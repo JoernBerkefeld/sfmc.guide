@@ -1,0 +1,83 @@
+@use "variables" as *;
+
+// ── CookieConsent v3 theming (Orest Bida) ────────────────────────────────────
+// Maps the plugin's CSS custom properties onto the site's dark design tokens so
+// the consent banner and preferences modal blend with the rest of ssjs.guide.
+// Plugin CSS is loaded from CDN (see _includes/google-analytics.html); these
+// variables override its defaults. Works for both the bottom-right banner and
+// the centered preferences modal, on mobile and desktop.
+
+#cc-main {
+  // Colors
+  --cc-bg: #{$bg-surface};
+  --cc-primary-color: #{$text-primary};
+  --cc-secondary-color: #{$text-secondary};
+
+  --cc-btn-primary-bg: #{$accent-primary};
+  --cc-btn-primary-color: #ffffff;
+  --cc-btn-primary-border-color: #{$accent-primary};
+  --cc-btn-primary-hover-bg: #{$accent-light};
+  --cc-btn-primary-hover-color: #ffffff;
+  --cc-btn-primary-hover-border-color: #{$accent-light};
+
+  --cc-btn-secondary-bg: #{$bg-elevated};
+  --cc-btn-secondary-color: #{$text-primary};
+  --cc-btn-secondary-border-color: #{$border-default};
+  --cc-btn-secondary-hover-bg: #{$bg-hover};
+  --cc-btn-secondary-hover-color: #{$text-primary};
+  --cc-btn-secondary-hover-border-color: #{$border-default};
+
+  --cc-separator-border-color: #{$border-muted};
+
+  --cc-toggle-on-bg: #{$accent-primary};
+  --cc-toggle-off-bg: #{$border-default};
+  --cc-toggle-on-knob-bg: #ffffff;
+  --cc-toggle-off-knob-bg: #{$bg-surface};
+
+  --cc-toggle-readonly-bg: #{$bg-hover};
+  --cc-toggle-readonly-knob-bg: #{$text-muted};
+
+  --cc-toggle-enabled-icon-color: var(--cc-bg);
+  --cc-toggle-disabled-icon-color: var(--cc-bg);
+
+  --cc-cookie-category-block-bg: #{$bg-elevated};
+  --cc-cookie-category-block-border: #{$border-muted};
+  --cc-cookie-category-block-hover-bg: #{$bg-overlay};
+  --cc-cookie-category-block-hover-border: #{$border-default};
+  --cc-cookie-category-expanded-block-bg: #{$bg-base};
+
+  --cc-overlay-bg: rgba(0, 0, 0, 0.65);
+  --cc-webkit-scrollbar-bg: #{$border-default};
+  --cc-webkit-scrollbar-hover-bg: #{$text-muted};
+
+  --cc-footer-bg: #{$bg-base};
+  --cc-footer-color: #{$text-muted};
+  --cc-footer-border-color: #{$border-muted};
+
+  // Shape / typography — align with the rest of the site
+  --cc-font-family: #{$font-sans};
+  --cc-modal-border-radius: #{$radius-lg};
+  --cc-btn-border-radius: #{$radius-md};
+  --cc-modal-transition-duration: 0.25s;
+  --cc-link-color: #{$text-link};
+
+  .cm__title,
+  .pm__title {
+    font-family: $font-sans;
+  }
+}
+
+// "Manage cookies" link in the footer — styled like the surrounding footer links.
+.footer-cookie-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  color: $text-muted;
+  font-weight: 500;
+
+  &:hover {
+    color: $accent-light;
+  }
+}

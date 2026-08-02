@@ -1,0 +1,41 @@
+title: "sfmc.guide"
+google_analytics: "G-D7F8E6B2XR"
+description: "Technical architecture guide for Salesforce Marketing Cloud Engagement and Marketing Cloud Next — tooling, patterns, and platform references."
+url: "https://sfmc.guide"
+baseurl: ""
+
+permalink: pretty
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+sass:
+  sass_dir: _sass
+  style: compressed
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-redirect-from
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .git
+  - README.md
+  - scripts
+
+nav_sections:
+  - title: Engagement
+    url: /engagement/
+  - title: Next
+    url: /next/
+  - title: Tools
+    url: /tools/

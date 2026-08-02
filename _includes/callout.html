@@ -1,0 +1,27 @@
+{% comment %}
+  Renders a styled callout block.
+  Usage: {% include callout.html type="warning" content="Your message here." %}
+  Types: tip, note, warning, caution, bug
+{% endcomment %}
+
+{% assign callout_type = include.type | default: "note" %}
+
+<div class="callout callout--{{ callout_type }}" role="{% if callout_type == 'warning' or callout_type == 'caution' %}alert{% else %}note{% endif %}">
+  <div class="callout-icon" aria-hidden="true">
+    {% if callout_type == "tip" %}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3M8 10v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    {% elsif callout_type == "note" %}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.5V11M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    {% elsif callout_type == "warning" %}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6v4M8 11.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    {% elsif callout_type == "caution" %}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    {% elsif callout_type == "bug" %}
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 6.5a2.5 2.5 0 015 0v3a2.5 2.5 0 01-5 0v-3z" stroke="currentColor" stroke-width="1.2"/><path d="M4 8H2M12 8h2M5.5 6.5L3 5M10.5 6.5L13 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    {% endif %}
+  </div>
+  <div class="callout-body">
+    {% if include.title %}<strong class="callout-title">{{ include.title }}</strong>{% endif %}
+    {{ include.content | markdownify }}
+  </div>
+</div>

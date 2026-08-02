@@ -1,0 +1,241 @@
+@use "variables" as *;
+
+// ── Code blocks ───────────────────────────────────────────────────────────────
+
+// Rouge syntax highlighting (GitHub Dark style)
+.highlight {
+  margin: $space-5 0;
+  position: relative;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  // Language label
+  &[data-lang]::before {
+    content: attr(data-lang);
+    display: block;
+    background-color: $bg-overlay;
+    color: $text-muted;
+    font-family: $font-mono;
+    font-size: $text-xs;
+    padding: $space-2 $space-4;
+    border-bottom: 1px solid $border-default;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  pre {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+// Syntax colors for Rouge (GitHub Dark)
+.highlight {
+  background: $bg-elevated;
+  border: 1px solid $border-default;
+
+  .c, .c1, .cm, .cs { color: $syntax-comment; font-style: italic; } // comments
+  .k, .kd, .kn, .kp, .kr, .kt { color: $syntax-keyword; font-weight: 500; } // keywords
+  .s, .s1, .s2, .sb, .sc, .sd, .se, .sh, .si, .sx { color: $syntax-string; } // strings
+  .m, .mf, .mh, .mi, .mo { color: $syntax-number; } // numbers
+  .n, .nv, .nx { color: $text-primary; } // names / variables
+  .na { color: $syntax-variable; } // attribute names
+  .nb { color: $syntax-builtin; } // builtins
+  .nf, .nc { color: $syntax-function; } // function/class names
+  .o, .ow { color: $syntax-keyword; } // operators
+  .p { color: $text-secondary; } // punctuation
+  .err { color: $color-danger; } // errors
+  .gd { color: $color-danger; background-color: rgba($color-danger, 0.1); } // diff deleted
+  .gi { color: $color-success; background-color: rgba($color-success, 0.1); } // diff inserted
+  .lineno { color: $text-muted; user-select: none; padding-right: $space-4; }
+}
+
+// ── Function syntax block ─────────────────────────────────────────────────────
+
+.function-syntax {
+  margin: $space-6 0;
+}
+
+.function-syntax-label {
+  font-size: $text-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  margin-bottom: $space-2;
+}
+
+.function-syntax-block {
+  background-color: $bg-elevated;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  pre {
+    margin: 0;
+    padding: $space-4 $space-5;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+
+    code {
+      font-family: $font-mono;
+      font-size: $text-sm;
+      color: $syntax-function;
+    }
+  }
+}
+
+.function-arity {
+  padding: $space-2 $space-5;
+  border-top: 1px solid $border-muted;
+  background-color: $bg-overlay;
+}
+
+.arity-badge {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: $text-muted;
+}
+
+// ── Parameters table ──────────────────────────────────────────────────────────
+
+.params-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: $space-5 0;
+  font-size: $text-sm;
+  background-color: $bg-surface;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  th {
+    background-color: $bg-elevated;
+    color: $text-secondary;
+    font-size: $text-xs;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: $space-3 $space-4;
+    text-align: left;
+    border-bottom: 1px solid $border-default;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid $border-muted;
+    vertical-align: top;
+
+    code {
+      font-family: $font-mono;
+      font-size: $text-xs;
+      color: $syntax-string;
+      background-color: $bg-overlay;
+      padding: 0.1em 0.35em;
+      border-radius: $radius-sm;
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  // Column styling
+  .param-name code {
+    color: $syntax-variable;
+    font-weight: 500;
+  }
+
+  .param-type code {
+    color: $syntax-builtin;
+  }
+
+  .param-required {
+    .badge-yes {
+      color: $color-success;
+      font-size: $text-xs;
+      font-weight: 600;
+    }
+
+    .badge-no {
+      color: $text-muted;
+      font-size: $text-xs;
+    }
+  }
+
+  .param-optional-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $text-muted;
+    background-color: $bg-overlay;
+    border: 1px solid $border-muted;
+    border-radius: $radius-full;
+    padding: 0 0.4em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: $space-2;
+  }
+}
+
+// ── Code copy button ──────────────────────────────────────────────────────────
+
+.code-block-wrapper {
+  position: relative;
+
+  &:hover .copy-button {
+    opacity: 1;
+  }
+}
+
+.copy-button {
+  position: absolute;
+  top: $space-3;
+  right: $space-3;
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  padding: $space-1 $space-2;
+  background-color: $bg-overlay;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  color: $text-muted;
+  font-family: $font-sans;
+  font-size: $text-xs;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity $transition-fast, color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    border-color: $border-emphasis;
+  }
+
+  &.is-copied {
+    color: $color-success;
+    border-color: $color-success;
+    opacity: 1;
+  }
+}
+
+// ── Inline type badges ────────────────────────────────────────────────────────
+
+.type-badge {
+  display: inline-block;
+  font-family: $font-mono;
+  font-size: 0.75em;
+  padding: 0.1em 0.45em;
+  border-radius: $radius-sm;
+  font-weight: 500;
+
+  &--string  { color: $syntax-string;  background: rgba(165, 214, 255, 0.1); }
+  &--number  { color: $syntax-number;  background: rgba(121, 192, 255, 0.1); }
+  &--boolean { color: $color-orange;   background: rgba(240, 136, 62, 0.1); }
+  &--object  { color: $syntax-function;background: rgba(210, 168, 255, 0.1); }
+  &--array   { color: $color-success;  background: rgba(63, 185, 80, 0.1); }
+  &--void    { color: $text-muted;     background: $bg-overlay; }
+  &--any     { color: $text-secondary; background: $bg-overlay; }
+}

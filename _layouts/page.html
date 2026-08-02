@@ -1,0 +1,46 @@
+---
+layout: default
+---
+
+<main class="page-content" aria-label="Main content">
+  <div class="page-header">
+    {% if page.parent %}
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ '/' | relative_url }}">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ page.parent_url | default: '#' | relative_url }}">{{ page.parent }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ page.title }}</span>
+      </nav>
+    {% endif %}
+
+    <h1 class="page-title">{{ page.title }}</h1>
+
+    {% if page.description %}
+      <p class="page-description">{{ page.description }}</p>
+    {% endif %}
+
+    {% include platform-badges.html %}
+  </div>
+
+  <div class="page-body prose">
+    {{ content }}
+  </div>
+
+  <div class="page-nav">
+    {% if page.prev_page %}
+      <a href="{{ page.prev_page.url | relative_url }}" class="page-nav-link page-nav-link--prev">
+        <span class="page-nav-label">Previous</span>
+        <span class="page-nav-title">&larr; {{ page.prev_page.title }}</span>
+      </a>
+    {% else %}
+      <span></span>
+    {% endif %}
+    {% if page.next_page %}
+      <a href="{{ page.next_page.url | relative_url }}" class="page-nav-link page-nav-link--next">
+        <span class="page-nav-label">Next</span>
+        <span class="page-nav-title">{{ page.next_page.title }} &rarr;</span>
+      </a>
+    {% endif %}
+  </div>
+</main>

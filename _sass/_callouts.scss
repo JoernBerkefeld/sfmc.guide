@@ -1,0 +1,281 @@
+@use "variables" as *;
+
+// ── Callout blocks ────────────────────────────────────────────────────────────
+
+.callout {
+  display: flex;
+  gap: $space-4;
+  padding: $space-4 $space-5;
+  border-radius: $radius-md;
+  margin: $space-5 0;
+  border: 1px solid;
+
+  &-icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  &-body {
+    flex: 1;
+    min-width: 0;
+    font-size: $text-sm;
+    line-height: $leading-relaxed;
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    code {
+      font-size: 0.85em;
+    }
+  }
+
+  &-title {
+    display: block;
+    font-size: $text-sm;
+    font-weight: 700;
+    margin-bottom: $space-2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  // ── Types ───────────────────────────────────────────────────────────────────
+
+  &--tip {
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+    color: $text-secondary;
+
+    .callout-icon { color: $color-success; }
+    .callout-title { color: $color-success; }
+  }
+
+  &--note {
+    background-color: rgba($color-info, 0.08);
+    border-color: rgba($color-info, 0.3);
+    color: $text-secondary;
+
+    .callout-icon { color: $color-info; }
+    .callout-title { color: $color-info; }
+  }
+
+  &--warning {
+    background-color: rgba($color-warning, 0.08);
+    border-color: rgba($color-warning, 0.3);
+    color: $text-secondary;
+
+    .callout-icon { color: $color-warning; }
+    .callout-title { color: $color-warning; }
+  }
+
+  &--caution {
+    background-color: rgba($color-danger, 0.08);
+    border-color: rgba($color-danger, 0.3);
+    color: $text-secondary;
+
+    .callout-icon { color: $color-danger; }
+    .callout-title { color: $color-danger; }
+  }
+
+  &--bug {
+    background-color: rgba($color-purple, 0.08);
+    border-color: rgba($color-purple, 0.3);
+    color: $text-secondary;
+
+    .callout-icon { color: $color-purple; }
+    .callout-title { color: $color-purple; }
+  }
+}
+
+// Shorthand Markdown blockquote callouts via CSS class on surrounding div
+// Usage: {:.callout.callout--warning}
+// > Your content here.
+
+// ── Availability badges ───────────────────────────────────────────────────────
+
+.availability-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-4 0;
+}
+
+.availability-label {
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: $space-1;
+}
+
+.availability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $text-xs;
+  font-weight: 500;
+  padding: 0.2em 0.6em;
+  border-radius: $radius-full;
+  border: 1px solid;
+
+  &.is-available {
+    color: $color-success;
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &.is-unavailable {
+    color: $text-muted;
+    background-color: $bg-elevated;
+    border-color: $border-muted;
+    opacity: 0.6;
+  }
+}
+
+// ── Verification badges ──────────────────────────────────────────────────────
+
+.verified-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-4 0;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $text-xs;
+  font-weight: 500;
+  padding: 0.2em 0.6em;
+  border-radius: $radius-full;
+  border: 1px solid;
+
+  &.is-confirmed {
+    color: $color-success;
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &.differs-from-docs {
+    color: $color-warning;
+    background-color: rgba($color-warning, 0.08);
+    border-color: rgba($color-warning, 0.3);
+  }
+
+  // ── Page-level verification status ──────────────────────────────────────
+  &.status-verified {
+    color: $color-success;
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &.status-in-progress {
+    color: $color-warning;
+    background-color: rgba($color-warning, 0.08);
+    border-color: rgba($color-warning, 0.3);
+  }
+
+  &.status-blocked {
+    color: $color-danger;
+    background-color: rgba($color-danger, 0.08);
+    border-color: rgba($color-danger, 0.3);
+  }
+
+  &.status-pending {
+    color: $text-muted;
+    background-color: $bg-elevated;
+    border-color: $border-muted;
+  }
+
+  // ── Every chapter ships a runnable "Show test script" block ─────────────
+  &.test-scripts-complete {
+    color: $color-info;
+    background-color: rgba($color-info, 0.08);
+    border-color: rgba($color-info, 0.3);
+  }
+}
+
+.verification-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-4 0;
+}
+
+// ── Type mapping (SSJS / SOAP / mcdev / GUI) ─────────────────────────────────
+
+.type-mapping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin: $space-4 0 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-1 $space-3;
+    background-color: $bg-surface;
+    border: 1px solid $border-muted;
+    border-radius: $radius-full;
+  }
+
+  dt {
+    font-size: $text-xs;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+    font-size: $text-sm;
+    color: $text-primary;
+
+    code {
+      font-family: $font-mono;
+      font-size: $text-xs;
+      color: $syntax-builtin;
+      background-color: $bg-overlay;
+      padding: 0.1em 0.4em;
+      border-radius: $radius-sm;
+    }
+  }
+
+  &__none {
+    font-size: $text-xs;
+    color: $text-muted;
+    font-style: italic;
+  }
+}
+
+// ── Function page header decorations ─────────────────────────────────────────
+
+.function-header {
+  display: flex;
+  align-items: baseline;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.function-title {
+  font-family: $font-mono;
+}
+
+.function-return-badge {
+  font-family: $font-mono;
+  font-size: $text-sm;
+  font-weight: 500;
+  color: $syntax-builtin;
+  background-color: rgba(121, 192, 255, 0.1);
+  padding: 0.2em 0.6em;
+  border-radius: $radius-sm;
+  border: 1px solid rgba(121, 192, 255, 0.2);
+  white-space: nowrap;
+}

@@ -1,0 +1,260 @@
+@use "variables" as *;
+
+// ── Prose content ─────────────────────────────────────────────────────────────
+
+.prose {
+  color: $text-primary;
+  font-size: $text-base;
+  line-height: $leading-relaxed;
+
+  // Headings
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: $leading-tight;
+    color: $text-primary;
+    margin-top: $space-8;
+    margin-bottom: $space-4;
+    scroll-margin-top: calc($header-height + $space-4);
+
+    a.header-anchor {
+      position: relative;
+      opacity: 0;
+      margin-left: $space-2;
+      color: $text-muted;
+      font-size: 0.8em;
+      text-decoration: none;
+      transition: opacity $transition-fast, color $transition-fast;
+      vertical-align: middle;
+      line-height: 1;
+
+      &::after {
+        content: 'Copied!';
+        position: absolute;
+        bottom: calc(100% + 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: $bg-overlay;
+        color: $text-primary;
+        font-family: $font-sans;
+        font-size: $text-xs;
+        font-weight: 500;
+        white-space: nowrap;
+        padding: $space-1 $space-2;
+        border-radius: $radius-sm;
+        border: 1px solid $border-default;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity $transition-fast;
+      }
+
+      &.is-copied {
+        opacity: 1;
+        color: $accent-light;
+
+        &::after {
+          opacity: 1;
+        }
+      }
+    }
+
+    &:hover a.header-anchor {
+      opacity: 1;
+    }
+  }
+
+  h1 { font-size: $text-3xl; }
+  h2 { font-size: $text-2xl; border-bottom: 1px solid $border-muted; padding-bottom: $space-3; }
+  h3 { font-size: $text-xl; }
+  h4 { font-size: $text-lg; }
+  h5, h6 { font-size: $text-base; }
+
+  // Paragraphs
+  p {
+    margin-bottom: $space-5;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Lists
+  ul, ol {
+    margin-bottom: $space-5;
+    padding-left: $space-6;
+
+    li {
+      margin-bottom: $space-2;
+      line-height: $leading-relaxed;
+    }
+
+    ul, ol {
+      margin-top: $space-2;
+      margin-bottom: $space-2;
+    }
+  }
+
+  ul { list-style-type: disc; }
+  ol { list-style-type: decimal; }
+
+  // Inline code
+  :not(pre) > code {
+    font-family: $font-mono;
+    font-size: 0.875em;
+    padding: 0.15em 0.4em;
+    background-color: $bg-elevated;
+    border: 1px solid $border-muted;
+    border-radius: $radius-sm;
+    color: $syntax-string;
+  }
+
+  // Code blocks
+  pre {
+    margin: $space-5 0;
+    padding: $space-5;
+    background-color: $bg-elevated;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    overflow-x: auto;
+    position: relative;
+
+    code {
+      font-family: $font-mono;
+      font-size: $text-sm;
+      line-height: 1.7;
+      background: none;
+      border: none;
+      padding: 0;
+      color: $text-primary;
+    }
+  }
+
+  // Blockquote (generic)
+  blockquote {
+    margin: $space-5 0;
+    padding: $space-4 $space-6;
+    border-left: 3px solid $accent-primary;
+    background-color: $accent-dim;
+    border-radius: 0 $radius-md $radius-md 0;
+    color: $text-secondary;
+
+    p {
+      margin-bottom: $space-2;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // Tables
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: $space-6 0;
+    font-size: $text-sm;
+
+    th {
+      background-color: $bg-elevated;
+      color: $text-secondary;
+      font-weight: 600;
+      text-align: left;
+      padding: $space-3 $space-4;
+      border-bottom: 2px solid $border-default;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: $space-3 $space-4;
+      border-bottom: 1px solid $border-muted;
+      vertical-align: top;
+      color: $text-primary;
+
+      code {
+        font-size: $text-xs;
+      }
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background-color: $bg-overlay;
+    }
+
+    // Column widths (common pattern)
+    .col-name   { width: 20%; }
+    .col-type   { width: 12%; }
+    .col-req    { width: 10%; }
+    .col-default{ width: 12%; }
+    .col-desc   { width: 46%; }
+  }
+
+  // HR
+  hr {
+    border: none;
+    border-top: 1px solid $border-muted;
+    margin: $space-8 0;
+  }
+
+  // Strong / em
+  strong { color: $text-primary; font-weight: 600; }
+  em { font-style: italic; }
+
+  // Keyboard shortcuts
+  kbd {
+    font-family: $font-mono;
+    font-size: $text-xs;
+    padding: 0.15em 0.4em;
+    background-color: $bg-overlay;
+    border: 1px solid $border-default;
+    border-bottom-width: 2px;
+    border-radius: $radius-sm;
+    color: $text-secondary;
+  }
+
+  // Definition lists
+  dl {
+    margin: $space-5 0;
+
+    dt {
+      font-weight: 600;
+      color: $text-primary;
+      margin-bottom: $space-1;
+    }
+
+    dd {
+      margin-left: $space-4;
+      color: $text-secondary;
+      margin-bottom: $space-4;
+    }
+  }
+}
+
+// ── Section heading anchors ───────────────────────────────────────────────────
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin: $space-10 0 $space-4;
+
+  &__label {
+    font-size: $text-xs;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $text-muted;
+    white-space: nowrap;
+    padding: $space-1 $space-3;
+    background-color: $bg-elevated;
+    border-radius: $radius-full;
+    border: 1px solid $border-muted;
+  }
+
+  &__line {
+    flex: 1;
+    height: 1px;
+    background-color: $border-muted;
+  }
+}

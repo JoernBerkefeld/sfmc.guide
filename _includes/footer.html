@@ -1,0 +1,44 @@
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="{{ '/' | relative_url }}" class="footer-brand-link">sfmc.guide</a>
+      <p class="footer-tagline">Technical architecture for Salesforce Marketing Cloud Engagement and Marketing Cloud Next.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-link-group">
+        <h4 class="footer-link-heading">Sections</h4>
+        <ul>
+          <li><a href="{{ '/engagement/' | relative_url }}">Engagement</a></li>
+          <li><a href="{{ '/next/' | relative_url }}">Next</a></li>
+          <li><a href="{{ '/tools/' | relative_url }}">Tools</a></li>
+        </ul>
+      </div>
+      <div class="footer-link-group">
+        <h4 class="footer-link-heading">Related</h4>
+        <ul>
+          <li><a href="https://ssjs.guide" target="_blank" rel="noopener">ssjs.guide</a> — SSJS reference</li>
+          <li><a href="https://ampscript.guide" target="_blank" rel="noopener">ampscript.guide</a></li>
+          <li><a href="https://joernberkefeld.com" target="_blank" rel="noopener">joernberkefeld.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-link-group">
+        <h4 class="footer-link-heading">Tooling</h4>
+        <ul>
+          <li><a href="{{ '/tools/vscode-sfmc-language/' | relative_url }}">SFMC Language Service</a></li>
+          <li><a href="{{ '/tools/eslint-plugin-sfmc/' | relative_url }}">eslint-plugin-sfmc</a></li>
+          <li><a href="{{ '/tools/mcdev/' | relative_url }}">SFMC DevTools (mcdev)</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-copyright">
+    <p>
+      &copy; {{ 'now' | date: '%Y' }}
+      <a href="https://joernberkefeld.com" target="_blank" rel="noopener">Jörn Berkefeld</a>
+      · Not affiliated with Salesforce
+      · <a href="{{ '/privacy/' | relative_url }}">Privacy</a>
+      ·
+      <a class="footer-social-link" href="https://github.com/JoernBerkefeld/sfmc.guide" target="_blank" rel="noopener">GitHub</a>
+    </p>
+  </div>
+</footer>

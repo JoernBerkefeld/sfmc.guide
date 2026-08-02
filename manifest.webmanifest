@@ -1,0 +1,26 @@
+{
+  "name": "sfmc.guide",
+  "short_name": "sfmc.guide",
+  "description": "Technical architecture guide for Salesforce Marketing Cloud Engagement and Next",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "categories": ["developer", "reference", "education"],
+  "icons": [
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

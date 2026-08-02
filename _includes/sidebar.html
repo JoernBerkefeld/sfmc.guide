@@ -1,0 +1,35 @@
+<nav class="sidebar" id="sidebar" aria-label="Documentation navigation">
+  <div class="sidebar-inner">
+    {% assign nav = site.data.navigation %}
+    {% for section in nav %}
+      <div class="sidebar-section {% if page.url contains section.url %}is-active{% endif %}">
+        <a href="{{ section.url | relative_url }}"
+           class="sidebar-section-title {% if page.url contains section.url %}is-current{% endif %}">
+          {{ section.title }}
+          {% if section.children %}
+            <svg class="sidebar-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M4 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {% endif %}
+        </a>
+
+        {% if section.children %}
+          <ul class="sidebar-children {% if page.url contains section.url %}is-open{% endif %}">
+            {% for child in section.children %}
+              {% if child.title contains "—" %}
+                <li class="sidebar-group-label">{{ child.title | remove: "—" | strip }}</li>
+              {% else %}
+                <li class="sidebar-item">
+                  <a href="{{ child.url | relative_url }}"
+                     class="sidebar-link {% if page.url == child.url %}is-active{% endif %}">
+                    {{ child.title }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</nav>

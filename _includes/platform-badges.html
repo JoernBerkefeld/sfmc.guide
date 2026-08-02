@@ -1,0 +1,11 @@
+{% if page.platforms %}
+<div class="platform-badges" aria-label="Supported platforms">
+  {% for p in page.platforms %}
+    {% if p == "engagement" %}
+      <span class="platform-badge platform-badge--engagement" title="Salesforce Marketing Cloud Engagement">Engagement</span>
+    {% elsif p == "next" %}
+      <span class="platform-badge platform-badge--next" title="Marketing Cloud Next">Next</span>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}

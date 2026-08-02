@@ -1,0 +1,69 @@
+@use "variables" as *;
+
+// Search styles are defined in _header.scss where the search component lives.
+// This file is reserved for any standalone search page or search-results page styling.
+
+.search-page {
+  padding: $space-8 0;
+
+  &__heading {
+    font-size: $text-2xl;
+    font-weight: 700;
+    margin-bottom: $space-6;
+  }
+
+  &__count {
+    font-size: $text-sm;
+    color: $text-muted;
+    margin-bottom: $space-4;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+  }
+}
+
+.search-page-result {
+  padding: $space-5;
+  background-color: $bg-surface;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  margin-bottom: $space-3;
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: $accent-primary;
+  }
+
+  .result-title {
+    font-size: $text-base;
+    font-weight: 600;
+    color: $text-primary;
+    text-decoration: none;
+
+    &:hover {
+      color: $accent-light;
+    }
+  }
+
+  .result-path {
+    font-size: $text-xs;
+    color: $text-muted;
+    font-family: $font-mono;
+    margin: $space-1 0;
+  }
+
+  .result-excerpt {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin-top: $space-2;
+  }
+
+  mark {
+    background-color: rgba($color-warning, 0.25);
+    color: $text-primary;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+}

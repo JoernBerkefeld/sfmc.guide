@@ -1,0 +1,90 @@
+// ---- Color Palette (light, contrast to ssjs.guide dark) ----
+
+$bg-base:          #f8fafc;
+$bg-surface:       #ffffff;
+$bg-elevated:      #f1f5f9;
+$bg-overlay:       #e2e8f0;
+$bg-hover:         #e2e8f0;
+
+$border-muted:     #e2e8f0;
+$border-default:   #cbd5e1;
+$border-emphasis:  #0369a1;
+
+$text-primary:     #0f172a;
+$text-secondary:   #475569;
+$text-muted:       #64748b;
+$text-link:        #0369a1;
+$text-link-hover:  #0c4a6e;
+
+$accent-primary:   #0369a1;
+$accent-light:     #0284c7;
+$accent-dim:       rgba(3, 105, 161, 0.12);
+
+$color-success:    #15803d;
+$color-warning:    #a16207;
+$color-danger:     #b91c1c;
+$color-info:       #0369a1;
+$color-purple:     #7c3aed;
+$color-orange:     #c2410c;
+
+$syntax-keyword:   #b91c1c;
+$syntax-string:    #0369a1;
+$syntax-number:    #0e7490;
+$syntax-comment:   #64748b;
+$syntax-function:  #6d28d9;
+$syntax-variable:  #c2410c;
+$syntax-builtin:   #0e7490;
+
+$space-1:  0.25rem;
+$space-2:  0.5rem;
+$space-3:  0.75rem;
+$space-4:  1rem;
+$space-5:  1.25rem;
+$space-6:  1.5rem;
+$space-8:  2rem;
+$space-9:  2.25rem;
+$space-10: 2.5rem;
+$space-12: 3rem;
+$space-16: 4rem;
+$space-20: 5rem;
+
+$font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-mono:  'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+
+$text-xs:   0.75rem;
+$text-sm:   0.875rem;
+$text-base: 1rem;
+$text-lg:   1.125rem;
+$text-xl:   1.25rem;
+$text-2xl:  1.5rem;
+$text-3xl:  1.875rem;
+$text-4xl:  2.25rem;
+
+$leading-tight:  1.25;
+$leading-normal: 1.6;
+$leading-relaxed:1.75;
+
+$header-height:  3.5rem;
+$sidebar-width:  17rem;
+$content-max:    52rem;
+$toc-width:      14rem;
+
+$radius-sm:  0.25rem;
+$radius-md:  0.5rem;
+$radius-lg:  0.75rem;
+$radius-xl:  1rem;
+$radius-full: 9999px;
+
+$shadow-sm:  0 1px 2px rgba(15, 23, 42, 0.06);
+$shadow-md:  0 4px 12px rgba(15, 23, 42, 0.08);
+$shadow-lg:  0 8px 32px rgba(15, 23, 42, 0.12);
+
+$transition-fast:   150ms ease;
+$transition-normal: 250ms ease;
+$transition-slow:   400ms ease;
+
+$z-sidebar:  100;
+$z-header:   200;
+$z-overlay:  300;
+$z-modal:    400;
+$z-tooltip:  500;

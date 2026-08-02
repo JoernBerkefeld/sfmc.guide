@@ -1,0 +1,254 @@
+[
+  {
+    "name": "AMPscript",
+    "url": "/engagement/ampscript/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Engagement AMPscript guidance from the SFMC Cookbook."
+  },
+  {
+    "name": "AMPscript and Handlebars on Marketing Cloud Next",
+    "url": "/next/ampscript-handlebars/",
+    "section": "Next",
+    "type": "page",
+    "description": "Which AMPscript functions are supported in Marketing Cloud Next, how they map to Handlebars helpers, and which helpers have no AMPscript counterpart."
+  },
+  {
+    "name": "ampscript.io",
+    "url": "/tools/ampscript-io/",
+    "section": "Tools",
+    "type": "page",
+    "description": "AMPscript syntax validation and highlighting in the browser."
+  },
+  {
+    "name": "dataviews.io",
+    "url": "/tools/dataviews-io/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Community reference for Engagement Data Views — schemas and relationships."
+  },
+  {
+    "name": "Diagramforce",
+    "url": "/tools/diagramforce/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more."
+  },
+  {
+    "name": "Einstein Recommendations",
+    "url": "/engagement/einstein/recommendation/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
+    "name": "Encryption",
+    "url": "/engagement/encryption/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Encryption patterns for Salesforce Marketing Cloud Engagement."
+  },
+  {
+    "name": "eslint-config-ssjs",
+    "url": "/tools/eslint-config-ssjs/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Legacy SSJS ESLint config — superseded by eslint-plugin-sfmc."
+  },
+  {
+    "name": "eslint-plugin-mcdev",
+    "url": "/tools/eslint-plugin-mcdev/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Runs mcdev metadata validations as ESLint diagnostics in the editor and CI."
+  },
+  {
+    "name": "eslint-plugin-mso-email",
+    "url": "/tools/eslint-plugin-mso-email/",
+    "section": "Tools",
+    "type": "page",
+    "description": "ESLint rules for Outlook (MSO) conditional comments, VML, and HTML email layout pitfalls."
+  },
+  {
+    "name": "eslint-plugin-sfmc",
+    "url": "/tools/eslint-plugin-sfmc/",
+    "section": "Tools",
+    "type": "page",
+    "description": "ESLint rules for AMPscript, SSJS, and Handlebars — shared team policy for editor and CI, including Next configs."
+  },
+  {
+    "name": "FAQ",
+    "url": "/engagement/faq/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Frequently asked questions for Automations, CloudPages, emails, Journey Builder, and admin."
+  },
+  {
+    "name": "General coding guidelines",
+    "url": "/engagement/general/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Development environment, project setup, Data Extensions, and business units for SFMC Engagement."
+  },
+  {
+    "name": "Marketing Cloud Engagement",
+    "url": "/engagement/",
+    "section": "engagement",
+    "type": "page",
+    "description": "Architect-oriented guides for Salesforce Marketing Cloud Engagement — patterns, FAQ, AMPscript notes, Einstein, and encryption."
+  },
+  {
+    "name": "Marketing Cloud Next",
+    "url": "/next/",
+    "section": "next",
+    "type": "page",
+    "description": "Architect-oriented entry point for Marketing Cloud Next on sfmc.guide."
+  },
+  {
+    "name": "MCFS [AMPScript]",
+    "url": "/tools/mcfs-ampscript/",
+    "section": "Tools",
+    "type": "page",
+    "description": "VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets."
+  },
+  {
+    "name": "MCP Server for SFMC",
+    "url": "/tools/mcp-server-sfmc/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Model Context Protocol server that gives AI assistants accurate AMPscript, SSJS, and Handlebars knowledge."
+  },
+  {
+    "name": "MSO Conditionals (VS Code)",
+    "url": "/tools/vscode-mso-conditionals/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Hover translations and snippets for Outlook MSO conditional comments in HTML email."
+  },
+  {
+    "name": "prettier-plugin-sfmc",
+    "url": "/tools/prettier-plugin-sfmc/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults."
+  },
+  {
+    "name": "sf-plugin-mcnext",
+    "url": "/tools/sf-plugin-mcnext/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Salesforce CLI plugin for Marketing Cloud Next (in development)."
+  },
+  {
+    "name": "SFMC Boilerplate",
+    "url": "/tools/sfmc-boilerplate/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Bundle SSJS, AMPscript, and front-end sources into deployable CloudPages and emails."
+  },
+  {
+    "name": "SFMC Companion",
+    "url": "/tools/sfmc-companion/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more)."
+  },
+  {
+    "name": "SFMC Data Loader App",
+    "url": "/tools/sfmc-dataloader-app/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Cross-platform desktop app for bulk Data Extension imports and exports."
+  },
+  {
+    "name": "SFMC Data Loader for VS Code",
+    "url": "/tools/vscode-sfmc-dataloader/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Load and export Data Extension records from the VS Code editor."
+  },
+  {
+    "name": "SFMC DevTools (mcdev)",
+    "url": "/tools/mcdev/",
+    "section": "Tools",
+    "type": "page",
+    "description": "CLI to retrieve, deploy, and version Marketing Cloud Engagement metadata as code across business units."
+  },
+  {
+    "name": "SFMC DevTools for VS Code",
+    "url": "/tools/vscode-sfmc-devtools/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Graphical VS Code interface for mcdev — retrieve and deploy without living in the terminal."
+  },
+  {
+    "name": "SFMC Extension Pack",
+    "url": "/tools/vscode-sfmc-extension-pack/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Essential SFMC VS Code extensions bundled for a ready-to-go setup."
+  },
+  {
+    "name": "SFMC Extension Pack (Expanded)",
+    "url": "/tools/vscode-sfmc-extension-pack-expanded/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Full SFMC toolset plus complementary editor tooling for power users."
+  },
+  {
+    "name": "SFMC Language Service",
+    "url": "/tools/vscode-sfmc-language/",
+    "section": "Tools",
+    "type": "page",
+    "description": "VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, snippets."
+  },
+  {
+    "name": "SFMC numberToLocaleString",
+    "url": "/tools/sfmc-numbertolocalestring/",
+    "section": "Tools",
+    "type": "page",
+    "description": "SSJS polyfill for locale-aware number formatting in Engagement."
+  },
+  {
+    "name": "sfmc-dataloader",
+    "url": "/tools/sfmc-dataloader/",
+    "section": "Tools",
+    "type": "page",
+    "description": "CLI for bulk import and export of Data Extension rows — built for automation."
+  },
+  {
+    "name": "sfmc-language-lsp",
+    "url": "/tools/sfmc-language-lsp/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Language Server Protocol implementation behind the SFMC Language Service extension."
+  },
+  {
+    "name": "sfmc.guide — Marketing Cloud Engagement & Next",
+    "url": "/",
+    "section": "Home",
+    "type": "page",
+    "description": "Technical architecture guide for Salesforce Marketing Cloud Engagement and Marketing Cloud Next — patterns, tooling, and platform references."
+  },
+  {
+    "name": "SSJS Manager",
+    "url": "/tools/ssjs-manager/",
+    "section": "Tools",
+    "type": "page",
+    "description": "VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB)."
+  },
+  {
+    "name": "Tools",
+    "url": "/tools/",
+    "section": "tools",
+    "type": "page",
+    "description": "Editor, CI, CLI, and ecosystem tooling for Marketing Cloud Engagement and Marketing Cloud Next."
+  },
+  {
+    "name": "Why the SFMC Language Service Is Great on Its Own, and Even Better With ESLint and Prettier",
+    "url": "/tools/language-service-eslint-prettier/",
+    "section": "Tools",
+    "type": "page",
+    "description": "How the SFMC Language Service, eslint-plugin-sfmc, and prettier-plugin-sfmc share one source of truth — and why ESLint matters once CI and Git hooks enter the picture."
+  }
+]

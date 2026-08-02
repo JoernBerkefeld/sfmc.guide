@@ -1,0 +1,161 @@
+@use "variables" as *;
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+.sidebar {
+  position: fixed;
+  top: $header-height;
+  bottom: 0;
+  left: 0;
+  width: $sidebar-width;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: $bg-surface;
+  border-right: 1px solid $border-muted;
+  z-index: $z-sidebar;
+  transition: transform $transition-normal;
+
+  // Hidden on mobile by default
+  @media (max-width: 1023px) {
+    transform: translateX(-100%);
+    z-index: $z-overlay;
+    box-shadow: $shadow-lg;
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.sidebar-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: $space-6 0 $space-12;
+
+  // Custom scrollbar (scroll container is inner, not .sidebar)
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $border-default;
+    border-radius: $radius-full;
+  }
+}
+
+// ── Sidebar section ───────────────────────────────────────────────────────────
+
+.sidebar-section {
+  margin-bottom: $space-1;
+}
+
+.sidebar-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-2 $space-5;
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $text-secondary;
+  text-decoration: none;
+  border-radius: 0;
+  transition: color $transition-fast, background-color $transition-fast;
+  cursor: pointer;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+    text-decoration: none;
+  }
+
+  &.is-current {
+    color: $accent-light;
+  }
+}
+
+.sidebar-chevron {
+  flex-shrink: 0;
+  transition: transform $transition-fast;
+  color: $text-muted;
+}
+
+.sidebar-section.is-active .sidebar-chevron {
+  transform: rotate(180deg);
+}
+
+// ── Sidebar children ──────────────────────────────────────────────────────────
+
+.sidebar-children {
+  display: none;
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+
+  &.is-open {
+    display: block;
+  }
+}
+
+.sidebar-group-label {
+  display: block;
+  padding: $space-3 $space-5 $space-1 $space-8;
+  font-size: $text-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  margin-top: $space-2;
+}
+
+.sidebar-item {
+  list-style: none;
+}
+
+.sidebar-link {
+  display: block;
+  padding: $space-2 $space-5 $space-2 $space-8;
+  font-size: $text-sm;
+  color: $text-secondary;
+  text-decoration: none;
+  transition: color $transition-fast, background-color $transition-fast;
+  border-left: 2px solid transparent;
+  position: relative;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+    text-decoration: none;
+  }
+
+  &.is-active {
+    color: $accent-light;
+    background-color: $accent-dim;
+    border-left-color: $accent-primary;
+    font-weight: 500;
+  }
+}
+
+// ── Mobile sidebar overlay ────────────────────────────────────────────────────
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: calc($z-overlay - 1);
+
+  &.is-visible {
+    display: block;
+  }
+}

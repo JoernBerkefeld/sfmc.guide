@@ -1,0 +1,103 @@
+{% if jekyll.environment == "production" and site.google_analytics %}
+<!-- Google tag (gtag.js) with Consent Mode v2 â€” analytics blocked until opt-in -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+
+  // Consent Mode v2 defaults: deny everything until the visitor opts in.
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+
+  gtag('js', new Date());
+  gtag('config', '{{ site.google_analytics }}');
+</script>
+
+<!-- CookieConsent v3 (Orest Bida) â€” GDPR opt-in banner, self-hosted (no third-party requests) -->
+<link rel="stylesheet" href="{{ '/assets/vendor/cookieconsent/cookieconsent.css' | relative_url }}">
+<script src="{{ '/assets/vendor/cookieconsent/cookieconsent.umd.js' | relative_url }}"></script>
+<script>
+  (function () {
+    // Translate CookieConsent's analytics category into a Consent Mode update.
+    function updateConsent() {
+      var granted = window.CookieConsent && CookieConsent.acceptedCategory('analytics');
+      gtag('consent', 'update', {
+        analytics_storage: granted ? 'granted' : 'denied'
+      });
+    }
+
+    window.addEventListener('load', function () {
+      CookieConsent.run({
+        guiOptions: {
+          consentModal: { layout: 'box', position: 'bottom right', equalWeightButtons: false, flipButtons: false },
+          preferencesModal: { layout: 'box', equalWeightButtons: true, flipButtons: false }
+        },
+        cookie: { name: 'cc_cookie', expiresAfterDays: 182, sameSite: 'Lax' },
+
+        onFirstConsent: updateConsent,
+        onConsent: updateConsent,
+        onChange: updateConsent,
+
+        categories: {
+          necessary: { enabled: true, readOnly: true },
+          analytics: {
+            autoClear: {
+              cookies: [
+                { name: /^_ga/ },
+                { name: '_gid' }
+              ]
+            }
+          }
+        },
+
+        language: {
+          default: 'en',
+          translations: {
+            en: {
+              consentModal: {
+                title: 'Cookies on sfmc.guide',
+                description: 'This site uses Google Analytics to understand which pages are useful. Analytics cookies are only set if you allow them. See the <a href="{{ '/privacy/' | relative_url }}">Privacy &amp; Cookie Policy</a>.',
+                acceptAllBtn: 'Accept',
+                acceptNecessaryBtn: 'Decline',
+                showPreferencesBtn: 'Manage preferences'
+              },
+              preferencesModal: {
+                title: 'Cookie preferences',
+                acceptAllBtn: 'Accept all',
+                acceptNecessaryBtn: 'Decline all',
+                savePreferencesBtn: 'Save preferences',
+                closeIconLabel: 'Close',
+                footer: '<a href="{{ '/privacy/' | relative_url }}">Privacy &amp; Cookie Policy</a>',
+                sections: [
+                  {
+                    title: 'Cookie usage',
+                    description: 'sfmc.guide keeps cookies to a minimum. Only strictly necessary cookies are always active; analytics cookies require your consent and can be withdrawn at any time.'
+                  },
+                  {
+                    title: 'Strictly necessary',
+                    description: 'Required for the site to work (e.g. remembering your cookie choice). These cannot be disabled.',
+                    linkedCategory: 'necessary'
+                  },
+                  {
+                    title: 'Analytics',
+                    description: 'Google Analytics collects anonymised usage statistics so I can improve the reference. No data is collected until you accept.',
+                    linkedCategory: 'analytics'
+                  }
+                ]
+              }
+            }
+          }
+        }
+      });
+    });
+  })();
+</script>
+{% endif %}

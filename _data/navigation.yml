@@ -1,0 +1,59 @@
+- title: Engagement
+  url: /engagement/
+  children:
+    - title: Overview
+      url: /engagement/
+    - title: General guidelines
+      url: /engagement/general/
+    - title: AMPscript
+      url: /engagement/ampscript/
+    - title: FAQ
+      url: /engagement/faq/
+    - title: Einstein Recommendations
+      url: /engagement/einstein/recommendation/
+    - title: Encryption
+      url: /engagement/encryption/
+
+- title: Next
+  url: /next/
+  children:
+    - title: Overview
+      url: /next/
+    - title: AMPscript & Handlebars
+      url: /next/ampscript-handlebars/
+
+- title: Tools
+  url: /tools/
+  children:
+    - title: Catalog
+      url: /tools/
+    - title: Language Service article
+      url: /tools/language-service-eslint-prettier/
+    - title: "— Own tools —"
+      url: /tools/#own-tools
+    - title: SFMC Language Service
+      url: /tools/vscode-sfmc-language/
+    - title: eslint-plugin-sfmc
+      url: /tools/eslint-plugin-sfmc/
+    - title: prettier-plugin-sfmc
+      url: /tools/prettier-plugin-sfmc/
+    - title: mcp-server-sfmc
+      url: /tools/mcp-server-sfmc/
+    - title: mcdev
+      url: /tools/mcdev/
+    - title: sf-plugin-mcnext
+      url: /tools/sf-plugin-mcnext/
+    - title: "— Community —"
+      url: /tools/#community-and-ecosystem
+    - title: dataviews.io
+      url: /tools/dataviews-io/
+    - title: Diagramforce
+      url: /tools/diagramforce/
+    - title: SSJS Manager
+      url: /tools/ssjs-manager/
+    - title: MCFS AMPscript
+      url: /tools/mcfs-ampscript/
+    - title: SFMC Companion
+      url: /tools/sfmc-companion/
+    - title: ampscript.io
+      url: /tools/ampscript-io/
