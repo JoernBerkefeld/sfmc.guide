@@ -13,7 +13,7 @@
   var headerSearch = document.querySelector('.header-search');
   var cancelBtn = document.querySelector('.search-cancel');
 
-  var EXPAND_THRESHOLD = 280; // px â€” expand to full-width overlay below this
+  var EXPAND_THRESHOLD = 280; // px — expand to full-width overlay below this
 
   function expandSearch() {
     if (headerSearch) headerSearch.classList.add('is-expanded');
@@ -61,12 +61,12 @@
       .catch(function (err) {
         loadFailed = true;
         console.error('[search] failed to load index:', err);
-        searchResults.innerHTML = '<div class="search-empty">Search temporarily unavailable â€” please reload the page.</div>';
+        searchResults.innerHTML = '<div class="search-empty">Search temporarily unavailable — please reload the page.</div>';
         searchResults.hidden = false;
       });
   }
 
-  // Simple inverted index â€” tokenize name, description, and aliases
+  // Simple inverted index — tokenize name, description, and aliases
   function buildIndex(docs) {
     // Object.create(null) avoids prototype-pollution collisions when a token
     // happens to match a built-in property name like "constructor".
@@ -143,7 +143,7 @@
       return '<a class="search-result-item" href="' + escapeHtml(doc.url) + '">' +
         '<div class="result-title">' + highlight(doc.name, query) + '</div>' +
         '<div class="result-section">' + escapeHtml(doc.section || '') + '</div>' +
-        (doc.description ? '<div class="result-snippet">' + highlight(doc.description, query) + 'â€¦</div>' : '') +
+        (doc.description ? '<div class="result-snippet">' + highlight(doc.description, query) + '…</div>' : '') +
         '</a>';
     }).join('');
 
@@ -162,7 +162,7 @@
     debounceTimer = setTimeout(function () {
       if (!index) {
         if (!loadFailed) {
-          searchResults.innerHTML = '<div class="search-empty">Loading searchâ€¦</div>';
+          searchResults.innerHTML = '<div class="search-empty">Loading search…</div>';
           searchResults.hidden = false;
         }
         loadIndex(function () { renderResults(search(q), q); });
@@ -220,7 +220,7 @@
   });
 
   // Eagerly load the index so the first search feels instant.
-  // search.js is loaded with defer so the DOM is already parsed here â€”
+  // search.js is loaded with defer so the DOM is already parsed here —
   // DOMContentLoaded has already fired; call loadIndex() directly.
   loadIndex();
 
