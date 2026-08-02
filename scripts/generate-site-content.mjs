@@ -22,6 +22,27 @@ function write(rel, content) {
   console.log('wrote', rel);
 }
 
+/** Copy a Cookbook asset directory next to the engagement page (keeps relative img/ links working). */
+function copyCookbookDir(fromRel, toRel) {
+  const from = path.join(COOKBOOK, fromRel);
+  const to = path.join(SITE, toRel);
+  if (!fs.existsSync(from)) {
+    console.warn('skip missing cookbook dir', fromRel);
+    return;
+  }
+  fs.mkdirSync(to, { recursive: true });
+  for (const name of fs.readdirSync(from)) {
+    const src = path.join(from, name);
+    const dest = path.join(to, name);
+    if (fs.statSync(src).isDirectory()) {
+      copyCookbookDir(path.join(fromRel, name), path.join(toRel, name));
+    } else {
+      fs.copyFileSync(src, dest);
+    }
+  }
+  console.log('copied', fromRel, '→', toRel);
+}
+
 function cookbookDate(rel) {
   try {
     const out = execSync(`git log --diff-filter=A --follow --format=%aI -- "${rel}"`, {
@@ -152,5 +173,9 @@ portPage({
   permalink: '/engagement/encryption/',
   cookbookUrlPath: 'encryption/',
 });
+
+// Sibling img/ folders referenced as ![…](img/…) in the ported Markdown
+copyCookbookDir('einstein/recommendation/img', 'engagement/einstein/recommendation/img');
+copyCookbookDir('encryption/img', 'engagement/encryption/img');
 
 console.log('engagement pages done');
