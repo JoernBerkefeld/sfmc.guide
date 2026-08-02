@@ -2,7 +2,7 @@
   <!-- Round white disc (transparent corners like Google's favicon) -->
   <circle cx="250" cy="250" r="250" fill="#FFFFFF"/>
   <!-- Compass inset slightly so a white rim shows around the points -->
-  <g transform="translate(250 250) scale(0.88) translate(-250 -250)">
+  <g transform="translate(250 250) scale(0.995) translate(-250 -250)">
     <circle cx="250" cy="250" r="145" fill="none" stroke="#102A45" stroke-width="20"/>
     <polygon points="250,25 250,250 210,210" fill="#2563EB"/>
     <polygon points="250,25 290,210 250,250" fill="#0F172A"/>
