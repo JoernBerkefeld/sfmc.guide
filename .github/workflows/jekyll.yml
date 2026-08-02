@@ -1,6 +1,10 @@
 # Build and deploy the Jekyll site to GitHub Pages using the repo's own Gemfile
 # (Jekyll 4.3 + modern Dart Sass), instead of the legacy `github-pages` gem
 # (Jekyll 3.10 + Ruby Sass 3.7) that does not support `@use` module syntax.
+#
+# Custom domain (sfmc.guide): always build with empty baseurl. Do NOT pass
+# configure-pages base_path — for this repo that can resolve to "/sfmc.guide"
+# and break every asset/link on the apex domain.
 name: Deploy Jekyll site to Pages
 
 on:
@@ -8,7 +12,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Allow one concurrent deployment; skip runs queued between an in-progress run and the latest.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -32,11 +35,10 @@ jobs:
           bundler-cache: true
 
       - name: Setup Pages
-        id: pages
         uses: actions/configure-pages@v5
 
       - name: Build with Jekyll
-        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+        run: bundle exec jekyll build --baseurl ""
         env:
           JEKYLL_ENV: production
 
