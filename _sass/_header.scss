@@ -68,16 +68,56 @@
   color: $accent-primary;
 }
 
-.brand-badge {
-  font-size: $text-xs;
-  font-weight: 700;
-  padding: 0.15em 0.45em;
-  background-color: $accent-dim;
-  color: $accent-light;
+// Connected Engagement / Next toggles (same visual language as the old .brand-badge)
+.brand-platforms {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
   border-radius: $radius-sm;
   border: 1px solid rgba($accent-primary, 0.3);
+  overflow: hidden;
+  background-color: transparent;
+}
+
+.brand-platform {
+  font-size: $text-xs;
+  font-weight: 700;
+  padding: 0.15em 0.5em;
+  color: $text-muted;
+  background-color: transparent;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-decoration: none;
+  line-height: 1.4;
+  border: 0;
+  border-right: 1px solid rgba($accent-primary, 0.3);
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  &:hover {
+    text-decoration: none;
+    color: $accent-light;
+    background-color: rgba($accent-primary, 0.06);
+  }
+
+  &.is-pressed {
+    background-color: $accent-dim;
+    color: $accent-light;
+  }
+
+  &.is-pressed:hover {
+    background-color: rgba($accent-primary, 0.22);
+    color: $accent-light;
+  }
+}
+
+@media (max-width: 640px) {
+  .brand-platforms {
+    display: none;
+  }
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────

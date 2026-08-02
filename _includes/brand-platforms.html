@@ -1,0 +1,38 @@
+{% comment %}
+  Connected Engagement / Next platform toggles in the header.
+  Pressed state:
+    1. page.platforms frontmatter when set (e.g. tools that support only one platform)
+    2. else path: /engagement/ → Engagement, /next/ → Next, /tools/ → both
+    3. else neither pressed (home, privacy, …)
+{% endcomment %}
+
+{% assign brand_engagement = false %}
+{% assign brand_next = false %}
+
+{% assign platform_count = page.platforms | size %}
+{% if page.platforms and platform_count > 0 %}
+  {% for p in page.platforms %}
+    {% if p == 'engagement' %}{% assign brand_engagement = true %}{% endif %}
+    {% if p == 'next' %}{% assign brand_next = true %}{% endif %}
+  {% endfor %}
+{% elsif page.url contains '/engagement/' %}
+  {% assign brand_engagement = true %}
+{% elsif page.url contains '/next/' %}
+  {% assign brand_next = true %}
+{% elsif page.url contains '/tools/' %}
+  {% assign brand_engagement = true %}
+  {% assign brand_next = true %}
+{% endif %}
+
+<div class="brand-platforms" role="group" aria-label="Platform focus">
+  <a href="{{ '/engagement/' | relative_url }}"
+     class="brand-platform{% if brand_engagement %} is-pressed{% endif %}"
+     {% if brand_engagement %}aria-current="true"{% endif %}>
+    Engagement
+  </a>
+  <a href="{{ '/next/' | relative_url }}"
+     class="brand-platform{% if brand_next %} is-pressed{% endif %}"
+     {% if brand_next %}aria-current="true"{% endif %}>
+    Next
+  </a>
+</div>
