@@ -189,6 +189,12 @@ img {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: $space-4;
+
+    img {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
   }
 
   .hero-title {

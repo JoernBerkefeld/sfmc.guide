@@ -6,7 +6,7 @@ description: "Technical architecture guide for Salesforce Marketing Cloud Engage
 
 <div class="home-hero">
   <div class="hero-eyebrow">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#0369a1"/><text x="7" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="white" font-family="system-ui">S</text></svg>
+    <img src="{{ '/assets/sfmc-guide-compass.svg' | relative_url }}" width="14" height="14" alt="" aria-hidden="true">
     Salesforce Marketing Cloud
   </div>
   <h1 class="hero-title">

@@ -46,6 +46,14 @@
 
 .brand-icon {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+
+  img {
+    display: block;
+    width: 28px;
+    height: 28px;
+  }
 }
 
 .brand-name {

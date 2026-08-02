@@ -11,7 +11,7 @@
   "categories": ["developer", "reference", "education"],
   "icons": [
     {
-      "src": "/assets/favicon.svg",
+      "src": "/assets/sfmc-guide-compass.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
