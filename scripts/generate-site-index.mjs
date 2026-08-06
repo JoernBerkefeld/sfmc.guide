@@ -38,7 +38,7 @@ const files = walk(SITE).filter((f) => !f.includes(`${path.sep}scripts${path.sep
 const index = [];
 
 for (const file of files) {
-  const raw = fs.readFileSync(file, 'utf8');
+  const raw = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
   const fm = parseFm(raw);
   if (!fm.title || fm.sitemap === 'false') continue;
   let url = fm.permalink;

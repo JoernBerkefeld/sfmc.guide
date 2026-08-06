@@ -1,0 +1,381 @@
+{% comment %}
+  Renders the searchable / filterable / sortable AMPscript function catalog table.
+
+  Shares its shape with ssjs.guide's function index (name, category, returns,
+  description) and with differs-from-docs-list.html's control strip, so the two
+  sites stay visually and behaviourally aligned instead of drifting apart.
+
+  Usage:
+    {% include ampscript-function-index.html entries=site.data.ampscript_functions
+       empty="No functions catalogued yet." %}
+
+  Parameters:
+    entries (array)  - a site.data.* list of function rows (may be empty/nil).
+    empty   (string) - sentence shown when there are no entries.
+
+  Row fields come from scripts/generate-ampscript-function-index.mjs:
+    name, slug, category, syntax, returnType, args, verified, url,
+    differsFromDocs, deprecated, mcn, description, guideUrl
+
+  A row is only linked when `verified` is true — an unverified row is
+  catalogued, not proven, and must never link to a page that does not exist.
+
+  Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
+{% endcomment %}
+
+{% assign afi_entries = include.entries %}
+{% assign afi_count = afi_entries | size %}
+
+<style>
+.afi-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin: 1.5rem 0 0.5rem;
+}
+.afi-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.afi-control > label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.afi-control select,
+.afi-control input[type="search"] {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.35em 0.6em;
+  font-size: 0.85rem;
+}
+.afi-control--search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+.afi-control--search input[type="search"] {
+  width: 100%;
+}
+.afi-count {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0.75rem 0 1rem;
+}
+.afi-empty {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  color: #475569;
+}
+.afi-tablewrap {
+  overflow-x: auto;
+}
+.afi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.afi-table th,
+.afi-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.7em;
+  border-bottom: 1px solid #e2e8f0;
+}
+.afi-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  border-bottom: 1px solid #cbd5e1;
+  white-space: nowrap;
+}
+.afi-table td code {
+  font-family: monospace;
+}
+.afi-row.is-hidden {
+  display: none;
+}
+.afi-row--unverified td:first-child code {
+  color: #475569;
+}
+/* Category label pill — same shape as .dfd-tag. */
+.afi-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  padding: 0.15em 0.6em;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+/* Verification state chips — reuse .verified-badge sizing, colored per state. */
+.afi-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  padding: 0.15em 0.6em;
+  border: 1px solid;
+  border-radius: 9999px;
+}
+.afi-state--verified {
+  color: #15803d;
+  background: rgba(21, 128, 61, 0.08);
+  border-color: rgba(21, 128, 61, 0.3);
+}
+.afi-state--unverified {
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.afi-flag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  padding: 0.1em 0.5em;
+  margin-left: 0.35em;
+  border: 1px solid rgba(161, 98, 7, 0.3);
+  border-radius: 9999px;
+  background: rgba(161, 98, 7, 0.08);
+  color: #a16207;
+}
+.afi-flag--deprecated {
+  border-color: rgba(185, 28, 28, 0.3);
+  background: rgba(185, 28, 28, 0.08);
+  color: #b91c1c;
+}
+.afi-desc {
+  color: #475569;
+}
+.afi-legend {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+</style>
+
+{% if afi_count > 0 %}
+{% assign afi_verified = afi_entries | where: "verified", true | size %}
+
+<div class="afi-controls">
+  <div class="afi-control afi-control--search">
+    <label for="afi-search">Search</label>
+    <input type="search" id="afi-search" placeholder="Filter by name (e.g. FormatDate)" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="afi-control">
+    <label for="afi-category">Category</label>
+    <select id="afi-category">
+      <option value="" selected>All categories</option>
+      {% assign afi_cats = afi_entries | map: "category" | uniq | sort %}
+      {% for cat in afi_cats %}
+      <option value="{{ cat | escape }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="afi-control">
+    <label for="afi-state">Verification</label>
+    <select id="afi-state">
+      <option value="" selected>All functions</option>
+      <option value="verified">Runtime verified only</option>
+      <option value="unverified">Not yet verified</option>
+    </select>
+  </div>
+  <div class="afi-control">
+    <label for="afi-sort">Sort by</label>
+    <select id="afi-sort">
+      <option value="name" selected>Name (A &rarr; Z)</option>
+      <option value="category">Category</option>
+      <option value="state">Verification state</option>
+    </select>
+  </div>
+</div>
+
+<p class="afi-count" id="afi-count"></p>
+
+<p class="afi-legend">
+  <span class="afi-state afi-state--verified">Verified</span> means the function completed a runtime
+  sweep on a live Engagement CloudPage and has a reference page — the name links to it.
+  <span class="afi-state afi-state--unverified">Catalogued</span> means the signature below comes from
+  the language catalog and has <strong>not</strong> been proven here; use
+  <a href="https://ampscript.guide/" target="_blank" rel="noopener">ampscript.guide</a> for those until a
+  sweep reaches them.
+</p>
+
+<div class="afi-tablewrap">
+  <table class="afi-table">
+    <thead>
+      <tr>
+        <th>Function</th>
+        <th>Category</th>
+        <th>Args</th>
+        <th>Returns</th>
+        <th>State</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="afi-body">
+      {% for f in afi_entries %}
+      <tr class="afi-row{% unless f.verified %} afi-row--unverified{% endunless %}"
+          data-name="{{ f.name | downcase | escape }}"
+          data-category="{{ f.category | escape }}"
+          data-state="{% if f.verified %}verified{% else %}unverified{% endif %}"
+          id="fn-{{ f.slug }}">
+        <td>
+          {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
+          {% if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
+          {% if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
+        </td>
+        <td><span class="afi-tag">{{ f.category }}</span></td>
+        <td>{{ f.args }}</td>
+        <td><code>{{ f.returnType }}</code></td>
+        <td>
+          {% if f.verified %}
+          <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>
+          {% else %}
+          <span class="afi-state afi-state--unverified" title="Listed from the language catalog. Runtime behaviour has not been proven here.">Catalogued</span>
+          {% endif %}
+        </td>
+        <td class="afi-desc">{{ f.description }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var searchInput = document.getElementById("afi-search");
+  var catSel = document.getElementById("afi-category");
+  var stateSel = document.getElementById("afi-state");
+  var sortSel = document.getElementById("afi-sort");
+  var countEl = document.getElementById("afi-count");
+  var body = document.getElementById("afi-body");
+  if (!body) { return; }
+
+  var rows = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+  var TOTAL = rows.length;
+  var VERIFIED = {{ afi_verified }};
+  var STATE_ORDER = { verified: 0, unverified: 1 };
+
+  // VS Code-style subsequence match: every query char must appear in order
+  // within the haystack, but not necessarily contiguously. Both are lowercased.
+  function fuzzyMatch(query, haystack) {
+    if (!query) { return true; }
+    var qi = 0;
+    for (var hi = 0; hi < haystack.length && qi < query.length; hi++) {
+      if (haystack.charAt(hi) === query.charAt(qi)) { qi += 1; }
+    }
+    return qi === query.length;
+  }
+
+  function apply() {
+    var query = searchInput ? searchInput.value.toLowerCase() : "";
+    var cat = catSel ? catSel.value : "";
+    var state = stateSel ? stateSel.value : "";
+    var total = 0;
+    var k, row, visible;
+
+    for (k = 0; k < rows.length; k++) {
+      row = rows[k];
+      visible = true;
+      if (cat && row.getAttribute("data-category") !== cat) { visible = false; }
+      if (visible && state && row.getAttribute("data-state") !== state) { visible = false; }
+      if (visible && !fuzzyMatch(query, row.getAttribute("data-name") || "")) { visible = false; }
+      if (visible) {
+        row.classList.remove("is-hidden");
+        total += 1;
+      } else {
+        row.classList.add("is-hidden");
+      }
+    }
+
+    if (countEl) {
+      countEl.textContent =
+        "Showing " + total + " of " + TOTAL + " functions — " + VERIFIED + " runtime verified";
+    }
+  }
+
+  function rowName(row) {
+    return row.getAttribute("data-name") || "";
+  }
+
+  function byName(a, b) {
+    var na = rowName(a), nb = rowName(b);
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  }
+
+  function sortRows() {
+    var mode = sortSel ? sortSel.value : "name";
+    var group = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+    var ordered;
+
+    if (mode === "category") {
+      // Group by category (alphabetically), then by name within each bucket.
+      var catOrder = [];
+      var buckets = {};
+      for (var g = 0; g < group.length; g++) {
+        var c = group[g].getAttribute("data-category") || "";
+        if (!buckets[c]) { buckets[c] = []; catOrder.push(c); }
+        buckets[c].push(group[g]);
+      }
+      catOrder.sort(function (a, b) {
+        var la = a.toLowerCase(), lb = b.toLowerCase();
+        return la < lb ? -1 : la > lb ? 1 : 0;
+      });
+      ordered = [];
+      for (var i = 0; i < catOrder.length; i++) {
+        buckets[catOrder[i]].sort(byName);
+        ordered = ordered.concat(buckets[catOrder[i]]);
+      }
+    } else if (mode === "state") {
+      // Verified first, then by name.
+      var decorated = [];
+      for (var m = 0; m < group.length; m++) {
+        var s = STATE_ORDER[group[m].getAttribute("data-state")];
+        decorated.push({ row: group[m], key: s === undefined ? 99 : s });
+      }
+      decorated.sort(function (a, b) {
+        return a.key - b.key || byName(a.row, b.row);
+      });
+      ordered = [];
+      for (var n = 0; n < decorated.length; n++) {
+        ordered.push(decorated[n].row);
+      }
+    } else {
+      ordered = group.slice();
+      ordered.sort(byName);
+    }
+
+    for (var o = 0; o < ordered.length; o++) {
+      body.appendChild(ordered[o]);
+    }
+    // Rebuild the master row list to reflect new DOM order.
+    rows = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+  }
+
+  function refresh() {
+    sortRows();
+    apply();
+  }
+
+  if (searchInput) { searchInput.addEventListener("input", apply); }
+  if (catSel) { catSel.addEventListener("change", apply); }
+  if (stateSel) { stateSel.addEventListener("change", apply); }
+  if (sortSel) { sortSel.addEventListener("change", refresh); }
+
+  refresh();
+})();
+</script>
+{% else %}
+<p class="afi-empty">{{ include.empty }}</p>
+{% endif %}

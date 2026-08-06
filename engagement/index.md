@@ -15,6 +15,8 @@ Practical Engagement material ported from the [SFMC Cookbook](https://joernberke
 |---|---|
 | [General coding guidelines](/engagement/general/) | Environment, project layout, Data Extensions, business units |
 | [AMPscript](/engagement/ampscript/) | Engagement AMPscript how-tos from the Cookbook |
+| [AMPscript function reference](/engagement/ampscript/functions/) | Per-function pages proven on a live Engagement CloudPage — signature, edge cases, test script |
+| [Differs from official docs](/engagement/differs-from-docs/) | AMPscript behaviour on Engagement that contradicts the official documentation |
 | [FAQ](/engagement/faq/) | Automations, CloudPages, emails, Journey Builder, admin |
 | [Einstein Recommendations](/engagement/einstein/recommendation/) | Recommendation scenarios |
 | [Encryption](/engagement/encryption/) | Crypto patterns in Engagement |

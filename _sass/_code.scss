@@ -221,6 +221,31 @@
   }
 }
 
+// ── Collapsible "Show test script" block ─────────────────────────────────────
+
+// Rendered by _includes/test-script.html at the bottom of a chapter, and shaped
+// to match the inline .dfd-testscript block on the differs-from-docs cards so
+// both read as the same affordance. The <pre> inside still gets the shared copy
+// button from assets/js/main.js once the <details> is opened.
+
+.testscript-details {
+  margin: $space-2 0 0;
+
+  > summary {
+    cursor: pointer;
+    font-size: 0.72rem;
+    color: $text-secondary;
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  pre {
+    margin: $space-2 0 0;
+  }
+}
+
 // ── Inline type badges ────────────────────────────────────────────────────────
 
 .type-badge {

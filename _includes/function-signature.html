@@ -1,0 +1,30 @@
+{% comment %}
+  Renders the signature block for an AMPscript function reference page.
+
+  Front matter drivers:
+    syntax: "Add(number1, number2)"   required — nothing renders without it
+    return_type: number               shown as a → badge next to the signature
+    min_args / max_args               rendered as an arity hint below the signature
+
+  sfmc.guide has no dedicated `function` layout, so function pages use
+  `layout: page` (the folder-based site convention) and call this include as the
+  first thing in the body. Styling reuses _sass/_code.scss (.function-syntax…).
+{% endcomment %}
+
+{% if page.syntax %}
+<div class="function-syntax">
+  <h2 class="function-syntax-label">Syntax</h2>
+  <div class="function-syntax-block">
+    <pre><code class="language-plaintext">{{ page.syntax | escape }}{% if page.return_type %}  →  {{ page.return_type }}{% endif %}</code></pre>
+    {% if page.min_args and page.max_args %}
+      <div class="function-arity">
+        {% if page.min_args == page.max_args %}
+          <span class="arity-badge">{{ page.min_args }} argument{% if page.min_args != 1 %}s{% endif %} — exactly</span>
+        {% else %}
+          <span class="arity-badge">{{ page.min_args }}–{{ page.max_args }} arguments</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

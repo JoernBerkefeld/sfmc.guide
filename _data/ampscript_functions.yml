@@ -1,0 +1,1884 @@
+# AMPscript function catalog for /engagement/ampscript/functions/.
+# PLATFORM: Marketing Cloud Engagement.
+#
+# AUTO-GENERATED — do not edit by hand.
+# Regenerate with: node sfmc.guide/scripts/generate-ampscript-function-index.mjs
+#
+# Source of truth: ampscript-data/src/index.js (names, categories, arity,
+# return type, MCN availability) plus the presence of a flat reference page at
+# engagement/ampscript/functions/<lowercase-name>.md.
+#
+# verified: true means the function completed a runtime verification sweep AND
+# has a published reference page. Everything else is catalogued only — its
+# behaviour has NOT been proven here.
+
+- name: "Add"
+  slug: "add"
+  category: "Math"
+  syntax: "Add(number1, number2)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/add/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Computes the sum of two numeric values."
+  guideUrl: "https://ampscript.guide/add/"
+- name: "AddMscrmListMember"
+  slug: "addmscrmlistmember"
+  category: "Microsoft Dynamics CRM"
+  syntax: "AddMscrmListMember(recordGuid, listGuid)"
+  returnType: "void"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Appends a member to a Dynamics CRM list."
+  guideUrl: "https://ampscript.guide/addmscrmlistmember/"
+- name: "AddObjectArrayItem"
+  slug: "addobjectarrayitem"
+  category: "Marketing Cloud API"
+  syntax: "AddObjectArrayItem(apiObject, arrayProperty, itemToAdd)"
+  returnType: "void"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Appends an item to an API object's array property."
+  guideUrl: "https://ampscript.guide/addobjectarrayitem/"
+- name: "AttachFile"
+  slug: "attachfile"
+  category: "Content"
+  syntax: "AttachFile(fileLocationType, fileLocation, attachmentFileName, viewOnWeb, viewOnWebUrl, viewOnWebFileName, viewOnWebDuration, contentDispositionAttachment)"
+  returnType: "void"
+  args: "2–8"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Includes a file attachment in the outgoing message."
+  guideUrl: "https://ampscript.guide/attachfile/"
+- name: "AttributeValue"
+  slug: "attributevalue"
+  category: "Utility"
+  syntax: "AttributeValue(attributeName)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Safely retrieves a subscriber attribute value, returning empty string if null."
+  guideUrl: "https://ampscript.guide/attributevalue/"
+- name: "AuthenticatedEmployeeID"
+  slug: "authenticatedemployeeid"
+  category: "Utility"
+  syntax: "AuthenticatedEmployeeID()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the employee ID of the currently authenticated user."
+  guideUrl: "https://ampscript.guide/authenticatedemployeeid/"
+- name: "AuthenticatedEmployeeNotificationAddress"
+  slug: "authenticatedemployeenotificationaddress"
+  category: "Utility"
+  syntax: "AuthenticatedEmployeeNotificationAddress()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the notification email address of the authenticated employee."
+  guideUrl: "https://ampscript.guide/authenticatedemployeenotificationaddress/"
+- name: "AuthenticatedEmployeeUserName"
+  slug: "authenticatedemployeeusername"
+  category: "Utility"
+  syntax: "AuthenticatedEmployeeUserName()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the username of the authenticated employee."
+  guideUrl: "https://ampscript.guide/authenticatedemployeeusername/"
+- name: "AuthenticatedEnterpriseID"
+  slug: "authenticatedenterpriseid"
+  category: "Utility"
+  syntax: "AuthenticatedEnterpriseID()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the enterprise ID (top-level MID) of the authenticated user."
+  guideUrl: "https://ampscript.guide/authenticatedenterpriseid/"
+- name: "AuthenticatedMemberID"
+  slug: "authenticatedmemberid"
+  category: "Utility"
+  syntax: "AuthenticatedMemberID()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the member ID (MID) of the authenticated business unit."
+  guideUrl: "https://ampscript.guide/authenticatedmemberid/"
+- name: "AuthenticatedMemberName"
+  slug: "authenticatedmembername"
+  category: "Utility"
+  syntax: "AuthenticatedMemberName()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the name of the authenticated business unit."
+  guideUrl: "https://ampscript.guide/authenticatedmembername/"
+- name: "BarcodeURL"
+  slug: "barcodeurl"
+  category: "Content"
+  syntax: "BarcodeURL(valueToConvert, barcodeType, width, height, checksumValue, showText, altText, rotation, transparentBG)"
+  returnType: "string"
+  args: "9"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a URL pointing to a barcode image rendered from the given parameters."
+  guideUrl: "https://ampscript.guide/barcodeurl/"
+- name: "Base64Decode"
+  slug: "base64decode"
+  category: "Encryption and Encoding"
+  syntax: "Base64Decode(encodedString[, encoding, characterSet])"
+  returnType: "string"
+  args: "1–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Decodes a Base64-encoded string."
+  guideUrl: "https://ampscript.guide/base64decode/"
+- name: "Base64Encode"
+  slug: "base64encode"
+  category: "Encryption and Encoding"
+  syntax: "Base64Encode(value[, encoding])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Encodes a value as a Base64 string."
+  guideUrl: "https://ampscript.guide/base64encode/"
+- name: "BeginImpressionRegion"
+  slug: "beginimpressionregion"
+  category: "Content"
+  syntax: "BeginImpressionRegion(regionName)"
+  returnType: "void"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Marks the start of an impression tracking region."
+  guideUrl: "https://ampscript.guide/beginimpressionregion/"
+- name: "BuildOptionList"
+  slug: "buildoptionlist"
+  category: "Content"
+  syntax: "BuildOptionList(defaultSelection, option1Value, option1Text[, optionValueN, optionTextN, ...])"
+  returnType: "string"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Builds HTML <option> elements from a data extension for use in a <select> dropdown."
+  guideUrl: "https://ampscript.guide/buildoptionlist/"
+- name: "BuildRowsetFromJSON"
+  slug: "buildrowsetfromjson"
+  category: "Content"
+  syntax: "BuildRowsetFromJSON(jsonData, jsonPathExpression, returnEmptyOnError)"
+  returnType: "rowset"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Parses a JSON string and returns a rowset."
+  guideUrl: "https://ampscript.guide/buildrowsetfromjson/"
+- name: "BuildRowSetFromString"
+  slug: "buildrowsetfromstring"
+  category: "Content"
+  syntax: "BuildRowSetFromString(sourceData, delimiter)"
+  returnType: "rowset"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Splits a delimited string into a single-column rowset."
+  guideUrl: "https://ampscript.guide/buildrowsetfromstring/"
+- name: "BuildRowSetFromXML"
+  slug: "buildrowsetfromxml"
+  category: "Content"
+  syntax: "BuildRowSetFromXML(xmlData, xpathExpression, returnEmptyOnError)"
+  returnType: "rowset"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Parses an XML string using an XPath expression and returns a rowset."
+  guideUrl: "https://ampscript.guide/buildrowsetfromxml/"
+- name: "Char"
+  slug: "char"
+  category: "String"
+  syntax: "Char(characterCode[, numRepetitions])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the character for the given ASCII code."
+  guideUrl: "https://ampscript.guide/char/"
+- name: "ClaimRow"
+  slug: "claimrow"
+  category: "Data Extension"
+  syntax: "ClaimRow(dataExt, claimColumn, claimantColumn, claimantValue[, additionalColumnNameN, additionalColumnValueN, ...])"
+  returnType: "row"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Atomically claims an unclaimed row in a data extension by setting a key column value."
+  guideUrl: "https://ampscript.guide/claimrow/"
+- name: "ClaimRowValue"
+  slug: "claimrowvalue"
+  category: "Data Extension"
+  syntax: "ClaimRowValue(dataExt, returnValueColumn, claimColumn[, valueIfClaimed, claimantColumnN, claimantValueN, ...])"
+  returnType: "string"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Atomically claims a row and returns a specific column value from it."
+  guideUrl: "https://ampscript.guide/claimrowvalue/"
+- name: "CloudPagesURL"
+  slug: "cloudpagesurl"
+  category: "Utility"
+  syntax: "CloudPagesURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
+  returnType: "string"
+  args: "1–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a secure, encrypted URL to a CloudPages landing page, optionally passing name-value parameters."
+  guideUrl: "https://ampscript.guide/cloudpagesurl/"
+- name: "Concat"
+  slug: "concat"
+  category: "String"
+  syntax: "Concat(string1, string2[, stringN, ...])"
+  returnType: "string"
+  args: "1–Infinity"
+  verified: true
+  url: "/engagement/ampscript/functions/concat/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Concatenates two or more string values."
+  guideUrl: "https://ampscript.guide/concat/"
+- name: "ContentArea"
+  slug: "contentarea"
+  category: "Content"
+  syntax: "ContentArea(contentAreaId[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
+  returnType: "string"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: true
+  mcn: ""
+  description: "Inserts a classic content area by its numeric ID."
+  guideUrl: "https://ampscript.guide/contentarea/"
+- name: "ContentAreaByName"
+  slug: "contentareabyname"
+  category: "Content"
+  syntax: "ContentAreaByName(contentAreaName[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
+  returnType: "string"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: true
+  mcn: ""
+  description: "Inserts a classic content area by its folder path and name."
+  guideUrl: "https://ampscript.guide/contentareabyname/"
+- name: "ContentBlockByID"
+  slug: "contentblockbyid"
+  category: "Content"
+  syntax: "ContentBlockByID(contentBlockId[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
+  returnType: "string"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Retrieves and renders a Content Builder content block by its numeric ID."
+  guideUrl: "https://ampscript.guide/contentblockbyid/"
+- name: "ContentBlockByKey"
+  slug: "contentblockbykey"
+  category: "Content"
+  syntax: "ContentBlockByKey(contentBlockKey[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
+  returnType: "string"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Retrieves and renders a Content Builder content block by its customer key."
+  guideUrl: "https://ampscript.guide/contentblockbykey/"
+- name: "ContentBlockByName"
+  slug: "contentblockbyname"
+  category: "Content"
+  syntax: "ContentBlockByName(contentBlockName[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
+  returnType: "string"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Retrieves and renders a Content Builder content block by its folder path and name."
+  guideUrl: "https://ampscript.guide/contentblockbyname/"
+- name: "ContentImageByID"
+  slug: "contentimagebyid"
+  category: "Content"
+  syntax: "ContentImageByID(id, defaultImageExternalId)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the URL of a Content Builder image asset by its numeric ID."
+  guideUrl: "https://ampscript.guide/contentimagebyid/"
+- name: "ContentImageByKey"
+  slug: "contentimagebykey"
+  category: "Content"
+  syntax: "ContentImageByKey(imageExternalKey, defaultImageExternalKey)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the URL of a Content Builder image asset by its customer key."
+  guideUrl: "https://ampscript.guide/contentimagebykey/"
+- name: "CreateMSCRMRecord"
+  slug: "createmscrmrecord"
+  category: "Microsoft Dynamics CRM"
+  syntax: "CreateMSCRMRecord(entityName, numFields, attributeName1, attributeValue1[, attributeNameN, attributeValueN, ...])"
+  returnType: "string"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Creates a new record in Microsoft Dynamics CRM."
+  guideUrl: "https://ampscript.guide/createmscrmrecord/"
+- name: "CreateObject"
+  slug: "createobject"
+  category: "Marketing Cloud API"
+  syntax: "CreateObject(objectName)"
+  returnType: "object"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Instantiates a Marketing Cloud SOAP API object for use with Invoke* functions."
+  guideUrl: "https://ampscript.guide/createobject/"
+- name: "CreateSalesforceObject"
+  slug: "createsalesforceobject"
+  category: "Sales and Service Cloud"
+  syntax: "CreateSalesforceObject(objectName, numFields, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
+  returnType: "string"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Creates a new record in a connected Salesforce CRM object."
+  guideUrl: "https://ampscript.guide/createsalesforceobject/"
+- name: "CreateSmsConversation"
+  slug: "createsmsconversation"
+  category: "MobileConnect"
+  syntax: "CreateSmsConversation(shortCode, keyword, nextKeyword, messageText)"
+  returnType: "void"
+  args: "4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Initiates an SMS conversation on a MobileConnect short code."
+  guideUrl: "https://ampscript.guide/createsmsconversation/"
+- name: "DataExtensionRowCount"
+  slug: "dataextensionrowcount"
+  category: "Data Extension"
+  syntax: "DataExtensionRowCount(dataExtensionName)"
+  returnType: "number"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the total number of rows in a data extension."
+  guideUrl: "https://ampscript.guide/dataextensionrowcount/"
+- name: "DateAdd"
+  slug: "dateadd"
+  category: "Date and Time"
+  syntax: "DateAdd(date, amountToAdd, unitToAdd)"
+  returnType: "date"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Adds a specified interval to a date value."
+  guideUrl: "https://ampscript.guide/dateadd/"
+- name: "DateDiff"
+  slug: "datediff"
+  category: "Date and Time"
+  syntax: "DateDiff(startDate, endDate, unitOfDifference)"
+  returnType: "number"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the difference between two dates in the specified interval."
+  guideUrl: "https://ampscript.guide/datediff/"
+- name: "DateParse"
+  slug: "dateparse"
+  category: "Date and Time"
+  syntax: "DateParse(dateString[, useUtc])"
+  returnType: "date"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Parses a date string into a date value."
+  guideUrl: "https://ampscript.guide/dateparse/"
+- name: "DatePart"
+  slug: "datepart"
+  category: "Date and Time"
+  syntax: "DatePart(dateString, datePart)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Extracts a specific component from a date value."
+  guideUrl: "https://ampscript.guide/datepart/"
+- name: "DecryptSymmetric"
+  slug: "decryptsymmetric"
+  category: "Encryption and Encoding"
+  syntax: "DecryptSymmetric(encryptedValue, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
+  returnType: "string"
+  args: "8"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Decrypts a value using symmetric key encryption."
+  guideUrl: "https://ampscript.guide/decryptsymmetric/"
+- name: "DeleteData"
+  slug: "deletedata"
+  category: "Data Extension"
+  syntax: "DeleteData(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Deletes rows from a data extension matching the specified key column criteria."
+  guideUrl: "https://ampscript.guide/deletedata/"
+- name: "DeleteDE"
+  slug: "deletede"
+  category: "Data Extension"
+  syntax: "DeleteDE(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Deletes rows from a data extension. Email-context variant of DeleteData."
+  guideUrl: "https://ampscript.guide/deletede/"
+- name: "DescribeMSCRMEntities"
+  slug: "describemscrmentities"
+  category: "Microsoft Dynamics CRM"
+  syntax: "DescribeMSCRMEntities()"
+  returnType: "rowset"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns a rowset describing all available Dynamics CRM entity types."
+  guideUrl: "https://ampscript.guide/describemscrmentities/"
+- name: "DescribeMSCRMEntityAttributes"
+  slug: "describemscrmentityattributes"
+  category: "Microsoft Dynamics CRM"
+  syntax: "DescribeMSCRMEntityAttributes(entityType)"
+  returnType: "rowset"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns a rowset of attributes for the specified CRM entity type."
+  guideUrl: "https://ampscript.guide/describemscrmentityattributes/"
+- name: "Divide"
+  slug: "divide"
+  category: "Math"
+  syntax: "Divide(dividend, divisor)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/divide/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Divides the first number by the second."
+  guideUrl: "https://ampscript.guide/divide/"
+- name: "Domain"
+  slug: "domain"
+  category: "Utility"
+  syntax: "Domain(emailAddress)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Extracts the domain portion from an email address."
+  guideUrl: "https://ampscript.guide/domain/"
+- name: "Empty"
+  slug: "empty"
+  category: "Utility"
+  syntax: "Empty(value)"
+  returnType: "boolean"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns true if the value is empty, null, or not defined."
+  guideUrl: "https://ampscript.guide/empty/"
+- name: "EncryptSymmetric"
+  slug: "encryptsymmetric"
+  category: "Encryption and Encoding"
+  syntax: "EncryptSymmetric(value, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
+  returnType: "string"
+  args: "8"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Encrypts a value using symmetric key encryption."
+  guideUrl: "https://ampscript.guide/encryptsymmetric/"
+- name: "EndImpressionRegion"
+  slug: "endimpressionregion"
+  category: "Content"
+  syntax: "EndImpressionRegion([endAllRegions])"
+  returnType: "void"
+  args: "0–1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Marks the end of an impression tracking region."
+  guideUrl: "https://ampscript.guide/endimpressionregion/"
+- name: "EndSmsConversation"
+  slug: "endsmsconversation"
+  category: "MobileConnect"
+  syntax: "EndSmsConversation(shortCode, keyword)"
+  returnType: "void"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Ends an active SMS conversation on a short code."
+  guideUrl: "https://ampscript.guide/endsmsconversation/"
+- name: "ExecuteFilter"
+  slug: "executefilter"
+  category: "Data Extension"
+  syntax: "ExecuteFilter(dataFilterExternalId)"
+  returnType: "rowset"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Executes a predefined data filter and returns the resulting rowset."
+  guideUrl: "https://ampscript.guide/executefilter/"
+- name: "ExecuteFilterOrderedRows"
+  slug: "executefilterorderedrows"
+  category: "Data Extension"
+  syntax: "ExecuteFilterOrderedRows(dataFilterExternalId, numRows, sortColumn)"
+  returnType: "rowset"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Executes a predefined data filter and returns results sorted by a column."
+  guideUrl: "https://ampscript.guide/executefilterorderedrows/"
+- name: "Field"
+  slug: "field"
+  category: "Data Extension"
+  syntax: "Field(row, fieldName[, exceptionIfNotFound])"
+  returnType: "string"
+  args: "2–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Retrieves the value of a specific field from a rowset row."
+  guideUrl: "https://ampscript.guide/field/"
+- name: "Format"
+  slug: "format"
+  category: "Utility"
+  syntax: "Format(value, formatString[, culture, timeZone])"
+  returnType: "string"
+  args: "2–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Formats a value using a .NET format string."
+  guideUrl: "https://ampscript.guide/format/"
+- name: "FormatCurrency"
+  slug: "formatcurrency"
+  category: "Utility"
+  syntax: "FormatCurrency(value, locale[, decimalPlaces, symbol])"
+  returnType: "string"
+  args: "2–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Formats a number as a currency string."
+  guideUrl: "https://ampscript.guide/formatcurrency/"
+- name: "FormatDate"
+  slug: "formatdate"
+  category: "Date and Time"
+  syntax: "FormatDate(dateString[, dateFormat, timeFormat, localeCode])"
+  returnType: "string"
+  args: "1–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Formats a date string according to the specified date and time format patterns."
+  guideUrl: "https://ampscript.guide/formatdate/"
+- name: "FormatNumber"
+  slug: "formatnumber"
+  category: "Utility"
+  syntax: "FormatNumber(number, format[, locale])"
+  returnType: "string"
+  args: "2–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Formats a number using a format pattern."
+  guideUrl: "https://ampscript.guide/formatnumber/"
+- name: "GetJWT"
+  slug: "getjwt"
+  category: "Encryption and Encoding"
+  syntax: "GetJWT(secret, algorithm, jsonPayload)"
+  returnType: "string"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a JSON Web Token using the supplied claims, algorithm, and secret."
+  guideUrl: "https://ampscript.guide/getjwt/"
+- name: "GetJWTByKeyName"
+  slug: "getjwtbykeyname"
+  category: "Encryption and Encoding"
+  syntax: "GetJWTByKeyName(keyName, algorithm, jsonPayload)"
+  returnType: "string"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a JSON Web Token using a named encryption key from Key Management."
+  guideUrl: "https://ampscript.guide/getjwtbykeyname/"
+- name: "GetPortfolioItem"
+  slug: "getportfolioitem"
+  category: "Content"
+  syntax: "GetPortfolioItem(itemExternalKey)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Retrieves metadata for a classic portfolio item."
+  guideUrl: "https://ampscript.guide/getportfolioitem/"
+- name: "GetPublishedSocialContent"
+  slug: "getpublishedsocialcontent"
+  category: "Social"
+  syntax: "GetPublishedSocialContent(socialContentId)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Retrieves published social media content by its identifier."
+  guideUrl: "https://ampscript.guide/getpublishedsocialcontent/"
+- name: "GetSendTime"
+  slug: "getsendtime"
+  category: "Date and Time"
+  syntax: "GetSendTime([persistFormat])"
+  returnType: "date"
+  args: "0–1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the scheduled send time for the current job. In STO context returns the Einstein-optimized time."
+  guideUrl: "https://ampscript.guide/getsendtime/"
+- name: "GetSocialPublishURL"
+  slug: "getsocialpublishurl"
+  category: "Social"
+  syntax: "GetSocialPublishURL(socialNetworkCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
+  returnType: "string"
+  args: "2–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Optionally accepts repeating key/value parameter pairs."
+  guideUrl: "https://ampscript.guide/getsocialpublishurl/"
+- name: "GetSocialPublishURLByName"
+  slug: "getsocialpublishurlbyname"
+  category: "Social"
+  syntax: "GetSocialPublishURLByName(socialNetworkName, countryCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
+  returnType: "string"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns HTML for sharing a content region on a supported social network (identified by name) via Social Forward. Optionally accepts repeating key/value parameter pairs."
+  guideUrl: "https://ampscript.guide/getsocialpublishurlbyname/"
+- name: "GUID"
+  slug: "guid"
+  category: "Utility"
+  syntax: "GUID()"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a new globally unique identifier (GUID)."
+  guideUrl: "https://ampscript.guide/guid/"
+- name: "HTTPGet"
+  slug: "httpget"
+  category: "HTTP"
+  syntax: "HTTPGet(httpGetUrl[, continueOnError, headerName, headerValue])"
+  returnType: "string"
+  args: "1–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Performs an HTTP GET request and returns the response body."
+  guideUrl: "https://ampscript.guide/httpget/"
+- name: "HTTPPost"
+  slug: "httppost"
+  category: "HTTP"
+  syntax: "HTTPPost(urlEndpoint, contentTypeHeader, contentToPost[, @response, headerName1, headerValue1, headerNameN, headerValueN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Performs an HTTP POST request. The response body is stored in the output variable."
+  guideUrl: "https://ampscript.guide/httppost/"
+- name: "HTTPPost2"
+  slug: "httppost2"
+  category: "HTTP"
+  syntax: "HTTPPost2(url, contentType, contentToPost[, exceptionOnError, @response, @responseRowSet, headerName1, headerValue1, headerNameN, headerValueN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Performs an HTTP POST with access to response headers. Response body and headers are stored in output variables."
+  guideUrl: "https://ampscript.guide/httppost2/"
+- name: "HTTPPostWithRetry"
+  slug: "httppostwithretry"
+  category: "HTTP"
+  syntax: "HTTPPostWithRetry(urlEndpoint, contentTypeHeader, content[, numRetries, reschedule, returnExceptionOnError, @responseStatus, @responseContentRowset, headerName1, headerValue1, headerNameN, headerValueN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Posts content to the specified URL with automatic retry logic on failure. Similar to HTTPPost2 but adds configurable retries and rescheduling."
+  guideUrl: "https://ampscript.guide/httppostwithretry/"
+- name: "HTTPRequestHeader"
+  slug: "httprequestheader"
+  category: "HTTP"
+  syntax: "HTTPRequestHeader(headerToRetrieve)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the value of a specified HTTP request header from the inbound request."
+  guideUrl: "https://ampscript.guide/httprequestheader/"
+- name: "IIf"
+  slug: "iif"
+  category: "Utility"
+  syntax: "IIf(expression, trueValue, falseValue)"
+  returnType: "string"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns one of two values based on a boolean expression (inline if)."
+  guideUrl: "https://ampscript.guide/iif/"
+- name: "Image"
+  slug: "image"
+  category: "Content"
+  syntax: "Image(imageExternalKey[, defaultImageExternalKey])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns an HTML img tag for the Portfolio image matching the specified external key."
+  guideUrl: "https://ampscript.guide/image/"
+- name: "IndexOf"
+  slug: "indexof"
+  category: "String"
+  syntax: "IndexOf(sourceString, substring)"
+  returnType: "number"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the 1-based position of the first occurrence of a substring."
+  guideUrl: "https://ampscript.guide/indexof/"
+- name: "InsertData"
+  slug: "insertdata"
+  category: "Data Extension"
+  syntax: "InsertData(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Inserts a new row into a data extension."
+  guideUrl: "https://ampscript.guide/insertdata/"
+- name: "InsertDE"
+  slug: "insertde"
+  category: "Data Extension"
+  syntax: "InsertDE(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
+  returnType: "number"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Inserts a new row into a data extension. Email-context variant of InsertData."
+  guideUrl: "https://ampscript.guide/insertde/"
+- name: "InvokeCreate"
+  slug: "invokecreate"
+  category: "Marketing Cloud API"
+  syntax: "InvokeCreate(apiObject, @statusMessage, @errorCode[, createOptionsObject])"
+  returnType: "string"
+  args: "3–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Create method on the given API object."
+  guideUrl: "https://ampscript.guide/invokecreate/"
+- name: "InvokeDelete"
+  slug: "invokedelete"
+  category: "Marketing Cloud API"
+  syntax: "InvokeDelete(apiObject, @statusMessage, @errorCode[, deleteOptionsObject])"
+  returnType: "string"
+  args: "3–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Delete method on the given API object."
+  guideUrl: "https://ampscript.guide/invokedelete/"
+- name: "InvokeExecute"
+  slug: "invokeexecute"
+  category: "Marketing Cloud API"
+  syntax: "InvokeExecute(apiObject[, @statusMessage, @requestId])"
+  returnType: "rowset"
+  args: "1–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Execute method on the given API object and returns the API status code."
+  guideUrl: "https://ampscript.guide/invokeexecute/"
+- name: "InvokePerform"
+  slug: "invokeperform"
+  category: "Marketing Cloud API"
+  syntax: "InvokePerform(apiObject, actionToPerform[, @statusMessage])"
+  returnType: "string"
+  args: "2–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Perform method on the given API object."
+  guideUrl: "https://ampscript.guide/invokeperform/"
+- name: "InvokeRetrieve"
+  slug: "invokeretrieve"
+  category: "Marketing Cloud API"
+  syntax: "InvokeRetrieve(apiObject[, @statusMessage, @requestId])"
+  returnType: "rowset"
+  args: "1–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Retrieve method and returns a rowset of results."
+  guideUrl: "https://ampscript.guide/invokeretrieve/"
+- name: "InvokeUpdate"
+  slug: "invokeupdate"
+  category: "Marketing Cloud API"
+  syntax: "InvokeUpdate(apiObject[, @statusMessage, @errorCode, updateOptions])"
+  returnType: "string"
+  args: "1–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Calls the SOAP API Update method on the given API object."
+  guideUrl: "https://ampscript.guide/invokeupdate/"
+- name: "IsCHTMLBrowser"
+  slug: "ischtmlbrowser"
+  category: "Utility"
+  syntax: "IsCHTMLBrowser(userAgent)"
+  returnType: "boolean"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns true if the subscriber's browser is identified as a compact HTML (cHTML) device."
+  guideUrl: "https://ampscript.guide/ischtmlbrowser/"
+- name: "IsEmailAddress"
+  slug: "isemailaddress"
+  category: "Utility"
+  syntax: "IsEmailAddress(value)"
+  returnType: "boolean"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns true if the value is a syntactically valid email address."
+  guideUrl: "https://ampscript.guide/isemailaddress/"
+- name: "IsNull"
+  slug: "isnull"
+  category: "Utility"
+  syntax: "IsNull(value)"
+  returnType: "boolean"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns true if the value is null."
+  guideUrl: "https://ampscript.guide/isnull/"
+- name: "IsNullDefault"
+  slug: "isnulldefault"
+  category: "Utility"
+  syntax: "IsNullDefault(value, defaultValue)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the value if not null, otherwise returns the default."
+  guideUrl: "https://ampscript.guide/isnulldefault/"
+- name: "IsPhoneNumber"
+  slug: "isphonenumber"
+  category: "Utility"
+  syntax: "IsPhoneNumber(value)"
+  returnType: "boolean"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns true if the value is a valid phone number."
+  guideUrl: "https://ampscript.guide/isphonenumber/"
+- name: "Length"
+  slug: "length"
+  category: "String"
+  syntax: "Length(sourceString)"
+  returnType: "number"
+  args: "1"
+  verified: true
+  url: "/engagement/ampscript/functions/length/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the number of characters in a string."
+  guideUrl: "https://ampscript.guide/length/"
+- name: "LiveContentMicrositeURL"
+  slug: "livecontentmicrositeurl"
+  category: "Content"
+  syntax: "LiveContentMicrositeURL(contentType, externalKey)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a URL to a microsite page that serves live, dynamic content."
+  guideUrl: "https://ampscript.guide/livecontentmicrositeurl/"
+- name: "LocalDateToSystemDate"
+  slug: "localdatetosystemdate"
+  category: "Date and Time"
+  syntax: "LocalDateToSystemDate(timeToConvert)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Converts a local date to the Marketing Cloud system date (Central Time)."
+  guideUrl: "https://ampscript.guide/localdatetosystemdate/"
+- name: "LongSFID"
+  slug: "longsfid"
+  category: "Sales and Service Cloud"
+  syntax: "LongSFID(sfid15)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version."
+  guideUrl: "https://ampscript.guide/longsfid/"
+- name: "Lookup"
+  slug: "lookup"
+  category: "Data Extension"
+  syntax: "Lookup(dataObject, returnColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
+  returnType: "string"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns a single field value from the first matching row in a data extension."
+  guideUrl: "https://ampscript.guide/lookup/"
+- name: "LookupOrderedRows"
+  slug: "lookuporderedrows"
+  category: "Data Extension"
+  syntax: "LookupOrderedRows(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
+  returnType: "rowset"
+  args: "5–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns a sorted rowset of matching rows from a data extension."
+  guideUrl: "https://ampscript.guide/lookuporderedrows/"
+- name: "LookupOrderedRowsCS"
+  slug: "lookuporderedrowscs"
+  category: "Data Extension"
+  syntax: "LookupOrderedRowsCS(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
+  returnType: "rowset"
+  args: "5–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Case-sensitive version of LookupOrderedRows. Returns a sorted rowset of matching rows."
+  guideUrl: "https://ampscript.guide/lookuporderedrowscs/"
+- name: "LookupRows"
+  slug: "lookuprows"
+  category: "Data Extension"
+  syntax: "LookupRows(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
+  returnType: "rowset"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns a rowset of all matching rows from a data extension."
+  guideUrl: "https://ampscript.guide/lookuprows/"
+- name: "LookupRowsCS"
+  slug: "lookuprowscs"
+  category: "Data Extension"
+  syntax: "LookupRowsCS(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
+  returnType: "rowset"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Case-sensitive version of LookupRows. Returns a rowset of matching rows."
+  guideUrl: "https://ampscript.guide/lookuprowscs/"
+- name: "Lowercase"
+  slug: "lowercase"
+  category: "String"
+  syntax: "Lowercase(sourceString)"
+  returnType: "string"
+  args: "1"
+  verified: true
+  url: "/engagement/ampscript/functions/lowercase/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Converts a string to all lowercase characters."
+  guideUrl: "https://ampscript.guide/lowercase/"
+- name: "MD5"
+  slug: "md5"
+  category: "Encryption and Encoding"
+  syntax: "MD5(stringToConvert[, charSet])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the MD5 hash of the input value."
+  guideUrl: "https://ampscript.guide/md5/"
+- name: "MicrositeURL"
+  slug: "micrositeurl"
+  category: "Utility"
+  syntax: "MicrositeURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
+  returnType: "string"
+  args: "1–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Generates a tracked URL to a microsite page, optionally passing parameters."
+  guideUrl: "https://ampscript.guide/micrositeurl/"
+- name: "MMS_Content_URL"
+  slug: "mms_content_url"
+  category: "MobileConnect"
+  syntax: "MMS_Content_URL(position)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the URL of MMS content from an inbound mobile-originated (MO) message. Only usable in MobileConnect."
+  guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
+- name: "Mod"
+  slug: "mod"
+  category: "Math"
+  syntax: "Mod(dividend, divisor)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/mod/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the remainder after dividing the first number by the second (modulo)."
+  guideUrl: "https://ampscript.guide/mod/"
+- name: "Msg"
+  slug: "msg"
+  category: "MobileConnect"
+  syntax: "Msg(0)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the content of an inbound mobile-originated (MO) message. Only usable in MobileConnect. The only accepted argument value is 0."
+  guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
+- name: "Multiply"
+  slug: "multiply"
+  category: "Math"
+  syntax: "Multiply(number1, number2)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/multiply/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Computes the product of two numeric values."
+  guideUrl: "https://ampscript.guide/multiply/"
+- name: "Noun"
+  slug: "noun"
+  category: "MobileConnect"
+  syntax: "Msg(0).Noun(position)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns a single word that follows the keyword in an inbound mobile-originated (MO) message, by position. Only usable in MobileConnect, chained off Msg(0)."
+  guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
+- name: "Nouns"
+  slug: "nouns"
+  category: "MobileConnect"
+  syntax: "Msg(0).Nouns"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns all message content that follows the keyword in an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
+  guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
+- name: "Now"
+  slug: "now"
+  category: "Date and Time"
+  syntax: "Now([persistFormat])"
+  returnType: "date"
+  args: "0–1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the current system date and time (Central Time). Pass 1 to persist the value across renders."
+  guideUrl: "https://ampscript.guide/now/"
+- name: "Output"
+  slug: "output"
+  category: "Utility"
+  syntax: "Output(content)"
+  returnType: "void"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Writes a value to the rendered output. Used inside script blocks to emit content."
+  guideUrl: "https://ampscript.guide/output/"
+- name: "OutputLine"
+  slug: "outputline"
+  category: "Utility"
+  syntax: "OutputLine(content)"
+  returnType: "void"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Writes a value followed by a line break to the rendered output."
+  guideUrl: "https://ampscript.guide/outputline/"
+- name: "ProperCase"
+  slug: "propercase"
+  category: "String"
+  syntax: "ProperCase(sourceString)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Converts a string to proper (title) case, capitalizing the first letter of each word."
+  guideUrl: "https://ampscript.guide/propercase/"
+- name: "QueryParameter"
+  slug: "queryparameter"
+  category: "Utility"
+  syntax: "QueryParameter(parameterName)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the value of a URL query string parameter from the current page request."
+  guideUrl: "https://ampscript.guide/queryparameter/"
+- name: "RaiseError"
+  slug: "raiseerror"
+  category: "Utility"
+  syntax: "RaiseError(message[, skipSubscriber, apiErrorCode, apiErrorNumber, preserveDataExt])"
+  returnType: "void"
+  args: "1–5"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error."
+  guideUrl: "https://ampscript.guide/raiseerror/"
+- name: "Random"
+  slug: "random"
+  category: "Math"
+  syntax: "Random(min, max)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/random/"
+  differsFromDocs: true
+  deprecated: false
+  mcn: "67"
+  description: "Returns a random integer between the two specified values (inclusive). Both bounds must be whole numbers; a decimal bound aborts the page. The bounds may be supplied in either order."
+  guideUrl: "https://ampscript.guide/random/"
+- name: "RatingStars"
+  slug: "ratingstars"
+  category: "Einstein Email Recommendations"
+  syntax: "RatingStars(rating, maxRating, imageUrl)"
+  returnType: "string"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Renders a star-rating image using Einstein recommendations data."
+  guideUrl: "https://ampscript.guide/ratingstars/"
+- name: "Redirect"
+  slug: "redirect"
+  category: "Utility"
+  syntax: "Redirect(url)"
+  returnType: "void"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Performs an HTTP redirect to the specified URL. Landing pages only."
+  guideUrl: "https://ampscript.guide/redirect/"
+- name: "RedirectTo"
+  slug: "redirectto"
+  category: "Utility"
+  syntax: "RedirectTo(url)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Creates a trackable redirect URL, typically used in email links."
+  guideUrl: "https://ampscript.guide/redirectto/"
+- name: "RegExMatch"
+  slug: "regexmatch"
+  category: "String"
+  syntax: "RegExMatch(sourceString, regExPattern, returnValue[, regExOptions])"
+  returnType: "string"
+  args: "3–4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Tests a string against a regular expression pattern and returns first occurrence of the matching regular expression pattern."
+  guideUrl: "https://ampscript.guide/regexmatch/"
+- name: "Replace"
+  slug: "replace"
+  category: "String"
+  syntax: "Replace(sourceString, searchSubstring, replacementSubstring)"
+  returnType: "string"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Replaces all occurrences of a substring with a new value."
+  guideUrl: "https://ampscript.guide/replace/"
+- name: "ReplaceList"
+  slug: "replacelist"
+  category: "String"
+  syntax: "ReplaceList(sourceString, replacementString, searchString1[, searchStringN, ...])"
+  returnType: "string"
+  args: "3–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Replaces multiple old values in a string with a single new value."
+  guideUrl: "https://ampscript.guide/replacelist/"
+- name: "RequestParameter"
+  slug: "requestparameter"
+  category: "Utility"
+  syntax: "RequestParameter(parameterName)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the value of a form post or query string parameter from the current request."
+  guideUrl: "https://ampscript.guide/requestparameter/"
+- name: "RetrieveMSCRMRecords"
+  slug: "retrievemscrmrecords"
+  category: "Microsoft Dynamics CRM"
+  syntax: "RetrieveMSCRMRecords(entityName, fieldsToRetrieve, queryFieldName, queryFieldOperator, queryFieldValue)"
+  returnType: "rowset"
+  args: "5"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Retrieves records from Dynamics CRM using a simple filter."
+  guideUrl: "https://ampscript.guide/retrievemscrmrecords/"
+- name: "RetrieveMSCRMRecordsFetchXML"
+  slug: "retrievemscrmrecordsfetchxml"
+  category: "Microsoft Dynamics CRM"
+  syntax: "RetrieveMSCRMRecordsFetchXML(fetchXml)"
+  returnType: "rowset"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Retrieves records from Dynamics CRM using a FetchXML query."
+  guideUrl: "https://ampscript.guide/retrievemscrmrecordsfetchxml/"
+- name: "RetrieveSalesforceJobSources"
+  slug: "retrievesalesforcejobsources"
+  category: "Sales and Service Cloud"
+  syntax: "RetrieveSalesforceJobSources(jobId)"
+  returnType: "rowset"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Retrieves the data sources associated with a Salesforce-triggered send job."
+  guideUrl: "https://ampscript.guide/retrievesalesforcejobsources/"
+- name: "RetrieveSalesforceObjects"
+  slug: "retrievesalesforceobjects"
+  category: "Sales and Service Cloud"
+  syntax: "RetrieveSalesforceObjects(objectName, fieldsToRetrieve, queryFieldName1, queryFieldOperator1, queryFieldValue1[, queryFieldNameN, queryFieldOperatorN, queryFieldValueN, ...])"
+  returnType: "rowset"
+  args: "5–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Retrieves records from a connected Salesforce CRM object."
+  guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
+- name: "Row"
+  slug: "row"
+  category: "Data Extension"
+  syntax: "Row(rowset, rowIndex)"
+  returnType: "row"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns a specific row from a rowset by its 1-based index."
+  guideUrl: "https://ampscript.guide/row/"
+- name: "RowCount"
+  slug: "rowcount"
+  category: "Data Extension"
+  syntax: "RowCount(rowset)"
+  returnType: "number"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Returns the number of rows in a rowset."
+  guideUrl: "https://ampscript.guide/rowcount/"
+- name: "SetObjectProperty"
+  slug: "setobjectproperty"
+  category: "Marketing Cloud API"
+  syntax: "SetObjectProperty(apiObject, propertyName, propertyValue)"
+  returnType: "void"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Sets a property value on a Marketing Cloud API object."
+  guideUrl: "https://ampscript.guide/setobjectproperty/"
+- name: "SetSmsConversationNextKeyword"
+  slug: "setsmsconversationnextkeyword"
+  category: "MobileConnect"
+  syntax: "SetSmsConversationNextKeyword(shortCode, keyword, nextKeyword)"
+  returnType: "void"
+  args: "3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Sets the next expected keyword for an active SMS conversation."
+  guideUrl: "https://ampscript.guide/setsmsconversationnextkeyword/"
+- name: "SetStateMscrmRecord"
+  slug: "setstatemscrmrecord"
+  category: "Microsoft Dynamics CRM"
+  syntax: "SetStateMscrmRecord(recordGuid, entityName, stateToSet, statusToSet)"
+  returnType: "void"
+  args: "4"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Sets the state and status of a Dynamics CRM record."
+  guideUrl: "https://ampscript.guide/setstatemscrmrecord/"
+- name: "SHA1"
+  slug: "sha1"
+  category: "Encryption and Encoding"
+  syntax: "SHA1(stringToConvert[, charSet])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the SHA-1 hash of the input value."
+  guideUrl: "https://ampscript.guide/sha1/"
+- name: "SHA256"
+  slug: "sha256"
+  category: "Encryption and Encoding"
+  syntax: "SHA256(stringToConvert[, charSet])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the SHA-256 hash of the input value."
+  guideUrl: "https://ampscript.guide/sha256/"
+- name: "SHA512"
+  slug: "sha512"
+  category: "Encryption and Encoding"
+  syntax: "SHA512(stringToConvert[, charSet])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the SHA-512 hash of the input value."
+  guideUrl: "https://ampscript.guide/sha512/"
+- name: "StringToDate"
+  slug: "stringtodate"
+  category: "Date and Time"
+  syntax: "StringToDate(dateString)"
+  returnType: "date"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Converts a date string to a date value."
+  guideUrl: "https://ampscript.guide/stringtodate/"
+- name: "StringToHex"
+  slug: "stringtohex"
+  category: "Encryption and Encoding"
+  syntax: "StringToHex(sourceString[, charSet])"
+  returnType: "string"
+  args: "1–2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Converts a string to its hexadecimal representation."
+  guideUrl: "https://ampscript.guide/stringtohex/"
+- name: "Substring"
+  slug: "substring"
+  category: "String"
+  syntax: "Substring(sourceString, startPosition[, substringLength])"
+  returnType: "string"
+  args: "2–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Extracts a portion of a string starting at the given index for the specified length."
+  guideUrl: "https://ampscript.guide/substring/"
+- name: "Subtract"
+  slug: "subtract"
+  category: "Math"
+  syntax: "Subtract(minuend, subtrahend)"
+  returnType: "number"
+  args: "2"
+  verified: true
+  url: "/engagement/ampscript/functions/subtract/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Computes the difference between two numeric values."
+  guideUrl: "https://ampscript.guide/subtract/"
+- name: "SystemDateToLocalDate"
+  slug: "systemdatetolocaldate"
+  category: "Date and Time"
+  syntax: "SystemDateToLocalDate(systemTime)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Converts a Marketing Cloud system date (Central Time) to the subscriber's local time."
+  guideUrl: "https://ampscript.guide/systemdatetolocaldate/"
+- name: "TransformXML"
+  slug: "transformxml"
+  category: "Content"
+  syntax: "TransformXML(xmlDocument, xslDocument)"
+  returnType: "string"
+  args: "2"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Transforms an XML document using an XSLT stylesheet."
+  guideUrl: "https://ampscript.guide/transformxml/"
+- name: "TreatAsContent"
+  slug: "treatascontent"
+  category: "Content"
+  syntax: "TreatAsContent(stringToReturn)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions."
+  guideUrl: "https://ampscript.guide/treatascontent/"
+- name: "TreatAsContentArea"
+  slug: "treatascontentarea"
+  category: "Content"
+  syntax: "TreatAsContentArea(contentKey, contentValue[, impressionRegion])"
+  returnType: "string"
+  args: "2–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Treats a string as a content area, optionally assigning it to an impression region."
+  guideUrl: "https://ampscript.guide/treatascontentarea/"
+- name: "Trim"
+  slug: "trim"
+  category: "String"
+  syntax: "Trim(sourceString)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Removes leading and trailing whitespace from a string."
+  guideUrl: "https://ampscript.guide/trim/"
+- name: "UpdateData"
+  slug: "updatedata"
+  category: "Data Extension"
+  syntax: "UpdateData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
+  returnType: "number"
+  args: "6–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates existing rows in a data extension that match the specified search columns. Returns the number of rows updated."
+  guideUrl: "https://ampscript.guide/updatedata/"
+- name: "UpdateDE"
+  slug: "updatede"
+  category: "Data Extension"
+  syntax: "UpdateDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
+  returnType: "number"
+  args: "6–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates existing rows in a data extension. Email-context variant of UpdateData. Returns the number of rows updated."
+  guideUrl: "https://ampscript.guide/updatede/"
+- name: "UpdateMSCRMRecords"
+  slug: "updatemscrmrecords"
+  category: "Microsoft Dynamics CRM"
+  syntax: "UpdateMSCRMRecords(entityName, guidsToUpdate, attributeName1, attributeValue1[, attributeNameN, attributeValueN, ...])"
+  returnType: "number"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates one or more records in a Microsoft Dynamics CRM entity, and returns the number of successfully updated records."
+  guideUrl: "https://ampscript.guide/updatemscrmrecords/"
+- name: "UpdateSingleSalesforceObject"
+  slug: "updatesinglesalesforceobject"
+  category: "Sales and Service Cloud"
+  syntax: "UpdateSingleSalesforceObject(objectName, idToUpdate, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
+  returnType: "number"
+  args: "4–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates a single record in a connected Salesforce CRM object. Accepts one or more field name and value pairs. Returns 1 on success, 0 otherwise."
+  guideUrl: "https://ampscript.guide/updatesinglesalesforceobject/"
+- name: "Uppercase"
+  slug: "uppercase"
+  category: "String"
+  syntax: "Uppercase(sourceString)"
+  returnType: "string"
+  args: "1"
+  verified: true
+  url: "/engagement/ampscript/functions/uppercase/"
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Converts a string to all uppercase characters. The German sharp s remains unchanged rather than expanding to SS."
+  guideUrl: "https://ampscript.guide/uppercase/"
+- name: "UpsertContact"
+  slug: "upsertcontact"
+  category: "MobileConnect"
+  syntax: "UpsertContact(channel, attribute, phoneNumber, keyToUpsert1, valueToUpsert1[, keyToUpsertN, valueToUpsertN, ...])"
+  returnType: "number"
+  args: "5–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Upserts attributes into a contact record. If the contact exists it is updated; otherwise a new contact is created."
+  guideUrl: "https://ampscript.guide/upsertcontact/"
+- name: "UpsertData"
+  slug: "upsertdata"
+  category: "Data Extension"
+  syntax: "UpsertData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
+  returnType: "number"
+  args: "6–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates a row in a data extension if matching columns and values are found, or inserts a row if no matches are found. Returns the number of rows affected."
+  guideUrl: "https://ampscript.guide/upsertdata/"
+- name: "UpsertDE"
+  slug: "upsertde"
+  category: "Data Extension"
+  syntax: "UpsertDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
+  returnType: "number"
+  args: "6–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Updates or inserts a row in a data extension. Email-context variant of UpsertData. Returns the number of rows affected."
+  guideUrl: "https://ampscript.guide/upsertde/"
+- name: "UpsertMSCRMRecord"
+  slug: "upsertmscrmrecord"
+  category: "Microsoft Dynamics CRM"
+  syntax: "UpsertMSCRMRecord(entityName, sortField, sortType, numPairsForRetrieve, filterAttributeName, filterAttributeValue, numPairsForUpdate, updateAttributeName, updateAttributeValue)"
+  returnType: "string"
+  args: "9"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Upserts a Microsoft Dynamics CRM record. Updates the matched record or creates one if no match is found. Returns the GUID of the record."
+  guideUrl: "https://ampscript.guide/upsertmscrmrecord/"
+- name: "URLEncode"
+  slug: "urlencode"
+  category: "Encryption and Encoding"
+  syntax: "URLEncode(urlToEncode[, encodeAllChars, encodeAllStrings])"
+  returnType: "string"
+  args: "1–3"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "URL-encodes a string for safe inclusion in a URL."
+  guideUrl: "https://ampscript.guide/urlencode/"
+- name: "v"
+  slug: "v"
+  category: "Utility"
+  syntax: "v(variableName)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: "67"
+  description: "Short alias for retrieving a variable value inline. Equivalent to %%=v(@var)=%%."
+  guideUrl: "https://ampscript.guide/v/"
+- name: "Verb"
+  slug: "verb"
+  category: "MobileConnect"
+  syntax: "Msg(0).Verb"
+  returnType: "string"
+  args: "0"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the keyword (verb) from an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
+  guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
+- name: "WAT"
+  slug: "wat"
+  category: "Utility"
+  syntax: "WAT(parameterSetKey, parameterValue1[, parameterValueN, ...])"
+  returnType: "string"
+  args: "2–Infinity"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Returns the values of the Web Analytics Tracking (WAT) parameter set with the specified external key, substituting the supplied values for the matching WATP references in the Sender Profile tracking parameter."
+  guideUrl: "https://ampscript.guide/wat/"
+- name: "WATP"
+  slug: "watp"
+  category: "Utility"
+  syntax: "WATP(ordinal)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Ordinal placeholder for a parameter value configured in a WAT parameter set. The ordinal maps to the position of the value passed to the WAT function. Configured by Marketing Cloud Support as part of the WAT string."
+  guideUrl: "https://ampscript.guide/watp/"
+- name: "WrapLongURL"
+  slug: "wraplongurl"
+  category: "Utility"
+  syntax: "WrapLongURL(url)"
+  returnType: "string"
+  args: "1"
+  verified: false
+  differsFromDocs: false
+  deprecated: false
+  mcn: ""
+  description: "Wraps a long URL to prevent line-break issues in email clients."
+  guideUrl: "https://ampscript.guide/wraplongurl/"

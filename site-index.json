@@ -1,5 +1,12 @@
 [
   {
+    "name": "Add",
+    "url": "/engagement/ampscript/functions/add/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Computes the sum of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+  },
+  {
     "name": "AMPscript",
     "url": "/engagement/ampscript/",
     "section": "Engagement",
@@ -14,11 +21,39 @@
     "description": "Which AMPscript functions are supported in Marketing Cloud Next, how they map to Handlebars helpers, and which helpers have no AMPscript counterpart."
   },
   {
+    "name": "AMPscript Differs from Official Docs (Engagement)",
+    "url": "/engagement/differs-from-docs/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry is proven on a live Engagement CloudPage."
+  },
+  {
+    "name": "AMPscript Differs from Official Docs (Next)",
+    "url": "/next/differs-from-docs/",
+    "section": "Next",
+    "type": "page",
+    "description": "AMPscript functions whose real behaviour on Marketing Cloud Next contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour, and divergence from the same function on Engagement."
+  },
+  {
+    "name": "AMPscript Function Reference",
+    "url": "/engagement/ampscript/functions/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Per-function AMPscript reference pages for Marketing Cloud Engagement. Every page is proven by running the function on a live Engagement CloudPage — signature, argument handling, edge cases, and the test script that produced the evidence."
+  },
+  {
     "name": "ampscript.io",
     "url": "/tools/ampscript-io/",
     "section": "Tools",
     "type": "page",
     "description": "AMPscript syntax validation and highlighting in the browser."
+  },
+  {
+    "name": "Concat",
+    "url": "/engagement/ampscript/functions/concat/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Joins two or more values into a single string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the one-argument form the reference never mentions and the boolean values that vanish without a trace."
   },
   {
     "name": "dataviews.io",
@@ -33,6 +68,13 @@
     "section": "Tools",
     "type": "page",
     "description": "Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more."
+  },
+  {
+    "name": "Divide",
+    "url": "/engagement/ampscript/functions/divide/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Divides the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
   },
   {
     "name": "Einstein Recommendations",
@@ -84,11 +126,32 @@
     "description": "Frequently asked questions for Automations, CloudPages, emails, Journey Builder, and admin."
   },
   {
+    "name": "Function Index",
+    "url": "/function-index/",
+    "section": "function-index",
+    "type": "page",
+    "description": "Entry point to the Marketing Cloud function references — the AMPscript function index on sfmc.guide, and the SSJS function index on ssjs.guide."
+  },
+  {
     "name": "General coding guidelines",
     "url": "/engagement/general/",
     "section": "Engagement",
     "type": "page",
     "description": "Development environment, project setup, Data Extensions, and business units for SFMC Engagement."
+  },
+  {
+    "name": "Length",
+    "url": "/engagement/ampscript/functions/length/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Measures the size of a string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the counting unit, which is UTF-16 code units rather than user-visible characters."
+  },
+  {
+    "name": "Lowercase",
+    "url": "/engagement/ampscript/functions/lowercase/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Converts a value to lower case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
   },
   {
     "name": "Marketing Cloud Engagement",
@@ -119,6 +182,13 @@
     "description": "Model Context Protocol server that gives AI assistants accurate AMPscript, SSJS, and Handlebars knowledge."
   },
   {
+    "name": "Mod",
+    "url": "/engagement/ampscript/functions/mod/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the remainder after dividing the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sign rule and the NaN result for a zero divisor."
+  },
+  {
     "name": "MSO Conditionals (VS Code)",
     "url": "/tools/vscode-mso-conditionals/",
     "section": "Tools",
@@ -126,11 +196,25 @@
     "description": "Hover translations and snippets for Outlook MSO conditional comments in HTML email."
   },
   {
+    "name": "Multiply",
+    "url": "/engagement/ampscript/functions/multiply/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Computes the product of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+  },
+  {
     "name": "prettier-plugin-sfmc",
     "url": "/tools/prettier-plugin-sfmc/",
     "section": "Tools",
     "type": "page",
     "description": "Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults."
+  },
+  {
+    "name": "Random",
+    "url": "/engagement/ampscript/functions/random/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns a random whole number between two inclusive bounds. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the decimal bounds that the official docs allow but the runtime rejects."
   },
   {
     "name": "sf-plugin-mcnext",
@@ -231,6 +315,13 @@
     "description": "Technical architecture guide for Salesforce Marketing Cloud Engagement and Marketing Cloud Next — patterns, tooling, and platform references."
   },
   {
+    "name": "SSJS Function Reference",
+    "url": "/engagement/ssjs/functions/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "The Server-Side JavaScript function reference for Marketing Cloud Engagement lives on ssjs.guide — the A–Z index of Platform functions, the Core library, WSProxy, HTTP and the ECMAScript built-ins as the SFMC engine implements them."
+  },
+  {
     "name": "SSJS Manager",
     "url": "/tools/ssjs-manager/",
     "section": "Tools",
@@ -238,11 +329,25 @@
     "description": "VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB)."
   },
   {
+    "name": "Subtract",
+    "url": "/engagement/ampscript/functions/subtract/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Computes the difference between two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+  },
+  {
     "name": "Tools",
     "url": "/tools/",
     "section": "tools",
     "type": "page",
     "description": "Editor, CI, CLI, and ecosystem tooling for Marketing Cloud Engagement and Marketing Cloud Next."
+  },
+  {
+    "name": "Uppercase",
+    "url": "/engagement/ampscript/functions/uppercase/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Converts a value to upper case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the German sharp s, which is returned untouched instead of expanding to a double S."
   },
   {
     "name": "Why the SFMC Language Service Is Great on Its Own, and Even Better With ESLint and Prettier",

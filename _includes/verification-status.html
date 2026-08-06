@@ -1,0 +1,57 @@
+{% comment %}
+  Renders the page-level verification badges for AMPscript function reference pages.
+
+  Front matter drivers:
+    verification: verified | in-progress | pending   (absent => nothing renders)
+    differs_from_docs: true                          (adds the amber warning badge)
+
+  Styling comes from _sass/_callouts.scss (.verification-status / .verified-badge).
+{% endcomment %}
+
+{% if page.verification %}
+{% if page.verification == "verified" %}
+  {% assign status_class = "status-verified" %}
+  {% assign status_label = "Runtime verified" %}
+  {% assign status_title = "Every claim on this page was proven by running the function on a live Marketing Cloud Engagement CloudPage." %}
+{% elsif page.verification == "in-progress" %}
+  {% assign status_class = "status-in-progress" %}
+  {% assign status_label = "Verification in progress" %}
+  {% assign status_title = "Some claims on this page are runtime-proven; the rest are still being checked." %}
+{% else %}
+  {% assign status_class = "status-pending" %}
+  {% assign status_label = "Verification pending" %}
+  {% assign status_title = "This page has not yet been proven against a live CloudPage." %}
+{% endif %}
+
+<div class="verification-status" aria-label="Verification status">
+  <span class="verified-badge {{ status_class }}" title="{{ status_title | escape }}">
+    {% if page.verification == "verified" %}
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {% elsif page.verification == "in-progress" %}
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {% else %}
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6 3.5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M6 8.3v.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    {% endif %}
+    {{ status_label }}
+  </span>
+
+  {% if page.differs_from_docs %}
+  <span class="verified-badge differs-from-docs" title="Runtime behaviour on this page contradicts the official Salesforce documentation. See the Differs from official docs section below.">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M6 1.5L11 10.5H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    Differs from official docs
+  </span>
+  {% endif %}
+</div>
+{% endif %}

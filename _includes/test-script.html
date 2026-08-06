@@ -1,0 +1,51 @@
+{% comment %}
+  Renders a collapsed "Show test script" block at the bottom of a chapter.
+
+  The script is a runnable AMPscript CloudPage page that ASSERTS every claim the
+  chapter makes — positive, negative, and each documented deviation from the
+  official Salesforce docs. Its purpose is auditability: when a claim is
+  questioned later, re-deploy the page and compare against the recorded
+  expectations rather than re-deriving the finding from scratch.
+
+  AMPscript has no try/catch and no exception object, so a script cannot report
+  its own failures the way an SSJS one can. Instead the scripts published here
+  follow the gated-fetch shape: risky cases sit behind
+  `IF @b == "<case>" THEN … ENDIF` branches driven by RequestParameter("b"),
+  and the header comment states which `?b=` value renders which block and what
+  it must print. Read the header before running one.
+
+  Scripts live in _data/test_scripts/<bundle>.yml, one YAML file per guide page,
+  named after the page folder with "/" replaced by "--":
+
+    engagement/divide/index.md  →  _data/test_scripts/engagement--divide.yml
+
+      returns: |
+        <!DOCTYPE html>
+        ...
+      zero-divisor: |
+        ...
+
+  Jekyll exposes that as site.data.test_scripts["engagement--divide"].
+
+  Parameters:
+    bundle  (string) - required. YAML file name without extension.
+    chapter (string) - required. Key inside the YAML file.
+    label   (string) - optional. Summary text; defaults to "Show test script".
+
+  Usage:
+    {% include test-script.html bundle="engagement--divide" chapter="returns" %}
+
+  Renders nothing when the bundle or key is missing, so a partially-populated
+  page still builds.
+{% endcomment %}
+
+{%- assign ts_bundle = site.data.test_scripts[include.bundle] -%}
+{%- if ts_bundle -%}
+{%- assign ts_script = ts_bundle[include.chapter] -%}
+{%- if ts_script -%}
+{%- assign ts_label = include.label | default: "Show test script" -%}
+<details class="testscript-details"><summary>{{ ts_label }}</summary>{{ '```html' | append: '
+' | append: ts_script | append: '
+```' | markdownify }}</details>
+{%- endif -%}
+{%- endif -%}

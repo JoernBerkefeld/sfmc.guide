@@ -1,0 +1,25 @@
+# AMPscript runtime behaviour that contradicts the official Salesforce docs.
+# PLATFORM: Marketing Cloud Next ONLY.
+# Rendered by /next/differs-from-docs/ via _includes/differs-from-docs-list.html
+#
+# This file intentionally ships EMPTY. Append one entry per proven finding.
+# A finding belongs here when it was proven on Marketing Cloud Next, or when the
+# Next behaviour of a function diverges from the same function on Engagement.
+# Engagement-only functions (Char, RegExMatch, ...) have no entry here at all.
+#
+# Row format (all keys except `testScript` and `officialUrl` are required):
+#
+# - name: "FunctionName"                       # AMPscript function / construct as written in code
+#   url: "/next/ampscript-handlebars/#anchor"  # sfmc.guide page documenting it (omit if none yet)
+#   officialUrl: "https://..."                 # the official Salesforce doc page that is wrong
+#   tagline: "short one-line summary of the discrepancy"
+#   category: "Date functions"                 # ampscript-data category, shown as a pill
+#   object: "Date functions"                   # grouping key for the "Sort by object" mode
+#   severity: "high"                           # high | medium | low
+#   discrepancy: "A1"                          # A1..A7, see the legend in the include
+#   anchor: "functionname-wrong-return-type"   # unique slug, becomes the card id
+#   body: |
+#     Markdown paragraph explaining what the docs claim and what the runtime
+#     actually does. Keep it factual and runtime-proven.
+#   testScript: |
+#     %%[ /* AMPscript that reproduces the discrepancy */ ]%%

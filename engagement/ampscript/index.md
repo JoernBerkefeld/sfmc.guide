@@ -9,6 +9,8 @@ permalink: /engagement/ampscript/
 
 {% include callout.html type="note" title="Originally published" content="First published **2019-03-03** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/ampscript/). Ported here for sfmc.guide." %}
 
+{% include callout.html type="tip" title="Looking for a specific function?" content="This page collects patterns and snippets. For per-function reference pages proven against a live CloudPage — signature, argument handling, edge cases, and the test script behind each claim — see the [AMPscript function reference](/engagement/ampscript/functions/)." %}
+
 - [1.1. Hide your code](#11-hide-your-code)
 - [1.2. AMPscript snippets for typical problems](#12-ampscript-snippets-for-typical-problems)
   - [1.2.1. Use dynamic trackable links](#121-use-dynamic-trackable-links)

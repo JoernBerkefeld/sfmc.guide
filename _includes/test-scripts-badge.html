@@ -1,0 +1,29 @@
+{% comment %}
+  Renders the "Test scripts included" badge when the page front matter carries
+  `test_scripts: complete`, and nothing otherwise.
+
+  The flag means EVERY chapter on the page ships a runnable "Show test script"
+  block whose assertions cover all documented claims — positive, negative, and
+  each deviation from the official Salesforce docs. It is never aggregated from
+  child pages: the add-ampscript-guide-test-scripts skill sets it per page only
+  after every script on it was observed rendering its expected values in a
+  single run.
+
+  Partial coverage never ships the badge — the key is omitted entirely rather
+  than written as `partial`.
+
+  Usage (place directly under the page intro, before the first chapter):
+    {% include test-scripts-badge.html %}
+{% endcomment %}
+
+{%- if page.test_scripts == "complete" -%}
+<div class="verified-badges" aria-label="Test script status">
+  <span class="verified-badge test-scripts-complete" title="Every chapter on this page ships a runnable AMPscript test script that asserts each documented claim, including the deviations from the official docs. Expand &ldquo;Show test script&rdquo; in any chapter to see it.">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M4 2.5v2.2L1.8 8.6A1 1 0 0 0 2.7 10h6.6a1 1 0 0 0 .9-1.4L8 4.7V2.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M3.2 2.5h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    Test scripts included
+  </span>
+</div>
+{%- endif -%}

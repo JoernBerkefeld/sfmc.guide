@@ -1,0 +1,331 @@
+# AMPscript runtime behaviour that contradicts the official Salesforce docs.
+# PLATFORM: Marketing Cloud Engagement ONLY.
+# Rendered by /engagement/differs-from-docs/ via _includes/differs-from-docs-list.html
+#
+# This file intentionally ships EMPTY. Append one entry per proven finding.
+# A finding belongs here when it was proven on an Engagement CloudPage / email
+# and the function is available on Engagement. Next-only behaviour goes in
+# differs_from_docs_next.yml instead.
+#
+# Row format (all keys except `testScript` and `officialUrl` are required):
+#
+# - name: "FunctionName"                 # AMPscript function / construct as written in code
+#   url: "/engagement/ampscript/#anchor" # sfmc.guide page documenting it (omit if none yet)
+#   officialUrl: "https://..."           # the official Salesforce doc page that is wrong
+#   tagline: "short one-line summary of the discrepancy"
+#   category: "String functions"         # ampscript-data category, shown as a pill
+#   object: "String functions"           # grouping key for the "Sort by object" mode
+#   severity: "high"                     # high | medium | low
+#   discrepancy: "A1"                    # A1..A7, see the legend in the include
+#   anchor: "functionname-wrong-return-type"  # unique slug, becomes the card id
+#   body: |
+#     Markdown paragraph explaining what the docs claim and what the runtime
+#     actually does. Keep it factual and runtime-proven.
+#   testScript: |
+#     %%[ /* AMPscript that reproduces the discrepancy */ ]%%
+
+- name: "Random"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html"
+  tagline: "decimal bounds are documented as allowed but abort the page"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "random-decimal-bounds-rejected"
+  body: |
+    The official reference presents the two bounds as numbers that may carry a
+    decimal part. At runtime only whole numbers are usable: every decimal bound
+    aborted the CloudPage with HTTP 422, discarding all output rendered before
+    it. `Random(1.2, 1.8)`, `Random(1, 2.5)`, `Random(1.0, 3.0)` and the quoted
+    form `Random("1.5", "3.5")` all failed, while the equivalent whole-number
+    calls and whole-number strings such as `Random("1", "2")` returned values
+    normally.
+
+    The same decimal calls were redeployed to the parent business unit and
+    aborted there too, so this is not a limitation of the child QA account.
+    Treat the bounds as integers only — round or truncate before the call.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* whole-number bounds: renders a value */
+      IF @b == "ok" THEN
+        OutputLine(Concat("Random(1,3)=[", Random(1,3), "]"))
+      ENDIF
+      /* decimal bounds: page aborts with HTTP 422, nothing renders */
+      IF @b == "dec" THEN
+        OutputLine(Concat("Random(1.2,1.8)=[", Random(1.2,1.8), "]"))
+      ENDIF
+    ]%%
+
+- name: "Divide"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html"
+  tagline: "a zero divisor silently renders an infinity symbol instead of failing"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "divide-zero-divisor-infinity"
+  body: |
+    The official page says nothing at all about a divisor of zero — this is an
+    undocumented behaviour, not a contradiction of the docs. What actually
+    happens is that the call does **not** raise an error and does **not** abort
+    the page: with a non-zero dividend it renders the infinity symbol `∞`
+    (U+221E), and `Divide(0, 0)` renders `NaN`. A negative dividend renders
+    `-∞`. A zero divisor passed as a numeric string behaves identically.
+
+    That matters because the value flows straight into the rendered message, so
+    an unguarded division by zero ships `∞` to the recipient rather than
+    failing loudly. Guard the divisor yourself before dividing.
+
+    Note the glyph really is U+221E — a console that is not reading the response
+    as UTF-8 can display it as the digit `8`. Verify the codepoint before
+    concluding anything about the rendered literal.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "d0" THEN
+        OutputLine(Concat("Divide(100,0)=[", Divide(100,0), "]"))
+        OutputLine(Concat("Divide(-100,0)=[", Divide(-100,0), "]"))
+        OutputLine(Concat("Divide(0,0)=[", Divide(0,0), "]"))
+        OutputLine(Concat("Divide(100,'0')=[", Divide(100,"0"), "]"))
+      ENDIF
+    ]%%
+
+- name: "Mod"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html"
+  tagline: "a zero divisor returns NaN — inconsistently with its sibling Divide"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "mod-zero-divisor-nan"
+  body: |
+    As with `Divide`, the official page is silent on a divisor of zero, so this
+    is undocumented behaviour rather than a documented claim being wrong. The
+    call does not abort the page: `Mod(10, 0)`, `Mod(-10, 0)` and `Mod(0, 0)`
+    all render the three ASCII characters `NaN`.
+
+    The interesting part is the inconsistency between the two sibling
+    functions. `Divide` renders the infinity symbol `∞` for a non-zero dividend
+    and only falls back to `NaN` for `0 / 0`, whereas `Mod` renders `NaN` in
+    every zero-divisor case including a non-zero dividend — see
+    [Divide](#divide-zero-divisor-infinity). Code that tests for one sentinel
+    will not catch the other, so guard the divisor instead of pattern-matching
+    the result.
+
+    The responses were fetched as UTF-8 so a non-ASCII glyph could not be
+    mistaken for `NaN`.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "m0" THEN
+        OutputLine(Concat("Mod(10,0)=[", Mod(10,0), "]"))
+        OutputLine(Concat("Mod(-10,0)=[", Mod(-10,0), "]"))
+        OutputLine(Concat("Mod(0,0)=[", Mod(0,0), "]"))
+        /* contrast: Divide renders the infinity symbol here */
+        OutputLine(Concat("Divide(10,0)=[", Divide(10,0), "]"))
+      ENDIF
+    ]%%
+
+- name: "Mod"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html"
+  tagline: "the sign of the result follows the dividend, not the divisor"
+  category: "Math"
+  object: "Math"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "mod-sign-follows-dividend"
+  body: |
+    The official page does not state which operand decides the sign of the
+    remainder, and languages disagree on this. Proven at runtime: the sign
+    always follows the **dividend** (the first argument). `Mod(-10, 3)` gives
+    `-1`, `Mod(10, -3)` gives `1`, and `Mod(-10, -3)` gives `-1`.
+
+    That matches C-style truncated remainder semantics and JavaScript's `%`,
+    but it is the opposite of the floored-modulo convention used by languages
+    such as Python, where `-10 % 3` is `2`. Porting a modulo expression into
+    AMPscript from a floored-modulo language changes the result for negative
+    dividends — normalise explicitly if you need a non-negative remainder.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "mods" THEN
+        OutputLine(Concat("Mod(10,3)=[", Mod(10,3), "]"))
+        OutputLine(Concat("Mod(-10,3)=[", Mod(-10,3), "]"))
+        OutputLine(Concat("Mod(10,-3)=[", Mod(10,-3), "]"))
+        OutputLine(Concat("Mod(-10,-3)=[", Mod(-10,-3), "]"))
+      ENDIF
+    ]%%
+
+- name: "Length"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-length.html"
+  tagline: "counts UTF-16 code units, so an emoji measures 2"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "length-counts-utf16-code-units"
+  body: |
+    The official page speaks of the number of characters without ever saying
+    what a character is, so nothing it claims is contradicted — this is simply
+    undocumented. What the runtime actually counts is UTF-16 code units. A
+    single emoji from outside the Basic Multilingual Plane returns `2`, because
+    it is stored as a surrogate pair, while a precomposed accented letter and
+    the German sharp s each return `1`.
+
+    That was settled by dumping the codepoints of the *echoed* input next to the
+    returned count, so a mis-decoded console could not have invented the result:
+    the emoji echoed as the pair 55357/56832 and still measured `2`, the
+    accented letter echoed as the single codepoint 233 and measured `1`.
+
+    The practical consequence is truncation and validation logic. A field
+    limited by `Length` will accept a string that is one user-visible character
+    shorter than expected as soon as an emoji is involved, and cutting a string
+    at a code-unit position can split a surrogate pair in half.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "nal" THEN
+        /* plain ASCII: one unit per character */
+        OutputLine(Concat("NAL_ASCII4=[", Length("abcd"), "]"))
+        /* precomposed accented letter: still counts as one */
+        OutputLine(Concat("NAL_CAFE=[", Length("café"), "]"))
+        /* astral emoji: counts 2, one per UTF-16 code unit */
+        OutputLine(Concat("NAL_EMO=[", Length("😀"), "]"))
+      ENDIF
+    ]%%
+
+- name: "Uppercase"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-uppercase.html"
+  tagline: "the German sharp s is left alone instead of expanding to SS"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "uppercase-sharp-s-not-expanded"
+  body: |
+    The official page makes no statement about the German sharp s, so this is
+    undocumented behaviour rather than a documented claim being wrong. At
+    runtime the sharp s is returned untouched: uppercasing a six-letter word
+    containing it yielded the codepoints 83, 84, 82, 65, 223, 69 — the 223 sat
+    unchanged between the surrounding capitals, so the result is still six
+    characters rather than the seven a caller expecting an `SS` expansion would
+    get.
+
+    Other accented letters *are* mapped: the lowercase accented vowels 224, 233,
+    238, 245 and 252 came back as 192, 201, 206, 213 and 220. So the sharp s is
+    a specific gap, not a sign that non-ASCII input is ignored wholesale.
+
+    Casing is also culture-invariant. The dotless i (codepoint 305) uppercases
+    to plain ASCII `I` (73), not to the dotted capital a Turkish locale would
+    produce. Do not rely on uppercasing to normalise text for comparison across
+    locales — compare on a value you normalised yourself.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "nau" THEN
+        /* the sharp s survives uppercasing verbatim */
+        OutputLine(Concat("NAU_UP_SS=[", Uppercase("Straße"), "]"))
+        /* accented lowercase letters do map to accented capitals */
+        OutputLine(Concat("NAU_UP_CAFE=[", Uppercase("café"), "]"))
+      ENDIF
+      IF @b == "tr" THEN
+        /* invariant, not Turkish: the dotless i becomes a plain ASCII I */
+        OutputLine(Concat("TR_UP_DOTLESS=[", Uppercase("ı"), "]"))
+      ENDIF
+    ]%%
+
+- name: "Concat"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-concat.html"
+  tagline: "boolean values are swallowed silently — the whole String family does it"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "concat-booleans-swallowed"
+  body: |
+    None of the String reference pages say what happens when a boolean reaches
+    them, so this is undocumented behaviour and not a contradiction of anything
+    the docs state. The runtime neither converts the boolean nor rejects it: the
+    page returns HTTP 200 and the value simply disappears. `Concat(true, false)`
+    rendered an empty result, and so did `Lowercase(true)` and
+    `Uppercase(false)`. `Length(true)` is the only one that renders anything at
+    all, and it renders `0`.
+
+    This is worse than an abort would be, because booleans arrive in string
+    contexts by accident all the time — the result of `IsNull`, `Empty` or an
+    address check dropped straight into a `Concat` for a rendered message. The
+    send succeeds, the recipient gets a sentence with a hole in it, and nothing
+    in the response signals a problem.
+
+    Because nothing coherent about the boolean survives, this is treated as a
+    rejection for typing purposes: the parameter types stay string, number and
+    date. Convert booleans to text yourself — an `IF` that writes `"yes"` or
+    `"no"` into a variable — before passing them to a string function.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* all three return HTTP 200 with nothing between the brackets */
+      IF @b == "cb" THEN
+        OutputLine(Concat("CB=[", Concat(true, false), "]"))
+      ENDIF
+      IF @b == "lob" THEN
+        OutputLine(Concat("LOB=[", Lowercase(true), "]"))
+      ENDIF
+      IF @b == "ub" THEN
+        OutputLine(Concat("UB=[", Uppercase(false), "]"))
+      ENDIF
+      /* Length does render a number, but it is always 0 */
+      IF @b == "lb" THEN
+        OutputLine(Concat("LB=[", Length(true), "]"))
+      ENDIF
+    ]%%
+
+- name: "Concat"
+  url: "/engagement/ampscript/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-concat.html"
+  tagline: "a single argument is accepted, although two are presented as the minimum"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A3"
+  anchor: "concat-single-argument-accepted"
+  body: |
+    The official reference presents the function as joining two or more values,
+    and our own catalog encoded that as a minimum of two. At runtime one
+    argument is enough: `Concat("only")` returned HTTP 200 and echoed `only`
+    back unchanged. Passing no argument at all *is* rejected — that call aborted
+    the page with HTTP 422 before the surrounding marker line rendered — so the
+    real minimum is one, not zero and not two.
+
+    Treat this as an accepted form the documentation never mentions rather than
+    as the documentation being wrong: an argument-count disagreement on its own
+    is recorded in the catalog, not flagged as a doc contradiction. It is listed
+    here because callers can genuinely write the one-argument form and it will
+    work, which is not something the reference lets you predict.
+
+    The catalog was corrected accordingly during this verification run: the
+    minimum argument count moved from two to one and the second parameter is now
+    marked optional, so editor diagnostics no longer flag a valid call.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* one argument: HTTP 200, the value comes back unchanged */
+      IF @b == "c1" THEN
+        OutputLine(Concat("--- c1 start ---"))
+        OutputLine(Concat("C1=[", Concat("only"), "]"))
+        OutputLine(Concat("--- c1 done ---"))
+      ENDIF
+      /* zero arguments: page aborts with HTTP 422, no marker renders */
+      IF @b == "c0" THEN
+        OutputLine(Concat("--- c0 start ---"))
+        OutputLine(Concat("C0=[", Concat(), "]"))
+      ENDIF
+    ]%%

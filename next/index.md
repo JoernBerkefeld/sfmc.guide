@@ -14,6 +14,7 @@ Marketing Cloud Next changes what you can ship in content and automation compare
 | Page | Purpose |
 |---|---|
 | [AMPscript and Handlebars](/next/ampscript-handlebars/) | Which AMPscript functions are supported, API version, Handlebars mapping, and helpers with no AMPscript counterpart |
+| [Differs from official docs](/next/differs-from-docs/) | AMPscript behaviour on Next that contradicts the official documentation |
 
 ## Tooling for Next
 
