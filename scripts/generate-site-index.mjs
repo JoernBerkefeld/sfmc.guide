@@ -49,7 +49,7 @@ for (const file of files) {
   }
   if (!url.endsWith('/') && !url.includes('.')) url += '/';
 
-  const section = fm.parent || (url.split('/').filter(Boolean)[0] || 'Home');
+  const section = fm.parent || url.split('/').filter(Boolean)[0] || 'Home';
   index.push({
     name: fm.title.replace(/^"|"$/g, ''),
     url,

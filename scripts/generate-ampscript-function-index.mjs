@@ -27,7 +27,11 @@ const amp = require(path.join(ROOT, 'ampscript-data/src/index.js'));
 
 /** Quote a value for safe single-line YAML output. */
 function q(value) {
-  return `"${String(value ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\s*\n\s*/g, ' ').trim()}"`;
+  return `"${String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\s*\n\s*/g, ' ')
+    .trim()}"`;
 }
 
 /**
@@ -90,7 +94,7 @@ for (const f of functions) {
 
 if (orphanPages.size > 0) {
   console.error(
-    `ERROR: reference page(s) with no matching catalog entry: ${[...orphanPages].join(', ')}`
+    `ERROR: reference page(s) with no matching catalog entry: ${[...orphanPages].join(', ')}`,
   );
   process.exit(1);
 }
@@ -98,5 +102,5 @@ if (orphanPages.size > 0) {
 const target = path.join(SITE, '_data/ampscript_functions.yml');
 fs.writeFileSync(target, out.replace(/\r\n/g, '\n'), 'utf8');
 console.log(
-  `wrote _data/ampscript_functions.yml (${functions.length} functions, ${verified} verified with a page)`
+  `wrote _data/ampscript_functions.yml (${functions.length} functions, ${verified} verified with a page)`,
 );

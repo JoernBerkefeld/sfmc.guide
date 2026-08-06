@@ -23,15 +23,15 @@ function esc(s) {
 }
 
 const supported = amp.FUNCTIONS.filter((f) => amp.isMcnSupported(f.name)).sort((a, b) =>
-  a.name.localeCompare(b.name)
+  a.name.localeCompare(b.name),
 );
 
 const mappedHb = new Set(
-  supported.map((f) => f.handlebarsEquivalent).filter((x) => typeof x === 'string' && x.length)
+  supported.map((f) => f.handlebarsEquivalent).filter((x) => typeof x === 'string' && x.length),
 );
 
 const hbOnly = hb.HELPERS.filter((h) => !mappedHb.has(h.name)).sort((a, b) =>
-  a.name.localeCompare(b.name)
+  a.name.localeCompare(b.name),
 );
 
 const today = new Date().toISOString().slice(0, 10);
@@ -94,4 +94,7 @@ _Last regenerated ${today}. ${supported.length} AMPscript rows · ${hbOnly.lengt
 const out = path.join(SITE, 'next/ampscript-handlebars/index.md');
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, md.replace(/\r\n/g, '\n'), 'utf8');
-console.log('wrote next/ampscript-handlebars/index.md', { amp: supported.length, hbOnly: hbOnly.length });
+console.log('wrote next/ampscript-handlebars/index.md', {
+  amp: supported.length,
+  hbOnly: hbOnly.length,
+});

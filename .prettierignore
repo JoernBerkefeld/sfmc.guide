@@ -1,1 +1,43 @@
+# Formatting in this repo is opt-in for scripts/ only — everything else is ignored.
+#
+# Prettier's HTML parser collapses the {% comment %} blocks in the Liquid templates
+# under _includes/ and _layouts/ into a single reflowed paragraph and moves Liquid
+# tags across line boundaries, which breaks the templates outright. The remaining
+# hand-written sources (SCSS, front-end JS, content Markdown) were authored before
+# Prettier existed here; running it over them produces 250-310 changed lines per
+# file, which would bury real changes in review noise.
+#
+# lint-staged is scoped to scripts/**/*.{mjs,cjs,js} for the same reason. This file
+# keeps a stray `npm run format` from doing the damage the hook prevents.
+
+# Build output, caches and dependencies
+_site/
+.jekyll-cache/
+.sass-cache/
+node_modules/
+vendor/
+
+# Liquid templates and every other HTML file
+_includes/
+_layouts/
+**/*.html
+
+# Content pages
 **/*.md
+**/*.markdown
+
+# Jekyll data and generated artifacts — owned by scripts/, never hand-formatted
+_data/
+site-index.json
+
+# Styles and front-end JavaScript
+_sass/
+assets/
+sw.js
+
+# Site, CI and package configuration
+_config.yml
+.github/
+manifest.webmanifest
+package.json
+package-lock.json

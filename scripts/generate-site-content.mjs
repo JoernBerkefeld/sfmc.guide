@@ -126,14 +126,15 @@ Practical Engagement material ported from the [SFMC Cookbook](https://joernberke
 - [ssjs.guide](https://ssjs.guide) — Server-Side JavaScript reference
 - [ampscript.guide](https://ampscript.guide) — AMPscript function reference
 - [Tools](/tools/) — editor, CI, and ecosystem tooling
-`
+`,
 );
 
 portPage({
   cookbookRel: 'general/README.md',
   outRel: 'engagement/general/index.md',
   title: 'General coding guidelines',
-  description: 'Development environment, project setup, Data Extensions, and business units for SFMC Engagement.',
+  description:
+    'Development environment, project setup, Data Extensions, and business units for SFMC Engagement.',
   permalink: '/engagement/general/',
   cookbookUrlPath: 'general/',
 });
@@ -151,7 +152,8 @@ portPage({
   cookbookRel: 'faq/README.md',
   outRel: 'engagement/faq/index.md',
   title: 'FAQ',
-  description: 'Frequently asked questions for Automations, CloudPages, emails, Journey Builder, and admin.',
+  description:
+    'Frequently asked questions for Automations, CloudPages, emails, Journey Builder, and admin.',
   permalink: '/engagement/faq/',
   cookbookUrlPath: 'faq/',
 });

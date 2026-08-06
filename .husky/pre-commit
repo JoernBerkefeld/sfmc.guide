@@ -1,0 +1,61 @@
+if [[ $SKIP_HOOKS -gt 0 ]]; then
+  echo "[PRE-COMMIT] skipping hooks (SKIP_HOOKS=$SKIP_HOOKS)"
+  exit 0
+fi
+
+# ── Format staged sources ─────────────────────────────────────────────────────
+# Runs first so lint-staged's stash/restore of unstaged work never overlaps with
+# the files the generators below write. Scoped to scripts/ only: Prettier
+# collapses the {% comment %} blocks in the Liquid templates under _includes/
+# and _layouts/, and reformatting the existing SCSS would bury real changes in
+# hundreds of lines of noise. See .prettierignore for the full reasoning.
+echo "[PRE-COMMIT] Run lint-staged"
+npx lint-staged || {
+  echo "[PRE-COMMIT] lint-staged reported errors it could not auto-fix. Fix them manually and try again."
+  exit 1
+}
+
+# ── Regenerate committed artifacts ────────────────────────────────────────────
+# Both generators run in well under a second and are idempotent, so they run on
+# every commit rather than guessing which inputs matter. A conditional trigger
+# would have to track ampscript-data (outside this repo), every *.md frontmatter
+# block and the functions/ page list — getting that wrong reintroduces exactly
+# the stale-artifact bug this hook exists to prevent.
+echo "[PRE-COMMIT] 🔄 Regenerating _data/ampscript_functions.yml..."
+node scripts/generate-ampscript-function-index.mjs || {
+  echo "[PRE-COMMIT] ❌ The AMPscript function index could not be generated, so the commit was blocked"
+  echo "[PRE-COMMIT]    to stop a stale _data/ampscript_functions.yml from being committed."
+  echo "[PRE-COMMIT]    Usually a reference page under engagement/ampscript/functions/ has no"
+  echo "[PRE-COMMIT]    matching function in ampscript-data (see the error above)."
+  echo "[PRE-COMMIT]    Fix: correct the page filename so it matches the function name in"
+  echo "[PRE-COMMIT]    lowercase, or add the function to ampscript-data/src/index.js."
+  exit 1
+}
+
+echo "[PRE-COMMIT] 🔄 Regenerating site-index.json..."
+node scripts/generate-site-index.mjs || {
+  echo "[PRE-COMMIT] ❌ The site search index could not be generated, so the commit was blocked"
+  echo "[PRE-COMMIT]    to stop a stale site-index.json from being committed."
+  echo "[PRE-COMMIT]    Check the error above - usually a malformed frontmatter block."
+  exit 1
+}
+
+# Re-staging is the whole point: regenerating without `git add` would still
+# commit the stale blob that was staged before the hook ran.
+git add _data/ampscript_functions.yml site-index.json || {
+  echo "[PRE-COMMIT] ❌ Could not stage the regenerated artifacts. See the error above."
+  exit 1
+}
+echo "[PRE-COMMIT] ✅ Generated artifacts regenerated and staged."
+
+# ── Strip UTF-8 BOMs (must stay last) ─────────────────────────────────────────
+# Runs after everything else that writes files, so a BOM re-introduced by a
+# generator or by Prettier still gets caught. A BOM before a page's opening
+# `---` silently breaks Jekyll frontmatter parsing.
+echo "[PRE-COMMIT] Checking staged files for UTF-8 BOMs..."
+node scripts/check-bom.mjs || {
+  echo "[PRE-COMMIT] ❌ BOM check failed. See the message above."
+  exit 1
+}
+
+echo "[PRE-COMMIT] All checks passed."

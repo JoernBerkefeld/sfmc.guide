@@ -1,0 +1,28 @@
+{
+  "name": "sfmc-guide-site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tooling host for the sfmc.guide Jekyll site — husky hooks, generators and formatting only. Not a publishable package.",
+  "type": "module",
+  "author": "Joern Berkefeld <joern.berkefeld@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "husky || true",
+    "generate:function-index": "node scripts/generate-ampscript-function-index.mjs",
+    "generate:site-index": "node scripts/generate-site-index.mjs",
+    "generate:all": "npm run generate:function-index && npm run generate:site-index",
+    "check:bom": "node scripts/check-bom.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "scripts/**/*.{mjs,cjs,js}": [
+      "prettier --write"
+    ]
+  }
+}

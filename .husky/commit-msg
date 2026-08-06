@@ -1,0 +1,12 @@
+if [[ $SKIP_HOOKS -gt 0 ]]; then
+  echo "[COMMIT-MSG] skipping hooks (SKIP_HOOKS=$SKIP_HOOKS)"
+  exit 0
+fi
+
+# A commit message written with PowerShell's `Set-Content -Encoding UTF8` carries a
+# UTF-8 BOM that ends up inside the commit subject. pre-commit only sees staged
+# files, so the message needs its own guard.
+node scripts/strip-commit-msg-bom.mjs "$1" || {
+  echo "[COMMIT-MSG] ❌ Commit message check failed. See the message above."
+  exit 1
+}

@@ -25,7 +25,7 @@ function badgeHtml(platforms) {
     .map((p) =>
       p === 'engagement'
         ? '<span class="platform-badge platform-badge--engagement">Engagement</span>'
-        : '<span class="platform-badge platform-badge--next">Next</span>'
+        : '<span class="platform-badge platform-badge--next">Next</span>',
     )
     .join('\n    ');
 }
@@ -63,7 +63,8 @@ Pair it with [SFMC DevTools for VS Code](/tools/vscode-sfmc-devtools/) for a gra
     title: 'SFMC DevTools for VS Code',
     group: 'own',
     platforms: ['engagement', 'next'],
-    summary: 'Graphical VS Code interface for mcdev — retrieve and deploy without living in the terminal.',
+    summary:
+      'Graphical VS Code interface for mcdev — retrieve and deploy without living in the terminal.',
     body: `VS Code extension that wraps SFMC DevTools for day-to-day retrieve and deploy flows. Useful when architects and developers share the same Git-backed metadata repo.`,
     links: [
       {
@@ -138,7 +139,8 @@ Pair with the Language Service and [prettier-plugin-sfmc](/tools/prettier-plugin
     title: 'prettier-plugin-sfmc',
     group: 'own',
     platforms: ['engagement', 'next'],
-    summary: 'Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults.',
+    summary:
+      'Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults.',
     body: `Formats AMPscript (casing, quotes, embedded HTML) and SSJS with Engagement-safe defaults (indent, print width, no trailing commas that can break some SFMC contexts).`,
     links: [
       { label: 'npm', url: 'https://www.npmjs.com/package/prettier-plugin-sfmc' },
@@ -162,7 +164,8 @@ Pair with the Language Service and [prettier-plugin-sfmc](/tools/prettier-plugin
     title: 'eslint-plugin-mso-email',
     group: 'own',
     platforms: ['engagement', 'next'],
-    summary: 'ESLint rules for Outlook (MSO) conditional comments, VML, and HTML email layout pitfalls.',
+    summary:
+      'ESLint rules for Outlook (MSO) conditional comments, VML, and HTML email layout pitfalls.',
     body: `Catches common HTML email mistakes around Microsoft Outlook conditional comments and related markup.`,
     links: [
       { label: 'npm', url: 'https://www.npmjs.com/package/eslint-plugin-mso-email' },
@@ -301,9 +304,7 @@ The original shareable ESLint config for SSJS. Kept here for historical referenc
     body: `{% include callout.html type="note" title="Work in progress" content="This plugin is still being built. Expect APIs and commands to change before a stable release." %}
 
 Salesforce CLI (\`sf\`) plugin aimed at Marketing Cloud Next developer workflows. Tracked in the monorepo as it matures.`,
-    links: [
-      { label: 'GitHub', url: 'https://github.com/JoernBerkefeld/sf-plugin-mcnext' },
-    ],
+    links: [{ label: 'GitHub', url: 'https://github.com/JoernBerkefeld/sf-plugin-mcnext' }],
   },
   // Community
   {
@@ -324,7 +325,8 @@ Browser-based Data View documentation for Marketing Cloud Engagement.`,
     group: 'community',
     platforms: ['engagement'],
     externalOnly: true,
-    summary: 'Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more.',
+    summary:
+      'Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more.',
     body: `{% include callout.html type="note" title="Third-party" content="Not affiliated with Salesforce or sfmc.guide." %}
 
 Diagramforce runs in the browser (optionally with your own Google Drive). Useful for Engagement solution architecture sketches, data mapping, and Salesforce Flow diagrams.`,
@@ -336,7 +338,8 @@ Diagramforce runs in the browser (optionally with your own Google Drive). Useful
     group: 'community',
     platforms: ['engagement'],
     externalOnly: true,
-    summary: 'VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB).',
+    summary:
+      'VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB).',
     body: `{% include callout.html type="note" title="Third-party" content="Published by FiB. Not affiliated with sfmc.guide. Complements — does not replace — the [SFMC Language Service](/tools/vscode-sfmc-language/)." %}
 
 Focuses on rapid Cloud Page / script iteration, preview, and project setup against an Engagement business unit.`,
@@ -353,7 +356,8 @@ Focuses on rapid Cloud Page / script iteration, preview, and project setup again
     group: 'community',
     platforms: ['engagement'],
     externalOnly: true,
-    summary: 'VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets.',
+    summary:
+      'VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets.',
     body: `{% include callout.html type="note" title="Third-party" content="Published by Sergey Agadzhanov. Not affiliated with sfmc.guide." %}
 
 Connects the editor to Marketing Cloud assets for edit-in-place workflows, plus AMPscript language aids.`,
@@ -370,7 +374,8 @@ Connects the editor to Marketing Cloud assets for edit-in-place workflows, plus 
     group: 'community',
     platforms: ['engagement'],
     externalOnly: true,
-    summary: 'Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more).',
+    summary:
+      'Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more).',
     body: `{% include callout.html type="note" title="Third-party" content="Published by Cameron Robert. Not affiliated with sfmc.guide. Alpha-stage tooling — verify against your org permissions." %}
 
 In-browser navigation and discovery across Marketing Cloud Engagement objects.`,
@@ -448,13 +453,11 @@ ${community.map(card).join('\n')}
 ## Articles
 
 - [Why the SFMC Language Service Is Great on Its Own, and Even Better With ESLint and Prettier](/tools/language-service-eslint-prettier/)
-`
+`,
 );
 
 for (const t of tools) {
-  const links = (t.links || [])
-    .map((l) => `- [${l.label}](${l.url})`)
-    .join('\n');
+  const links = (t.links || []).map((l) => `- [${l.label}](${l.url})`).join('\n');
   write(
     `tools/${t.slug}/index.md`,
     `---
@@ -475,8 +478,10 @@ ${t.body}
 ${links || '_No external links._'}
 
 [← All tools](/tools/)
-`
+`,
   );
 }
 
 console.log(`tools: ${tools.length} pages`);
+
+const x = 1;
