@@ -75,14 +75,11 @@ for (const f of functions) {
   const isVerified = Boolean(f.isConfirmed) && hasPage;
   if (isVerified) verified += 1;
 
-  const args = f.minArgs === f.maxArgs ? `${f.minArgs}` : `${f.minArgs}–${f.maxArgs ?? '∞'}`;
-
   out += `- name: ${q(f.name)}\n`;
   out += `  slug: ${q(slug)}\n`;
   out += `  category: ${q(f.category)}\n`;
   out += `  syntax: ${q(f.syntax || `${f.name}()`)}\n`;
   out += `  returnType: ${q(f.returnType || '—')}\n`;
-  out += `  args: ${q(args)}\n`;
   out += `  verified: ${isVerified}\n`;
   if (isVerified) out += `  url: ${q(`/engagement/ampscript/functions/${slug}/`)}\n`;
   out += `  differsFromDocs: ${Boolean(f.differsFromOfficialDocs)}\n`;

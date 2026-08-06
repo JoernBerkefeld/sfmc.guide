@@ -17,7 +17,6 @@
   category: "Math"
   syntax: "Add(number1, number2)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/add/"
   differsFromDocs: false
@@ -30,7 +29,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "AddMscrmListMember(recordGuid, listGuid)"
   returnType: "void"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -42,7 +40,6 @@
   category: "Marketing Cloud API"
   syntax: "AddObjectArrayItem(apiObject, arrayProperty, itemToAdd)"
   returnType: "void"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -54,7 +51,6 @@
   category: "Content"
   syntax: "AttachFile(fileLocationType, fileLocation, attachmentFileName, viewOnWeb, viewOnWebUrl, viewOnWebFileName, viewOnWebDuration, contentDispositionAttachment)"
   returnType: "void"
-  args: "2–8"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -66,7 +62,6 @@
   category: "Utility"
   syntax: "AttributeValue(attributeName)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -78,7 +73,6 @@
   category: "Utility"
   syntax: "AuthenticatedEmployeeID()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -90,7 +84,6 @@
   category: "Utility"
   syntax: "AuthenticatedEmployeeNotificationAddress()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -102,7 +95,6 @@
   category: "Utility"
   syntax: "AuthenticatedEmployeeUserName()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -114,7 +106,6 @@
   category: "Utility"
   syntax: "AuthenticatedEnterpriseID()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -126,7 +117,6 @@
   category: "Utility"
   syntax: "AuthenticatedMemberID()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -138,7 +128,6 @@
   category: "Utility"
   syntax: "AuthenticatedMemberName()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -150,7 +139,6 @@
   category: "Content"
   syntax: "BarcodeURL(valueToConvert, barcodeType, width, height, checksumValue, showText, altText, rotation, transparentBG)"
   returnType: "string"
-  args: "9"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -162,7 +150,6 @@
   category: "Encryption and Encoding"
   syntax: "Base64Decode(encodedString[, encoding, characterSet])"
   returnType: "string"
-  args: "1–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -174,7 +161,6 @@
   category: "Encryption and Encoding"
   syntax: "Base64Encode(value[, encoding])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -186,7 +172,6 @@
   category: "Content"
   syntax: "BeginImpressionRegion(regionName)"
   returnType: "void"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -198,7 +183,6 @@
   category: "Content"
   syntax: "BuildOptionList(defaultSelection, option1Value, option1Text[, optionValueN, optionTextN, ...])"
   returnType: "string"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -210,7 +194,6 @@
   category: "Content"
   syntax: "BuildRowsetFromJSON(jsonData, jsonPathExpression, returnEmptyOnError)"
   returnType: "rowset"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -222,7 +205,6 @@
   category: "Content"
   syntax: "BuildRowSetFromString(sourceData, delimiter)"
   returnType: "rowset"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -234,7 +216,6 @@
   category: "Content"
   syntax: "BuildRowSetFromXML(xmlData, xpathExpression, returnEmptyOnError)"
   returnType: "rowset"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -246,7 +227,6 @@
   category: "String"
   syntax: "Char(characterCode[, numRepetitions])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -258,7 +238,6 @@
   category: "Data Extension"
   syntax: "ClaimRow(dataExt, claimColumn, claimantColumn, claimantValue[, additionalColumnNameN, additionalColumnValueN, ...])"
   returnType: "row"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -270,7 +249,6 @@
   category: "Data Extension"
   syntax: "ClaimRowValue(dataExt, returnValueColumn, claimColumn[, valueIfClaimed, claimantColumnN, claimantValueN, ...])"
   returnType: "string"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -282,7 +260,6 @@
   category: "Utility"
   syntax: "CloudPagesURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
   returnType: "string"
-  args: "1–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -294,7 +271,6 @@
   category: "String"
   syntax: "Concat(string1, string2[, stringN, ...])"
   returnType: "string"
-  args: "1–Infinity"
   verified: true
   url: "/engagement/ampscript/functions/concat/"
   differsFromDocs: false
@@ -307,7 +283,6 @@
   category: "Content"
   syntax: "ContentArea(contentAreaId[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
   returnType: "string"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: true
@@ -319,7 +294,6 @@
   category: "Content"
   syntax: "ContentAreaByName(contentAreaName[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
   returnType: "string"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: true
@@ -331,7 +305,6 @@
   category: "Content"
   syntax: "ContentBlockByID(contentBlockId[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -343,7 +316,6 @@
   category: "Content"
   syntax: "ContentBlockByKey(contentBlockKey[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -355,7 +327,6 @@
   category: "Content"
   syntax: "ContentBlockByName(contentBlockName[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -367,7 +338,6 @@
   category: "Content"
   syntax: "ContentImageByID(id, defaultImageExternalId)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -379,7 +349,6 @@
   category: "Content"
   syntax: "ContentImageByKey(imageExternalKey, defaultImageExternalKey)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -391,7 +360,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "CreateMSCRMRecord(entityName, numFields, attributeName1, attributeValue1[, attributeNameN, attributeValueN, ...])"
   returnType: "string"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -403,7 +371,6 @@
   category: "Marketing Cloud API"
   syntax: "CreateObject(objectName)"
   returnType: "object"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -415,7 +382,6 @@
   category: "Sales and Service Cloud"
   syntax: "CreateSalesforceObject(objectName, numFields, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
   returnType: "string"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -427,7 +393,6 @@
   category: "MobileConnect"
   syntax: "CreateSmsConversation(shortCode, keyword, nextKeyword, messageText)"
   returnType: "void"
-  args: "4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -439,7 +404,6 @@
   category: "Data Extension"
   syntax: "DataExtensionRowCount(dataExtensionName)"
   returnType: "number"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -451,7 +415,6 @@
   category: "Date and Time"
   syntax: "DateAdd(date, amountToAdd, unitToAdd)"
   returnType: "date"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -463,7 +426,6 @@
   category: "Date and Time"
   syntax: "DateDiff(startDate, endDate, unitOfDifference)"
   returnType: "number"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -475,7 +437,6 @@
   category: "Date and Time"
   syntax: "DateParse(dateString[, useUtc])"
   returnType: "date"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -487,7 +448,6 @@
   category: "Date and Time"
   syntax: "DatePart(dateString, datePart)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -499,7 +459,6 @@
   category: "Encryption and Encoding"
   syntax: "DecryptSymmetric(encryptedValue, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
   returnType: "string"
-  args: "8"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -511,7 +470,6 @@
   category: "Data Extension"
   syntax: "DeleteData(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -523,7 +481,6 @@
   category: "Data Extension"
   syntax: "DeleteDE(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -535,7 +492,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "DescribeMSCRMEntities()"
   returnType: "rowset"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -547,7 +503,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "DescribeMSCRMEntityAttributes(entityType)"
   returnType: "rowset"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -559,7 +514,6 @@
   category: "Math"
   syntax: "Divide(dividend, divisor)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/divide/"
   differsFromDocs: false
@@ -572,7 +526,6 @@
   category: "Utility"
   syntax: "Domain(emailAddress)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -584,7 +537,6 @@
   category: "Utility"
   syntax: "Empty(value)"
   returnType: "boolean"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -596,7 +548,6 @@
   category: "Encryption and Encoding"
   syntax: "EncryptSymmetric(value, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
   returnType: "string"
-  args: "8"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -608,7 +559,6 @@
   category: "Content"
   syntax: "EndImpressionRegion([endAllRegions])"
   returnType: "void"
-  args: "0–1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -620,7 +570,6 @@
   category: "MobileConnect"
   syntax: "EndSmsConversation(shortCode, keyword)"
   returnType: "void"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -632,7 +581,6 @@
   category: "Data Extension"
   syntax: "ExecuteFilter(dataFilterExternalId)"
   returnType: "rowset"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -644,7 +592,6 @@
   category: "Data Extension"
   syntax: "ExecuteFilterOrderedRows(dataFilterExternalId, numRows, sortColumn)"
   returnType: "rowset"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -656,7 +603,6 @@
   category: "Data Extension"
   syntax: "Field(row, fieldName[, exceptionIfNotFound])"
   returnType: "string"
-  args: "2–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -668,7 +614,6 @@
   category: "Utility"
   syntax: "Format(value, formatString[, culture, timeZone])"
   returnType: "string"
-  args: "2–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -680,7 +625,6 @@
   category: "Utility"
   syntax: "FormatCurrency(value, locale[, decimalPlaces, symbol])"
   returnType: "string"
-  args: "2–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -692,7 +636,6 @@
   category: "Date and Time"
   syntax: "FormatDate(dateString[, dateFormat, timeFormat, localeCode])"
   returnType: "string"
-  args: "1–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -704,7 +647,6 @@
   category: "Utility"
   syntax: "FormatNumber(number, format[, locale])"
   returnType: "string"
-  args: "2–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -716,7 +658,6 @@
   category: "Encryption and Encoding"
   syntax: "GetJWT(secret, algorithm, jsonPayload)"
   returnType: "string"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -728,7 +669,6 @@
   category: "Encryption and Encoding"
   syntax: "GetJWTByKeyName(keyName, algorithm, jsonPayload)"
   returnType: "string"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -740,7 +680,6 @@
   category: "Content"
   syntax: "GetPortfolioItem(itemExternalKey)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -752,7 +691,6 @@
   category: "Social"
   syntax: "GetPublishedSocialContent(socialContentId)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -764,7 +702,6 @@
   category: "Date and Time"
   syntax: "GetSendTime([persistFormat])"
   returnType: "date"
-  args: "0–1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -776,7 +713,6 @@
   category: "Social"
   syntax: "GetSocialPublishURL(socialNetworkCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
   returnType: "string"
-  args: "2–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -788,7 +724,6 @@
   category: "Social"
   syntax: "GetSocialPublishURLByName(socialNetworkName, countryCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
   returnType: "string"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -800,7 +735,6 @@
   category: "Utility"
   syntax: "GUID()"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -812,7 +746,6 @@
   category: "HTTP"
   syntax: "HTTPGet(httpGetUrl[, continueOnError, headerName, headerValue])"
   returnType: "string"
-  args: "1–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -824,7 +757,6 @@
   category: "HTTP"
   syntax: "HTTPPost(urlEndpoint, contentTypeHeader, contentToPost[, @response, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -836,7 +768,6 @@
   category: "HTTP"
   syntax: "HTTPPost2(url, contentType, contentToPost[, exceptionOnError, @response, @responseRowSet, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -848,7 +779,6 @@
   category: "HTTP"
   syntax: "HTTPPostWithRetry(urlEndpoint, contentTypeHeader, content[, numRetries, reschedule, returnExceptionOnError, @responseStatus, @responseContentRowset, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -860,7 +790,6 @@
   category: "HTTP"
   syntax: "HTTPRequestHeader(headerToRetrieve)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -872,7 +801,6 @@
   category: "Utility"
   syntax: "IIf(expression, trueValue, falseValue)"
   returnType: "string"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -884,7 +812,6 @@
   category: "Content"
   syntax: "Image(imageExternalKey[, defaultImageExternalKey])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -896,7 +823,6 @@
   category: "String"
   syntax: "IndexOf(sourceString, substring)"
   returnType: "number"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -908,7 +834,6 @@
   category: "Data Extension"
   syntax: "InsertData(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -920,7 +845,6 @@
   category: "Data Extension"
   syntax: "InsertDE(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
   returnType: "number"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -932,7 +856,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokeCreate(apiObject, @statusMessage, @errorCode[, createOptionsObject])"
   returnType: "string"
-  args: "3–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -944,7 +867,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokeDelete(apiObject, @statusMessage, @errorCode[, deleteOptionsObject])"
   returnType: "string"
-  args: "3–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -956,7 +878,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokeExecute(apiObject[, @statusMessage, @requestId])"
   returnType: "rowset"
-  args: "1–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -968,7 +889,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokePerform(apiObject, actionToPerform[, @statusMessage])"
   returnType: "string"
-  args: "2–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -980,7 +900,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokeRetrieve(apiObject[, @statusMessage, @requestId])"
   returnType: "rowset"
-  args: "1–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -992,7 +911,6 @@
   category: "Marketing Cloud API"
   syntax: "InvokeUpdate(apiObject[, @statusMessage, @errorCode, updateOptions])"
   returnType: "string"
-  args: "1–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1004,7 +922,6 @@
   category: "Utility"
   syntax: "IsCHTMLBrowser(userAgent)"
   returnType: "boolean"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1016,7 +933,6 @@
   category: "Utility"
   syntax: "IsEmailAddress(value)"
   returnType: "boolean"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1028,7 +944,6 @@
   category: "Utility"
   syntax: "IsNull(value)"
   returnType: "boolean"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1040,7 +955,6 @@
   category: "Utility"
   syntax: "IsNullDefault(value, defaultValue)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1052,7 +966,6 @@
   category: "Utility"
   syntax: "IsPhoneNumber(value)"
   returnType: "boolean"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1064,7 +977,6 @@
   category: "String"
   syntax: "Length(sourceString)"
   returnType: "number"
-  args: "1"
   verified: true
   url: "/engagement/ampscript/functions/length/"
   differsFromDocs: false
@@ -1077,7 +989,6 @@
   category: "Content"
   syntax: "LiveContentMicrositeURL(contentType, externalKey)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1089,7 +1000,6 @@
   category: "Date and Time"
   syntax: "LocalDateToSystemDate(timeToConvert)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1101,7 +1011,6 @@
   category: "Sales and Service Cloud"
   syntax: "LongSFID(sfid15)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1113,7 +1022,6 @@
   category: "Data Extension"
   syntax: "Lookup(dataObject, returnColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "string"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1125,7 +1033,6 @@
   category: "Data Extension"
   syntax: "LookupOrderedRows(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  args: "5–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1137,7 +1044,6 @@
   category: "Data Extension"
   syntax: "LookupOrderedRowsCS(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  args: "5–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1149,7 +1055,6 @@
   category: "Data Extension"
   syntax: "LookupRows(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1161,7 +1066,6 @@
   category: "Data Extension"
   syntax: "LookupRowsCS(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1173,7 +1077,6 @@
   category: "String"
   syntax: "Lowercase(sourceString)"
   returnType: "string"
-  args: "1"
   verified: true
   url: "/engagement/ampscript/functions/lowercase/"
   differsFromDocs: false
@@ -1186,7 +1089,6 @@
   category: "Encryption and Encoding"
   syntax: "MD5(stringToConvert[, charSet])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1198,7 +1100,6 @@
   category: "Utility"
   syntax: "MicrositeURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
   returnType: "string"
-  args: "1–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1210,7 +1111,6 @@
   category: "MobileConnect"
   syntax: "MMS_Content_URL(position)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1222,7 +1122,6 @@
   category: "Math"
   syntax: "Mod(dividend, divisor)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/mod/"
   differsFromDocs: false
@@ -1235,7 +1134,6 @@
   category: "MobileConnect"
   syntax: "Msg(0)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1247,7 +1145,6 @@
   category: "Math"
   syntax: "Multiply(number1, number2)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/multiply/"
   differsFromDocs: false
@@ -1260,7 +1157,6 @@
   category: "MobileConnect"
   syntax: "Msg(0).Noun(position)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1272,7 +1168,6 @@
   category: "MobileConnect"
   syntax: "Msg(0).Nouns"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1284,7 +1179,6 @@
   category: "Date and Time"
   syntax: "Now([persistFormat])"
   returnType: "date"
-  args: "0–1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1296,7 +1190,6 @@
   category: "Utility"
   syntax: "Output(content)"
   returnType: "void"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1308,7 +1201,6 @@
   category: "Utility"
   syntax: "OutputLine(content)"
   returnType: "void"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1320,7 +1212,6 @@
   category: "String"
   syntax: "ProperCase(sourceString)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1332,7 +1223,6 @@
   category: "Utility"
   syntax: "QueryParameter(parameterName)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1344,7 +1234,6 @@
   category: "Utility"
   syntax: "RaiseError(message[, skipSubscriber, apiErrorCode, apiErrorNumber, preserveDataExt])"
   returnType: "void"
-  args: "1–5"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1356,7 +1245,6 @@
   category: "Math"
   syntax: "Random(min, max)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/random/"
   differsFromDocs: true
@@ -1369,7 +1257,6 @@
   category: "Einstein Email Recommendations"
   syntax: "RatingStars(rating, maxRating, imageUrl)"
   returnType: "string"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1381,7 +1268,6 @@
   category: "Utility"
   syntax: "Redirect(url)"
   returnType: "void"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1393,7 +1279,6 @@
   category: "Utility"
   syntax: "RedirectTo(url)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1405,7 +1290,6 @@
   category: "String"
   syntax: "RegExMatch(sourceString, regExPattern, returnValue[, regExOptions])"
   returnType: "string"
-  args: "3–4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1417,7 +1301,6 @@
   category: "String"
   syntax: "Replace(sourceString, searchSubstring, replacementSubstring)"
   returnType: "string"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1429,7 +1312,6 @@
   category: "String"
   syntax: "ReplaceList(sourceString, replacementString, searchString1[, searchStringN, ...])"
   returnType: "string"
-  args: "3–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1441,7 +1323,6 @@
   category: "Utility"
   syntax: "RequestParameter(parameterName)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1453,7 +1334,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "RetrieveMSCRMRecords(entityName, fieldsToRetrieve, queryFieldName, queryFieldOperator, queryFieldValue)"
   returnType: "rowset"
-  args: "5"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1465,7 +1345,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "RetrieveMSCRMRecordsFetchXML(fetchXml)"
   returnType: "rowset"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1477,7 +1356,6 @@
   category: "Sales and Service Cloud"
   syntax: "RetrieveSalesforceJobSources(jobId)"
   returnType: "rowset"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1489,7 +1367,6 @@
   category: "Sales and Service Cloud"
   syntax: "RetrieveSalesforceObjects(objectName, fieldsToRetrieve, queryFieldName1, queryFieldOperator1, queryFieldValue1[, queryFieldNameN, queryFieldOperatorN, queryFieldValueN, ...])"
   returnType: "rowset"
-  args: "5–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1501,7 +1378,6 @@
   category: "Data Extension"
   syntax: "Row(rowset, rowIndex)"
   returnType: "row"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1513,7 +1389,6 @@
   category: "Data Extension"
   syntax: "RowCount(rowset)"
   returnType: "number"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1525,7 +1400,6 @@
   category: "Marketing Cloud API"
   syntax: "SetObjectProperty(apiObject, propertyName, propertyValue)"
   returnType: "void"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1537,7 +1411,6 @@
   category: "MobileConnect"
   syntax: "SetSmsConversationNextKeyword(shortCode, keyword, nextKeyword)"
   returnType: "void"
-  args: "3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1549,7 +1422,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "SetStateMscrmRecord(recordGuid, entityName, stateToSet, statusToSet)"
   returnType: "void"
-  args: "4"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1561,7 +1433,6 @@
   category: "Encryption and Encoding"
   syntax: "SHA1(stringToConvert[, charSet])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1573,7 +1444,6 @@
   category: "Encryption and Encoding"
   syntax: "SHA256(stringToConvert[, charSet])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1585,7 +1455,6 @@
   category: "Encryption and Encoding"
   syntax: "SHA512(stringToConvert[, charSet])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1597,7 +1466,6 @@
   category: "Date and Time"
   syntax: "StringToDate(dateString)"
   returnType: "date"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1609,7 +1477,6 @@
   category: "Encryption and Encoding"
   syntax: "StringToHex(sourceString[, charSet])"
   returnType: "string"
-  args: "1–2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1621,7 +1488,6 @@
   category: "String"
   syntax: "Substring(sourceString, startPosition[, substringLength])"
   returnType: "string"
-  args: "2–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1633,7 +1499,6 @@
   category: "Math"
   syntax: "Subtract(minuend, subtrahend)"
   returnType: "number"
-  args: "2"
   verified: true
   url: "/engagement/ampscript/functions/subtract/"
   differsFromDocs: false
@@ -1646,7 +1511,6 @@
   category: "Date and Time"
   syntax: "SystemDateToLocalDate(systemTime)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1658,7 +1522,6 @@
   category: "Content"
   syntax: "TransformXML(xmlDocument, xslDocument)"
   returnType: "string"
-  args: "2"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1670,7 +1533,6 @@
   category: "Content"
   syntax: "TreatAsContent(stringToReturn)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1682,7 +1544,6 @@
   category: "Content"
   syntax: "TreatAsContentArea(contentKey, contentValue[, impressionRegion])"
   returnType: "string"
-  args: "2–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1694,7 +1555,6 @@
   category: "String"
   syntax: "Trim(sourceString)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1706,7 +1566,6 @@
   category: "Data Extension"
   syntax: "UpdateData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
   returnType: "number"
-  args: "6–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1718,7 +1577,6 @@
   category: "Data Extension"
   syntax: "UpdateDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
   returnType: "number"
-  args: "6–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1730,7 +1588,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "UpdateMSCRMRecords(entityName, guidsToUpdate, attributeName1, attributeValue1[, attributeNameN, attributeValueN, ...])"
   returnType: "number"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1742,7 +1599,6 @@
   category: "Sales and Service Cloud"
   syntax: "UpdateSingleSalesforceObject(objectName, idToUpdate, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
   returnType: "number"
-  args: "4–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1754,7 +1610,6 @@
   category: "String"
   syntax: "Uppercase(sourceString)"
   returnType: "string"
-  args: "1"
   verified: true
   url: "/engagement/ampscript/functions/uppercase/"
   differsFromDocs: false
@@ -1767,7 +1622,6 @@
   category: "MobileConnect"
   syntax: "UpsertContact(channel, attribute, phoneNumber, keyToUpsert1, valueToUpsert1[, keyToUpsertN, valueToUpsertN, ...])"
   returnType: "number"
-  args: "5–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1779,7 +1633,6 @@
   category: "Data Extension"
   syntax: "UpsertData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
   returnType: "number"
-  args: "6–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1791,7 +1644,6 @@
   category: "Data Extension"
   syntax: "UpsertDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
   returnType: "number"
-  args: "6–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1803,7 +1655,6 @@
   category: "Microsoft Dynamics CRM"
   syntax: "UpsertMSCRMRecord(entityName, sortField, sortType, numPairsForRetrieve, filterAttributeName, filterAttributeValue, numPairsForUpdate, updateAttributeName, updateAttributeValue)"
   returnType: "string"
-  args: "9"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1815,7 +1666,6 @@
   category: "Encryption and Encoding"
   syntax: "URLEncode(urlToEncode[, encodeAllChars, encodeAllStrings])"
   returnType: "string"
-  args: "1–3"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1827,7 +1677,6 @@
   category: "Utility"
   syntax: "v(variableName)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1839,7 +1688,6 @@
   category: "MobileConnect"
   syntax: "Msg(0).Verb"
   returnType: "string"
-  args: "0"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1851,7 +1699,6 @@
   category: "Utility"
   syntax: "WAT(parameterSetKey, parameterValue1[, parameterValueN, ...])"
   returnType: "string"
-  args: "2–Infinity"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1863,7 +1710,6 @@
   category: "Utility"
   syntax: "WATP(ordinal)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false
@@ -1875,7 +1721,6 @@
   category: "Utility"
   syntax: "WrapLongURL(url)"
   returnType: "string"
-  args: "1"
   verified: false
   differsFromDocs: false
   deprecated: false

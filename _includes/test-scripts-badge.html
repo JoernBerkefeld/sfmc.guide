@@ -12,12 +12,12 @@
   Partial coverage never ships the badge — the key is omitted entirely rather
   than written as `partial`.
 
-  Usage (place directly under the page intro, before the first chapter):
-    {% include test-scripts-badge.html %}
+  Emits a bare <span>, not its own wrapper: verification-status.html includes it
+  inside the existing .verification-status row so all page badges sit together,
+  matching how ssjs.guide renders the same three badges.
 {% endcomment %}
 
 {%- if page.test_scripts == "complete" -%}
-<div class="verified-badges" aria-label="Test script status">
   <span class="verified-badge test-scripts-complete" title="Every chapter on this page ships a runnable AMPscript test script that asserts each documented claim, including the deviations from the official docs. Expand &ldquo;Show test script&rdquo; in any chapter to see it.">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M4 2.5v2.2L1.8 8.6A1 1 0 0 0 2.7 10h6.6a1 1 0 0 0 .9-1.4L8 4.7V2.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
@@ -25,5 +25,4 @@
     </svg>
     Test scripts included
   </span>
-</div>
 {%- endif -%}

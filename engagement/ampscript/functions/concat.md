@@ -12,6 +12,7 @@ syntax: "Concat(string1, string2[, stringN, ...])"
 return_type: string
 min_args: 1
 verification: verified
+test_scripts: complete
 differs_from_docs: false
 ---
 
@@ -23,11 +24,34 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `string1` | `string \| number \| date` | Yes | First value to join |
-| `string2` | `string \| number \| date` | No | Second value to join |
-| `stringN` | `string \| number \| date` | No | Any number of further values |
+| `string1` | string \| number \| date | Yes | First value to join |
+| `string2` | string \| number \| date | No | Second value to join |
+| `stringN` | string \| number \| date | No | Any number of further values |
 
-There is no upper bound on the argument count. Every parameter is typed `string | number | date` rather than `string` because numbers and date values are both accepted and stringified rather than rejected.
+There is no upper bound on the argument count.
+
+## Example
+
+```html
+%%[
+  VAR @greeting
+  SET @greeting = Concat("Hello ", AttributeValue("FirstName"), "!")
+]%%
+%%=v(@greeting)=%%
+```
+
+With a first name of `Ada`, renders `Hello Ada!`.
+
+Nothing is inserted between the values, so a separator has to be an argument of its own:
+
+```html
+%%[
+  VAR @label
+  SET @label = Concat("Order", " ", "#", 4711)
+]%%
+```
+
+Yields `Order #4711`.
 
 ## Return value
 
@@ -51,70 +75,16 @@ The result is arbitrary text, so there is no closed set of sentinel values to te
 
 **Booleans are swallowed silently.** `Concat(true, false)` returns HTTP 200 with an *empty* result — neither operand contributes anything. Nothing coherent about the boolean survives, so this is a rejection rather than boolean support, and the parameter types stay `string | number | date`. The same happens across the whole String family; see [Differs from official docs](/engagement/differs-from-docs/#concat-booleans-swallowed). Convert a boolean to text yourself before joining it.
 
+{% include test-script.html bundle="ampscript-functions--concat" chapter="behaviour" %}
+
+{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
+
 ## Availability
 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
-
-## Test script
-
-Deploy the block once as a CloudPage, then fetch it one branch at a time — `?b=safe`, `?b=c1`, `?b=c0`, and so on. The zero-argument case has to be isolated because it aborts the whole page; a branch that renders nothing at all is the failure signal.
-
-```html
-%%[
-  VAR @b
-  SET @b = RequestParameter("b")
-
-  /* safe sweep: everything here is accepted and can share one request */
-  IF @b == "safe" THEN
-    OutputLine(Concat("C2=[", Concat("Hello", "World"), "]"))
-    OutputLine(Concat("C3=[", Concat("a", "-", "b"), "]"))
-    OutputLine(Concat("C12=[", Concat("1","2","3","4","5","6","7","8","9","A","B","C"), "]"))
-  ENDIF
-
-  /* twenty arguments: still accepted */
-  IF @b == "c20" THEN
-    OutputLine(Concat("C20=[", Concat("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t"), "]"))
-  ENDIF
-
-  /* one argument: HTTP 200, the value comes back unchanged */
-  IF @b == "c1" THEN
-    OutputLine(Concat("--- c1 start ---"))
-    OutputLine(Concat("C1=[", Concat("only"), "]"))
-    OutputLine(Concat("--- c1 done ---"))
-  ENDIF
-
-  /* zero arguments: page aborts with HTTP 422, no marker renders */
-  IF @b == "c0" THEN
-    OutputLine(Concat("--- c0 start ---"))
-    OutputLine(Concat("C0=[", Concat(), "]"))
-  ENDIF
-
-  /* numbers are stringified, not added */
-  IF @b == "cn" THEN
-    OutputLine(Concat("CN=[", Concat(12, 3.5), "]"))
-  ENDIF
-
-  /* date values are stringified */
-  IF @b == "cd" THEN
-    OutputLine(Concat("CD=[", Concat(Now(), "X"), "]"))
-  ENDIF
-
-  /* booleans: HTTP 200 but nothing renders between the brackets */
-  IF @b == "cb" THEN
-    OutputLine(Concat("CB=[", Concat(true, false), "]"))
-  ENDIF
-
-  /* empty strings join to an empty result */
-  IF @b == "empty" THEN
-    OutputLine(Concat("CE=[", Concat("", ""), "]"))
-  ENDIF
-]%%
-```
-
-{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
 ## See also
 

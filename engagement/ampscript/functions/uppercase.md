@@ -13,6 +13,7 @@ return_type: string
 min_args: 1
 max_args: 1
 verification: verified
+test_scripts: complete
 differs_from_docs: false
 ---
 
@@ -24,9 +25,28 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `sourceString` | `string \| number \| date` | Yes | Value to convert |
+| `sourceString` | string \| number \| date | Yes | Value to convert |
 
-The parameter is typed `string | number | date` rather than `string` because numbers and date values are both accepted and stringified rather than rejected.
+## Example
+
+```html
+%%[
+  VAR @shout
+  SET @shout = Uppercase("Hello World")
+]%%
+%%=v(@shout)=%%
+```
+
+Renders `HELLO WORLD`.
+
+Typical use is a country or currency code that has to render consistently regardless of how it was stored:
+
+```html
+%%[
+  VAR @country
+  SET @country = Uppercase(AttributeValue("CountryCode"))
+]%%
+```
 
 ## Return value
 
@@ -35,8 +55,6 @@ The parameter is typed `string | number | date` rather than `string` because num
 The result is arbitrary transformed text, so there is no closed set of sentinel values to test for.
 
 ## Behaviour
-
-**Exactly one argument.** Zero arguments abort the page; two arguments abort the page. Both cases return HTTP 422 and discard everything rendered before the call.
 
 **Letters are uppercased, everything else is left alone.** A mixed-case string containing digits and punctuation came back with only the letters changed.
 
@@ -58,80 +76,18 @@ Uppercasing a six-letter German word containing the sharp s returned the codepoi
 
 This is a specific gap rather than non-ASCII input being ignored wholesale: the accented vowels in the same sweep *were* mapped correctly. The official reference makes no claim about the sharp s, so this is undocumented behaviour rather than a contradiction. It is catalogued on [Differs from official docs](/engagement/differs-from-docs/#uppercase-sharp-s-not-expanded).
 
+{% include test-script.html bundle="ampscript-functions--uppercase" chapter="behaviour" %}
+
+{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
+
+{% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct conversion look broken. Render the input alongside the result and dump both as codepoints before drawing any conclusion." %}
+
 ## Availability
 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
-
-## Test script
-
-Deploy the block once as a CloudPage, then fetch it one branch at a time — `?b=safe`, `?b=nau`, `?b=u0`, and so on. The arity branches have to be isolated because they abort the whole page; a branch that renders nothing at all is the failure signal. Fetch with UTF-8 decoding or the non-ASCII branches are unreadable.
-
-```html
-%%[
-  VAR @b
-  SET @b = RequestParameter("b")
-
-  /* safe sweep: ASCII letters change, digits and punctuation do not */
-  IF @b == "safe" THEN
-    OutputLine(Concat("UP1=[", Uppercase("HeLLo123!@#"), "]"))
-  ENDIF
-
-  /* empty string */
-  IF @b == "empty" THEN
-    OutputLine(Concat("UPE=[", Uppercase(""), "]"))
-  ENDIF
-
-  /* the sharp s survives verbatim; accented letters do map */
-  IF @b == "nau" THEN
-    OutputLine(Concat("NAU_ECHO_SS=[", "Straße", "]"))
-    OutputLine(Concat("NAU_UP_SS=[", Uppercase("Straße"), "]"))
-    OutputLine(Concat("NAU_ECHO_CAFE=[", "café", "]"))
-    OutputLine(Concat("NAU_UP_CAFE=[", Uppercase("café"), "]"))
-    OutputLine(Concat("NAU_ECHO_ACC=[", "àéîõü", "]"))
-    OutputLine(Concat("NAU_UP_ACC=[", Uppercase("àéîõü"), "]"))
-  ENDIF
-
-  /* invariant, not Turkish: the dotless i becomes a plain ASCII I */
-  IF @b == "tr" THEN
-    OutputLine(Concat("TR_ECHO_DOTLESS=[", "ı", "]"))
-    OutputLine(Concat("TR_UP_DOTLESS=[", Uppercase("ı"), "]"))
-    OutputLine(Concat("TR_UP_i=[", Uppercase("i"), "]"))
-  ENDIF
-
-  /* numbers pass through unchanged */
-  IF @b == "un" THEN
-    OutputLine(Concat("UN=[", Uppercase(12345), "]"))
-  ENDIF
-
-  /* date is stringified then processed */
-  IF @b == "ud" THEN
-    OutputLine(Concat("UD=[", Uppercase(Now()), "]"))
-  ENDIF
-
-  /* boolean: HTTP 200 but nothing renders between the brackets */
-  IF @b == "ub" THEN
-    OutputLine(Concat("UB=[", Uppercase(false), "]"))
-  ENDIF
-
-  /* each arity branch aborts the page: the start marker never renders */
-  IF @b == "u0" THEN
-    OutputLine(Concat("--- u0 start ---"))
-    OutputLine(Concat("U0=[", Uppercase(), "]"))
-  ENDIF
-
-  IF @b == "u2" THEN
-    OutputLine(Concat("--- u2 start ---"))
-    OutputLine(Concat("U2=[", Uppercase("a", "b"), "]"))
-  ENDIF
-]%%
-```
-
-{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
-
-{% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct conversion look broken. Render the input alongside the result and dump both as codepoints before drawing any conclusion." %}
 
 ## See also
 

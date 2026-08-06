@@ -4,6 +4,8 @@
   Front matter drivers:
     verification: verified | in-progress | pending   (absent => nothing renders)
     differs_from_docs: true                          (adds the amber warning badge)
+    test_scripts: complete                           (adds the test-script badge,
+                                                      via test-scripts-badge.html)
 
   Styling comes from _sass/_callouts.scss (.verification-status / .verified-badge).
 {% endcomment %}
@@ -53,5 +55,7 @@
     Differs from official docs
   </span>
   {% endif %}
+
+  {% include test-scripts-badge.html %}
 </div>
 {% endif %}

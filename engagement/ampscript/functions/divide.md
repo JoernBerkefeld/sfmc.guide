@@ -13,6 +13,7 @@ return_type: number
 min_args: 2
 max_args: 2
 verification: verified
+test_scripts: complete
 differs_from_docs: false
 ---
 
@@ -24,10 +25,32 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `dividend` | `string \| number` | Yes | Number to divide |
-| `divisor` | `string \| number` | Yes | Number to divide by |
+| `dividend` | string \| number | Yes | Number to divide |
+| `divisor` | string \| number | Yes | Number to divide by |
 
-Both parameters are typed `string | number` rather than `number` because a string that parses cleanly as a number is accepted at runtime and produces the same result as the numeric literal.
+## Example
+
+```html
+%%[
+  VAR @unitPrice
+  SET @unitPrice = Divide(29.97, 3)
+]%%
+Per unit: %%=v(@unitPrice)=%%
+```
+
+Renders `Per unit: 9.99`.
+
+A zero divisor renders `∞` rather than failing, so guard the divisor before you use the result:
+
+```html
+%%[
+  VAR @count, @average
+  SET @count = AttributeValue("ItemCount")
+  IF @count > 0 THEN
+    SET @average = Divide(AttributeValue("OrderTotal"), @count)
+  ENDIF
+]%%
+```
 
 ## Return value
 
@@ -36,8 +59,6 @@ Both parameters are typed `string | number` rather than `number` because a strin
 A zero divisor does not raise an error: a non-zero dividend yields the infinity symbol and a zero dividend yields `NaN`. Guard against a zero divisor before rendering the result. Both of those are IEEE numeric values rather than a closed set of status tokens, so there is nothing to pattern-match beyond the two literals.
 
 ## Behaviour
-
-**Exactly two arguments.** One argument aborts the page; three arguments abort the page.
 
 **Non-integer quotients render as decimals.** `Divide(10, 3)` renders `3.33333333333333` — the value is not rounded to an integer.
 
@@ -70,66 +91,16 @@ The practical consequence is that an unguarded division by zero does not fail lo
 
 Both zero-divisor behaviours are catalogued as findings on [Differs from official docs](/engagement/differs-from-docs/#divide-zero-divisor-infinity), alongside the contrasting behaviour of [`Mod`](/engagement/ampscript/functions/mod/), which renders `NaN` in every zero-divisor case.
 
+{% include test-script.html bundle="ampscript-functions--divide" chapter="behaviour" %}
+
+{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
+
 ## Availability
 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
-
-## Test script
-
-Deploy the block once as a CloudPage, then fetch it one branch at a time — `?b=safe`, `?b=d0`, `?b=few`, and so on. Risky cases must be isolated because a rejected argument aborts the whole page; a branch that renders nothing at all is the failure signal. Fetch with UTF-8 decoding or the infinity symbol will be unreadable.
-
-```html
-%%[
-  VAR @b
-  SET @b = RequestParameter("b")
-
-  /* safe sweep: everything here is accepted and can share one request */
-  IF @b == "safe" THEN
-    OutputLine(Concat("Divide(100,4)=[", Divide(100,4), "]"))
-    OutputLine(Concat("Divide('100','4')=[", Divide("100","4"), "]"))
-    OutputLine(Concat("Divide('3.5','0.5')=[", Divide("3.5","0.5"), "]"))
-    OutputLine(Concat("Divide(9,'2')=[", Divide(9,"2"), "]"))
-    OutputLine(Concat("Divide(10,3)=[", Divide(10,3), "]"))
-    OutputLine(Concat("Divide(-10,4)=[", Divide(-10,4), "]"))
-  ENDIF
-
-  /* zero divisor: does NOT abort, so all cases can share one request */
-  IF @b == "d0" THEN
-    OutputLine(Concat("Divide(100,0)=[", Divide(100,0), "]"))
-    OutputLine(Concat("Divide(1,0)=[", Divide(1,0), "]"))
-    OutputLine(Concat("Divide(7.5,0)=[", Divide(7.5,0), "]"))
-    OutputLine(Concat("Divide(-100,0)=[", Divide(-100,0), "]"))
-    OutputLine(Concat("Divide(0,0)=[", Divide(0,0), "]"))
-    OutputLine(Concat("Divide(100,'0')=[", Divide(100,"0"), "]"))
-  ENDIF
-
-  /* each risky branch aborts the page: the start marker never renders */
-  IF @b == "few" THEN
-    OutputLine(Concat("few start"))
-    OutputLine(Concat("Divide(1)=[", Divide(1), "]"))
-  ENDIF
-
-  IF @b == "many" THEN
-    OutputLine(Concat("many start"))
-    OutputLine(Concat("Divide(1,2,3)=[", Divide(1,2,3), "]"))
-  ENDIF
-
-  IF @b == "str" THEN
-    OutputLine(Concat("str start"))
-    OutputLine(Concat("Divide('abc',1)=[", Divide("abc",1), "]"))
-  ENDIF
-
-  IF @b == "bool" THEN
-    OutputLine(Concat("bool start"))
-    OutputLine(Concat("Divide('true',1)=[", Divide("true",1), "]"))
-  ENDIF
-]%%
-```
-
-{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
 ## See also
 

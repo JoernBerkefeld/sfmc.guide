@@ -1,0 +1,74 @@
+# Test scripts for /engagement/ampscript/functions/mod/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=mods, ?b=moddec, ?b=modstr, ?b=m0, ?b=fewm, ?b=manym, ?b=strm, ?b=boolm, ?b=datem.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* sign rule: all four cases are safe and can share one request */
+    IF @b == "mods" THEN
+      OutputLine(Concat("Mod(10,3)=[", Mod(10,3), "]"))
+      OutputLine(Concat("Mod(500,12)=[", Mod(500,12), "]"))
+      OutputLine(Concat("Mod(3,10)=[", Mod(3,10), "]"))
+      OutputLine(Concat("Mod(-10,3)=[", Mod(-10,3), "]"))
+      OutputLine(Concat("Mod(10,-3)=[", Mod(10,-3), "]"))
+      OutputLine(Concat("Mod(-10,-3)=[", Mod(-10,-3), "]"))
+    ENDIF
+
+    /* decimal operands */
+    IF @b == "moddec" THEN
+      OutputLine(Concat("Mod(-500.123,12.456)=[", Mod(-500.123,12.456), "]"))
+      OutputLine(Concat("Mod(10.5,3)=[", Mod(10.5,3), "]"))
+      OutputLine(Concat("Mod(10,3.5)=[", Mod(10,3.5), "]"))
+    ENDIF
+
+    /* numeric strings */
+    IF @b == "modstr" THEN
+      OutputLine(Concat("Mod('10','3')=[", Mod("10","3"), "]"))
+      OutputLine(Concat("Mod(10,'3')=[", Mod(10,"3"), "]"))
+      OutputLine(Concat("Mod('10.5','0.25')=[", Mod("10.5","0.25"), "]"))
+    ENDIF
+
+    /* zero divisor: does NOT abort, so all cases can share one request */
+    IF @b == "m0" THEN
+      OutputLine(Concat("Mod(10,0)=[", Mod(10,0), "]"))
+      OutputLine(Concat("Mod(-10,0)=[", Mod(-10,0), "]"))
+      OutputLine(Concat("Mod(0,0)=[", Mod(0,0), "]"))
+      /* contrast: Divide renders the infinity symbol here */
+      OutputLine(Concat("Divide(10,0)=[", Divide(10,0), "]"))
+    ENDIF
+
+    /* each risky branch aborts the page: the start marker never renders */
+    IF @b == "fewm" THEN
+      OutputLine(Concat("--- fewm start ---"))
+      OutputLine(Concat("Mod(1)=[", Mod(1), "]"))
+    ENDIF
+
+    IF @b == "manym" THEN
+      OutputLine(Concat("--- manym start ---"))
+      OutputLine(Concat("Mod(1,2,3)=[", Mod(1,2,3), "]"))
+    ENDIF
+
+    IF @b == "strm" THEN
+      OutputLine(Concat("--- strm start ---"))
+      OutputLine(Concat("Mod('abc',3)=[", Mod("abc",3), "]"))
+    ENDIF
+
+    IF @b == "boolm" THEN
+      OutputLine(Concat("--- boolm start ---"))
+      OutputLine(Concat("Mod('true',3)=[", Mod("true",3), "]"))
+    ENDIF
+
+    IF @b == "datem" THEN
+      OutputLine(Concat("--- datem start ---"))
+      OutputLine(Concat("Mod(Now(),3)=[", Mod(Now(),3), "]"))
+    ENDIF
+  ]%%

@@ -1,0 +1,68 @@
+# Test scripts for /engagement/ampscript/functions/uppercase/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=empty, ?b=nau, ?b=tr, ?b=un, ?b=ud, ?b=ub, ?b=u0, ?b=u2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: ASCII letters change, digits and punctuation do not */
+    IF @b == "safe" THEN
+      OutputLine(Concat("UP1=[", Uppercase("HeLLo123!@#"), "]"))
+    ENDIF
+
+    /* empty string */
+    IF @b == "empty" THEN
+      OutputLine(Concat("UPE=[", Uppercase(""), "]"))
+    ENDIF
+
+    /* the sharp s survives verbatim; accented letters do map */
+    IF @b == "nau" THEN
+      OutputLine(Concat("NAU_ECHO_SS=[", "Straße", "]"))
+      OutputLine(Concat("NAU_UP_SS=[", Uppercase("Straße"), "]"))
+      OutputLine(Concat("NAU_ECHO_CAFE=[", "café", "]"))
+      OutputLine(Concat("NAU_UP_CAFE=[", Uppercase("café"), "]"))
+      OutputLine(Concat("NAU_ECHO_ACC=[", "àéîõü", "]"))
+      OutputLine(Concat("NAU_UP_ACC=[", Uppercase("àéîõü"), "]"))
+    ENDIF
+
+    /* invariant, not Turkish: the dotless i becomes a plain ASCII I */
+    IF @b == "tr" THEN
+      OutputLine(Concat("TR_ECHO_DOTLESS=[", "ı", "]"))
+      OutputLine(Concat("TR_UP_DOTLESS=[", Uppercase("ı"), "]"))
+      OutputLine(Concat("TR_UP_i=[", Uppercase("i"), "]"))
+    ENDIF
+
+    /* numbers pass through unchanged */
+    IF @b == "un" THEN
+      OutputLine(Concat("UN=[", Uppercase(12345), "]"))
+    ENDIF
+
+    /* date is stringified then processed */
+    IF @b == "ud" THEN
+      OutputLine(Concat("UD=[", Uppercase(Now()), "]"))
+    ENDIF
+
+    /* boolean: HTTP 200 but nothing renders between the brackets */
+    IF @b == "ub" THEN
+      OutputLine(Concat("UB=[", Uppercase(false), "]"))
+    ENDIF
+
+    /* each arity branch aborts the page: the start marker never renders */
+    IF @b == "u0" THEN
+      OutputLine(Concat("--- u0 start ---"))
+      OutputLine(Concat("U0=[", Uppercase(), "]"))
+    ENDIF
+
+    IF @b == "u2" THEN
+      OutputLine(Concat("--- u2 start ---"))
+      OutputLine(Concat("U2=[", Uppercase("a", "b"), "]"))
+    ENDIF
+  ]%%

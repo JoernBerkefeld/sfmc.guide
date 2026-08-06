@@ -1,0 +1,59 @@
+# Test scripts for /engagement/ampscript/functions/add/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=few, ?b=many, ?b=str, ?b=bool, ?b=empty, ?b=date.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: everything here is accepted and can share one request */
+    IF @b == "safe" THEN
+      OutputLine(Concat("Add(15,27)=[", Add(15,27), "]"))
+      OutputLine(Concat("Add('15','27')=[", Add("15","27"), "]"))
+      OutputLine(Concat("Add('3.14',1)=[", Add("3.14",1), "]"))
+      OutputLine(Concat("Add(10,'5')=[", Add(10,"5"), "]"))
+      OutputLine(Concat("Add(1.5,2.25)=[", Add(1.5,2.25), "]"))
+      OutputLine(Concat("Add(-5,3)=[", Add(-5,3), "]"))
+      OutputLine(Concat("Add(2147483647,1)=[", Add(2147483647,1), "]"))
+    ENDIF
+
+    /* each risky branch aborts the page: the start marker never renders */
+    IF @b == "few" THEN
+      OutputLine(Concat("few start"))
+      OutputLine(Concat("Add(1)=[", Add(1), "]"))
+      OutputLine(Concat("few done"))
+    ENDIF
+
+    IF @b == "many" THEN
+      OutputLine(Concat("many start"))
+      OutputLine(Concat("Add(1,2,3)=[", Add(1,2,3), "]"))
+      OutputLine(Concat("many done"))
+    ENDIF
+
+    IF @b == "str" THEN
+      OutputLine(Concat("str start"))
+      OutputLine(Concat("Add('abc',1)=[", Add("abc",1), "]"))
+    ENDIF
+
+    IF @b == "bool" THEN
+      OutputLine(Concat("bool start"))
+      OutputLine(Concat("Add('true',1)=[", Add("true",1), "]"))
+    ENDIF
+
+    IF @b == "empty" THEN
+      OutputLine(Concat("empty start"))
+      OutputLine(Concat("Add('',1)=[", Add("",1), "]"))
+    ENDIF
+
+    IF @b == "date" THEN
+      OutputLine(Concat("date start"))
+      OutputLine(Concat("Add(Now(),1)=[", Add(Now(),1), "]"))
+    ENDIF
+  ]%%

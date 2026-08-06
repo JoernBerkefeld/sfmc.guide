@@ -13,6 +13,7 @@ return_type: number
 min_args: 1
 max_args: 1
 verification: verified
+test_scripts: complete
 differs_from_docs: false
 ---
 
@@ -24,9 +25,33 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `sourceString` | `string \| number \| date` | Yes | Value to measure |
+| `sourceString` | string \| number \| date | Yes | Value to measure |
 
-The parameter is typed `string | number | date` rather than `string` because numbers and date values are both accepted and measured by their string form rather than rejected.
+## Example
+
+```html
+%%[
+  VAR @size
+  SET @size = Length("Hello")
+]%%
+Length: %%=v(@size)=%%
+```
+
+Renders `Length: 5`.
+
+The usual use is guarding an optional field before rendering it:
+
+```html
+%%[
+  IF Length(AttributeValue("FirstName")) > 0 THEN
+]%%
+  Hi %%=v(AttributeValue("FirstName"))=%%,
+%%[ ELSE ]%%
+  Hi there,
+%%[ ENDIF ]%%
+```
+
+The count is in UTF-16 code units, so an emoji counts as two — see below before using it as a character limit.
 
 ## Return value
 
@@ -35,8 +60,6 @@ The parameter is typed `string | number | date` rather than `string` because num
 Every successful call rendered a bare non-negative integer. There is no closed set of sentinel values.
 
 ## Behaviour
-
-**Exactly one argument.** Zero arguments abort the page; two arguments abort the page. Both cases return HTTP 422 and discard everything rendered before the call.
 
 **Plain ASCII counts one per character.** `Length("Hello")` gives `5` and `Length("Hello World")` gives `11`.
 
@@ -63,75 +86,18 @@ The emoji is one user-visible character but two code units, and `Length` reports
 
 The practical consequence is truncation and validation. A limit enforced with `Length` accepts one fewer user-visible character as soon as an emoji is involved, and cutting a string at a code-unit position can split a surrogate pair. The finding is catalogued on [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units).
 
+{% include test-script.html bundle="ampscript-functions--length" chapter="behaviour" %}
+
+{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
+
+{% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct count look wrong. Render the input alongside the count and dump both as codepoints before drawing any conclusion." %}
+
 ## Availability
 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
-
-## Test script
-
-Deploy the block once as a CloudPage, then fetch it one branch at a time — `?b=safe`, `?b=nal`, `?b=l0`, and so on. The arity branches have to be isolated because they abort the whole page; a branch that renders nothing at all is the failure signal. Fetch with UTF-8 decoding or the non-ASCII branch is unreadable.
-
-```html
-%%[
-  VAR @b
-  SET @b = RequestParameter("b")
-
-  /* safe sweep: plain ASCII */
-  IF @b == "safe" THEN
-    OutputLine(Concat("L5=[", Length("Hello"), "]"))
-    OutputLine(Concat("L11=[", Length("Hello World"), "]"))
-  ENDIF
-
-  /* counting unit: echo the input next to the count so the codepoints can be dumped */
-  IF @b == "nal" THEN
-    OutputLine(Concat("NAL_ASCII4=[", Length("abcd"), "]"))
-    OutputLine(Concat("NAL_ECHO_CAFE=[", "café", "]"))
-    OutputLine(Concat("NAL_CAFE=[", Length("café"), "]"))
-    OutputLine(Concat("NAL_ECHO_SS=[", "Straße", "]"))
-    OutputLine(Concat("NAL_SS=[", Length("Straße"), "]"))
-    OutputLine(Concat("NAL_ECHO_EMO=[", "😀", "]"))
-    OutputLine(Concat("NAL_EMO=[", Length("😀"), "]"))
-  ENDIF
-
-  /* empty string */
-  IF @b == "empty" THEN
-    OutputLine(Concat("LE=[", Length(""), "]"))
-  ENDIF
-
-  /* numbers and dates are measured by their string form */
-  IF @b == "ln" THEN
-    OutputLine(Concat("LN=[", Length(12345), "]"))
-  ENDIF
-
-  IF @b == "ld" THEN
-    OutputLine(Concat("LD_ECHO=[", Now(), "]"))
-    OutputLine(Concat("LD=[", Length(Now()), "]"))
-  ENDIF
-
-  /* boolean: HTTP 200, renders 0 */
-  IF @b == "lb" THEN
-    OutputLine(Concat("LB=[", Length(true), "]"))
-  ENDIF
-
-  /* each arity branch aborts the page: the start marker never renders */
-  IF @b == "l0" THEN
-    OutputLine(Concat("--- l0 start ---"))
-    OutputLine(Concat("L0=[", Length(), "]"))
-  ENDIF
-
-  IF @b == "l2" THEN
-    OutputLine(Concat("--- l2 start ---"))
-    OutputLine(Concat("L2=[", Length("a", "b"), "]"))
-  ENDIF
-]%%
-```
-
-{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
-
-{% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct count look wrong. Render the input alongside the count and dump both as codepoints before drawing any conclusion." %}
 
 ## See also
 

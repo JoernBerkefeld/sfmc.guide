@@ -1,0 +1,60 @@
+# Test scripts for /engagement/ampscript/functions/concat/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=c20, ?b=c1, ?b=c0, ?b=cn, ?b=cd, ?b=cb, ?b=empty.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: everything here is accepted and can share one request */
+    IF @b == "safe" THEN
+      OutputLine(Concat("C2=[", Concat("Hello", "World"), "]"))
+      OutputLine(Concat("C3=[", Concat("a", "-", "b"), "]"))
+      OutputLine(Concat("C12=[", Concat("1","2","3","4","5","6","7","8","9","A","B","C"), "]"))
+    ENDIF
+
+    /* twenty arguments: still accepted */
+    IF @b == "c20" THEN
+      OutputLine(Concat("C20=[", Concat("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t"), "]"))
+    ENDIF
+
+    /* one argument: HTTP 200, the value comes back unchanged */
+    IF @b == "c1" THEN
+      OutputLine(Concat("--- c1 start ---"))
+      OutputLine(Concat("C1=[", Concat("only"), "]"))
+      OutputLine(Concat("--- c1 done ---"))
+    ENDIF
+
+    /* zero arguments: page aborts with HTTP 422, no marker renders */
+    IF @b == "c0" THEN
+      OutputLine(Concat("--- c0 start ---"))
+      OutputLine(Concat("C0=[", Concat(), "]"))
+    ENDIF
+
+    /* numbers are stringified, not added */
+    IF @b == "cn" THEN
+      OutputLine(Concat("CN=[", Concat(12, 3.5), "]"))
+    ENDIF
+
+    /* date values are stringified */
+    IF @b == "cd" THEN
+      OutputLine(Concat("CD=[", Concat(Now(), "X"), "]"))
+    ENDIF
+
+    /* booleans: HTTP 200 but nothing renders between the brackets */
+    IF @b == "cb" THEN
+      OutputLine(Concat("CB=[", Concat(true, false), "]"))
+    ENDIF
+
+    /* empty strings join to an empty result */
+    IF @b == "empty" THEN
+      OutputLine(Concat("CE=[", Concat("", ""), "]"))
+    ENDIF
+  ]%%

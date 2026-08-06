@@ -1,0 +1,46 @@
+# Test scripts for /engagement/ampscript/functions/multiply/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=few, ?b=many, ?b=str, ?b=bool.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: everything here is accepted and can share one request */
+    IF @b == "safe" THEN
+      OutputLine(Concat("Multiply(5,3)=[", Multiply(5,3), "]"))
+      OutputLine(Concat("Multiply('5','3')=[", Multiply("5","3"), "]"))
+      OutputLine(Concat("Multiply('4',2.5)=[", Multiply("4",2.5), "]"))
+      OutputLine(Concat("Multiply(1.5,2.25)=[", Multiply(1.5,2.25), "]"))
+      OutputLine(Concat("Multiply(-5,3)=[", Multiply(-5,3), "]"))
+      OutputLine(Concat("Multiply(1000000,1000000)=[", Multiply(1000000,1000000), "]"))
+    ENDIF
+
+    /* each risky branch aborts the page: the start marker never renders */
+    IF @b == "few" THEN
+      OutputLine(Concat("few start"))
+      OutputLine(Concat("Multiply(1)=[", Multiply(1), "]"))
+    ENDIF
+
+    IF @b == "many" THEN
+      OutputLine(Concat("many start"))
+      OutputLine(Concat("Multiply(1,2,3)=[", Multiply(1,2,3), "]"))
+    ENDIF
+
+    IF @b == "str" THEN
+      OutputLine(Concat("str start"))
+      OutputLine(Concat("Multiply('abc',1)=[", Multiply("abc",1), "]"))
+    ENDIF
+
+    IF @b == "bool" THEN
+      OutputLine(Concat("bool start"))
+      OutputLine(Concat("Multiply('true',1)=[", Multiply("true",1), "]"))
+    ENDIF
+  ]%%

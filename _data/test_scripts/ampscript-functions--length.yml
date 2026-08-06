@@ -1,0 +1,63 @@
+# Test scripts for /engagement/ampscript/functions/length/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=nal, ?b=empty, ?b=ln, ?b=ld, ?b=lb, ?b=l0, ?b=l2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: plain ASCII */
+    IF @b == "safe" THEN
+      OutputLine(Concat("L5=[", Length("Hello"), "]"))
+      OutputLine(Concat("L11=[", Length("Hello World"), "]"))
+    ENDIF
+
+    /* counting unit: echo the input next to the count so the codepoints can be dumped */
+    IF @b == "nal" THEN
+      OutputLine(Concat("NAL_ASCII4=[", Length("abcd"), "]"))
+      OutputLine(Concat("NAL_ECHO_CAFE=[", "café", "]"))
+      OutputLine(Concat("NAL_CAFE=[", Length("café"), "]"))
+      OutputLine(Concat("NAL_ECHO_SS=[", "Straße", "]"))
+      OutputLine(Concat("NAL_SS=[", Length("Straße"), "]"))
+      OutputLine(Concat("NAL_ECHO_EMO=[", "😀", "]"))
+      OutputLine(Concat("NAL_EMO=[", Length("😀"), "]"))
+    ENDIF
+
+    /* empty string */
+    IF @b == "empty" THEN
+      OutputLine(Concat("LE=[", Length(""), "]"))
+    ENDIF
+
+    /* numbers and dates are measured by their string form */
+    IF @b == "ln" THEN
+      OutputLine(Concat("LN=[", Length(12345), "]"))
+    ENDIF
+
+    IF @b == "ld" THEN
+      OutputLine(Concat("LD_ECHO=[", Now(), "]"))
+      OutputLine(Concat("LD=[", Length(Now()), "]"))
+    ENDIF
+
+    /* boolean: HTTP 200, renders 0 */
+    IF @b == "lb" THEN
+      OutputLine(Concat("LB=[", Length(true), "]"))
+    ENDIF
+
+    /* each arity branch aborts the page: the start marker never renders */
+    IF @b == "l0" THEN
+      OutputLine(Concat("--- l0 start ---"))
+      OutputLine(Concat("L0=[", Length(), "]"))
+    ENDIF
+
+    IF @b == "l2" THEN
+      OutputLine(Concat("--- l2 start ---"))
+      OutputLine(Concat("L2=[", Length("a", "b"), "]"))
+    ENDIF
+  ]%%

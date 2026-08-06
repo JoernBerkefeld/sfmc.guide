@@ -1,0 +1,46 @@
+# Test scripts for /engagement/ampscript/functions/subtract/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=few, ?b=many, ?b=str, ?b=bool.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: everything here is accepted and can share one request */
+    IF @b == "safe" THEN
+      OutputLine(Concat("Subtract(50,15)=[", Subtract(50,15), "]"))
+      OutputLine(Concat("Subtract('50','15')=[", Subtract("50","15"), "]"))
+      OutputLine(Concat("Subtract('9',4)=[", Subtract("9",4), "]"))
+      OutputLine(Concat("Subtract(1.5,2.25)=[", Subtract(1.5,2.25), "]"))
+      OutputLine(Concat("Subtract(-5,3)=[", Subtract(-5,3), "]"))
+    ENDIF
+
+    /* each risky branch aborts the page: the start marker never renders */
+    IF @b == "few" THEN
+      OutputLine(Concat("few start"))
+      OutputLine(Concat("Subtract(1)=[", Subtract(1), "]"))
+      OutputLine(Concat("few done"))
+    ENDIF
+
+    IF @b == "many" THEN
+      OutputLine(Concat("many start"))
+      OutputLine(Concat("Subtract(1,2,3)=[", Subtract(1,2,3), "]"))
+    ENDIF
+
+    IF @b == "str" THEN
+      OutputLine(Concat("str start"))
+      OutputLine(Concat("Subtract('abc',1)=[", Subtract("abc",1), "]"))
+    ENDIF
+
+    IF @b == "bool" THEN
+      OutputLine(Concat("bool start"))
+      OutputLine(Concat("Subtract('true',1)=[", Subtract("true",1), "]"))
+    ENDIF
+  ]%%

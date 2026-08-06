@@ -1,0 +1,66 @@
+# Test scripts for /engagement/ampscript/functions/lowercase/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=empty, ?b=nau, ?b=tr, ?b=lon, ?b=lod, ?b=lob, ?b=lo0, ?b=lo2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: ASCII letters change, digits and punctuation do not */
+    IF @b == "safe" THEN
+      OutputLine(Concat("LO1=[", Lowercase("HeLLo123!@#"), "]"))
+    ENDIF
+
+    /* empty string */
+    IF @b == "empty" THEN
+      OutputLine(Concat("LOE=[", Lowercase(""), "]"))
+    ENDIF
+
+    /* accented capitals: echo the input too so both sides can be codepoint-dumped */
+    IF @b == "nau" THEN
+      OutputLine(Concat("NAU_ECHO_CAFE=[", "CAFÉ", "]"))
+      OutputLine(Concat("NAU_LO_CAFE=[", Lowercase("CAFÉ"), "]"))
+      OutputLine(Concat("NAU_ECHO_ACC=[", "ÀÉÎÕÜ", "]"))
+      OutputLine(Concat("NAU_LO_ACC=[", Lowercase("ÀÉÎÕÜ"), "]"))
+    ENDIF
+
+    /* invariant, not Turkish: the dotted capital I becomes a plain ASCII i */
+    IF @b == "tr" THEN
+      OutputLine(Concat("TR_ECHO_DOTI=[", "İ", "]"))
+      OutputLine(Concat("TR_LO_DOTI=[", Lowercase("İ"), "]"))
+      OutputLine(Concat("TR_LO_I=[", Lowercase("I"), "]"))
+    ENDIF
+
+    /* numbers pass through unchanged */
+    IF @b == "lon" THEN
+      OutputLine(Concat("LON=[", Lowercase(12345), "]"))
+    ENDIF
+
+    /* date: the AM meridiem comes back lowercased */
+    IF @b == "lod" THEN
+      OutputLine(Concat("LOD=[", Lowercase(Now()), "]"))
+    ENDIF
+
+    /* boolean: HTTP 200 but nothing renders between the brackets */
+    IF @b == "lob" THEN
+      OutputLine(Concat("LOB=[", Lowercase(true), "]"))
+    ENDIF
+
+    /* each arity branch aborts the page: the start marker never renders */
+    IF @b == "lo0" THEN
+      OutputLine(Concat("--- lo0 start ---"))
+      OutputLine(Concat("LO0=[", Lowercase(), "]"))
+    ENDIF
+
+    IF @b == "lo2" THEN
+      OutputLine(Concat("--- lo2 start ---"))
+      OutputLine(Concat("LO2=[", Lowercase("a", "b"), "]"))
+    ENDIF
+  ]%%

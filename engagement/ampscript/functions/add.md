@@ -13,6 +13,7 @@ return_type: number
 min_args: 2
 max_args: 2
 verification: verified
+test_scripts: complete
 differs_from_docs: false
 ---
 
@@ -24,10 +25,29 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `number1` | `string \| number` | Yes | First operand |
-| `number2` | `string \| number` | Yes | Second operand |
+| `number1` | string \| number | Yes | First operand |
+| `number2` | string \| number | Yes | Second operand |
 
-Both parameters are typed `string | number` rather than `number` because a string that parses cleanly as a number is accepted at runtime and produces the same result as the numeric literal.
+## Example
+
+```html
+%%[
+  VAR @total
+  SET @total = Add(1, 2)
+]%%
+Total: %%=v(@total)=%%
+```
+
+Renders `Total: 3`.
+
+Because a numeric string is accepted, adding zero is a compact way to turn a string field into a number before further arithmetic:
+
+```html
+%%[
+  VAR @qty
+  SET @qty = Add(AttributeValue("Quantity"), 0)
+]%%
+```
 
 ## Return value
 
@@ -37,8 +57,6 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 
 ## Behaviour
 
-**Exactly two arguments.** One argument aborts the page; three arguments abort the page. There is no optional third operand.
-
 **Decimals and negatives work as expected.** `Add(1.5, 2.25)` gives `3.75`; `Add(-5, 3)` gives `-2`.
 
 **Numeric strings are accepted.** `Add("15", "27")` gives `42`, `Add("3.14", 1)` gives `4.14`, and mixing forms as in `Add(10, "5")` gives `15`.
@@ -47,69 +65,16 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 
 **No 32-bit truncation.** `Add(2147483647, 1)` returns `2147483648`, so results are not clamped at the signed 32-bit boundary.
 
+{% include test-script.html bundle="ampscript-functions--add" chapter="behaviour" %}
+
+{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
+
 ## Availability
 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
-
-## Test script
-
-The AMPscript below is the harness that produced the evidence above. Risky cases have to be isolated: a rejected argument aborts the entire page, so they cannot share a request with the safe sweep. Deploy the block once as a CloudPage, then fetch it one branch at a time — `?b=safe`, `?b=few`, `?b=str`, and so on. A branch that renders nothing at all is the failure signal.
-
-```html
-%%[
-  VAR @b
-  SET @b = RequestParameter("b")
-
-  /* safe sweep: everything here is accepted and can share one request */
-  IF @b == "safe" THEN
-    OutputLine(Concat("Add(15,27)=[", Add(15,27), "]"))
-    OutputLine(Concat("Add('15','27')=[", Add("15","27"), "]"))
-    OutputLine(Concat("Add('3.14',1)=[", Add("3.14",1), "]"))
-    OutputLine(Concat("Add(10,'5')=[", Add(10,"5"), "]"))
-    OutputLine(Concat("Add(1.5,2.25)=[", Add(1.5,2.25), "]"))
-    OutputLine(Concat("Add(-5,3)=[", Add(-5,3), "]"))
-    OutputLine(Concat("Add(2147483647,1)=[", Add(2147483647,1), "]"))
-  ENDIF
-
-  /* each risky branch aborts the page: the start marker never renders */
-  IF @b == "few" THEN
-    OutputLine(Concat("few start"))
-    OutputLine(Concat("Add(1)=[", Add(1), "]"))
-    OutputLine(Concat("few done"))
-  ENDIF
-
-  IF @b == "many" THEN
-    OutputLine(Concat("many start"))
-    OutputLine(Concat("Add(1,2,3)=[", Add(1,2,3), "]"))
-    OutputLine(Concat("many done"))
-  ENDIF
-
-  IF @b == "str" THEN
-    OutputLine(Concat("str start"))
-    OutputLine(Concat("Add('abc',1)=[", Add("abc",1), "]"))
-  ENDIF
-
-  IF @b == "bool" THEN
-    OutputLine(Concat("bool start"))
-    OutputLine(Concat("Add('true',1)=[", Add("true",1), "]"))
-  ENDIF
-
-  IF @b == "empty" THEN
-    OutputLine(Concat("empty start"))
-    OutputLine(Concat("Add('',1)=[", Add("",1), "]"))
-  ENDIF
-
-  IF @b == "date" THEN
-    OutputLine(Concat("date start"))
-    OutputLine(Concat("Add(Now(),1)=[", Add(Now(),1), "]"))
-  ENDIF
-]%%
-```
-
-{% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
 ## See also
 

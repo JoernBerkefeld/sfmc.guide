@@ -1,0 +1,56 @@
+# Test scripts for /engagement/ampscript/functions/divide/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=d0, ?b=few, ?b=many, ?b=str, ?b=bool.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: everything here is accepted and can share one request */
+    IF @b == "safe" THEN
+      OutputLine(Concat("Divide(100,4)=[", Divide(100,4), "]"))
+      OutputLine(Concat("Divide('100','4')=[", Divide("100","4"), "]"))
+      OutputLine(Concat("Divide('3.5','0.5')=[", Divide("3.5","0.5"), "]"))
+      OutputLine(Concat("Divide(9,'2')=[", Divide(9,"2"), "]"))
+      OutputLine(Concat("Divide(10,3)=[", Divide(10,3), "]"))
+      OutputLine(Concat("Divide(-10,4)=[", Divide(-10,4), "]"))
+    ENDIF
+
+    /* zero divisor: does NOT abort, so all cases can share one request */
+    IF @b == "d0" THEN
+      OutputLine(Concat("Divide(100,0)=[", Divide(100,0), "]"))
+      OutputLine(Concat("Divide(1,0)=[", Divide(1,0), "]"))
+      OutputLine(Concat("Divide(7.5,0)=[", Divide(7.5,0), "]"))
+      OutputLine(Concat("Divide(-100,0)=[", Divide(-100,0), "]"))
+      OutputLine(Concat("Divide(0,0)=[", Divide(0,0), "]"))
+      OutputLine(Concat("Divide(100,'0')=[", Divide(100,"0"), "]"))
+    ENDIF
+
+    /* each risky branch aborts the page: the start marker never renders */
+    IF @b == "few" THEN
+      OutputLine(Concat("few start"))
+      OutputLine(Concat("Divide(1)=[", Divide(1), "]"))
+    ENDIF
+
+    IF @b == "many" THEN
+      OutputLine(Concat("many start"))
+      OutputLine(Concat("Divide(1,2,3)=[", Divide(1,2,3), "]"))
+    ENDIF
+
+    IF @b == "str" THEN
+      OutputLine(Concat("str start"))
+      OutputLine(Concat("Divide('abc',1)=[", Divide("abc",1), "]"))
+    ENDIF
+
+    IF @b == "bool" THEN
+      OutputLine(Concat("bool start"))
+      OutputLine(Concat("Divide('true',1)=[", Divide("true",1), "]"))
+    ENDIF
+  ]%%

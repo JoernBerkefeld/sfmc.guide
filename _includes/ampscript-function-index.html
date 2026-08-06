@@ -14,13 +14,19 @@
     empty   (string) - sentence shown when there are no entries.
 
   Row fields come from scripts/generate-ampscript-function-index.mjs:
-    name, slug, category, syntax, returnType, args, verified, url,
+    name, slug, category, syntax, returnType, verified, url,
     differsFromDocs, deprecated, mcn, description, guideUrl
 
   A row is only linked when `verified` is true — an unverified row is
   catalogued, not proven, and must never link to a page that does not exist.
 
   Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
+
+  `description` MUST be escaped. Several catalog descriptions contain raw HTML
+  tag names (BuildOptionList mentions <option> and <select>); emitted verbatim
+  they open elements Kramdown never sees closed, which terminates the raw-HTML
+  block. Everything after it — the table's own closing tags and the Markdown
+  following the include — then renders as literal text.
 {% endcomment %}
 
 {% assign afi_entries = include.entries %}
@@ -216,14 +222,13 @@
       <tr>
         <th>Function</th>
         <th>Category</th>
-        <th>Args</th>
         <th>Returns</th>
         <th>State</th>
         <th>Description</th>
       </tr>
     </thead>
     <tbody id="afi-body">
-      {% for f in afi_entries %}
+      {%- for f in afi_entries %}
       <tr class="afi-row{% unless f.verified %} afi-row--unverified{% endunless %}"
           data-name="{{ f.name | downcase | escape }}"
           data-category="{{ f.category | escape }}"
@@ -231,22 +236,21 @@
           id="fn-{{ f.slug }}">
         <td>
           {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
-          {% if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
-          {% if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
+          {%- if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
+          {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
         <td><span class="afi-tag">{{ f.category }}</span></td>
-        <td>{{ f.args }}</td>
         <td><code>{{ f.returnType }}</code></td>
         <td>
-          {% if f.verified %}
+          {%- if f.verified %}
           <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>
-          {% else %}
+          {%- else %}
           <span class="afi-state afi-state--unverified" title="Listed from the language catalog. Runtime behaviour has not been proven here.">Catalogued</span>
-          {% endif %}
+          {%- endif %}
         </td>
-        <td class="afi-desc">{{ f.description }}</td>
+        <td class="afi-desc">{{ f.description | escape }}</td>
       </tr>
-      {% endfor %}
+      {%- endfor %}
     </tbody>
   </table>
 </div>
