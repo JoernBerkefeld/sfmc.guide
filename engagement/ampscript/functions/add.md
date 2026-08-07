@@ -30,7 +30,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @total
   SET @total = Add(1, 2)
@@ -42,7 +42,7 @@ Renders `Total: 3`.
 
 Because a numeric string is accepted, adding zero is a compact way to turn a string field into a number before further arithmetic:
 
-```html
+```ampscript
 %%[
   VAR @qty
   SET @qty = Add(AttributeValue("Quantity"), 0)

@@ -27,7 +27,7 @@ permalink: /engagement/ampscript/
 
 When AMPscript is inserted into either an email or a CloudPage it usually clutters up the preview window with code. To avoid this, wrap your code in something that will not render:
 
-```html
+```ampscript
 <div style="display:none">
 %%[
 // your code here
@@ -49,7 +49,7 @@ _Why?_ Not seeing the Code shrinks the content block to its minimum height, maki
 
 When creating links that include variables there are multiple approaches but some will lead to tracking being disabled.
 
-```html
+```ampscript
 <!-- good -->
 
 %%[
@@ -60,7 +60,7 @@ SET @url = CONCAT("https://mydomain.com/somePath?foo=", @myParam)
 <a href="%%=RedirectTo(@url)=%%">demo link</a>
 ```
 
-```html
+```ampscript
 <!-- bad -->
 
 %%[

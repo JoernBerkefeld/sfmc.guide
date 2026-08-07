@@ -84,7 +84,7 @@ This one is a bit tricky, however possible in both SSJS and AmpScript:
 
 AmpScript solution:
 
-```c++
+```ampscript
 # ampscript
 %%[
 // get attributes passed in during the API call

@@ -32,7 +32,7 @@ There is no upper bound on the argument count.
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @greeting
   SET @greeting = Concat("Hello ", AttributeValue("FirstName"), "!")
@@ -44,7 +44,7 @@ With a first name of `Ada`, renders `Hello Ada!`.
 
 Nothing is inserted between the values, so a separator has to be an argument of its own:
 
-```html
+```ampscript
 %%[
   VAR @label
   SET @label = Concat("Order", " ", "#", 4711)

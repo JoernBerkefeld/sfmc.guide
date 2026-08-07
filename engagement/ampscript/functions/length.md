@@ -29,7 +29,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @size
   SET @size = Length("Hello")
@@ -41,7 +41,7 @@ Renders `Length: 5`.
 
 The usual use is guarding an optional field before rendering it:
 
-```html
+```ampscript
 %%[
   IF Length(AttributeValue("FirstName")) > 0 THEN
 ]%%

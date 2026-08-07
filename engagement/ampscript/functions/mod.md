@@ -30,7 +30,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @rest
   SET @rest = Mod(10, 3)
@@ -42,7 +42,7 @@ Renders `Remainder: 1`.
 
 The common use is bucketing — pair it with [`Random`](/engagement/ampscript/functions/random/) or a subscriber ID to split an audience into groups:
 
-```html
+```ampscript
 %%[
   VAR @bucket
   SET @bucket = Mod(AttributeValue("SubscriberID"), 4)

@@ -30,7 +30,7 @@ differs_from_docs: true
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @pick
   SET @pick = Random(1, 3)
@@ -42,7 +42,7 @@ Renders `Variant: 1`, `2` or `3` — both bounds are reachable.
 
 Use it to pick one of a handful of content variants:
 
-```html
+```ampscript
 %%[
   VAR @pick
   SET @pick = Random(1, 2)

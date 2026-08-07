@@ -30,7 +30,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @unitPrice
   SET @unitPrice = Divide(29.97, 3)
@@ -42,7 +42,7 @@ Renders `Per unit: 9.99`.
 
 A zero divisor renders `∞` rather than failing, so guard the divisor before you use the result:
 
-```html
+```ampscript
 %%[
   VAR @count, @average
   SET @count = AttributeValue("ItemCount")

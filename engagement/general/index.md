@@ -65,13 +65,13 @@ Ever tried to fix a bug and got annoyed by having to publish your page or send y
 
 **Open a new CloudPage and replace everything in Code View with this:**
 
-```javascript
+```ampscript
 %%= TreatAsContent(HTTPGet("https://myurl.com/loader.html")) =%%
 ```
 
 **Put all following files into your online service for quick editing:**
 
-```html
+```ampscript
 
 <!-- loader.html -->
 
@@ -248,7 +248,7 @@ app-4.script.min.js
 
 Load the Platform Core once before all other SSJS files to use one consistent version across the CloudPage:
 
-```html
+```ampscript
 <!-- initCore.ssjs -->
 <!-- load this before all other SSJS files to use one consistent Core version across the CloudPage -->
 %%[ /* <b>initCore.ssjs</b> */ ]%%
@@ -266,7 +266,7 @@ Keep in mind that the above is just the minimal example. Of you have more code, 
 Any file should only contain markup language (HTML) or front-end code (CSS or JS) or AMPscript code or SSJS. You should avoid mixing this and mimic what the structure you saved locally.
 To still be able to easily recognize which content block contains what, add a little AMPscript at the beginning:
 
-```java
+```ampscript
 %%[ /* myAMPscript.amp */ ]%%
 
 %%[
@@ -276,7 +276,7 @@ To still be able to easily recognize which content block contains what, add a li
 
 or
 
-```java
+```ampscript
 %%[ /* mySSJS.ssjs */ ]%%
 
 <script runat="server" language="JavaScript">

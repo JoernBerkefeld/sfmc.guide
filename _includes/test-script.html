@@ -44,7 +44,7 @@
 {%- assign ts_script = ts_bundle[include.chapter] -%}
 {%- if ts_script -%}
 {%- assign ts_label = include.label | default: "Show test script" -%}
-<details class="testscript-details"><summary>{{ ts_label }}</summary>{{ '```html' | append: '
+<details class="testscript-details"><summary>{{ ts_label }}</summary>{{ '```ampscript' | append: '
 ' | append: ts_script | append: '
 ```' | markdownify }}</details>
 {%- endif -%}

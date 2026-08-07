@@ -30,7 +30,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @lineTotal
   SET @lineTotal = Multiply(3, 9.99)
@@ -42,7 +42,7 @@ Renders `Line total: 29.97`.
 
 Percentages need the fraction spelled out, since there is no percent operator:
 
-```html
+```ampscript
 %%[
   VAR @vat
   SET @vat = Multiply(AttributeValue("NetAmount"), 0.19)

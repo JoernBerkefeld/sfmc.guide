@@ -53,6 +53,27 @@ Marketing Cloud Next supports a **subset** of Engagement AMPscript and a paralle
 
 {% include callout.html type="note" title="Source of truth" content="AMPscript support and \`handlebarsEquivalent\` come from \`ampscript-data\`. Handlebars helpers come from \`handlebars-data\`. Regenerate this page when those packages change." %}
 
+## Syntax at a glance
+
+Handlebars helpers, Marketing Cloud Next bindings and AMPscript can all appear in the same template. Documented helpers and functions are highlighted differently from names the catalogs do not know:
+
+{% raw %}
+
+\`\`\`sfmc
+{{#if isMember}}
+  {{formatCurrency total "EUR"}} — {{myUnknownHelper total}}
+{{else}}
+  {{fallback firstName "there"}}
+{{/if}}
+
+<a href="{!$link.PreferenceCenterUrl}">Manage preferences</a>
+
+%%[ SET @greeting = Concat("Hello ", @firstName) ]%%
+%%=v(@greeting)=%%
+\`\`\`
+
+{% endraw %}
+
 ## AMPscript supported in Marketing Cloud Next
 
 Functions where \`isMcnSupported\` is true. **API version** is the Marketing Cloud Next API version from \`mcnSince\` / \`getMcnApiVersion\`.

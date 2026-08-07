@@ -29,7 +29,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @key
   SET @key = Lowercase("Hello World")
@@ -41,7 +41,7 @@ Renders `hello world`.
 
 The everyday use is normalising a value before comparing or keying on it:
 
-```html
+```ampscript
 %%[
   VAR @email
   SET @email = Lowercase(AttributeValue("EmailAddress"))

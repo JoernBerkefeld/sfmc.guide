@@ -275,7 +275,7 @@
     <span class="dfd-tag">{{ r.category }}</span>
   </div>
   <div class="dfd-card__body">{{ r.body | markdownify }}</div>
-  {% if r.testScript %}{% if r.testScript == "needs review" %}<p class="dfd-card__testscript-note"><em>Test script: needs review.</em></p>{% else %}<details class="dfd-testscript"><summary>Show test script</summary>{{ '```html' | append: '
+  {% if r.testScript %}{% if r.testScript == "needs review" %}<p class="dfd-card__testscript-note"><em>Test script: needs review.</em></p>{% else %}<details class="dfd-testscript"><summary>Show test script</summary>{{ '```ampscript' | append: '
 ' | append: r.testScript | append: '
 ```' | markdownify }}</details>{% endif %}{% endif %}
   {% if r.officialUrl %}<p class="dfd-card__ref"><a href="{{ r.officialUrl }}" target="_blank" rel="noopener">Official documentation</a></p>{% endif %}

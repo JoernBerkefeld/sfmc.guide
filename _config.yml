@@ -29,6 +29,8 @@ exclude:
   - vendor/gems/
   - vendor/ruby/
   - .git
+  - package.json
+  - package-lock.json
   - README.md
   - scripts
 

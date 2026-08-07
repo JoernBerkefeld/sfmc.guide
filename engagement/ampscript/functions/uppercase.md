@@ -29,7 +29,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @shout
   SET @shout = Uppercase("Hello World")
@@ -41,7 +41,7 @@ Renders `HELLO WORLD`.
 
 Typical use is a country or currency code that has to render consistently regardless of how it was stored:
 
-```html
+```ampscript
 %%[
   VAR @country
   SET @country = Uppercase(AttributeValue("CountryCode"))

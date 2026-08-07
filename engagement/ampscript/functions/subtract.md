@@ -30,7 +30,7 @@ differs_from_docs: false
 
 ## Example
 
-```html
+```ampscript
 %%[
   VAR @remaining
   SET @remaining = Subtract(100, 15)
@@ -42,7 +42,7 @@ Renders `Remaining: 85`.
 
 A result below zero is returned as-is, so subtract in the order you want the sign to come out:
 
-```html
+```ampscript
 %%[
   VAR @balance
   SET @balance = Subtract(AttributeValue("Credit"), AttributeValue("Spent"))
