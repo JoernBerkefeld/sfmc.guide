@@ -121,7 +121,9 @@
   background: #f1f5f9;
   color: #475569;
 }
-/* Verification state chips — reuse .verified-badge sizing, colored per state. */
+/* Verified chip — reuses .verified-badge sizing. Only verified rows carry one;
+   its absence is what marks a row as merely catalogued. Sits after the name and
+   may wrap onto its own line when the column is narrow. */
 .afi-state {
   display: inline-flex;
   align-items: center;
@@ -136,11 +138,6 @@
   color: #15803d;
   background: rgba(21, 128, 61, 0.08);
   border-color: rgba(21, 128, 61, 0.3);
-}
-.afi-state--unverified {
-  color: #64748b;
-  background: #f1f5f9;
-  border-color: #cbd5e1;
 }
 .afi-flag {
   display: inline-flex;
@@ -209,9 +206,8 @@
 
 <p class="afi-legend">
   <span class="afi-state afi-state--verified">Verified</span> means the function completed a runtime
-  sweep on a live Engagement CloudPage and has a reference page — the name links to it.
-  <span class="afi-state afi-state--unverified">Catalogued</span> means the signature below comes from
-  the language catalog and has <strong>not</strong> been proven here; use
+  sweep on a live Engagement CloudPage and has a reference page — the name links to it. A name without
+  the badge is listed from the language catalog and has <strong>not</strong> been proven here; use
   <a href="https://ampscript.guide/" target="_blank" rel="noopener">ampscript.guide</a> for those until a
   sweep reaches them.
 </p>
@@ -223,7 +219,6 @@
         <th>Function</th>
         <th>Category</th>
         <th>Returns</th>
-        <th>State</th>
         <th>Description</th>
       </tr>
     </thead>
@@ -236,18 +231,12 @@
           id="fn-{{ f.slug }}">
         <td>
           {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
+          {%- if f.verified %} <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
           {%- if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
           {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
         <td><span class="afi-tag">{{ f.category }}</span></td>
         <td><code>{{ f.returnType }}</code></td>
-        <td>
-          {%- if f.verified %}
-          <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>
-          {%- else %}
-          <span class="afi-state afi-state--unverified" title="Listed from the language catalog. Runtime behaviour has not been proven here.">Catalogued</span>
-          {%- endif %}
-        </td>
         <td class="afi-desc">{{ f.description | escape }}</td>
       </tr>
       {%- endfor %}

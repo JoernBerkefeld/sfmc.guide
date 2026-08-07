@@ -24,8 +24,10 @@
     </div>
 
     <nav class="header-nav">
-      <a href="{{ '/engagement/' | relative_url }}" class="header-nav-link">Engagement</a>
-      <a href="{{ '/next/' | relative_url }}" class="header-nav-link">Next</a>
+      {%- comment -%}
+        No Engagement / Next links here — the brand platform toggles on the left
+        already cover both, and duplicating them crowds the bar.
+      {%- endcomment -%}
       <a href="{{ '/tools/' | relative_url }}" class="header-nav-link">Tools</a>
       <a href="https://ssjs.guide" class="header-nav-link" target="_blank" rel="noopener">ssjs.guide</a>
       <a href="https://github.com/JoernBerkefeld/sfmc.guide" class="header-nav-link header-nav-link--icon" target="_blank" rel="noopener" aria-label="GitHub">
