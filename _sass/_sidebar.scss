@@ -90,7 +90,9 @@
   color: $text-muted;
 }
 
-.sidebar-section.is-active .sidebar-chevron {
+// Direct child only — a descendant selector would also rotate the chevron of a
+// nested parent item, which tracks its own open state.
+.sidebar-section.is-active > .sidebar-section-title .sidebar-chevron {
   transform: rotate(180deg);
 }
 
@@ -116,6 +118,20 @@
   letter-spacing: 0.08em;
   color: $text-muted;
   margin-top: $space-2;
+}
+
+// Third level — indented one step further than .sidebar-link so the hierarchy
+// reads at a glance. Collapsed unless the current page is the parent or one of
+// its grandchildren.
+.sidebar-grandchildren {
+  display: none;
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+
+  &.is-open {
+    display: block;
+  }
 }
 
 .sidebar-item {
@@ -144,6 +160,36 @@
     border-left-color: $accent-primary;
     font-weight: 500;
   }
+
+  // A child that owns a third level reads like a section heading rather than a
+  // leaf link — same weight and chevron as .sidebar-section-title, one level in.
+  &--parent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    font-weight: 600;
+    color: $text-secondary;
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  &--nested {
+    padding-left: $space-10;
+    font-size: $text-xs;
+  }
+}
+
+// Chevron points down when collapsed, up when expanded — mirrors
+// .sidebar-section.is-active .sidebar-chevron for the top level.
+.sidebar-item--parent.is-expanded > .sidebar-link .sidebar-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-group-label--nested {
+  padding-left: $space-10;
 }
 
 // ── Mobile sidebar overlay ────────────────────────────────────────────────────

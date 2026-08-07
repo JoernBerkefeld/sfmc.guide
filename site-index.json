@@ -130,7 +130,7 @@
     "url": "/function-index/",
     "section": "function-index",
     "type": "page",
-    "description": "Entry point to the Marketing Cloud function references — the AMPscript function index on sfmc.guide, and the SSJS function index on ssjs.guide."
+    "description": "Entry point to the Marketing Cloud function references — AMPscript and Handlebars on sfmc.guide, SSJS on ssjs.guide."
   },
   {
     "name": "General coding guidelines",

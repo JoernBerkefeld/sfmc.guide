@@ -13,38 +13,6 @@
       url: /engagement/
     - title: General guidelines
       url: /engagement/general/
-    - title: AMPscript
-      url: /engagement/ampscript/
-    - title: Function reference
-      url: /engagement/ampscript/functions/
-    - title: "— Math functions —"
-      url: /engagement/ampscript/functions/#all-functions
-    - title: Add
-      url: /engagement/ampscript/functions/add/
-    - title: Divide
-      url: /engagement/ampscript/functions/divide/
-    - title: Mod
-      url: /engagement/ampscript/functions/mod/
-    - title: Multiply
-      url: /engagement/ampscript/functions/multiply/
-    - title: Random
-      url: /engagement/ampscript/functions/random/
-    - title: Subtract
-      url: /engagement/ampscript/functions/subtract/
-    - title: "— String functions —"
-      url: /engagement/ampscript/functions/#all-functions
-    - title: Concat
-      url: /engagement/ampscript/functions/concat/
-    - title: Length
-      url: /engagement/ampscript/functions/length/
-    - title: Lowercase
-      url: /engagement/ampscript/functions/lowercase/
-    - title: Uppercase
-      url: /engagement/ampscript/functions/uppercase/
-    - title: "— Engagement —"
-      url: /engagement/
-    - title: SSJS function reference
-      url: /engagement/ssjs/functions/
     - title: Differs from Official Docs
       url: /engagement/differs-from-docs/
     - title: FAQ
@@ -53,6 +21,37 @@
       url: /engagement/einstein/recommendation/
     - title: Encryption
       url: /engagement/encryption/
+    - title: SSJS Function Index
+      url: /engagement/ssjs/functions/
+    - title: AMPscript
+      url: /engagement/ampscript/
+    - title: AMPscript Function Index
+      url: /engagement/ampscript/functions/
+      children:
+        - title: "— Math functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: Add
+          url: /engagement/ampscript/functions/add/
+        - title: Divide
+          url: /engagement/ampscript/functions/divide/
+        - title: Mod
+          url: /engagement/ampscript/functions/mod/
+        - title: Multiply
+          url: /engagement/ampscript/functions/multiply/
+        - title: Random
+          url: /engagement/ampscript/functions/random/
+        - title: Subtract
+          url: /engagement/ampscript/functions/subtract/
+        - title: "— String functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: Concat
+          url: /engagement/ampscript/functions/concat/
+        - title: Length
+          url: /engagement/ampscript/functions/length/
+        - title: Lowercase
+          url: /engagement/ampscript/functions/lowercase/
+        - title: Uppercase
+          url: /engagement/ampscript/functions/uppercase/
 
 - title: Next
   url: /next/

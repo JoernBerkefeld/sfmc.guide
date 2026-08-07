@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = 'sfmc-guide-' + CACHE_VERSION;
 
 const PRECACHE_URLS = ['/'];
@@ -36,7 +36,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(event.request).then((cached) => {
-        const networkFetch = fetch(event.request).then((response) => {
+        // `cache: 'reload'` bypasses the browser's HTTP cache. Without it the
+        // revalidation can re-store the very copy it is meant to replace, so a
+        // changed asset stays stale even after a cache-version bump.
+        const networkFetch = fetch(event.request, { cache: 'reload' }).then((response) => {
           if (response.ok) {
             cache.put(event.request, response.clone());
           }

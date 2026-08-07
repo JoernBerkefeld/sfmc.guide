@@ -39,23 +39,41 @@
 
   // ── Sidebar section expand/collapse ────────────────────────────────────────
 
+  // The chevron collapses/expands the section; the title text navigates to the
+  // section's own page. Clicking the label must not toggle, or a section closes
+  // the moment you enter it.
+
   var sectionTitles = document.querySelectorAll('.sidebar-section-title');
   sectionTitles.forEach(function (title) {
     title.addEventListener('click', function (e) {
       var section = title.parentElement;
       var children = section.querySelector('.sidebar-children');
-      if (children) {
-        // Only prevent default if it's a collapsible section (has children)
-        var isOpen = children.classList.contains('is-open');
-        if (isOpen) {
-          children.classList.remove('is-open');
-          section.classList.remove('is-active');
-        } else {
-          children.classList.add('is-open');
-          section.classList.add('is-active');
-        }
-        // Only prevent default navigation when toggling collapsed section
-        // Let active-section links through
+      if (!children || !e.target.closest('.sidebar-chevron')) {
+        return;
+      }
+      e.preventDefault();
+      children.classList.toggle('is-open');
+      section.classList.toggle('is-active');
+    });
+  });
+
+  // ── Sidebar third-level expand/collapse ────────────────────────────────────
+  // The chevron toggles; the label itself still navigates to the parent page.
+
+  var parentLinks = document.querySelectorAll('.sidebar-link--parent');
+  parentLinks.forEach(function (link) {
+    var chevron = link.querySelector('.sidebar-chevron');
+    if (!chevron) {
+      return;
+    }
+    chevron.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var item = link.parentElement;
+      var grandchildren = item.querySelector('.sidebar-grandchildren');
+      if (grandchildren) {
+        grandchildren.classList.toggle('is-open');
+        item.classList.toggle('is-expanded');
       }
     });
   });
