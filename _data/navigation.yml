@@ -3,6 +3,10 @@
   children:
     - title: AMPscript functions
       url: /engagement/ampscript/functions/
+    - title: AMPscript functions (Next)
+      url: /next/ampscript/functions/
+    - title: Handlebars helpers
+      url: /next/handlebars/helpers/
     - title: SSJS functions
       url: /engagement/ssjs/functions/
 
@@ -60,6 +64,10 @@
       url: /next/
     - title: AMPscript & Handlebars
       url: /next/ampscript-handlebars/
+    - title: AMPscript Function Index
+      url: /next/ampscript/functions/
+    - title: Handlebars Helper Index
+      url: /next/handlebars/helpers/
     - title: Differs from Official Docs
       url: /next/differs-from-docs/
 

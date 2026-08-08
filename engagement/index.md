@@ -3,6 +3,8 @@ layout: page
 title: "Marketing Cloud Engagement"
 description: "Architect-oriented guides for Salesforce Marketing Cloud Engagement — patterns, FAQ, AMPscript notes, Einstein, and encryption."
 permalink: /engagement/
+platforms:
+  - engagement
 ---
 
 Practical Engagement material ported from the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/), plus pointers to deeper language references.

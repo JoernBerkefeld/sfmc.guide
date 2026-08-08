@@ -5,6 +5,8 @@ description: "Encryption patterns for Salesforce Marketing Cloud Engagement."
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/encryption/
+platforms:
+  - engagement
 ---
 
 {% include callout.html type="note" title="Originally published" content="First published **2022-06-30** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/encryption/). Ported here for sfmc.guide." %}

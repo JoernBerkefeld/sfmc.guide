@@ -10,15 +10,23 @@
        empty="No functions catalogued yet." %}
 
   Parameters:
-    entries (array)  - a site.data.* list of function rows (may be empty/nil).
-    empty   (string) - sentence shown when there are no entries.
+    entries         (array)  - a site.data.* list of function rows (may be empty/nil).
+    empty           (string) - sentence shown when there are no entries.
+    mcn_only        (bool)   - keep only rows available on Marketing Cloud Next
+                               (non-empty `mcn`). Default: show everything.
+    show_mcn        (bool)   - add the "API version" column and its sort mode.
+    show_handlebars (bool)   - add the "Handlebars" column (equivalent helper +
+                               the MCN caveat from `mcnNotes`).
 
   Row fields come from scripts/generate-ampscript-function-index.mjs:
     name, slug, category, syntax, returnType, verified, url,
-    differsFromDocs, deprecated, mcn, description, guideUrl
+    differsFromDocs, deprecated, mcn, handlebarsEquivalent, mcnNotes,
+    description, guideUrl
 
   A row is only linked when `verified` is true — an unverified row is
   catalogued, not proven, and must never link to a page that does not exist.
+  Verification always happens on Engagement, so the link target stays under
+  /engagement/ even when the table is rendered in the Next section.
 
   Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
 
@@ -30,7 +38,10 @@
 {% endcomment %}
 
 {% assign afi_entries = include.entries %}
+{% if include.mcn_only %}{% assign afi_entries = afi_entries | where_exp: "f", "f.mcn != ''" %}{% endif %}
 {% assign afi_count = afi_entries | size %}
+{% assign afi_noun = "functions" %}
+{% if include.mcn_only %}{% assign afi_noun = "Next functions" %}{% endif %}
 
 <style>
 .afi-controls {
@@ -159,6 +170,20 @@
 .afi-desc {
   color: #475569;
 }
+/* Marketing Cloud Next API version — numeric, right-aligned like the old
+   generated markdown table it replaced. */
+.afi-ver {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: #475569;
+}
+.afi-note {
+  display: block;
+  margin-top: 0.25em;
+  font-size: 0.78rem;
+  color: #64748b;
+}
 .afi-legend {
   font-size: 0.78rem;
   color: #64748b;
@@ -198,6 +223,9 @@
       <option value="name" selected>Name (A &rarr; Z)</option>
       <option value="category">Category</option>
       <option value="state">Verification state</option>
+      {%- if include.show_mcn %}
+      <option value="version">API version</option>
+      {%- endif %}
     </select>
   </div>
 </div>
@@ -218,7 +246,9 @@
       <tr>
         <th>Function</th>
         <th>Category</th>
+        {%- if include.show_mcn %}<th>API version</th>{% endif %}
         <th>Returns</th>
+        {%- if include.show_handlebars %}<th>Handlebars</th>{% endif %}
         <th>Description</th>
       </tr>
     </thead>
@@ -228,6 +258,7 @@
           data-name="{{ f.name | downcase | escape }}"
           data-category="{{ f.category | escape }}"
           data-state="{% if f.verified %}verified{% else %}unverified{% endif %}"
+          data-version="{{ f.mcn }}"
           id="fn-{{ f.slug }}">
         <td>
           {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
@@ -236,7 +267,16 @@
           {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
         <td><span class="afi-tag">{{ f.category }}</span></td>
+        {%- if include.show_mcn %}
+        <td class="afi-ver">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
+        {%- endif %}
         <td><code>{{ f.returnType }}</code></td>
+        {%- if include.show_handlebars %}
+        <td>
+          {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
+          {%- if f.mcnNotes != "" %}<span class="afi-note">{{ f.mcnNotes | escape }}</span>{% endif %}
+        </td>
+        {%- endif %}
         <td class="afi-desc">{{ f.description | escape }}</td>
       </tr>
       {%- endfor %}
@@ -258,6 +298,7 @@
   var rows = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
   var TOTAL = rows.length;
   var VERIFIED = {{ afi_verified }};
+  var NOUN = {{ afi_noun | jsonify }};
   var STATE_ORDER = { verified: 0, unverified: 1 };
 
   // VS Code-style subsequence match: every query char must appear in order
@@ -294,7 +335,7 @@
 
     if (countEl) {
       countEl.textContent =
-        "Showing " + total + " of " + TOTAL + " functions — " + VERIFIED + " runtime verified";
+        "Showing " + total + " of " + TOTAL + " " + NOUN + " — " + VERIFIED + " runtime verified";
     }
   }
 
@@ -329,6 +370,21 @@
       for (var i = 0; i < catOrder.length; i++) {
         buckets[catOrder[i]].sort(byName);
         ordered = ordered.concat(buckets[catOrder[i]]);
+      }
+    } else if (mode === "version") {
+      // Oldest API version first; Engagement-only rows (no version) last.
+      var versioned = [];
+      for (var v = 0; v < group.length; v++) {
+        var raw = group[v].getAttribute("data-version");
+        var num = raw ? parseInt(raw, 10) : NaN;
+        versioned.push({ row: group[v], key: isNaN(num) ? Infinity : num });
+      }
+      versioned.sort(function (a, b) {
+        return a.key - b.key || byName(a.row, b.row);
+      });
+      ordered = [];
+      for (var w = 0; w < versioned.length; w++) {
+        ordered.push(versioned[w].row);
       }
     } else if (mode === "state") {
       // Verified first, then by name.

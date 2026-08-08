@@ -5,6 +5,8 @@ description: "Frequently asked questions for Automations, CloudPages, emails, Jo
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/faq/
+platforms:
+  - engagement
 ---
 
 {% include callout.html type="note" title="Originally published" content="First published **2019-07-15** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/faq/). Ported here for sfmc.guide." %}

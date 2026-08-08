@@ -9,9 +9,10 @@
   "scripts": {
     "prepare": "husky || true",
     "generate:function-index": "node scripts/generate-ampscript-function-index.mjs",
+    "generate:handlebars-index": "node scripts/generate-handlebars-helper-index.mjs",
     "generate:site-index": "node scripts/generate-site-index.mjs",
     "generate:lexer-data": "node scripts/generate-rouge-lexer-data.mjs",
-    "generate:all": "npm run generate:function-index && npm run generate:site-index && npm run generate:lexer-data",
+    "generate:all": "npm run generate:function-index && npm run generate:handlebars-index && npm run generate:site-index && npm run generate:lexer-data",
     "check:bom": "node scripts/check-bom.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

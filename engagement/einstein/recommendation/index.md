@@ -5,6 +5,8 @@ description: "Working with Einstein Recommendations in Marketing Cloud Engagemen
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/einstein/recommendation/
+platforms:
+  - engagement
 ---
 
 {% include callout.html type="note" title="Originally published" content="First published **2020-09-27** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/einstein/recommendation/). Ported here for sfmc.guide." %}

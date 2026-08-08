@@ -7,7 +7,6 @@ parent_url: /engagement/
 permalink: /engagement/ampscript/functions/
 platforms:
   - engagement
-  - next
 ---
 
 This is the runtime-proven half of the AMPscript reference. Every function in the language catalog is listed below, but only the ones marked **Verified** have a page. Each of those pages documents one function as it actually behaves on a live Marketing Cloud Engagement CloudPage — what the signature really accepts, what happens on the edges, and the AMPscript that produced the evidence. Nothing on those pages is inferred from reading a doc page.

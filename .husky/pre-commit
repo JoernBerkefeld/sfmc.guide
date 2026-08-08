@@ -16,11 +16,16 @@ npx lint-staged || {
 }
 
 # ── Regenerate committed artifacts ────────────────────────────────────────────
-# Both generators run in well under a second and are idempotent, so they run on
-# every commit rather than guessing which inputs matter. A conditional trigger
-# would have to track ampscript-data (outside this repo), every *.md frontmatter
-# block and the functions/ page list — getting that wrong reintroduces exactly
-# the stale-artifact bug this hook exists to prevent.
+# All four generators run in well under a second and are idempotent, so they run
+# on every commit rather than guessing which inputs matter. A conditional trigger
+# would have to track ampscript-data and handlebars-data (both outside this
+# repo), every *.md frontmatter block and the functions/ page list — getting that
+# wrong reintroduces exactly the stale-artifact bug this hook exists to prevent.
+#
+# scripts/generate-tools.mjs and scripts/generate-site-content.mjs are
+# deliberately NOT here: they render tracked pages from a catalog hard-coded in
+# the script and from ../SFMC-Cookbook, and would silently revert hand-edits to
+# tools/ and engagement/ on every commit.
 echo "[PRE-COMMIT] 🔄 Regenerating _data/ampscript_functions.yml..."
 node scripts/generate-ampscript-function-index.mjs || {
   echo "[PRE-COMMIT] ❌ The AMPscript function index could not be generated, so the commit was blocked"
@@ -29,6 +34,26 @@ node scripts/generate-ampscript-function-index.mjs || {
   echo "[PRE-COMMIT]    matching function in ampscript-data (see the error above)."
   echo "[PRE-COMMIT]    Fix: correct the page filename so it matches the function name in"
   echo "[PRE-COMMIT]    lowercase, or add the function to ampscript-data/src/index.js."
+  exit 1
+}
+
+echo "[PRE-COMMIT] 🔄 Regenerating _data/handlebars_helpers.yml..."
+node scripts/generate-handlebars-helper-index.mjs || {
+  echo "[PRE-COMMIT] ❌ The Handlebars helper index could not be generated, so the commit was blocked"
+  echo "[PRE-COMMIT]    to stop a stale _data/handlebars_helpers.yml from being committed."
+  echo "[PRE-COMMIT]    Usually a handlebarsEquivalent in ampscript-data points at a helper that"
+  echo "[PRE-COMMIT]    does not exist in handlebars-data (see the error above)."
+  echo "[PRE-COMMIT]    Fix: correct the handlebarsEquivalent value, or add the helper to"
+  echo "[PRE-COMMIT]    handlebars-data/src/index.js."
+  exit 1
+}
+
+echo "[PRE-COMMIT] 🔄 Regenerating _plugins/sfmc_catalogs.rb..."
+node scripts/generate-rouge-lexer-data.mjs || {
+  echo "[PRE-COMMIT] ❌ The Rouge lexer catalogs could not be generated, so the commit was blocked"
+  echo "[PRE-COMMIT]    to stop a stale _plugins/sfmc_catalogs.rb from being committed."
+  echo "[PRE-COMMIT]    Check the error above - usually a function or helper name that cannot be"
+  echo "[PRE-COMMIT]    expressed in a Ruby %w[] word array."
   exit 1
 }
 
@@ -42,7 +67,7 @@ node scripts/generate-site-index.mjs || {
 
 # Re-staging is the whole point: regenerating without `git add` would still
 # commit the stale blob that was staged before the hook ran.
-git add _data/ampscript_functions.yml site-index.json || {
+git add _data/ampscript_functions.yml _data/handlebars_helpers.yml _plugins/sfmc_catalogs.rb site-index.json || {
   echo "[PRE-COMMIT] ❌ Could not stage the regenerated artifacts. See the error above."
   exit 1
 }

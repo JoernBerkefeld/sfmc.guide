@@ -42,6 +42,13 @@
     "description": "Per-function AMPscript reference pages for Marketing Cloud Engagement. Every page is proven by running the function on a live Engagement CloudPage — signature, argument handling, edge cases, and the test script that produced the evidence."
   },
   {
+    "name": "AMPscript Function Reference (Next)",
+    "url": "/next/ampscript/functions/",
+    "section": "Next",
+    "type": "page",
+    "description": "The subset of AMPscript that Marketing Cloud Next supports — searchable and filterable, with the Core API version each function became available in and its Handlebars equivalent."
+  },
+  {
     "name": "ampscript.io",
     "url": "/tools/ampscript-io/",
     "section": "Tools",
@@ -138,6 +145,13 @@
     "section": "Engagement",
     "type": "page",
     "description": "Development environment, project setup, Data Extensions, and business units for SFMC Engagement."
+  },
+  {
+    "name": "Handlebars Helper Reference",
+    "url": "/next/handlebars/helpers/",
+    "section": "Next",
+    "type": "page",
+    "description": "The complete Handlebars helper catalog for Marketing Cloud Next — searchable and filterable, with the Core API version each helper became available in and its AMPscript equivalent where one exists."
   },
   {
     "name": "Length",

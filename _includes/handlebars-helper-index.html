@@ -1,0 +1,385 @@
+{% comment %}
+  Renders the searchable / filterable / sortable Handlebars helper catalog table.
+
+  Shares its shape and behaviour with ampscript-function-index.html so the two
+  catalogs on the Next pages stay visually aligned instead of drifting apart.
+
+  Usage:
+    {% include handlebars-helper-index.html entries=site.data.handlebars_helpers
+       empty="No helpers catalogued yet." %}
+
+  Parameters:
+    entries       (array)  - a site.data.* list of helper rows (may be empty/nil).
+    empty         (string) - sentence shown when there are no entries.
+    unmapped_only (bool)   - keep only helpers with no AMPscript counterpart.
+
+  Row fields come from scripts/generate-handlebars-helper-index.mjs:
+    name, slug, category, origin, helperType, syntax, returnType, mcn,
+    ampscriptEquivalent, subexpressionOnly, description, docUrl
+
+  Unlike the AMPscript index there is no verified state — no Handlebars helper
+  has been through a runtime sweep yet, so every row links out to the official
+  Salesforce reference instead of to a page on this site.
+
+  Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
+
+  `description` MUST be escaped, for the same reason as in the AMPscript index:
+  a raw HTML tag name in a catalog description opens an element Kramdown never
+  sees closed, which terminates the raw-HTML block and dumps the rest of the
+  page out as literal text.
+{% endcomment %}
+
+{% assign hbi_entries = include.entries %}
+{% if include.unmapped_only %}{% assign hbi_entries = hbi_entries | where_exp: "h", "h.ampscriptEquivalent == ''" %}{% endif %}
+{% assign hbi_count = hbi_entries | size %}
+
+<style>
+.hbi-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin: 1.5rem 0 0.5rem;
+}
+.hbi-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.hbi-control > label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.hbi-control select,
+.hbi-control input[type="search"] {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.35em 0.6em;
+  font-size: 0.85rem;
+}
+.hbi-control--search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+.hbi-control--search input[type="search"] {
+  width: 100%;
+}
+.hbi-count {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0.75rem 0 1rem;
+}
+.hbi-empty {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  color: #475569;
+}
+.hbi-tablewrap {
+  overflow-x: auto;
+}
+.hbi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.hbi-table th,
+.hbi-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.7em;
+  border-bottom: 1px solid #e2e8f0;
+}
+.hbi-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  border-bottom: 1px solid #cbd5e1;
+  white-space: nowrap;
+}
+.hbi-table td code {
+  font-family: monospace;
+}
+.hbi-row.is-hidden {
+  display: none;
+}
+/* Category label pill — same shape as .afi-tag. */
+.hbi-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  padding: 0.15em 0.6em;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+/* Origin / call-form flag, e.g. "block" or "subexpression only". */
+.hbi-flag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  padding: 0.1em 0.5em;
+  margin-left: 0.35em;
+  border: 1px solid rgba(109, 40, 217, 0.3);
+  border-radius: 9999px;
+  background: rgba(109, 40, 217, 0.08);
+  color: #6d28d9;
+}
+.hbi-ver {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: #475569;
+}
+.hbi-syntax {
+  display: block;
+  margin-top: 0.3em;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.hbi-desc {
+  color: #475569;
+}
+.hbi-legend {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+</style>
+
+{% if hbi_count > 0 %}
+{% assign hbi_mapped = hbi_entries | where_exp: "h", "h.ampscriptEquivalent != ''" | size %}
+
+<div class="hbi-controls">
+  <div class="hbi-control hbi-control--search">
+    <label for="hbi-search">Search</label>
+    <input type="search" id="hbi-search" placeholder="Filter by name (e.g. formatDate)" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="hbi-control">
+    <label for="hbi-category">Category</label>
+    <select id="hbi-category">
+      <option value="" selected>All categories</option>
+      {% assign hbi_cats = hbi_entries | map: "category" | uniq | sort %}
+      {% for cat in hbi_cats %}
+      <option value="{{ cat | escape }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="hbi-control">
+    <label for="hbi-origin">Origin</label>
+    <select id="hbi-origin">
+      <option value="" selected>All origins</option>
+      <option value="mcn-helper">Marketing Cloud Next helper</option>
+      <option value="handlebars-builtin">Handlebars built-in</option>
+      <option value="mcn-platform">Marketing Cloud Next platform</option>
+    </select>
+  </div>
+  {%- unless include.unmapped_only %}
+  <div class="hbi-control">
+    <label for="hbi-mapping">AMPscript mapping</label>
+    <select id="hbi-mapping">
+      <option value="" selected>All helpers</option>
+      <option value="mapped">Has an AMPscript equivalent</option>
+      <option value="unmapped">Handlebars only</option>
+    </select>
+  </div>
+  {%- endunless %}
+  <div class="hbi-control">
+    <label for="hbi-sort">Sort by</label>
+    <select id="hbi-sort">
+      <option value="name" selected>Name (A &rarr; Z)</option>
+      <option value="category">Category</option>
+      <option value="version">API version</option>
+    </select>
+  </div>
+</div>
+
+<p class="hbi-count" id="hbi-count"></p>
+
+<p class="hbi-legend">
+  Every helper links to the official Salesforce reference &mdash; none of them has been through a
+  runtime sweep on this site yet. <strong>API version</strong> is the Marketing Cloud Next Core API
+  version the helper became available in.
+  {%- unless include.unmapped_only %} A row with no <strong>AMPscript equivalent</strong> can only be
+  expressed in Handlebars.{% endunless %}
+</p>
+
+<div class="hbi-tablewrap">
+  <table class="hbi-table">
+    <thead>
+      <tr>
+        <th>Helper</th>
+        <th>Category</th>
+        <th>API version</th>
+        <th>Returns</th>
+        {%- unless include.unmapped_only %}<th>AMPscript equivalent</th>{% endunless %}
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="hbi-body">
+      {%- for h in hbi_entries %}
+      <tr class="hbi-row"
+          data-name="{{ h.name | downcase | escape }}"
+          data-category="{{ h.category | escape }}"
+          data-origin="{{ h.origin | escape }}"
+          data-mapping="{% if h.ampscriptEquivalent != '' %}mapped{% else %}unmapped{% endif %}"
+          data-version="{{ h.mcn }}"
+          id="hb-{{ h.slug }}">
+        <td>
+          {% if h.docUrl %}<a href="{{ h.docUrl }}" target="_blank" rel="noopener"><code>{{ h.name }}</code></a>{% else %}<code>{{ h.name }}</code>{% endif %}
+          {%- if h.helperType == "block" %}<span class="hbi-flag" title="Block helper — wraps a body">block</span>{% endif %}
+          {%- if h.helperType == "both" %}<span class="hbi-flag" title="Usable inline and as a block helper">inline or block</span>{% endif %}
+          {%- if h.subexpressionOnly %}<span class="hbi-flag" title="Only valid inside another helper call">subexpression only</span>{% endif %}
+          <code class="hbi-syntax">{{ h.syntax | escape }}</code>
+        </td>
+        <td><span class="hbi-tag">{{ h.category }}</span></td>
+        <td class="hbi-ver">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
+        <td><code>{{ h.returnType }}</code></td>
+        {%- unless include.unmapped_only %}
+        <td>{% if h.ampscriptEquivalent != "" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}&mdash;{% endif %}</td>
+        {%- endunless %}
+        <td class="hbi-desc">{{ h.description | escape }}</td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var searchInput = document.getElementById("hbi-search");
+  var catSel = document.getElementById("hbi-category");
+  var originSel = document.getElementById("hbi-origin");
+  var mappingSel = document.getElementById("hbi-mapping");
+  var sortSel = document.getElementById("hbi-sort");
+  var countEl = document.getElementById("hbi-count");
+  var body = document.getElementById("hbi-body");
+  if (!body) { return; }
+
+  var rows = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+  var TOTAL = rows.length;
+  var SUFFIX = {% if include.unmapped_only %}""{% else %}" — {{ hbi_mapped }} with an AMPscript equivalent"{% endif %};
+
+  // VS Code-style subsequence match: every query char must appear in order
+  // within the haystack, but not necessarily contiguously. Both are lowercased.
+  function fuzzyMatch(query, haystack) {
+    if (!query) { return true; }
+    var qi = 0;
+    for (var hi = 0; hi < haystack.length && qi < query.length; hi++) {
+      if (haystack.charAt(hi) === query.charAt(qi)) { qi += 1; }
+    }
+    return qi === query.length;
+  }
+
+  function apply() {
+    var query = searchInput ? searchInput.value.toLowerCase() : "";
+    var cat = catSel ? catSel.value : "";
+    var origin = originSel ? originSel.value : "";
+    var mapping = mappingSel ? mappingSel.value : "";
+    var total = 0;
+    var k, row, visible;
+
+    for (k = 0; k < rows.length; k++) {
+      row = rows[k];
+      visible = true;
+      if (cat && row.getAttribute("data-category") !== cat) { visible = false; }
+      if (visible && origin && row.getAttribute("data-origin") !== origin) { visible = false; }
+      if (visible && mapping && row.getAttribute("data-mapping") !== mapping) { visible = false; }
+      if (visible && !fuzzyMatch(query, row.getAttribute("data-name") || "")) { visible = false; }
+      if (visible) {
+        row.classList.remove("is-hidden");
+        total += 1;
+      } else {
+        row.classList.add("is-hidden");
+      }
+    }
+
+    if (countEl) {
+      countEl.textContent = "Showing " + total + " of " + TOTAL + " helpers" + SUFFIX;
+    }
+  }
+
+  function rowName(row) {
+    return row.getAttribute("data-name") || "";
+  }
+
+  function byName(a, b) {
+    var na = rowName(a), nb = rowName(b);
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  }
+
+  function sortRows() {
+    var mode = sortSel ? sortSel.value : "name";
+    var group = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+    var ordered;
+
+    if (mode === "category") {
+      // Group by category (alphabetically), then by name within each bucket.
+      var catOrder = [];
+      var buckets = {};
+      for (var g = 0; g < group.length; g++) {
+        var c = group[g].getAttribute("data-category") || "";
+        if (!buckets[c]) { buckets[c] = []; catOrder.push(c); }
+        buckets[c].push(group[g]);
+      }
+      catOrder.sort(function (a, b) {
+        var la = a.toLowerCase(), lb = b.toLowerCase();
+        return la < lb ? -1 : la > lb ? 1 : 0;
+      });
+      ordered = [];
+      for (var i = 0; i < catOrder.length; i++) {
+        buckets[catOrder[i]].sort(byName);
+        ordered = ordered.concat(buckets[catOrder[i]]);
+      }
+    } else if (mode === "version") {
+      // Oldest API version first; rows without one last.
+      var versioned = [];
+      for (var v = 0; v < group.length; v++) {
+        var raw = group[v].getAttribute("data-version");
+        var num = raw ? parseInt(raw, 10) : NaN;
+        versioned.push({ row: group[v], key: isNaN(num) ? Infinity : num });
+      }
+      versioned.sort(function (a, b) {
+        return a.key - b.key || byName(a.row, b.row);
+      });
+      ordered = [];
+      for (var w = 0; w < versioned.length; w++) {
+        ordered.push(versioned[w].row);
+      }
+    } else {
+      ordered = group.slice();
+      ordered.sort(byName);
+    }
+
+    for (var o = 0; o < ordered.length; o++) {
+      body.appendChild(ordered[o]);
+    }
+    // Rebuild the master row list to reflect new DOM order.
+    rows = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+  }
+
+  function refresh() {
+    sortRows();
+    apply();
+  }
+
+  if (searchInput) { searchInput.addEventListener("input", apply); }
+  if (catSel) { catSel.addEventListener("change", apply); }
+  if (originSel) { originSel.addEventListener("change", apply); }
+  if (mappingSel) { mappingSel.addEventListener("change", apply); }
+  if (sortSel) { sortSel.addEventListener("change", refresh); }
+
+  refresh();
+})();
+</script>
+{% else %}
+<p class="hbi-empty">{{ include.empty }}</p>
+{% endif %}

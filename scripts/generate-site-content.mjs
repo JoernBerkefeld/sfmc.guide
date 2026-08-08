@@ -2,7 +2,6 @@
  * One-shot / regenerable content helpers for sfmc.guide.
  * Run from workspace root or sfmc.guide:
  *   node sfmc.guide/scripts/generate-site-content.mjs
- *   node sfmc.guide/scripts/generate-mcn-ampscript-table.mjs
  */
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,12 +1,17 @@
-# AMPscript function catalog for /engagement/ampscript/functions/.
-# PLATFORM: Marketing Cloud Engagement.
+# AMPscript function catalog for /engagement/ampscript/functions/ and,
+# filtered to rows with a non-empty mcn, /next/ampscript/functions/ and
+# /next/ampscript-handlebars/.
 #
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate with: node sfmc.guide/scripts/generate-ampscript-function-index.mjs
 #
 # Source of truth: ampscript-data/src/index.js (names, categories, arity,
-# return type, MCN availability) plus the presence of a flat reference page at
-# engagement/ampscript/functions/<lowercase-name>.md.
+# return type, MCN availability, Handlebars mapping) plus the presence of a flat
+# reference page at engagement/ampscript/functions/<lowercase-name>.md.
+#
+# mcn is the Marketing Cloud Next API version the function became available in,
+# or "" when it is Engagement-only. handlebarsEquivalent names the Handlebars
+# helper in handlebars_helpers.yml that covers the same job, or "".
 #
 # verified: true means the function completed a runtime verification sweep AND
 # has a published reference page. Everything else is catalogued only — its
@@ -22,6 +27,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "add"
+  mcnNotes: ""
   description: "Computes the sum of two numeric values."
   guideUrl: "https://ampscript.guide/add/"
 - name: "AddMscrmListMember"
@@ -33,6 +40,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Appends a member to a Dynamics CRM list."
   guideUrl: "https://ampscript.guide/addmscrmlistmember/"
 - name: "AddObjectArrayItem"
@@ -44,6 +53,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Appends an item to an API object's array property."
   guideUrl: "https://ampscript.guide/addobjectarrayitem/"
 - name: "AttachFile"
@@ -55,6 +66,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Includes a file attachment in the outgoing message."
   guideUrl: "https://ampscript.guide/attachfile/"
 - name: "AttributeValue"
@@ -66,6 +79,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Safely retrieves a subscriber attribute value, returning empty string if null."
   guideUrl: "https://ampscript.guide/attributevalue/"
 - name: "AuthenticatedEmployeeID"
@@ -77,6 +92,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the employee ID of the currently authenticated user."
   guideUrl: "https://ampscript.guide/authenticatedemployeeid/"
 - name: "AuthenticatedEmployeeNotificationAddress"
@@ -88,6 +105,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the notification email address of the authenticated employee."
   guideUrl: "https://ampscript.guide/authenticatedemployeenotificationaddress/"
 - name: "AuthenticatedEmployeeUserName"
@@ -99,6 +118,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the username of the authenticated employee."
   guideUrl: "https://ampscript.guide/authenticatedemployeeusername/"
 - name: "AuthenticatedEnterpriseID"
@@ -110,6 +131,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the enterprise ID (top-level MID) of the authenticated user."
   guideUrl: "https://ampscript.guide/authenticatedenterpriseid/"
 - name: "AuthenticatedMemberID"
@@ -121,6 +144,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the member ID (MID) of the authenticated business unit."
   guideUrl: "https://ampscript.guide/authenticatedmemberid/"
 - name: "AuthenticatedMemberName"
@@ -132,6 +157,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the name of the authenticated business unit."
   guideUrl: "https://ampscript.guide/authenticatedmembername/"
 - name: "BarcodeURL"
@@ -143,6 +170,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a URL pointing to a barcode image rendered from the given parameters."
   guideUrl: "https://ampscript.guide/barcodeurl/"
 - name: "Base64Decode"
@@ -154,6 +183,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Decodes a Base64-encoded string."
   guideUrl: "https://ampscript.guide/base64decode/"
 - name: "Base64Encode"
@@ -165,6 +196,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Encodes a value as a Base64 string."
   guideUrl: "https://ampscript.guide/base64encode/"
 - name: "BeginImpressionRegion"
@@ -176,6 +209,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Marks the start of an impression tracking region."
   guideUrl: "https://ampscript.guide/beginimpressionregion/"
 - name: "BuildOptionList"
@@ -187,6 +222,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Builds HTML <option> elements from a data extension for use in a <select> dropdown."
   guideUrl: "https://ampscript.guide/buildoptionlist/"
 - name: "BuildRowsetFromJSON"
@@ -198,6 +235,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Parses a JSON string and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromjson/"
 - name: "BuildRowSetFromString"
@@ -209,6 +248,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Splits a delimited string into a single-column rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromstring/"
 - name: "BuildRowSetFromXML"
@@ -220,6 +261,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Parses an XML string using an XPath expression and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromxml/"
 - name: "Char"
@@ -231,6 +274,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the character for the given ASCII code."
   guideUrl: "https://ampscript.guide/char/"
 - name: "ClaimRow"
@@ -242,6 +287,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Atomically claims an unclaimed row in a data extension by setting a key column value."
   guideUrl: "https://ampscript.guide/claimrow/"
 - name: "ClaimRowValue"
@@ -253,6 +300,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Atomically claims a row and returns a specific column value from it."
   guideUrl: "https://ampscript.guide/claimrowvalue/"
 - name: "CloudPagesURL"
@@ -264,6 +313,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a secure, encrypted URL to a CloudPages landing page, optionally passing name-value parameters."
   guideUrl: "https://ampscript.guide/cloudpagesurl/"
 - name: "Concat"
@@ -276,6 +327,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "concat"
+  mcnNotes: ""
   description: "Concatenates two or more string values."
   guideUrl: "https://ampscript.guide/concat/"
 - name: "ContentArea"
@@ -287,6 +340,8 @@
   differsFromDocs: false
   deprecated: true
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Inserts a classic content area by its numeric ID."
   guideUrl: "https://ampscript.guide/contentarea/"
 - name: "ContentAreaByName"
@@ -298,6 +353,8 @@
   differsFromDocs: false
   deprecated: true
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Inserts a classic content area by its folder path and name."
   guideUrl: "https://ampscript.guide/contentareabyname/"
 - name: "ContentBlockByID"
@@ -309,6 +366,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "No direct Handlebars helper."
   description: "Retrieves and renders a Content Builder content block by its numeric ID."
   guideUrl: "https://ampscript.guide/contentblockbyid/"
 - name: "ContentBlockByKey"
@@ -320,6 +379,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "No direct Handlebars helper."
   description: "Retrieves and renders a Content Builder content block by its customer key."
   guideUrl: "https://ampscript.guide/contentblockbykey/"
 - name: "ContentBlockByName"
@@ -331,6 +392,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "No direct Handlebars helper."
   description: "Retrieves and renders a Content Builder content block by its folder path and name."
   guideUrl: "https://ampscript.guide/contentblockbyname/"
 - name: "ContentImageByID"
@@ -342,6 +405,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the URL of a Content Builder image asset by its numeric ID."
   guideUrl: "https://ampscript.guide/contentimagebyid/"
 - name: "ContentImageByKey"
@@ -353,6 +418,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the URL of a Content Builder image asset by its customer key."
   guideUrl: "https://ampscript.guide/contentimagebykey/"
 - name: "CreateMSCRMRecord"
@@ -364,6 +431,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Creates a new record in Microsoft Dynamics CRM."
   guideUrl: "https://ampscript.guide/createmscrmrecord/"
 - name: "CreateObject"
@@ -375,6 +444,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Instantiates a Marketing Cloud SOAP API object for use with Invoke* functions."
   guideUrl: "https://ampscript.guide/createobject/"
 - name: "CreateSalesforceObject"
@@ -386,6 +457,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Creates a new record in a connected Salesforce CRM object."
   guideUrl: "https://ampscript.guide/createsalesforceobject/"
 - name: "CreateSmsConversation"
@@ -397,6 +470,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Initiates an SMS conversation on a MobileConnect short code."
   guideUrl: "https://ampscript.guide/createsmsconversation/"
 - name: "DataExtensionRowCount"
@@ -408,6 +483,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the total number of rows in a data extension."
   guideUrl: "https://ampscript.guide/dataextensionrowcount/"
 - name: "DateAdd"
@@ -419,6 +496,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "dateAdd"
+  mcnNotes: ""
   description: "Adds a specified interval to a date value."
   guideUrl: "https://ampscript.guide/dateadd/"
 - name: "DateDiff"
@@ -430,6 +509,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "dateDiff"
+  mcnNotes: ""
   description: "Returns the difference between two dates in the specified interval."
   guideUrl: "https://ampscript.guide/datediff/"
 - name: "DateParse"
@@ -441,6 +522,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Parses a date string into a date value."
   guideUrl: "https://ampscript.guide/dateparse/"
 - name: "DatePart"
@@ -452,6 +535,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Extracts a specific component from a date value."
   guideUrl: "https://ampscript.guide/datepart/"
 - name: "DecryptSymmetric"
@@ -463,6 +548,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Decrypts a value using symmetric key encryption."
   guideUrl: "https://ampscript.guide/decryptsymmetric/"
 - name: "DeleteData"
@@ -474,6 +561,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Deletes rows from a data extension matching the specified key column criteria."
   guideUrl: "https://ampscript.guide/deletedata/"
 - name: "DeleteDE"
@@ -485,6 +574,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Deletes rows from a data extension. Email-context variant of DeleteData."
   guideUrl: "https://ampscript.guide/deletede/"
 - name: "DescribeMSCRMEntities"
@@ -496,6 +587,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a rowset describing all available Dynamics CRM entity types."
   guideUrl: "https://ampscript.guide/describemscrmentities/"
 - name: "DescribeMSCRMEntityAttributes"
@@ -507,6 +600,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a rowset of attributes for the specified CRM entity type."
   guideUrl: "https://ampscript.guide/describemscrmentityattributes/"
 - name: "Divide"
@@ -519,6 +614,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "divide"
+  mcnNotes: ""
   description: "Divides the first number by the second."
   guideUrl: "https://ampscript.guide/divide/"
 - name: "Domain"
@@ -530,6 +627,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Extracts the domain portion from an email address."
   guideUrl: "https://ampscript.guide/domain/"
 - name: "Empty"
@@ -541,6 +640,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "isEmpty"
+  mcnNotes: ""
   description: "Returns true if the value is empty, null, or not defined."
   guideUrl: "https://ampscript.guide/empty/"
 - name: "EncryptSymmetric"
@@ -552,6 +653,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Encrypts a value using symmetric key encryption."
   guideUrl: "https://ampscript.guide/encryptsymmetric/"
 - name: "EndImpressionRegion"
@@ -563,6 +666,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Marks the end of an impression tracking region."
   guideUrl: "https://ampscript.guide/endimpressionregion/"
 - name: "EndSmsConversation"
@@ -574,6 +679,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Ends an active SMS conversation on a short code."
   guideUrl: "https://ampscript.guide/endsmsconversation/"
 - name: "ExecuteFilter"
@@ -585,6 +692,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Executes a predefined data filter and returns the resulting rowset."
   guideUrl: "https://ampscript.guide/executefilter/"
 - name: "ExecuteFilterOrderedRows"
@@ -596,6 +705,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Executes a predefined data filter and returns results sorted by a column."
   guideUrl: "https://ampscript.guide/executefilterorderedrows/"
 - name: "Field"
@@ -607,6 +718,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves the value of a specific field from a rowset row."
   guideUrl: "https://ampscript.guide/field/"
 - name: "Format"
@@ -618,6 +731,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "format"
+  mcnNotes: ""
   description: "Formats a value using a .NET format string."
   guideUrl: "https://ampscript.guide/format/"
 - name: "FormatCurrency"
@@ -629,6 +744,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "formatCurrency"
+  mcnNotes: ""
   description: "Formats a number as a currency string."
   guideUrl: "https://ampscript.guide/formatcurrency/"
 - name: "FormatDate"
@@ -640,6 +757,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "In MCN, uses Java SimpleDateFormat format strings instead of .NET. Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\")."
   description: "Formats a date string according to the specified date and time format patterns."
   guideUrl: "https://ampscript.guide/formatdate/"
 - name: "FormatNumber"
@@ -651,6 +770,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "formatNumber"
+  mcnNotes: ""
   description: "Formats a number using a format pattern."
   guideUrl: "https://ampscript.guide/formatnumber/"
 - name: "GetJWT"
@@ -662,6 +783,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a JSON Web Token using the supplied claims, algorithm, and secret."
   guideUrl: "https://ampscript.guide/getjwt/"
 - name: "GetJWTByKeyName"
@@ -673,6 +796,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a JSON Web Token using a named encryption key from Key Management."
   guideUrl: "https://ampscript.guide/getjwtbykeyname/"
 - name: "GetPortfolioItem"
@@ -684,6 +809,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves metadata for a classic portfolio item."
   guideUrl: "https://ampscript.guide/getportfolioitem/"
 - name: "GetPublishedSocialContent"
@@ -695,6 +822,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves published social media content by its identifier."
   guideUrl: "https://ampscript.guide/getpublishedsocialcontent/"
 - name: "GetSendTime"
@@ -706,6 +835,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the scheduled send time for the current job. In STO context returns the Einstein-optimized time."
   guideUrl: "https://ampscript.guide/getsendtime/"
 - name: "GetSocialPublishURL"
@@ -717,6 +848,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Optionally accepts repeating key/value parameter pairs."
   guideUrl: "https://ampscript.guide/getsocialpublishurl/"
 - name: "GetSocialPublishURLByName"
@@ -728,6 +861,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns HTML for sharing a content region on a supported social network (identified by name) via Social Forward. Optionally accepts repeating key/value parameter pairs."
   guideUrl: "https://ampscript.guide/getsocialpublishurlbyname/"
 - name: "GUID"
@@ -739,6 +874,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a new globally unique identifier (GUID)."
   guideUrl: "https://ampscript.guide/guid/"
 - name: "HTTPGet"
@@ -750,6 +887,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Performs an HTTP GET request and returns the response body."
   guideUrl: "https://ampscript.guide/httpget/"
 - name: "HTTPPost"
@@ -761,6 +900,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Performs an HTTP POST request. The response body is stored in the output variable."
   guideUrl: "https://ampscript.guide/httppost/"
 - name: "HTTPPost2"
@@ -772,6 +913,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Performs an HTTP POST with access to response headers. Response body and headers are stored in output variables."
   guideUrl: "https://ampscript.guide/httppost2/"
 - name: "HTTPPostWithRetry"
@@ -783,6 +926,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Posts content to the specified URL with automatic retry logic on failure. Similar to HTTPPost2 but adds configurable retries and rescheduling."
   guideUrl: "https://ampscript.guide/httppostwithretry/"
 - name: "HTTPRequestHeader"
@@ -794,6 +939,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the value of a specified HTTP request header from the inbound request."
   guideUrl: "https://ampscript.guide/httprequestheader/"
 - name: "IIf"
@@ -805,6 +952,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "iif"
+  mcnNotes: ""
   description: "Returns one of two values based on a boolean expression (inline if)."
   guideUrl: "https://ampscript.guide/iif/"
 - name: "Image"
@@ -816,6 +965,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns an HTML img tag for the Portfolio image matching the specified external key."
   guideUrl: "https://ampscript.guide/image/"
 - name: "IndexOf"
@@ -827,6 +978,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "indexOf"
+  mcnNotes: ""
   description: "Returns the 1-based position of the first occurrence of a substring."
   guideUrl: "https://ampscript.guide/indexof/"
 - name: "InsertData"
@@ -838,6 +991,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Inserts a new row into a data extension."
   guideUrl: "https://ampscript.guide/insertdata/"
 - name: "InsertDE"
@@ -849,6 +1004,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Inserts a new row into a data extension. Email-context variant of InsertData."
   guideUrl: "https://ampscript.guide/insertde/"
 - name: "InvokeCreate"
@@ -860,6 +1017,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Create method on the given API object."
   guideUrl: "https://ampscript.guide/invokecreate/"
 - name: "InvokeDelete"
@@ -871,6 +1030,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Delete method on the given API object."
   guideUrl: "https://ampscript.guide/invokedelete/"
 - name: "InvokeExecute"
@@ -882,6 +1043,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Execute method on the given API object and returns the API status code."
   guideUrl: "https://ampscript.guide/invokeexecute/"
 - name: "InvokePerform"
@@ -893,6 +1056,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Perform method on the given API object."
   guideUrl: "https://ampscript.guide/invokeperform/"
 - name: "InvokeRetrieve"
@@ -904,6 +1069,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Retrieve method and returns a rowset of results."
   guideUrl: "https://ampscript.guide/invokeretrieve/"
 - name: "InvokeUpdate"
@@ -915,6 +1082,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Calls the SOAP API Update method on the given API object."
   guideUrl: "https://ampscript.guide/invokeupdate/"
 - name: "IsCHTMLBrowser"
@@ -926,6 +1095,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns true if the subscriber's browser is identified as a compact HTML (cHTML) device."
   guideUrl: "https://ampscript.guide/ischtmlbrowser/"
 - name: "IsEmailAddress"
@@ -937,6 +1108,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns true if the value is a syntactically valid email address."
   guideUrl: "https://ampscript.guide/isemailaddress/"
 - name: "IsNull"
@@ -948,6 +1121,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns true if the value is null."
   guideUrl: "https://ampscript.guide/isnull/"
 - name: "IsNullDefault"
@@ -959,6 +1134,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the value if not null, otherwise returns the default."
   guideUrl: "https://ampscript.guide/isnulldefault/"
 - name: "IsPhoneNumber"
@@ -970,6 +1147,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns true if the value is a valid phone number."
   guideUrl: "https://ampscript.guide/isphonenumber/"
 - name: "Length"
@@ -982,6 +1161,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "length"
+  mcnNotes: ""
   description: "Returns the number of characters in a string."
   guideUrl: "https://ampscript.guide/length/"
 - name: "LiveContentMicrositeURL"
@@ -993,6 +1174,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a URL to a microsite page that serves live, dynamic content."
   guideUrl: "https://ampscript.guide/livecontentmicrositeurl/"
 - name: "LocalDateToSystemDate"
@@ -1004,6 +1187,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Converts a local date to the Marketing Cloud system date (Central Time)."
   guideUrl: "https://ampscript.guide/localdatetosystemdate/"
 - name: "LongSFID"
@@ -1015,6 +1200,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version."
   guideUrl: "https://ampscript.guide/longsfid/"
 - name: "Lookup"
@@ -1026,6 +1213,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. All filter keys must fully specify the composite primary key."
   description: "Returns a single field value from the first matching row in a data extension."
   guideUrl: "https://ampscript.guide/lookup/"
 - name: "LookupOrderedRows"
@@ -1037,6 +1226,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a sorted rowset of matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuporderedrows/"
 - name: "LookupOrderedRowsCS"
@@ -1048,6 +1239,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Case-sensitive version of LookupOrderedRows. Returns a sorted rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuporderedrowscs/"
 - name: "LookupRows"
@@ -1059,6 +1252,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a rowset of all matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuprows/"
 - name: "LookupRowsCS"
@@ -1070,6 +1265,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Case-sensitive version of LookupRows. Returns a rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuprowscs/"
 - name: "Lowercase"
@@ -1082,6 +1279,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "lowercase"
+  mcnNotes: ""
   description: "Converts a string to all lowercase characters."
   guideUrl: "https://ampscript.guide/lowercase/"
 - name: "MD5"
@@ -1093,6 +1292,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the MD5 hash of the input value."
   guideUrl: "https://ampscript.guide/md5/"
 - name: "MicrositeURL"
@@ -1104,6 +1305,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Generates a tracked URL to a microsite page, optionally passing parameters."
   guideUrl: "https://ampscript.guide/micrositeurl/"
 - name: "MMS_Content_URL"
@@ -1115,6 +1318,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the URL of MMS content from an inbound mobile-originated (MO) message. Only usable in MobileConnect."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
 - name: "Mod"
@@ -1127,6 +1332,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "modulo"
+  mcnNotes: ""
   description: "Returns the remainder after dividing the first number by the second (modulo)."
   guideUrl: "https://ampscript.guide/mod/"
 - name: "Msg"
@@ -1138,6 +1345,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the content of an inbound mobile-originated (MO) message. Only usable in MobileConnect. The only accepted argument value is 0."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
 - name: "Multiply"
@@ -1150,6 +1359,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "multiply"
+  mcnNotes: ""
   description: "Computes the product of two numeric values."
   guideUrl: "https://ampscript.guide/multiply/"
 - name: "Noun"
@@ -1161,6 +1372,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a single word that follows the keyword in an inbound mobile-originated (MO) message, by position. Only usable in MobileConnect, chained off Msg(0)."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
 - name: "Nouns"
@@ -1172,6 +1385,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns all message content that follows the keyword in an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
 - name: "Now"
@@ -1183,6 +1398,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "now"
+  mcnNotes: ""
   description: "Returns the current system date and time (Central Time). Pass 1 to persist the value across renders."
   guideUrl: "https://ampscript.guide/now/"
 - name: "Output"
@@ -1194,6 +1411,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Writes a value to the rendered output. Used inside script blocks to emit content."
   guideUrl: "https://ampscript.guide/output/"
 - name: "OutputLine"
@@ -1205,6 +1424,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Writes a value followed by a line break to the rendered output."
   guideUrl: "https://ampscript.guide/outputline/"
 - name: "ProperCase"
@@ -1216,6 +1437,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "properCase"
+  mcnNotes: ""
   description: "Converts a string to proper (title) case, capitalizing the first letter of each word."
   guideUrl: "https://ampscript.guide/propercase/"
 - name: "QueryParameter"
@@ -1227,6 +1450,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the value of a URL query string parameter from the current page request."
   guideUrl: "https://ampscript.guide/queryparameter/"
 - name: "RaiseError"
@@ -1238,6 +1463,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "raiseError"
+  mcnNotes: ""
   description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error."
   guideUrl: "https://ampscript.guide/raiseerror/"
 - name: "Random"
@@ -1250,6 +1477,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "random"
+  mcnNotes: ""
   description: "Returns a random integer between the two specified values (inclusive). Both bounds must be whole numbers; a decimal bound aborts the page. The bounds may be supplied in either order."
   guideUrl: "https://ampscript.guide/random/"
 - name: "RatingStars"
@@ -1261,6 +1490,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Renders a star-rating image using Einstein recommendations data."
   guideUrl: "https://ampscript.guide/ratingstars/"
 - name: "Redirect"
@@ -1272,6 +1503,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Performs an HTTP redirect to the specified URL. Landing pages only."
   guideUrl: "https://ampscript.guide/redirect/"
 - name: "RedirectTo"
@@ -1283,6 +1516,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Creates a trackable redirect URL, typically used in email links."
   guideUrl: "https://ampscript.guide/redirectto/"
 - name: "RegExMatch"
@@ -1294,6 +1529,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Tests a string against a regular expression pattern and returns first occurrence of the matching regular expression pattern."
   guideUrl: "https://ampscript.guide/regexmatch/"
 - name: "Replace"
@@ -1305,6 +1542,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "replace"
+  mcnNotes: ""
   description: "Replaces all occurrences of a substring with a new value."
   guideUrl: "https://ampscript.guide/replace/"
 - name: "ReplaceList"
@@ -1316,6 +1555,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Replaces multiple old values in a string with a single new value."
   guideUrl: "https://ampscript.guide/replacelist/"
 - name: "RequestParameter"
@@ -1327,6 +1568,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the value of a form post or query string parameter from the current request."
   guideUrl: "https://ampscript.guide/requestparameter/"
 - name: "RetrieveMSCRMRecords"
@@ -1338,6 +1581,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves records from Dynamics CRM using a simple filter."
   guideUrl: "https://ampscript.guide/retrievemscrmrecords/"
 - name: "RetrieveMSCRMRecordsFetchXML"
@@ -1349,6 +1594,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves records from Dynamics CRM using a FetchXML query."
   guideUrl: "https://ampscript.guide/retrievemscrmrecordsfetchxml/"
 - name: "RetrieveSalesforceJobSources"
@@ -1360,6 +1607,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves the data sources associated with a Salesforce-triggered send job."
   guideUrl: "https://ampscript.guide/retrievesalesforcejobsources/"
 - name: "RetrieveSalesforceObjects"
@@ -1371,6 +1620,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Retrieves records from a connected Salesforce CRM object."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
 - name: "Row"
@@ -1382,6 +1633,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns a specific row from a rowset by its 1-based index."
   guideUrl: "https://ampscript.guide/row/"
 - name: "RowCount"
@@ -1393,6 +1646,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the number of rows in a rowset."
   guideUrl: "https://ampscript.guide/rowcount/"
 - name: "SetObjectProperty"
@@ -1404,6 +1659,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Sets a property value on a Marketing Cloud API object."
   guideUrl: "https://ampscript.guide/setobjectproperty/"
 - name: "SetSmsConversationNextKeyword"
@@ -1415,6 +1672,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Sets the next expected keyword for an active SMS conversation."
   guideUrl: "https://ampscript.guide/setsmsconversationnextkeyword/"
 - name: "SetStateMscrmRecord"
@@ -1426,6 +1685,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Sets the state and status of a Dynamics CRM record."
   guideUrl: "https://ampscript.guide/setstatemscrmrecord/"
 - name: "SHA1"
@@ -1437,6 +1698,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the SHA-1 hash of the input value."
   guideUrl: "https://ampscript.guide/sha1/"
 - name: "SHA256"
@@ -1448,6 +1711,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the SHA-256 hash of the input value."
   guideUrl: "https://ampscript.guide/sha256/"
 - name: "SHA512"
@@ -1459,6 +1724,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the SHA-512 hash of the input value."
   guideUrl: "https://ampscript.guide/sha512/"
 - name: "StringToDate"
@@ -1470,6 +1737,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: "In MCN, returns a locale-formatted string (G standard format, e.g. \"5/15/2026 1:23:45 PM\") instead of a dateTime object. Cannot be reliably passed to FormatDate() or other date functions in MCN - use FormatDate() directly instead."
   description: "Converts a date string to a date value."
   guideUrl: "https://ampscript.guide/stringtodate/"
 - name: "StringToHex"
@@ -1481,6 +1750,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Converts a string to its hexadecimal representation."
   guideUrl: "https://ampscript.guide/stringtohex/"
 - name: "Substring"
@@ -1492,6 +1763,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "substring"
+  mcnNotes: ""
   description: "Extracts a portion of a string starting at the given index for the specified length."
   guideUrl: "https://ampscript.guide/substring/"
 - name: "Subtract"
@@ -1504,6 +1777,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "subtract"
+  mcnNotes: ""
   description: "Computes the difference between two numeric values."
   guideUrl: "https://ampscript.guide/subtract/"
 - name: "SystemDateToLocalDate"
@@ -1515,6 +1790,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Converts a Marketing Cloud system date (Central Time) to the subscriber's local time."
   guideUrl: "https://ampscript.guide/systemdatetolocaldate/"
 - name: "TransformXML"
@@ -1526,6 +1803,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Transforms an XML document using an XSLT stylesheet."
   guideUrl: "https://ampscript.guide/transformxml/"
 - name: "TreatAsContent"
@@ -1537,6 +1816,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions."
   guideUrl: "https://ampscript.guide/treatascontent/"
 - name: "TreatAsContentArea"
@@ -1548,6 +1829,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Treats a string as a content area, optionally assigning it to an impression region."
   guideUrl: "https://ampscript.guide/treatascontentarea/"
 - name: "Trim"
@@ -1559,6 +1842,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "trim"
+  mcnNotes: ""
   description: "Removes leading and trailing whitespace from a string."
   guideUrl: "https://ampscript.guide/trim/"
 - name: "UpdateData"
@@ -1570,6 +1855,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates existing rows in a data extension that match the specified search columns. Returns the number of rows updated."
   guideUrl: "https://ampscript.guide/updatedata/"
 - name: "UpdateDE"
@@ -1581,6 +1868,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates existing rows in a data extension. Email-context variant of UpdateData. Returns the number of rows updated."
   guideUrl: "https://ampscript.guide/updatede/"
 - name: "UpdateMSCRMRecords"
@@ -1592,6 +1881,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates one or more records in a Microsoft Dynamics CRM entity, and returns the number of successfully updated records."
   guideUrl: "https://ampscript.guide/updatemscrmrecords/"
 - name: "UpdateSingleSalesforceObject"
@@ -1603,6 +1894,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates a single record in a connected Salesforce CRM object. Accepts one or more field name and value pairs. Returns 1 on success, 0 otherwise."
   guideUrl: "https://ampscript.guide/updatesinglesalesforceobject/"
 - name: "Uppercase"
@@ -1615,6 +1908,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: "uppercase"
+  mcnNotes: ""
   description: "Converts a string to all uppercase characters. The German sharp s remains unchanged rather than expanding to SS."
   guideUrl: "https://ampscript.guide/uppercase/"
 - name: "UpsertContact"
@@ -1626,6 +1921,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Upserts attributes into a contact record. If the contact exists it is updated; otherwise a new contact is created."
   guideUrl: "https://ampscript.guide/upsertcontact/"
 - name: "UpsertData"
@@ -1637,6 +1934,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates a row in a data extension if matching columns and values are found, or inserts a row if no matches are found. Returns the number of rows affected."
   guideUrl: "https://ampscript.guide/upsertdata/"
 - name: "UpsertDE"
@@ -1648,6 +1947,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Updates or inserts a row in a data extension. Email-context variant of UpsertData. Returns the number of rows affected."
   guideUrl: "https://ampscript.guide/upsertde/"
 - name: "UpsertMSCRMRecord"
@@ -1659,6 +1960,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Upserts a Microsoft Dynamics CRM record. Updates the matched record or creates one if no match is found. Returns the GUID of the record."
   guideUrl: "https://ampscript.guide/upsertmscrmrecord/"
 - name: "URLEncode"
@@ -1670,6 +1973,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "URL-encodes a string for safe inclusion in a URL."
   guideUrl: "https://ampscript.guide/urlencode/"
 - name: "v"
@@ -1681,6 +1986,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Short alias for retrieving a variable value inline. Equivalent to %%=v(@var)=%%."
   guideUrl: "https://ampscript.guide/v/"
 - name: "Verb"
@@ -1692,6 +1999,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the keyword (verb) from an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
 - name: "WAT"
@@ -1703,6 +2012,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Returns the values of the Web Analytics Tracking (WAT) parameter set with the specified external key, substituting the supplied values for the matching WATP references in the Sender Profile tracking parameter."
   guideUrl: "https://ampscript.guide/wat/"
 - name: "WATP"
@@ -1714,6 +2025,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Ordinal placeholder for a parameter value configured in a WAT parameter set. The ordinal maps to the position of the value passed to the WAT function. Configured by Marketing Cloud Support as part of the WAT string."
   guideUrl: "https://ampscript.guide/watp/"
 - name: "WrapLongURL"
@@ -1725,5 +2038,7 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
+  handlebarsEquivalent: ""
+  mcnNotes: ""
   description: "Wraps a long URL to prevent line-break issues in email clients."
   guideUrl: "https://ampscript.guide/wraplongurl/"

@@ -13,7 +13,11 @@ platforms:
     <div class="card-title">AMPscript</div>
     <div class="card-description">The complete AMPscript catalog for Marketing Cloud Engagement — searchable, filterable, with runtime-verified reference pages.</div>
   </a>
-  <a href="/next/ampscript-handlebars/" class="home-card">
+  <a href="/next/ampscript/functions/" class="home-card">
+    <div class="card-title">AMPscript on Next</div>
+    <div class="card-description">Only the functions Marketing Cloud Next supports, with the Core API version each one arrived in.</div>
+  </a>
+  <a href="/next/handlebars/helpers/" class="home-card">
     <div class="card-title">Handlebars</div>
     <div class="card-description">The Marketing Cloud Next helper catalog and its AMPscript equivalents.</div>
   </a>

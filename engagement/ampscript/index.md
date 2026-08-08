@@ -5,6 +5,8 @@ description: "Engagement AMPscript guidance from the SFMC Cookbook."
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/ampscript/
+platforms:
+  - engagement
 ---
 
 {% include callout.html type="note" title="Originally published" content="First published **2019-03-03** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/ampscript/). Ported here for sfmc.guide." %}

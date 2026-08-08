@@ -19,11 +19,14 @@ bundle exec jekyll serve
 From the monorepo root (needs local `ampscript-data` / `handlebars-data` / `SFMC-Cookbook`):
 
 ```powershell
+npm run generate:all --prefix sfmc.guide
 node sfmc.guide/scripts/generate-site-content.mjs
-node sfmc.guide/scripts/generate-mcn-ampscript-table.mjs
 node sfmc.guide/scripts/generate-tools.mjs
-node sfmc.guide/scripts/generate-rouge-lexer-data.mjs
 ```
+
+`generate:all` rebuilds `_data/ampscript_functions.yml`, `_data/handlebars_helpers.yml`, `site-index.json` and the Rouge catalogs. The two `_data` files back the function and helper index tables on `/engagement/ampscript/functions/`, `/next/ampscript/functions/`, `/next/handlebars/helpers/` and `/next/ampscript-handlebars/` — regenerate them whenever `ampscript-data` or `handlebars-data` changes. The pre-commit hook runs all four for you, so running them by hand is only needed to preview the result.
+
+`generate-site-content.mjs` and `generate-tools.mjs` are **not** part of the hook and overwrite tracked pages under `engagement/` and `tools/` from `../SFMC-Cookbook` and a catalog inside the script. Run them only when you intend to re-scaffold those pages, and review the diff — they will revert hand-edits.
 
 ## Syntax highlighting
 

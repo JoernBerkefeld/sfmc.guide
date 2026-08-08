@@ -35,6 +35,18 @@ function q(value) {
 }
 
 /**
+ * Marketing Cloud Next caveat sentence for one function.
+ *
+ * `mcnHandlebarsGap` is a boolean in the catalog, so it has to become prose
+ * here — emitting it raw would print a literal "true" in the rendered table.
+ */
+function mcnNotes(f) {
+  return [f.mcnNotes, f.mcnHandlebarsGap === true ? 'No direct Handlebars helper.' : '']
+    .filter(Boolean)
+    .join(' ');
+}
+
+/**
  * Reference pages are flat files (functions/<name>.md), mirroring ssjs.guide.
  * index.md is the directory index, never a function page.
  */
@@ -52,15 +64,20 @@ const functions = [...amp.FUNCTIONS].sort((a, b) => a.name.localeCompare(b.name)
 
 let verified = 0;
 let orphanPages = new Set(slugs);
-let out = `# AMPscript function catalog for /engagement/ampscript/functions/.
-# PLATFORM: Marketing Cloud Engagement.
+let out = `# AMPscript function catalog for /engagement/ampscript/functions/ and,
+# filtered to rows with a non-empty mcn, /next/ampscript/functions/ and
+# /next/ampscript-handlebars/.
 #
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate with: node sfmc.guide/scripts/generate-ampscript-function-index.mjs
 #
 # Source of truth: ampscript-data/src/index.js (names, categories, arity,
-# return type, MCN availability) plus the presence of a flat reference page at
-# engagement/ampscript/functions/<lowercase-name>.md.
+# return type, MCN availability, Handlebars mapping) plus the presence of a flat
+# reference page at engagement/ampscript/functions/<lowercase-name>.md.
+#
+# mcn is the Marketing Cloud Next API version the function became available in,
+# or "" when it is Engagement-only. handlebarsEquivalent names the Handlebars
+# helper in handlebars_helpers.yml that covers the same job, or "".
 #
 # verified: true means the function completed a runtime verification sweep AND
 # has a published reference page. Everything else is catalogued only — its
@@ -85,6 +102,8 @@ for (const f of functions) {
   out += `  differsFromDocs: ${Boolean(f.differsFromOfficialDocs)}\n`;
   out += `  deprecated: ${Boolean(f.deprecated)}\n`;
   out += `  mcn: ${f.mcnSince ? q(String(f.mcnSince)) : '""'}\n`;
+  out += `  handlebarsEquivalent: ${f.handlebarsEquivalent ? q(f.handlebarsEquivalent) : '""'}\n`;
+  out += `  mcnNotes: ${q(mcnNotes(f))}\n`;
   out += `  description: ${q(f.description)}\n`;
   if (f.guideUrl) out += `  guideUrl: ${q(f.guideUrl)}\n`;
 }
