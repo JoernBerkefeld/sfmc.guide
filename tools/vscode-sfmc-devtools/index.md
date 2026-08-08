@@ -7,7 +7,6 @@ parent_url: /tools/
 permalink: /tools/vscode-sfmc-devtools/
 platforms:
   - engagement
-  - next
 ---
 
 VS Code extension that wraps SFMC DevTools for day-to-day retrieve and deploy flows. Useful when architects and developers share the same Git-backed metadata repo.

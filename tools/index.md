@@ -23,16 +23,15 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">CLI to retrieve, deploy, and version Marketing Cloud Engagement metadata as code across business units.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-sfmc-devtools/">
   <div class="tool-card-title">SFMC DevTools for VS Code</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
-    <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Graphical VS Code interface for mcdev — retrieve and deploy without living in the terminal.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-sfmc-language/">
   <div class="tool-card-title">SFMC Language Service</div>
@@ -41,7 +40,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, snippets.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-language-lsp/">
   <div class="tool-card-title">sfmc-language-lsp</div>
@@ -50,7 +49,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Language Server Protocol implementation behind the SFMC Language Service extension.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/mcp-server-sfmc/">
   <div class="tool-card-title">MCP Server for SFMC</div>
@@ -59,7 +58,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Model Context Protocol server that gives AI assistants accurate AMPscript, SSJS, and Handlebars knowledge.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/eslint-plugin-sfmc/">
   <div class="tool-card-title">eslint-plugin-sfmc</div>
@@ -68,7 +67,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">ESLint rules for AMPscript, SSJS, and Handlebars — shared team policy for editor and CI, including Next configs.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/prettier-plugin-sfmc/">
   <div class="tool-card-title">prettier-plugin-sfmc</div>
@@ -77,7 +76,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/eslint-plugin-mcdev/">
   <div class="tool-card-title">eslint-plugin-mcdev</div>
@@ -86,7 +85,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Runs mcdev metadata validations as ESLint diagnostics in the editor and CI.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/eslint-plugin-mso-email/">
   <div class="tool-card-title">eslint-plugin-mso-email</div>
@@ -95,7 +94,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">ESLint rules for Outlook (MSO) conditional comments, VML, and HTML email layout pitfalls.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-mso-conditionals/">
   <div class="tool-card-title">MSO Conditionals (VS Code)</div>
@@ -104,7 +103,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Hover translations and snippets for Outlook MSO conditional comments in HTML email.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-sfmc-extension-pack/">
   <div class="tool-card-title">SFMC Extension Pack</div>
@@ -113,7 +112,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Essential SFMC VS Code extensions bundled for a ready-to-go setup.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-sfmc-extension-pack-expanded/">
   <div class="tool-card-title">SFMC Extension Pack (Expanded)</div>
@@ -122,7 +121,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Full SFMC toolset plus complementary editor tooling for power users.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-dataloader/">
   <div class="tool-card-title">sfmc-dataloader</div>
@@ -130,7 +129,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">CLI for bulk import and export of Data Extension rows — built for automation.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/vscode-sfmc-dataloader/">
   <div class="tool-card-title">SFMC Data Loader for VS Code</div>
@@ -138,7 +137,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Load and export Data Extension records from the VS Code editor.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-dataloader-app/">
   <div class="tool-card-title">SFMC Data Loader App</div>
@@ -146,7 +145,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Cross-platform desktop app for bulk Data Extension imports and exports.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-boilerplate/">
   <div class="tool-card-title">SFMC Boilerplate</div>
@@ -154,7 +153,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Bundle SSJS, AMPscript, and front-end sources into deployable CloudPages and emails.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-numbertolocalestring/">
   <div class="tool-card-title">SFMC numberToLocaleString</div>
@@ -162,7 +161,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">SSJS polyfill for locale-aware number formatting in Engagement.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/eslint-config-ssjs/">
   <div class="tool-card-title">eslint-config-ssjs</div>
@@ -193,7 +192,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Community reference for Engagement Data Views — schemas and relationships.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/diagramforce/">
   <div class="tool-card-title">Diagramforce</div>
@@ -201,7 +200,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/ssjs-manager/">
   <div class="tool-card-title">SSJS Manager</div>
@@ -209,7 +208,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB).</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/mcfs-ampscript/">
   <div class="tool-card-title">MCFS [AMPScript]</div>
@@ -217,7 +216,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets.</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/sfmc-companion/">
   <div class="tool-card-title">SFMC Companion</div>
@@ -225,7 +224,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more).</div>
-  
+
 </a>
 <a class="tool-card" href="/tools/ampscript-io/">
   <div class="tool-card-title">ampscript.io</div>
@@ -233,7 +232,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
     <span class="platform-badge platform-badge--engagement">Engagement</span>
   </div>
   <div class="tool-card-desc">AMPscript syntax validation and highlighting in the browser.</div>
-  
+
 </a>
 </div>
 
