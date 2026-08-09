@@ -1,0 +1,79 @@
+# Test scripts for /engagement/ampscript/functions/authenticatedmemberid/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The ungated block renders on every request. The shape-and-sibling comparison,
+# the arithmetic check and the two argument-count cases each sit behind their
+# own RequestParameter("b") branch and must be fetched one at a time:
+# ?b=shape, ?b=num, ?b=ar1, ?b=ar2. The two argument cases are expected to
+# return HTTP 422 for their own branch only — fetch any other value, such as
+# ?b=zzz, and the control line proves the deploy is fine.
+#
+# The two MIDs in the shape branch are placeholders: substitute your own
+# account's parent MID and the MID of the business unit you publish to.
+behaviour: |
+  %%[
+    VAR @b, @mid, @eid, @empid
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a deploy that failed to compile */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    OutputLine(Concat("--- AMID start ---"))
+
+    /* a plain anonymous request still produces a value */
+    SET @mid = AuthenticatedMemberID()
+    OutputLine(Concat("AMID=[", @mid, "]"))
+
+    /* confirmed with a second function rather than read off empty brackets */
+    OutputLine(Concat("AMID_EMPTY=[", IIf(Empty(@mid), "empty", "not-empty"), "]"))
+    OutputLine(Concat("AMID_LEN=[", Length(Concat(@mid, "")), "]"))
+
+    /* the value is usable inline, nested and in a comparison */
+    OutputLine(Concat("AMID_DIRECT=[", AuthenticatedMemberID(), "]"))
+    OutputLine(Concat("AMID_IN_CONCAT=[", Concat("<", AuthenticatedMemberID(), ">"), "]"))
+    OutputLine(Concat("AMID_CMP=[", IIf(@mid == "", "eq-emptystring", "ne-emptystring"), "]"))
+    OutputLine(Concat("--- AMID done ---"))
+
+    /* what the value looks like, which MID it is, and how it relates to its siblings */
+    IF @b == "shape" THEN
+      OutputLine(Concat("--- shape start ---"))
+      OutputLine(Concat("DOT_POS=[", IndexOf(@mid, "."), "]"))
+      OutputLine(Concat("SPACE_POS=[", IndexOf(@mid, " "), "]"))
+      OutputLine(Concat("AT_POS=[", IndexOf(@mid, "@"), "]"))
+      OutputLine(Concat("DASH_POS=[", IndexOf(@mid, "-"), "]"))
+      OutputLine(Concat("PARENT_MID_MATCH=[", IIf(@mid == "0000000", "yes", "no"), "]"))
+      OutputLine(Concat("CHILD_MID_MATCH=[", IIf(@mid == "000000000", "yes", "no"), "]"))
+      SET @eid = AuthenticatedEnterpriseID()
+      SET @empid = AuthenticatedEmployeeID()
+      OutputLine(Concat("EID_LEN=[", Length(Concat(@eid, "")), "]"))
+      OutputLine(Concat("SAME_AS_EID=[", IIf(@mid == @eid, "identical", "different"), "]"))
+      OutputLine(Concat("EMPID_LEN=[", Length(Concat(@empid, "")), "]"))
+      OutputLine(Concat("SAME_AS_EMPID=[", IIf(@mid == @empid, "identical", "different"), "]"))
+      OutputLine(Concat("AMID_IN_EMPID=[", IndexOf(@empid, @mid), "]"))
+      OutputLine(Concat("EMPID_IN_AMID=[", IndexOf(@mid, @empid), "]"))
+      OutputLine(Concat("--- shape done ---"))
+    ENDIF
+
+    /* the digits behave as a number, not only as text */
+    IF @b == "num" THEN
+      OutputLine(Concat("--- num start ---"))
+      OutputLine(Concat("PLUS1=[", Add(@mid, 1), "]"))
+      OutputLine(Concat("--- num done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its branch */
+    IF @b == "ar1" THEN
+      OutputLine(Concat("--- ar1 start ---"))
+      OutputLine(Concat("AMID1=[", AuthenticatedMemberID("x"), "]"))
+      OutputLine(Concat("--- ar1 done ---"))
+    ENDIF
+
+    IF @b == "ar2" THEN
+      OutputLine(Concat("--- ar2 start ---"))
+      OutputLine(Concat("AMID2=[", AuthenticatedMemberID("x", "y"), "]"))
+      OutputLine(Concat("--- ar2 done ---"))
+    ENDIF
+  ]%%

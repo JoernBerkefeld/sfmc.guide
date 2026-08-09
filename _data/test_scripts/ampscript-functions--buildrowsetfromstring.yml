@@ -1,0 +1,65 @@
+# Test scripts for /engagement/ampscript/functions/buildrowsetfromstring/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=edges, ?b=byname,
+# ?b=casing, ?b=abortord0, ?b=abortrow0, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @unset, @rows
+    SET @b = RequestParameter("b")
+
+    /* control branch: proves the page itself renders */
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* multi-character separator, source order, ordinal 1 */
+    IF @b == "safe" THEN
+      SET @rows = BuildRowSetFromString("North**South**East**West", "**")
+      OutputLine(Concat("s1 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("s1 r1 ord1=[", Field(Row(@rows, 1), 1), "] r4 ord1=[", Field(Row(@rows, 4), 1), "]"))
+      OutputLine(Concat("s12 multichar rc=[", RowCount(BuildRowSetFromString("a::b::c", "::")), "] r2=[", Field(Row(BuildRowSetFromString("a::b::c", "::"), 2), 1), "]"))
+    ENDIF
+
+    /* separator edge cases and empty inputs */
+    IF @b == "edges" THEN
+      SET @rows = BuildRowSetFromString("a,b,", ",")
+      OutputLine(Concat("s2 trailingdelim rc=[", RowCount(@rows), "] r3=[", Field(Row(@rows, 3), 1), "]"))
+      SET @rows = BuildRowSetFromString("NoDelimiterHere", ",")
+      OutputLine(Concat("s3 nodelim rc=[", RowCount(@rows), "] r1=[", Field(Row(@rows, 1), 1), "]"))
+      OutputLine(Concat("s4 emptysource rc=[", RowCount(BuildRowSetFromString("", ",")), "]"))
+      OutputLine(Concat("s13 unsetvar rc=[", RowCount(BuildRowSetFromString(@unset, ",")), "]"))
+      OutputLine(Concat("s5 emptydelim rc=[", RowCount(BuildRowSetFromString("a,b,c", "")), "]"))
+    ENDIF
+
+    /* the unnamed column also answers to the name Value */
+    IF @b == "byname" THEN
+      SET @rows = BuildRowSetFromString("a,b,c", ",")
+      OutputLine(Concat("s6 byname-Value=[", Field(Row(@rows, 1), "Value", 0), "]"))
+    ENDIF
+
+    /* the alternate capitalisation resolves to the same function */
+    IF @b == "casing" THEN
+      OutputLine(Concat("s11 lowercase-s-casing rc=[", RowCount(BuildRowsetFromString("a,b,c", ",")), "]"))
+    ENDIF
+
+    /* fetch ?b=abortord0 - HTTP 422, ordinals are 1-based */
+    IF @b == "abortord0" THEN
+      OutputLine(Concat("--- s7 start ---"))
+      SET @rows = BuildRowSetFromString("a,b,c", ",")
+      OutputLine(Concat("s7 ord0=[", Field(Row(@rows, 1), 0), "]"))
+    ENDIF
+
+    /* fetch ?b=abortrow0 - HTTP 422, row indexing is 1-based */
+    IF @b == "abortrow0" THEN
+      OutputLine(Concat("--- s8 start ---"))
+      SET @rows = BuildRowSetFromString("a,b,c", ",")
+      OutputLine(Concat("s8 row0=[", Field(Row(@rows, 0), 1), "]"))
+    ENDIF
+  ]%%

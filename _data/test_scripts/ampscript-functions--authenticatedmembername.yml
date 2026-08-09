@@ -1,0 +1,74 @@
+# Test scripts for /engagement/ampscript/functions/authenticatedmembername/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The ungated block renders on every request. The shape-and-sibling comparison
+# and the two argument-count cases each sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time:
+# ?b=shape, ?b=ar1, ?b=ar2. The two argument cases are expected to return
+# HTTP 422 for their own branch only — fetch any other value, such as ?b=zzz,
+# and the control line proves the deploy is fine.
+#
+# The business unit name in the shape branch is a placeholder: substitute the
+# name your own tooling or deployment configuration uses for the business unit
+# you publish to, and watch the comparison answer "no".
+behaviour: |
+  %%[
+    VAR @b, @amn, @aeun, @buName
+    SET @b = RequestParameter("b")
+    SET @buName = "Your_Configured_BU_Name"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a deploy that failed to compile */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    OutputLine(Concat("--- AMN start ---"))
+
+    /* a plain anonymous request still produces a value */
+    SET @amn = AuthenticatedMemberName()
+    OutputLine(Concat("AMN=[", @amn, "]"))
+
+    /* confirmed with a second function rather than read off empty brackets */
+    OutputLine(Concat("AMN_EMPTY=[", IIf(Empty(@amn), "empty", "not-empty"), "]"))
+    OutputLine(Concat("AMN_LEN=[", Length(Concat(@amn, "")), "]"))
+
+    /* the value is usable inline, nested and in a comparison */
+    OutputLine(Concat("AMN_DIRECT=[", AuthenticatedMemberName(), "]"))
+    OutputLine(Concat("AMN_IN_CONCAT=[", Concat("<", AuthenticatedMemberName(), ">"), "]"))
+    OutputLine(Concat("AMN_CMP=[", IIf(@amn == "", "eq-emptystring", "ne-emptystring"), "]"))
+    OutputLine(Concat("--- AMN done ---"))
+
+    /* what the value looks like, which name it is, and how it relates to the
+       username sibling read in the very same render */
+    IF @b == "shape" THEN
+      OutputLine(Concat("--- shape start ---"))
+      OutputLine(Concat("DOT_POS=[", IndexOf(@amn, "."), "]"))
+      OutputLine(Concat("SPACE_POS=[", IndexOf(@amn, " "), "]"))
+      OutputLine(Concat("AT_POS=[", IndexOf(@amn, "@"), "]"))
+      OutputLine(Concat("USCORE_POS=[", IndexOf(@amn, "_"), "]"))
+      OutputLine(Concat("IS_EMAIL=[", IIf(IsEmailAddress(@amn), "yes", "no"), "]"))
+      OutputLine(Concat("BUNAME_MATCH=[", IIf(@amn == @buName, "yes", "no"), "]"))
+      OutputLine(Concat("BUNAME_IN_AMN=[", IndexOf(@amn, @buName), "]"))
+      OutputLine(Concat("AMN_IN_BUNAME=[", IndexOf(@buName, @amn), "]"))
+      SET @aeun = AuthenticatedEmployeeUserName()
+      OutputLine(Concat("AEUN_LEN=[", Length(Concat(@aeun, "")), "]"))
+      OutputLine(Concat("SAME_AS_AEUN=[", IIf(@amn == @aeun, "identical", "different"), "]"))
+      OutputLine(Concat("AMN_IN_AEUN=[", IndexOf(@aeun, @amn), "]"))
+      OutputLine(Concat("AEUN_IN_AMN=[", IndexOf(@amn, @aeun), "]"))
+      OutputLine(Concat("--- shape done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its branch */
+    IF @b == "ar1" THEN
+      OutputLine(Concat("--- ar1 start ---"))
+      OutputLine(Concat("AMN1=[", AuthenticatedMemberName("x"), "]"))
+      OutputLine(Concat("--- ar1 done ---"))
+    ENDIF
+
+    IF @b == "ar2" THEN
+      OutputLine(Concat("--- ar2 start ---"))
+      OutputLine(Concat("AMN2=[", AuthenticatedMemberName("x", "y"), "]"))
+      OutputLine(Concat("--- ar2 done ---"))
+    ENDIF
+  ]%%

@@ -1,0 +1,104 @@
+# Test scripts for /engagement/ampscript/functions/buildrowsetfromjson/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=scalars, ?b=singleobj,
+# ?b=nestedarr, ?b=nested, ?b=empties, ?b=boolflag, ?b=casing, ?b=missingcol3,
+# ?b=abortflag0, ?b=abortmissingcol, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @json, @single, @nestarr, @mixed, @unset, @rows, @r1, @r3
+    SET @b = RequestParameter("b")
+    SET @json = '{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}'
+    SET @single = '{"Id":123,"Shape":"Square"}'
+    SET @nestarr = '{"Shapes":["Triangle","Circle","Square"]}'
+    SET @mixed = '{"a":{"b":1},"c":[1,2],"d":"plain"}'
+
+    /* control branch: proves the page itself renders */
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* array of objects: row per element, named columns, case-insensitive names, ordinals */
+    IF @b == "safe" THEN
+      SET @rows = BuildRowsetFromJSON(@json, "$.Flights[*]", 1)
+      SET @r1 = Row(@rows, 1)
+      SET @r3 = Row(@rows, 3)
+      OutputLine(Concat("j1 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("j1 r1 byname Origin=[", Field(@r1, "Origin"), "] Dest=[", Field(@r1, "Dest"), "] Price=[", Field(@r1, "Price"), "]"))
+      OutputLine(Concat("j1 r1 ord1=[", Field(@r1, 1), "] ord2=[", Field(@r1, 2), "]"))
+      OutputLine(Concat("j1 r3 byname Dest=[", Field(@r3, "Dest"), "] PerBagSurcharge=[", Field(@r3, "PerBagSurcharge", 0), "]"))
+      OutputLine(Concat("j1 r3 lowercase-name dest=[", Field(@r3, "dest"), "]"))
+    ENDIF
+
+    /* scalar path: single column named Value, also ordinal 1 */
+    IF @b == "scalars" THEN
+      SET @rows = BuildRowsetFromJSON(@json, "$.Flights[*].Price", 1)
+      OutputLine(Concat("j5 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("j5 r2 Value=[", Field(Row(@rows, 2), "Value", 0), "] ord1=[", Field(Row(@rows, 2), 1), "]"))
+    ENDIF
+
+    /* single object with a wildcard path: one row per key */
+    IF @b == "singleobj" THEN
+      SET @rows = BuildRowsetFromJSON(@single, "$.*", 1)
+      OutputLine(Concat("j6 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("j6 r1 ord1=[", Field(Row(@rows, 1), 1), "] r2 ord1=[", Field(Row(@rows, 2), 1), "]"))
+    ENDIF
+
+    /* nested scalar array: one row per element */
+    IF @b == "nestedarr" THEN
+      SET @rows = BuildRowsetFromJSON(@nestarr, "$.Shapes[*]", 1)
+      OutputLine(Concat("j7 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("j7 r2 ord1=[", Field(Row(@rows, 2), 1), "] Value=[", Field(Row(@rows, 2), "Value", 0), "]"))
+    ENDIF
+
+    /* structured values under a wildcard path render empty */
+    IF @b == "nested" THEN
+      SET @rows = BuildRowsetFromJSON(@mixed, "$.*", 1)
+      OutputLine(Concat("j18 rc=[", RowCount(@rows), "] r1=[", Field(Row(@rows, 1), 1), "] r2=[", Field(Row(@rows, 2), 1), "] r3=[", Field(Row(@rows, 3), 1), "]"))
+    ENDIF
+
+    /* everything that yields zero rows while the third argument is 1 */
+    IF @b == "empties" THEN
+      OutputLine(Concat("j8 malformed-flag1 rc=[", RowCount(BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 1)), "]"))
+      OutputLine(Concat("j10 emptystring-flag1 rc=[", RowCount(BuildRowsetFromJSON("", "$.Flights[*]", 1)), "]"))
+      OutputLine(Concat("j11 emptyarray rc=[", RowCount(BuildRowsetFromJSON("[]", "$[*]", 1)), "]"))
+      OutputLine(Concat("j12 unsetvar-flag1 rc=[", RowCount(BuildRowsetFromJSON(@unset, "$.Flights[*]", 1)), "]"))
+      OutputLine(Concat("j13 nomatch rc=[", RowCount(BuildRowsetFromJSON(@json, "$.NoSuchKey[*]", 1)), "]"))
+    ENDIF
+
+    /* the boolean literal true behaves like the number 1 */
+    IF @b == "boolflag" THEN
+      OutputLine(Concat("j14 boolliteral rc=[", RowCount(BuildRowsetFromJSON(@json, "$.Flights[*]", true)), "]"))
+    ENDIF
+
+    /* the alternate capitalisation resolves to the same function */
+    IF @b == "casing" THEN
+      OutputLine(Concat("j17 capitalS-casing rc=[", RowCount(BuildRowSetFromJSON(@json, "$.Flights[*]", 1)), "]"))
+    ENDIF
+
+    /* the three-argument Field form renders empty instead of aborting */
+    IF @b == "missingcol3" THEN
+      SET @rows = BuildRowsetFromJSON(@json, "$.Flights[*]", 1)
+      OutputLine(Concat("j4 missingcol3arg=[", Field(Row(@rows, 1), "NoSuchColumn", 0), "]"))
+    ENDIF
+
+    /* fetch ?b=abortflag0 - HTTP 422, nothing renders */
+    IF @b == "abortflag0" THEN
+      OutputLine(Concat("--- j9 start ---"))
+      SET @rows = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 0)
+      OutputLine(Concat("j9 rc=[", RowCount(@rows), "]"))
+    ENDIF
+
+    /* fetch ?b=abortmissingcol - HTTP 422, the two-argument Field form on a missing column */
+    IF @b == "abortmissingcol" THEN
+      OutputLine(Concat("--- j3 start ---"))
+      SET @rows = BuildRowsetFromJSON(@json, "$.Flights[*]", 1)
+      OutputLine(Concat("j3 missingcol2arg=[", Field(Row(@rows, 1), "NoSuchColumn"), "]"))
+    ENDIF
+  ]%%

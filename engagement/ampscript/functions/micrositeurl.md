@@ -75,6 +75,6 @@ One thing the harness cannot reach: what the token resolves to on the target pag
 
 ## See also
 
-- `CloudPagesURL` — the CloudPages counterpart. It has no page here yet: no invocation of it could be made to render from a CloudPage, so nothing about it is runtime-proven
+- [CloudPagesURL](/engagement/ampscript/functions/cloudpagesurl/) — the CloudPages counterpart, which aborts the request on an ID that matches no page
 - [v](/engagement/ampscript/functions/v/) — outputs the built URL inline
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-microsite-url.html) · [ampscript.guide](https://ampscript.guide/micrositeurl/)

@@ -1,0 +1,47 @@
+# Test scripts for /engagement/ampscript/functions/authenticatedemployeeid/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The ungated block renders on every request. The two argument-count cases
+# each sit behind their own RequestParameter("b") branch and must be fetched
+# one at a time: ?b=ar1, ?b=ar2. Both are expected to return HTTP 422 for
+# their own branch only — the control line proves the deploy itself is fine.
+behaviour: |
+  %%[
+    VAR @b, @aeid
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a deploy that failed to compile */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    OutputLine(Concat("--- AEID start ---"))
+
+    /* a plain anonymous request still produces a value */
+    SET @aeid = AuthenticatedEmployeeID()
+    OutputLine(Concat("AEID=[", @aeid, "]"))
+
+    /* confirmed with a second function rather than read off empty brackets */
+    OutputLine(Concat("AEID_EMPTY=[", IIf(Empty(@aeid), "empty", "not-empty"), "]"))
+    OutputLine(Concat("AEID_LEN=[", Length(Concat(@aeid, "")), "]"))
+
+    /* the value is usable inline, nested and in a comparison */
+    OutputLine(Concat("AEID_DIRECT=[", AuthenticatedEmployeeID(), "]"))
+    OutputLine(Concat("AEID_IN_CONCAT=[", Concat("<", AuthenticatedEmployeeID(), ">"), "]"))
+    OutputLine(Concat("AEID_CMP=[", IIf(@aeid == "", "eq-emptystring", "ne-emptystring"), "]"))
+    OutputLine(Concat("--- AEID done ---"))
+
+    /* argument counts the signature does not allow: each aborts its branch */
+    IF @b == "ar1" THEN
+      OutputLine(Concat("--- ar1 start ---"))
+      OutputLine(Concat("AEID1=[", AuthenticatedEmployeeID("x"), "]"))
+      OutputLine(Concat("--- ar1 done ---"))
+    ENDIF
+
+    IF @b == "ar2" THEN
+      OutputLine(Concat("--- ar2 start ---"))
+      OutputLine(Concat("AEID2=[", AuthenticatedEmployeeID("x", "y"), "]"))
+      OutputLine(Concat("--- ar2 done ---"))
+    ENDIF
+  ]%%

@@ -1,0 +1,79 @@
+# Test scripts for /engagement/ampscript/functions/buildrowsetfromxml/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=attributes,
+# ?b=missingattr, ?b=attrpath, ?b=empties, ?b=boolflag, ?b=casing,
+# ?b=abortflag0, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @xml, @unset, @rows, @r2, @r3
+    SET @b = RequestParameter("b")
+    SET @xml = '<root><Flight origin="IND" dest="NYC" carrier="UAL">100.00</Flight><Flight origin="IND" dest="LAX" carrier="UAL">200.00</Flight><Flight origin="IND" dest="SEA">500<PerBagSurcharge>25</PerBagSurcharge></Flight></root>'
+
+    /* control branch: proves the page itself renders */
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* one row per matched element, Value and Xml columns */
+    IF @b == "safe" THEN
+      SET @rows = BuildRowSetFromXML(@xml, "//Flight", 1)
+      SET @r2 = Row(@rows, 2)
+      OutputLine(Concat("x1 rc=[", RowCount(@rows), "]"))
+      OutputLine(Concat("x1 r2 Value=[", Field(@r2, "Value", 0), "] Xml=[", Field(@r2, "Xml", 0), "]"))
+    ENDIF
+
+    /* attribute columns, case-insensitive lookup, ordinal order */
+    IF @b == "attributes" THEN
+      SET @rows = BuildRowSetFromXML(@xml, "//Flight", 1)
+      SET @r2 = Row(@rows, 2)
+      OutputLine(Concat("x2 origin_att=[", Field(@r2, "origin_att", 0), "] Origin_att=[", Field(@r2, "Origin_att", 0), "] carrier_att=[", Field(@r2, "carrier_att", 0), "]"))
+      OutputLine(Concat("x2 ord1=[", Field(@r2, 1), "] ord2=[", Field(@r2, 2), "] ord3=[", Field(@r2, 3), "] ord4=[", Field(@r2, 4), "] ord5=[", Field(@r2, 5), "]"))
+    ENDIF
+
+    /* a node lacking an attribute the siblings carry, plus a child element */
+    IF @b == "missingattr" THEN
+      SET @rows = BuildRowSetFromXML(@xml, "//Flight", 1)
+      SET @r3 = Row(@rows, 3)
+      OutputLine(Concat("x3 r3 Value=[", Field(@r3, "Value", 0), "] Xml=[", Field(@r3, "Xml", 0), "]"))
+      OutputLine(Concat("x3 r3 carrier_att=[", Field(@r3, "carrier_att", 0), "]"))
+    ENDIF
+
+    /* an XPath selecting an attribute node */
+    IF @b == "attrpath" THEN
+      SET @rows = BuildRowSetFromXML(@xml, "/root/Flight[1]/@origin", 1)
+      OutputLine(Concat("x4 attr-xpath rc=[", RowCount(@rows), "] v=[", Field(Row(@rows, 1), "Value", 0), "] ord1=[", Field(Row(@rows, 1), 1), "]"))
+    ENDIF
+
+    /* everything that yields zero rows while the third argument is 1 */
+    IF @b == "empties" THEN
+      OutputLine(Concat("x6 malformed-flag1 rc=[", RowCount(BuildRowSetFromXML("<root><a>1</a>", "//a", 1)), "]"))
+      OutputLine(Concat("x8 emptystring-flag1 rc=[", RowCount(BuildRowSetFromXML("", "//Flight", 1)), "]"))
+      OutputLine(Concat("x5 emptyroot rc=[", RowCount(BuildRowSetFromXML("<root></root>", "//Flight", 1)), "]"))
+      OutputLine(Concat("x13 unsetvar rc=[", RowCount(BuildRowSetFromXML(@unset, "//Flight", 1)), "]"))
+      OutputLine(Concat("x9 nomatch rc=[", RowCount(BuildRowSetFromXML(@xml, "//NoSuchNode", 1)), "]"))
+    ENDIF
+
+    /* the boolean literal true behaves like the number 1 */
+    IF @b == "boolflag" THEN
+      OutputLine(Concat("x12 boolliteral rc=[", RowCount(BuildRowSetFromXML(@xml, "//Flight", true)), "]"))
+    ENDIF
+
+    /* the alternate capitalisation resolves to the same function */
+    IF @b == "casing" THEN
+      OutputLine(Concat("x11 lowercase-s-casing rc=[", RowCount(BuildRowsetFromXML(@xml, "//Flight", 1)), "]"))
+    ENDIF
+
+    /* fetch ?b=abortflag0 - HTTP 422, nothing renders */
+    IF @b == "abortflag0" THEN
+      OutputLine(Concat("--- x7 start ---"))
+      SET @rows = BuildRowSetFromXML("<root><a>1</a>", "//a", 0)
+      OutputLine(Concat("x7 rc=[", RowCount(@rows), "]"))
+    ENDIF
+  ]%%

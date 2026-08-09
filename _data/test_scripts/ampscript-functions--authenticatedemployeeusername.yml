@@ -1,0 +1,62 @@
+# Test scripts for /engagement/ampscript/functions/authenticatedemployeeusername/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The ungated block renders on every request. The shape comparison and the two
+# argument-count cases each sit behind their own RequestParameter("b") branch
+# and must be fetched one at a time: ?b=shape, ?b=ar1, ?b=ar2. The two argument
+# cases are expected to return HTTP 422 for their own branch only — fetch any
+# other value, such as ?b=zzz, and the control line proves the deploy is fine.
+behaviour: |
+  %%[
+    VAR @b, @aeun, @sib
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a deploy that failed to compile */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    OutputLine(Concat("--- AEUN start ---"))
+
+    /* a plain anonymous request still produces a value */
+    SET @aeun = AuthenticatedEmployeeUserName()
+    OutputLine(Concat("AEUN=[", @aeun, "]"))
+
+    /* confirmed with a second function rather than read off empty brackets */
+    OutputLine(Concat("AEUN_EMPTY=[", IIf(Empty(@aeun), "empty", "not-empty"), "]"))
+    OutputLine(Concat("AEUN_LEN=[", Length(Concat(@aeun, "")), "]"))
+
+    /* the value is usable inline, nested and in a comparison */
+    OutputLine(Concat("AEUN_DIRECT=[", AuthenticatedEmployeeUserName(), "]"))
+    OutputLine(Concat("AEUN_IN_CONCAT=[", Concat("<", AuthenticatedEmployeeUserName(), ">"), "]"))
+    OutputLine(Concat("AEUN_CMP=[", IIf(@aeun == "", "eq-emptystring", "ne-emptystring"), "]"))
+    OutputLine(Concat("--- AEUN done ---"))
+
+    /* what the value looks like, and how it relates to the sibling ID */
+    IF @b == "shape" THEN
+      OutputLine(Concat("--- shape start ---"))
+      OutputLine(Concat("AT_POS=[", IndexOf(@aeun, "@"), "]"))
+      OutputLine(Concat("DOT_POS=[", IndexOf(@aeun, "."), "]"))
+      OutputLine(Concat("SPACE_POS=[", IndexOf(@aeun, " "), "]"))
+      OutputLine(Concat("IS_EMAIL=[", IIf(IsEmailAddress(@aeun), "yes", "no"), "]"))
+      SET @sib = AuthenticatedEmployeeID()
+      OutputLine(Concat("SIB_LEN=[", Length(Concat(@sib, "")), "]"))
+      OutputLine(Concat("SAME=[", IIf(@aeun == @sib, "identical", "different"), "]"))
+      OutputLine(Concat("ID_IN_NAME=[", IndexOf(@aeun, @sib), "]"))
+      OutputLine(Concat("--- shape done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its branch */
+    IF @b == "ar1" THEN
+      OutputLine(Concat("--- ar1 start ---"))
+      OutputLine(Concat("AEUN1=[", AuthenticatedEmployeeUserName("x"), "]"))
+      OutputLine(Concat("--- ar1 done ---"))
+    ENDIF
+
+    IF @b == "ar2" THEN
+      OutputLine(Concat("--- ar2 start ---"))
+      OutputLine(Concat("AEUN2=[", AuthenticatedEmployeeUserName("x", "y"), "]"))
+      OutputLine(Concat("--- ar2 done ---"))
+    ENDIF
+  ]%%

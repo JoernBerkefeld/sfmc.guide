@@ -89,7 +89,8 @@
   category: "Utility"
   syntax: "AuthenticatedEmployeeID()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedemployeeid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -102,65 +103,70 @@
   category: "Utility"
   syntax: "AuthenticatedEmployeeNotificationAddress()"
   returnType: "string"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedemployeenotificationaddress/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the notification email address of the authenticated employee."
+  description: "Returns the notification email address of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty address rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. It is a separate value from AuthenticatedEmployeeUserName() — neither can be derived from the other."
   guideUrl: "https://ampscript.guide/authenticatedemployeenotificationaddress/"
 - name: "AuthenticatedEmployeeUserName"
   slug: "authenticatedemployeeusername"
   category: "Utility"
   syntax: "AuthenticatedEmployeeUserName()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedemployeeusername/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the username of the authenticated employee."
+  description: "Returns the login username of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty username rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one."
   guideUrl: "https://ampscript.guide/authenticatedemployeeusername/"
 - name: "AuthenticatedEnterpriseID"
   slug: "authenticatedenterpriseid"
   category: "Utility"
   syntax: "AuthenticatedEnterpriseID()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedenterpriseid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the enterprise ID (top-level MID) of the authenticated user."
+  description: "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty ID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. Called from a child business unit it reports the parent (enterprise) MID, not the child MID, and it is a different value from AuthenticatedEmployeeID()."
   guideUrl: "https://ampscript.guide/authenticatedenterpriseid/"
 - name: "AuthenticatedMemberID"
   slug: "authenticatedmemberid"
   category: "Utility"
   syntax: "AuthenticatedMemberID()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedmemberid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the member ID (MID) of the authenticated business unit."
+  description: "Returns the member ID (MID) of the business unit the code runs on. On a public CloudPage, where nobody is signed in, it still returns a non-empty MID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. Called from a child business unit it reports that CHILD MID, unlike AuthenticatedEnterpriseID(), which reports the parent (enterprise) MID in the same render."
   guideUrl: "https://ampscript.guide/authenticatedmemberid/"
 - name: "AuthenticatedMemberName"
   slug: "authenticatedmembername"
   category: "Utility"
   syntax: "AuthenticatedMemberName()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/authenticatedmembername/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the name of the authenticated business unit."
+  description: "Returns the display name of the business unit the code runs on. On a public CloudPage, where nobody is signed in, it still returns a non-empty name rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. It is the business unit name as shown in the Marketing Cloud UI — spaces and punctuation included — not a person and not the login username returned by AuthenticatedEmployeeUserName() in the same render."
   guideUrl: "https://ampscript.guide/authenticatedmembername/"
 - name: "BarcodeURL"
   slug: "barcodeurl"
@@ -234,8 +240,9 @@
   category: "Content"
   syntax: "BuildRowsetFromJSON(jsonData, jsonPathExpression, returnEmptyOnError)"
   returnType: "rowset"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/buildrowsetfromjson/"
+  differsFromDocs: true
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
@@ -247,7 +254,8 @@
   category: "Content"
   syntax: "BuildRowSetFromString(sourceData, delimiter)"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/buildrowsetfromstring/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -260,8 +268,9 @@
   category: "Content"
   syntax: "BuildRowSetFromXML(xmlData, xpathExpression, returnEmptyOnError)"
   returnType: "rowset"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/buildrowsetfromxml/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -313,13 +322,14 @@
   category: "Utility"
   syntax: "CloudPagesURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/cloudpagesurl/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Generates a secure, encrypted URL to a CloudPages landing page, optionally passing name-value parameters."
+  description: "Builds the published URL of a CloudPages landing page. Name-value pairs are appended in PAIRS and are folded into a single encrypted query token rather than readable parameters; an odd trailing argument or a page ID that matches no page aborts the page."
   guideUrl: "https://ampscript.guide/cloudpagesurl/"
 - name: "Concat"
   slug: "concat"

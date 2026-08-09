@@ -1,0 +1,117 @@
+# Test scripts for /engagement/ampscript/functions/cloudpagesurl/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Deploy it to the page whose ID you put in @pid, and put that page's own
+# published URL in @known — the script then proves the returned string against
+# the page it is running on, rather than you having to follow the link.
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=zzz    no gate matches — proves the deploy is healthy at HTTP 200
+#   ?b=ar1    one argument: the page's own URL, unwrapped
+#   ?b=ar3    one name-value pair
+#   ?b=ar5    two name-value pairs
+#   ?b=str    the ID as a quoted string
+#   ?b=enc    a value holding a space and an ampersand
+#   ?b=det    two identical calls inside one render
+# These return HTTP 422 — that IS the result, and the control line above
+# proves the deploy is healthy while they abort:
+#   ?b=ar0    ?b=ar2    ?b=ar4    ?b=bad
+behaviour: |
+  %%[
+    VAR @b, @pid, @known, @u1, @u2
+    SET @b = RequestParameter("b")
+
+    /* the page this script is deployed to, and that page's own URL */
+    SET @pid = 39412
+    SET @known = "your-subdomain.pub.sfmc-content.com/your-path"
+
+    /* known-good control: renders on every request, so a gate that aborts
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* one argument: the returned string IS the page's own published URL,
+       so the known URL is found at position 9, right after https:// */
+    IF @b == "ar1" THEN
+      OutputLine(Concat("--- ar1 start ---"))
+      SET @u1 = CloudPagesURL(@pid)
+      OutputLine(Concat("R=[", @u1, "]"))
+      OutputLine(Concat("LEN=[", Length(Concat(@u1, "")), "]"))
+      OutputLine(Concat("HOSTPOS=[", IndexOf(@u1, @known), "]"))
+      OutputLine(Concat("QSPOS=[", IndexOf(@u1, "?"), "]"))
+      OutputLine(Concat("--- ar1 done ---"))
+    ENDIF
+
+    /* one pair: a single query parameter appears, and neither the name nor
+       the value can be found in the result */
+    IF @b == "ar3" THEN
+      OutputLine(Concat("--- ar3 start ---"))
+      SET @u1 = CloudPagesURL(@pid, "k1", "v1")
+      OutputLine(Concat("R=[", @u1, "]"))
+      OutputLine(Concat("LEN=[", Length(Concat(@u1, "")), "]"))
+      OutputLine(Concat("KPOS=[", IndexOf(@u1, "k1"), "]"))
+      OutputLine(Concat("VPOS=[", IndexOf(@u1, "v1"), "]"))
+      OutputLine(Concat("--- ar3 done ---"))
+    ENDIF
+
+    /* two pairs: still one query parameter, just a longer token */
+    IF @b == "ar5" THEN
+      OutputLine(Concat("--- ar5 start ---"))
+      SET @u1 = CloudPagesURL(@pid, "k1", "v1", "k2", "v2")
+      OutputLine(Concat("R=[", @u1, "]"))
+      OutputLine(Concat("LEN=[", Length(Concat(@u1, "")), "]"))
+      OutputLine(Concat("--- ar5 done ---"))
+    ENDIF
+
+    /* the ID as a quoted string behaves like the numeric literal */
+    IF @b == "str" THEN
+      OutputLine(Concat("--- str start ---"))
+      SET @u1 = CloudPagesURL("39412")
+      OutputLine(Concat("R=[", @u1, "]"))
+      OutputLine(Concat("LEN=[", Length(Concat(@u1, "")), "]"))
+      OutputLine(Concat("--- str done ---"))
+    ENDIF
+
+    /* a value holding a space and an ampersand: neither character appears
+       in the result, because the pair never survives as text */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      SET @u1 = CloudPagesURL(@pid, "q", "a b&c")
+      OutputLine(Concat("R=[", @u1, "]"))
+      OutputLine(Concat("SPACEPOS=[", IndexOf(@u1, " "), "]"))
+      OutputLine(Concat("AMPPOS=[", IndexOf(@u1, "&"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* two identical calls inside ONE render match; fetch this gate twice and
+       compare the ar3 tokens across the two requests to see them differ */
+    IF @b == "det" THEN
+      OutputLine(Concat("--- det start ---"))
+      SET @u1 = CloudPagesURL(@pid)
+      SET @u2 = CloudPagesURL(@pid)
+      OutputLine(Concat("SAME=[", IIf(@u1 == @u2, "identical", "different"), "]"))
+      OutputLine(Concat("--- det done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow, and an ID matching no
+       page: each aborts its own branch with HTTP 422 while every branch
+       above still renders */
+    IF @b == "ar0" THEN
+      OutputLine(Concat("AR0_START=[x]"))
+      OutputLine(Concat("R=[", CloudPagesURL(), "]"))
+    ENDIF
+    IF @b == "ar2" THEN
+      OutputLine(Concat("AR2_START=[x]"))
+      OutputLine(Concat("R=[", CloudPagesURL(@pid, "k1"), "]"))
+    ENDIF
+    IF @b == "ar4" THEN
+      OutputLine(Concat("AR4_START=[x]"))
+      OutputLine(Concat("R=[", CloudPagesURL(@pid, "k1", "v1", "k2"), "]"))
+    ENDIF
+    IF @b == "bad" THEN
+      OutputLine(Concat("BAD_START=[x]"))
+      OutputLine(Concat("R=[", CloudPagesURL(987654321), "]"))
+    ENDIF
+  ]%%

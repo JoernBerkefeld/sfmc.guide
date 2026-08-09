@@ -63,6 +63,48 @@
     "description": "Reads an attribute of the current message or page context by name. Runtime-proven on a live Marketing Cloud Engagement CloudPage — system attributes resolve there, the name is matched without regard to case, and an unknown name gives an empty value instead of failing."
   },
   {
+    "name": "AuthenticatedEmployeeID",
+    "url": "/engagement/ampscript/functions/authenticatedemployeeid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
+  },
+  {
+    "name": "AuthenticatedEmployeeNotificationAddress",
+    "url": "/engagement/ampscript/functions/authenticatedemployeenotificationaddress/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the notification email address of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
+  },
+  {
+    "name": "AuthenticatedEmployeeUserName",
+    "url": "/engagement/ampscript/functions/authenticatedemployeeusername/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the login username of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
+  },
+  {
+    "name": "AuthenticatedEnterpriseID",
+    "url": "/engagement/ampscript/functions/authenticatedenterpriseid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
+  },
+  {
+    "name": "AuthenticatedMemberID",
+    "url": "/engagement/ampscript/functions/authenticatedmemberid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the member ID (MID) of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
+  },
+  {
+    "name": "AuthenticatedMemberName",
+    "url": "/engagement/ampscript/functions/authenticatedmembername/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the display name of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
+  },
+  {
     "name": "Base64Decode",
     "url": "/engagement/ampscript/functions/base64decode/",
     "section": "AMPscript Function Reference",
@@ -77,11 +119,39 @@
     "description": "Encodes a value as a Base64 string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes encoded are the UTF-8 form of the input, and that the encoding argument accepts far more names than any source lists."
   },
   {
+    "name": "BuildRowsetFromJSON",
+    "url": "/engagement/ampscript/functions/buildrowsetfromjson/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Parses a JSON string and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the third argument, which works the opposite way round from the documented syntax."
+  },
+  {
+    "name": "BuildRowSetFromString",
+    "url": "/engagement/ampscript/functions/buildrowsetfromstring/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Splits a delimited string into a single-column rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the unnamed column and the empty separator that splits nothing."
+  },
+  {
+    "name": "BuildRowSetFromXML",
+    "url": "/engagement/ampscript/functions/buildrowsetfromxml/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Parses an XML string using an XPath expression and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the third argument, which works the opposite way round from the documented syntax."
+  },
+  {
     "name": "Char",
     "url": "/engagement/ampscript/functions/char/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the character for a numeric character code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the code domain is not capped at 255."
+  },
+  {
+    "name": "CloudPagesURL",
+    "url": "/engagement/ampscript/functions/cloudpagesurl/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Builds the published URL of a CloudPages landing page. Runtime-proven on a live Marketing Cloud Engagement CloudPage — extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
   },
   {
     "name": "Concat",

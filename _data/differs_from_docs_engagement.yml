@@ -2076,3 +2076,426 @@
         OutputLine(Concat("SAME=[", IIf(@u1 == @u2, "identical", "different"), "]"))
       ENDIF
     ]%%
+
+- name: "AuthenticatedEmployeeID"
+  url: "/engagement/ampscript/functions/authenticatedemployeeid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-id.html"
+  tagline: "Returns a non-empty user ID on a public CloudPage where nobody is signed in"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "authenticatedemployeeid-value-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and says it is not for CloudPages, so it makes no
+    claim at all about what a CloudPage does. It turns out to be neither empty
+    nor an abort: an anonymous request to a public CloudPage rendered a
+    nine-digit ID at HTTP 200.
+
+    The value behaves like any other string. It compared as not equal to the
+    empty string, `Empty()` on it answered false, `Length()` on it gave nine and
+    it rendered unchanged when nested inside a `Concat`, so it is a plain value
+    and not a call that ends the page.
+
+    The consequence for a caller is the trap: because a value always comes back,
+    a page cannot use a non-empty result to decide that its visitor is a signed-in
+    Marketing Cloud user. Anything gating content on that check would open the
+    content to everybody. Use a real authentication mechanism instead.
+  testScript: |
+    %%[ VAR @aeid
+      SET @aeid = AuthenticatedEmployeeID()
+      OutputLine(Concat("AEID=[", @aeid, "]"))
+      OutputLine(Concat("AEID_EMPTY=[", IIf(Empty(@aeid), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AEID_IN_CONCAT=[", Concat("<", AuthenticatedEmployeeID(), ">"), "]"))
+      OutputLine(Concat("AEID_LEN=[", Length(Concat(@aeid, "")), "]"))
+    ]%%
+
+- name: "AuthenticatedEmployeeUserName"
+  url: "/engagement/ampscript/functions/authenticatedemployeeusername/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-username.html"
+  tagline: "Returns a non-empty username on a public CloudPage where nobody is signed in"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "authenticatedemployeeusername-value-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and says it is not for CloudPages, so it says
+    nothing about what a CloudPage produces. What it produces is a real
+    username: an anonymous request to a public CloudPage rendered a non-empty
+    string at HTTP 200, not an empty value and not an abort.
+
+    The shape is worth knowing before you print it. On the business unit tested
+    the value looked like an email address — a local part, an `@`, then a
+    dotted domain-like suffix — and `IsEmailAddress()` accepted it. It is
+    therefore account-identifying and should not be rendered into public
+    content. It is also unrelated in form to the numeric ID from
+    [AuthenticatedEmployeeID](#authenticatedemployeeid-value-without-a-session):
+    the two values are not equal and the ID does not appear anywhere inside the
+    username, so neither can be derived from the other.
+
+    Same trap as its sibling: because a value always comes back, a non-empty
+    result cannot be used to decide that the visitor is a signed-in Marketing
+    Cloud user. Gate on a real authentication mechanism instead.
+  testScript: |
+    %%[ VAR @aeun
+      SET @aeun = AuthenticatedEmployeeUserName()
+      OutputLine(Concat("AEUN_EMPTY=[", IIf(Empty(@aeun), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AEUN_LEN=[", Length(Concat(@aeun, "")), "]"))
+      OutputLine(Concat("AT_POS=[", IndexOf(@aeun, "@"), "]"))
+      OutputLine(Concat("IS_EMAIL=[", IIf(IsEmailAddress(@aeun), "yes", "no"), "]"))
+      OutputLine(Concat("SAME_AS_ID=[", IIf(@aeun == AuthenticatedEmployeeID(), "identical", "different"), "]"))
+    ]%%
+
+- name: "AuthenticatedEmployeeNotificationAddress"
+  url: "/engagement/ampscript/functions/authenticatedemployeenotificationaddress/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-notification-address.html"
+  tagline: "Returns a real mailbox address on a public CloudPage, and it is not the username"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "authenticatedemployeenotificationaddress-value-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and explicitly rules out use on CloudPages. The
+    runtime contradicts that scoping: an anonymous request to a public CloudPage
+    rendered a non-empty email address at HTTP 200 — no empty value, no abort.
+
+    The name-alike trap is the interesting part. It is easy to assume this
+    returns the same string as
+    [AuthenticatedEmployeeUserName](#authenticatedemployeeusername-value-without-a-session),
+    which is itself email-shaped. Called side by side in one render they came
+    back **different**: the notification address was a real mailbox on a
+    registered corporate domain, while the username carried a longer,
+    account-scoped suffix that is not a mail domain. It is equally unrelated to
+    the numeric ID from
+    [AuthenticatedEmployeeID](#authenticatedemployeeid-value-without-a-session).
+    Pick the function whose value you actually want; none of the three is a
+    substitute for another.
+
+    Same trap as both siblings: a value always comes back, so a non-empty result
+    says nothing about whether the visitor is a signed-in Marketing Cloud user.
+    And because this one is a deliverable mailbox, do not render it into public
+    content.
+  testScript: |
+    %%[ VAR @aena
+      SET @aena = AuthenticatedEmployeeNotificationAddress()
+      OutputLine(Concat("AENA_EMPTY=[", IIf(Empty(@aena), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AENA_LEN=[", Length(Concat(@aena, "")), "]"))
+      OutputLine(Concat("IS_EMAIL=[", IIf(IsEmailAddress(@aena), "yes", "no"), "]"))
+      OutputLine(Concat("SAME_AS_UNAME=[", IIf(@aena == AuthenticatedEmployeeUserName(), "identical", "different"), "]"))
+      OutputLine(Concat("SAME_AS_ID=[", IIf(@aena == AuthenticatedEmployeeID(), "identical", "different"), "]"))
+    ]%%
+
+- name: "AuthenticatedEnterpriseID"
+  url: "/engagement/ampscript/functions/authenticatedenterpriseid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-enterprise-id.html"
+  tagline: "Returns the parent MID on a public CloudPage, even when the page runs on a child business unit"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "authenticatedenterpriseid-parent-mid-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and says it is not for CloudPages, so it makes no
+    claim about a CloudPage at all. An anonymous request to a public CloudPage
+    rendered a non-empty, digits-only account ID at HTTP 200 — no empty value,
+    no abort.
+
+    The question worth settling is which MID comes back. The page was published
+    on a **child** business unit, yet the value matched the account's **parent**
+    (enterprise) MID exactly and did not match the child's own MID. So this is
+    an account-level identifier, not the identifier of the business unit the
+    code happens to run in — reach for a business-unit MID elsewhere if that is
+    what you need.
+
+    It is also not the employee identifier. Read in the same render,
+    [AuthenticatedEmployeeID](#authenticatedemployeeid-value-without-a-session)
+    came back a different, longer digit string, and neither value occurs inside
+    the other.
+
+    Same trap as its siblings: a value always comes back, so a non-empty result
+    says nothing about whether the visitor is a signed-in Marketing Cloud user.
+  testScript: |
+    %%[ VAR @eid
+      SET @eid = AuthenticatedEnterpriseID()
+      OutputLine(Concat("AEID_EMPTY=[", IIf(Empty(@eid), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AEID_LEN=[", Length(Concat(@eid, "")), "]"))
+      OutputLine(Concat("SAME_AS_EMPID=[", IIf(@eid == AuthenticatedEmployeeID(), "identical", "different"), "]"))
+      OutputLine(Concat("PLUS1=[", Add(@eid, 1), "]"))
+    ]%%
+
+- name: "AuthenticatedMemberID"
+  url: "/engagement/ampscript/functions/authenticatedmemberid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-id.html"
+  tagline: "Returns the running business unit's own MID on a public CloudPage — the child, not the parent"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "authenticatedmemberid-child-mid-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and says it is not for CloudPages, so it makes no
+    claim about a CloudPage at all. An anonymous request to a public CloudPage
+    rendered a non-empty, digits-only MID at HTTP 200 — no empty value, no
+    abort.
+
+    The pairing with its sibling is the finding. The page was published on a
+    **child** business unit. In one and the same render this function returned
+    the **child's own** MID, while
+    [AuthenticatedEnterpriseID](#authenticatedenterpriseid-parent-mid-without-a-session)
+    returned the account's **parent** MID. Both comparisons ran against the two
+    real MIDs configured for the account, so the split is real and not an
+    artefact of an invented identifier. Reach for this function when you want
+    the business unit the code is executing in, and for the enterprise function
+    when you want the account.
+
+    It is neither of the employee values either: called alongside
+    [AuthenticatedEmployeeID](#authenticatedemployeeid-value-without-a-session)
+    it came back a different digit string of the same length, with neither value
+    occurring inside the other. The digits are genuinely numeric — `Add()`
+    applied straight to the result returned it incremented by one.
+
+    Same trap as its siblings: a value always comes back, so a non-empty result
+    says nothing about whether the visitor is a signed-in Marketing Cloud user.
+  testScript: |
+    %%[ VAR @mid
+      SET @mid = AuthenticatedMemberID()
+      OutputLine(Concat("AMID_EMPTY=[", IIf(Empty(@mid), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AMID_LEN=[", Length(Concat(@mid, "")), "]"))
+      OutputLine(Concat("SAME_AS_EID=[", IIf(@mid == AuthenticatedEnterpriseID(), "identical", "different"), "]"))
+      OutputLine(Concat("SAME_AS_EMPID=[", IIf(@mid == AuthenticatedEmployeeID(), "identical", "different"), "]"))
+      OutputLine(Concat("PLUS1=[", Add(@mid, 1), "]"))
+    ]%%
+
+- name: "AuthenticatedMemberName"
+  url: "/engagement/ampscript/functions/authenticatedmembername/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-name.html"
+  tagline: "Returns the business unit's display name on a public CloudPage — not a person, and not the login username"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "authenticatedmembername-business-unit-name-without-a-session"
+  body: |
+    The official page scopes this function to microsites with sender
+    authenticated redirection and says it is not for CloudPages, so it makes no
+    claim about a CloudPage. An anonymous request to a public CloudPage rendered
+    a non-empty name at HTTP 200 — no empty value, no abort.
+
+    What comes back is the **business unit's display name**, the human-readable
+    label you see in the Marketing Cloud UI, not an identity. It is free text:
+    the value observed contained spaces and a punctuation separator, so treat it
+    as prose rather than as a key — `IsEmailAddress()` rejected it and it
+    contained no `@`.
+
+    It is emphatically **not** a person. Called in the same render,
+    [AuthenticatedEmployeeUserName](#authenticatedemployeeusername-value-without-a-session)
+    returned a completely different, much longer email-shaped login string, with
+    neither value occurring inside the other. Nor is it the technical key: it
+    did **not** equal the business unit's configured name as used by tooling and
+    deployment configuration, and neither string contained the other — the UI
+    display name and the configuration name differ in separator and spacing. If
+    you need to branch on the business unit, match the MID from
+    [AuthenticatedMemberID](#authenticatedmemberid-child-mid-without-a-session)
+    rather than string-matching this name.
+
+    Same trap as its siblings: a value always comes back, so a non-empty result
+    says nothing about whether the visitor is a signed-in Marketing Cloud user.
+  testScript: |
+    %%[ VAR @amn
+      SET @amn = AuthenticatedMemberName()
+      OutputLine(Concat("AMN_EMPTY=[", IIf(Empty(@amn), "empty", "not-empty"), "]"))
+      OutputLine(Concat("AMN_LEN=[", Length(Concat(@amn, "")), "]"))
+      OutputLine(Concat("SPACE_POS=[", IndexOf(@amn, " "), "]"))
+      OutputLine(Concat("IS_EMAIL=[", IIf(IsEmailAddress(@amn), "yes", "no"), "]"))
+      OutputLine(Concat("SAME_AS_AEUN=[", IIf(@amn == AuthenticatedEmployeeUserName(), "identical", "different"), "]"))
+    ]%%
+
+- name: "CloudPagesURL"
+  url: "/engagement/ampscript/functions/cloudpagesurl/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-cloud-pages-url.html"
+  tagline: "A page ID that matches no page takes the whole page down instead of returning nothing"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "cloudpagesurl-unknown-page-id-aborts"
+  body: |
+    The official reference says nothing about what happens when the page ID does
+    not identify a landing page. The answer is the worst one available: the
+    request **aborts with HTTP 422** and discards everything already rendered.
+    There is no empty string, no error value and no sentinel to test for — a
+    single mistyped digit turns a working page into a blank failure, and the
+    output that would have told you why is thrown away with it.
+
+    This is doubly worth knowing because the sibling
+    [MicrositeURL](/engagement/ampscript/functions/micrositeurl/) behaves the
+    opposite way: an ID matching no asset there still returns a well-formed URL.
+    Two functions with the same signature shape, and one of them is a landmine.
+
+    Validate the ID before you build the link, and never take one from
+    unvalidated input.
+
+    The same abort applies to an **even** total argument count — the extra
+    name-value pairs are accepted only in pairs, so a name supplied without its
+    value fails the request rather than being ignored.
+  testScript: |
+    %%[ VAR @b, @pid
+      SET @b = RequestParameter("b")
+      SET @pid = 39412
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=good — renders the page URL */
+      IF @b == "good" THEN
+        OutputLine(Concat("R=[", CloudPagesURL(@pid), "]"))
+      ENDIF
+      /* fetch ?b=bad — HTTP 422, and the control line above is lost too */
+      IF @b == "bad" THEN
+        OutputLine(Concat("R=[", CloudPagesURL(987654321), "]"))
+      ENDIF
+      /* fetch ?b=odd — a name without its value, also HTTP 422 */
+      IF @b == "odd" THEN
+        OutputLine(Concat("R=[", CloudPagesURL(@pid, "k1"), "]"))
+      ENDIF
+    ]%%
+
+- name: "BuildRowsetFromJSON"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "The third argument works the opposite way round from the Syntax section"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromjson-error-flag-inverted"
+  body: |
+    The reference page's Syntax section says a **false** third argument returns
+    an empty rowset and a **true** one raises an exception. Runtime does the
+    reverse: an unparsable payload passed with `1` rendered a rowset of zero
+    rows, while the identical payload passed with `0` aborted the whole page.
+
+    The same page's Errors section actually describes the runtime ordering, so
+    it contradicts its own Syntax bullet. Treat the flag as *return empty on
+    error*: pass `1` (or `true`) whenever the input can be untrusted, and check
+    `RowCount` before reading anything.
+
+    The XML sibling behaves identically — see
+    [BuildRowSetFromXML](#buildrowsetfromxml-error-flag-inverted).
+  testScript: |
+    %%[ VAR @b, @rows
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=safe - renders rc=[0] */
+      IF @b == "safe" THEN
+        SET @rows = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 1)
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+      /* fetch ?b=abort - HTTP 422, the control line above is lost too */
+      IF @b == "abort" THEN
+        SET @rows = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 0)
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+    ]%%
+
+- name: "BuildRowsetFromJSON"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "Nested objects and arrays render empty, not as a placeholder label"
+  category: "Content"
+  object: "Content"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromjson-nested-values-empty"
+  body: |
+    The reference page states that when a selected value is itself an object or
+    an array, the rowset carries a descriptive placeholder in that cell. It does
+    not. Selecting the keys of `{"a":{"b":1},"c":[1,2],"d":"plain"}` with a
+    wildcard path gave three rows in which the object-valued and array-valued
+    keys both rendered an **empty** value, and only the plain scalar came back
+    with content.
+
+    So you cannot detect a structured value by testing for a marker string.
+    Select the nested path you actually want with a second call instead.
+  testScript: |
+    %%[ VAR @b, @rows
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=nested - renders rc=[3] r1=[1] r2=[] r3=[] */
+      IF @b == "nested" THEN
+        SET @rows = BuildRowsetFromJSON('{"a":{"b":1},"c":[1,2],"d":"plain"}', "$.*", 1)
+        OutputLine(Concat("rc=[", RowCount(@rows), "] r1=[", Field(Row(@rows, 1), 1), "] r2=[", Field(Row(@rows, 2), 1), "] r3=[", Field(Row(@rows, 3), 1), "]"))
+      ENDIF
+    ]%%
+
+- name: "BuildRowSetFromXML"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
+  tagline: "The third argument works the opposite way round from the Syntax section"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromxml-error-flag-inverted"
+  body: |
+    As with the JSON sibling, the Syntax section's description of the third
+    argument is reversed. Unclosed markup parsed with `1` produced a rowset of
+    zero rows; the same markup parsed with `0` aborted the page and discarded
+    everything already rendered.
+
+    Pass `1` (or `true`) for untrusted input and branch on `RowCount`. See
+    [BuildRowsetFromJSON](#buildrowsetfromjson-error-flag-inverted) for the
+    identical finding on the JSON builder.
+  testScript: |
+    %%[ VAR @b, @rows
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=safe - renders rc=[0] */
+      IF @b == "safe" THEN
+        SET @rows = BuildRowSetFromXML("<root><a>1</a>", "//a", 1)
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+      /* fetch ?b=abort - HTTP 422, the control line above is lost too */
+      IF @b == "abort" THEN
+        SET @rows = BuildRowSetFromXML("<root><a>1</a>", "//a", 0)
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+    ]%%
+
+- name: "BuildRowSetFromString"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-string.html"
+  tagline: "A trailing separator adds an empty row, and an empty separator splits nothing"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "buildrowsetfromstring-edge-separators"
+  body: |
+    The reference page is silent about the edges of the split. Runtime settles
+    them: a trailing separator is **not** ignored — `"a,b,"` split on a comma
+    gives three rows whose last one is empty — and an **empty** separator does
+    not split per character, it returns the whole input as a single row.
+
+    An empty or unset source gives a rowset of zero rows rather than aborting,
+    so `RowCount` is a safe guard here.
+  testScript: |
+    %%[ VAR @b, @rows
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=trailing - renders rc=[3] r3=[] */
+      IF @b == "trailing" THEN
+        SET @rows = BuildRowSetFromString("a,b,", ",")
+        OutputLine(Concat("rc=[", RowCount(@rows), "] r3=[", Field(Row(@rows, 3), 1), "]"))
+      ENDIF
+      /* fetch ?b=emptydelim - renders rc=[1] */
+      IF @b == "emptydelim" THEN
+        SET @rows = BuildRowSetFromString("a,b,c", "")
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+      /* fetch ?b=emptysrc - renders rc=[0] */
+      IF @b == "emptysrc" THEN
+        SET @rows = BuildRowSetFromString("", ",")
+        OutputLine(Concat("rc=[", RowCount(@rows), "]"))
+      ENDIF
+    ]%%
