@@ -1,0 +1,157 @@
+# Test scripts for /engagement/ampscript/functions/requestparameter/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# ONE shared harness covers RequestParameter, QueryParameter and v, so the
+# three can be exercised from a single deploy. The gate selector is itself
+# read with RequestParameter, so every fetch re-proves the happy path.
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=basic&p=hello              ?b=enc&sp=a%20b        ?b=enc&am=a%26b
+#   ?b=enc&pl=a+b                 ?b=enc&pc=100%25       ?b=absent
+#   ?b=case&Foo=1                 ?b=dup&x=1&x=2         ?b=plat
+#   ?b=plat&PAGEURL=zzz           ?b=vread&p=hello       ?b=vnest&p=hello
+#   ?b=vnumlit                    ?b=rpempty             ?b=rpnum
+# These return HTTP 422 — that IS the result, and the ungated control proves
+# the deploy is healthy:
+#   ?b=rp0  ?b=qp0  ?b=v0  ?b=v2  ?b=rp2&p=hello
+#   ?b=qp2num&p=hello  ?b=qp2zero&p=hello  ?b=qp2bool&p=hello
+behaviour: |
+  %%[
+    VAR @b, @rp, @qp, @word, @num
+    SET @b = RequestParameter("b")
+    SET @word = "zeta"
+    SET @num = 7
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* a parameter this request set itself, read by both functions and
+       compared in-page */
+    IF @b == "basic" THEN
+      OutputLine(Concat("--- basic start ---"))
+      SET @rp = RequestParameter("p")
+      SET @qp = QueryParameter("p")
+      OutputLine(Concat("RP=[", @rp, "] LEN=[", Length(@rp), "]"))
+      OutputLine(Concat("QP=[", @qp, "] LEN=[", Length(@qp), "]"))
+      OutputLine(Concat("EQ=[", IIf(@rp == @qp, "same", "diff"), "]"))
+      OutputLine(Concat("--- basic done ---"))
+    ENDIF
+
+    /* percent-encoded and plus-encoded values arrive decoded; the length
+       proves a real single character rather than the escape sequence */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("SP=[", RequestParameter("sp"), "] LEN=[", Length(RequestParameter("sp")), "]"))
+      OutputLine(Concat("AM=[", RequestParameter("am"), "] LEN=[", Length(RequestParameter("am")), "]"))
+      OutputLine(Concat("PL=[", RequestParameter("pl"), "]"))
+      OutputLine(Concat("PC=[", RequestParameter("pc"), "]"))
+      OutputLine(Concat("SP_QP=[", QueryParameter("sp"), "]"))
+      OutputLine(Concat("AM_QP=[", QueryParameter("am"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* a parameter the request never carried: empty at HTTP 200 */
+    IF @b == "absent" THEN
+      OutputLine(Concat("--- absent start ---"))
+      SET @rp = RequestParameter("nosuchparam")
+      SET @qp = QueryParameter("nosuchparam")
+      OutputLine(Concat("ABS_RP=[", @rp, "] LEN=[", Length(@rp), "]"))
+      OutputLine(Concat("ABS_RP_CHK=[", IIf(Empty(@rp), "empty", "not-empty"), "]"))
+      OutputLine(Concat("ABS_QP_CHK=[", IIf(Empty(@qp), "empty", "not-empty"), "]"))
+      OutputLine(Concat("--- absent done ---"))
+    ENDIF
+
+    /* the name ignores case: fetch with a single mixed-case parameter */
+    IF @b == "case" THEN
+      OutputLine(Concat("--- case start ---"))
+      OutputLine(Concat("LOW=[", RequestParameter("foo"), "] UPP=[", RequestParameter("FOO"), "] MIX=[", RequestParameter("Foo"), "]"))
+      OutputLine(Concat("LOW_QP=[", QueryParameter("foo"), "] UPP_QP=[", QueryParameter("FOO"), "] MIX_QP=[", QueryParameter("Foo"), "]"))
+      OutputLine(Concat("--- case done ---"))
+    ENDIF
+
+    /* the same name twice: joined by a comma, proven by the length */
+    IF @b == "dup" THEN
+      OutputLine(Concat("--- dup start ---"))
+      OutputLine(Concat("DUP_RP=[", RequestParameter("x"), "] LEN=[", Length(RequestParameter("x")), "]"))
+      OutputLine(Concat("DUP_QP=[", QueryParameter("x"), "]"))
+      OutputLine(Concat("--- dup done ---"))
+    ENDIF
+
+    /* a name the platform supplies although the request never set it —
+       and, with ?b=plat&PAGEURL=zzz, a caller value overriding it */
+    IF @b == "plat" THEN
+      OutputLine(Concat("--- plat start ---"))
+      OutputLine(Concat("PAGEURL_RP=[", RequestParameter("PAGEURL"), "]"))
+      OutputLine(Concat("PAGEURL_QP=[", QueryParameter("PAGEURL"), "]"))
+      OutputLine(Concat("PAGENAME=[", RequestParameter("PAGENAME"), "]"))
+      OutputLine(Concat("MID=[", RequestParameter("MID"), "]"))
+      OutputLine(Concat("--- plat done ---"))
+    ENDIF
+
+    /* v() outputs a variable, a literal, a number and a nested call */
+    IF @b == "vread" THEN
+      OutputLine(Concat("--- vread start ---"))
+      SET @rp = RequestParameter("p")
+      OutputLine(Concat("V_VAR=[", v(@rp), "]"))
+      OutputLine(Concat("V_LIT=[", v("p"), "]"))
+      OutputLine(Concat("V_WORD=[", v(@word), "]"))
+      OutputLine(Concat("V_NUM=[", v(@num), "]"))
+      OutputLine(Concat("--- vread done ---"))
+    ENDIF
+
+    IF @b == "vnest" THEN
+      OutputLine(Concat("--- vnest start ---"))
+      OutputLine(Concat("V_NEST=[", v(RequestParameter("p")), "]"))
+      OutputLine(Concat("--- vnest done ---"))
+    ENDIF
+
+    IF @b == "vnumlit" THEN
+      OutputLine(Concat("--- vnumlit start ---"))
+      OutputLine(Concat("V_NUMLIT=[", v(5), "]"))
+      OutputLine(Concat("--- vnumlit done ---"))
+    ENDIF
+
+    /* an empty name and a numeric name: accepted, always empty */
+    IF @b == "rpempty" THEN
+      OutputLine(Concat("--- rpempty start ---"))
+      OutputLine(Concat("RPEMPTY=[", RequestParameter(""), "] QPEMPTY=[", QueryParameter(""), "]"))
+      OutputLine(Concat("--- rpempty done ---"))
+    ENDIF
+
+    IF @b == "rpnum" THEN
+      OutputLine(Concat("--- rpnum start ---"))
+      OutputLine(Concat("RPNUM=[", RequestParameter(1), "] QPNUM=[", QueryParameter(1), "]"))
+      OutputLine(Concat("--- rpnum done ---"))
+    ENDIF
+
+    /* argument counts the signatures do not allow: each aborts its own
+       branch with HTTP 422 while every branch above still renders */
+    IF @b == "rp0" THEN
+      OutputLine(Concat("RP0=[", RequestParameter(), "]"))
+    ENDIF
+    IF @b == "rp2" THEN
+      OutputLine(Concat("RP2=[", RequestParameter("p", 1), "]"))
+    ENDIF
+    IF @b == "qp0" THEN
+      OutputLine(Concat("QP0=[", QueryParameter(), "]"))
+    ENDIF
+    IF @b == "qp2num" THEN
+      OutputLine(Concat("QP2NUM=[", QueryParameter("p", 1), "]"))
+    ENDIF
+    IF @b == "qp2zero" THEN
+      OutputLine(Concat("QP2ZERO=[", QueryParameter("p", 0), "]"))
+    ENDIF
+    IF @b == "qp2bool" THEN
+      OutputLine(Concat("QP2BOOL=[", QueryParameter("p", true), "]"))
+    ENDIF
+    IF @b == "v0" THEN
+      OutputLine(Concat("V0=[", v(), "]"))
+    ENDIF
+    IF @b == "v2" THEN
+      OutputLine(Concat("V2=[", v(@word, @word), "]"))
+    ENDIF
+  ]%%

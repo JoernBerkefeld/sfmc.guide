@@ -75,13 +75,14 @@
   category: "Utility"
   syntax: "AttributeValue(attributeName)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/attributevalue/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Safely retrieves a subscriber attribute value, returning empty string if null."
+  description: "Reads an attribute of the current message or page context by name, giving an empty value instead of failing when the name is unknown. The name is matched without regard to case, and system attributes such as the message context resolve on a CloudPage even though no subscriber is involved."
   guideUrl: "https://ampscript.guide/attributevalue/"
 - name: "AuthenticatedEmployeeID"
   slug: "authenticatedemployeeid"
@@ -94,7 +95,7 @@
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the employee ID of the currently authenticated user."
+  description: "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty ID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one."
   guideUrl: "https://ampscript.guide/authenticatedemployeeid/"
 - name: "AuthenticatedEmployeeNotificationAddress"
   slug: "authenticatedemployeenotificationaddress"
@@ -177,28 +178,30 @@
 - name: "Base64Decode"
   slug: "base64decode"
   category: "Encryption and Encoding"
-  syntax: "Base64Decode(encodedString[, encoding, characterSet])"
+  syntax: "Base64Decode(encodedString[, encoding, abortOnFailure])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/base64decode/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Decodes a Base64-encoded string."
+  description: "Decodes a Base64-encoded string. The decoded bytes are read as UTF-8 unless encoding names another character encoding, and any value that is not well-formed Base64 aborts the page instead of returning an empty or partial result."
   guideUrl: "https://ampscript.guide/base64decode/"
 - name: "Base64Encode"
   slug: "base64encode"
   category: "Encryption and Encoding"
   syntax: "Base64Encode(value[, encoding])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/base64encode/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Encodes a value as a Base64 string."
+  description: "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 representation of the input unless encoding names another character encoding."
   guideUrl: "https://ampscript.guide/base64encode/"
 - name: "BeginImpressionRegion"
   slug: "beginimpressionregion"
@@ -270,13 +273,14 @@
   category: "String"
   syntax: "Char(characterCode[, numRepetitions])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/char/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the character for the given ASCII code."
+  description: "Returns the character for the given numeric character code. Codes above 255 are not rejected — they resolve to the matching Unicode character."
   guideUrl: "https://ampscript.guide/char/"
 - name: "ClaimRow"
   slug: "claimrow"
@@ -492,65 +496,70 @@
   category: "Date and Time"
   syntax: "DateAdd(date, amountToAdd, unitToAdd)"
   returnType: "date"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/dateadd/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "dateAdd"
   mcnNotes: ""
-  description: "Adds a specified interval to a date value."
+  description: "Adds a whole number of intervals to a date value. Only the five documented units are accepted and every other unit, including seconds and weeks, aborts the page — as does a non-integer amount or a date the engine cannot parse."
   guideUrl: "https://ampscript.guide/dateadd/"
 - name: "DateDiff"
   slug: "datediff"
   category: "Date and Time"
   syntax: "DateDiff(startDate, endDate, unitOfDifference)"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/datediff/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "dateDiff"
   mcnNotes: ""
-  description: "Returns the difference between two dates in the specified interval."
+  description: "Counts how many boundaries of the requested unit lie between two dates, by truncating both to that unit and subtracting — so a 23-hour gap that crosses midnight counts as 1 day, while 23 hours within one day counts as 0. Finer units than the one requested are ignored rather than rounded."
   guideUrl: "https://ampscript.guide/datediff/"
 - name: "DateParse"
   slug: "dateparse"
   category: "Date and Time"
   syntax: "DateParse(dateString[, useUtc])"
   returnType: "date"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/dateparse/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Parses a date string into a date value."
+  description: "Parses a date string into a date value. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected. An offset or GMT marker in the input is honoured and converted to the account time zone."
   guideUrl: "https://ampscript.guide/dateparse/"
 - name: "DatePart"
   slug: "datepart"
   category: "Date and Time"
   syntax: "DatePart(dateString, datePart)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/datepart/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Extracts a specific component from a date value."
+  description: "Extracts one component from a date. The hour is reported on a 12-hour clock with no AM/PM indicator, so 19:35 yields 7 and any time at midnight — including a date with no time part at all — yields 12. Month and day come back zero-padded to two digits while hour and minute do not."
   guideUrl: "https://ampscript.guide/datepart/"
 - name: "DecryptSymmetric"
   slug: "decryptsymmetric"
   category: "Encryption and Encoding"
   syntax: "DecryptSymmetric(encryptedValue, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/decryptsymmetric/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Decrypts a value using symmetric key encryption."
+  description: "Decrypts a Base64 ciphertext produced by EncryptSymmetric, using the same algorithm, passphrase, salt and initialization vector."
   guideUrl: "https://ampscript.guide/decryptsymmetric/"
 - name: "DeleteData"
   slug: "deletedata"
@@ -623,39 +632,42 @@
   category: "Utility"
   syntax: "Domain(emailAddress)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/domain/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Extracts the domain portion from an email address."
+  description: "Returns everything after the first at sign, without validating the address or the domain. A value with no at sign, an empty string and a number all return an empty string."
   guideUrl: "https://ampscript.guide/domain/"
 - name: "Empty"
   slug: "empty"
   category: "Utility"
   syntax: "Empty(value)"
   returnType: "boolean"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/empty/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "isEmpty"
   mcnNotes: ""
-  description: "Returns true if the value is empty, null, or not defined."
+  description: "Returns true when the value is an empty string, an unset variable, or an undeclared variable. Whitespace, the number 0, the string \"0\" and the string \"false\" are all treated as present."
   guideUrl: "https://ampscript.guide/empty/"
 - name: "EncryptSymmetric"
   slug: "encryptsymmetric"
   category: "Encryption and Encoding"
   syntax: "EncryptSymmetric(value, algorithm, passwordExternalKey, password, saltExternalKey, salt, ivExternalKey, iv)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/encryptsymmetric/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Encrypts a value using symmetric key encryption."
+  description: "Encrypts a value using symmetric key encryption and returns the ciphertext as Base64. The result is deterministic: the same inputs produce the same ciphertext on every call."
   guideUrl: "https://ampscript.guide/encryptsymmetric/"
 - name: "EndImpressionRegion"
   slug: "endimpressionregion"
@@ -725,67 +737,72 @@
 - name: "Format"
   slug: "format"
   category: "Utility"
-  syntax: "Format(value, formatString[, culture, timeZone])"
+  syntax: "Format(value, formatString[, dataFormat, cultureCode])"
   returnType: "string"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/format/"
+  differsFromDocs: true
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "format"
   mcnNotes: ""
-  description: "Formats a value using a .NET format string."
+  description: "Formats a number, a date or a string with a .NET format pattern. The third parameter only accepts Date or the empty string; the documented value Number aborts the page."
   guideUrl: "https://ampscript.guide/format/"
 - name: "FormatCurrency"
   slug: "formatcurrency"
   category: "Utility"
   syntax: "FormatCurrency(value, locale[, decimalPlaces, symbol])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/formatcurrency/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "formatCurrency"
   mcnNotes: ""
-  description: "Formats a number as a currency string."
+  description: "Formats a number as a currency amount for a locale, choosing the symbol, the separators and the symbol position from that locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatcurrency/"
 - name: "FormatDate"
   slug: "formatdate"
   category: "Date and Time"
   syntax: "FormatDate(dateString[, dateFormat, timeFormat, localeCode])"
   returnType: "string"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/formatdate/"
+  differsFromDocs: true
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: "In MCN, uses Java SimpleDateFormat format strings instead of .NET. Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\")."
-  description: "Formats a date string according to the specified date and time format patterns."
+  description: "Formats a date according to a date pattern, a time pattern and a locale. The two pattern arguments use separate, case-insensitive token sets: in the date pattern mm means month, and minutes are only reachable from the time pattern."
   guideUrl: "https://ampscript.guide/formatdate/"
 - name: "FormatNumber"
   slug: "formatnumber"
   category: "Utility"
   syntax: "FormatNumber(number, format[, locale])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/formatnumber/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "formatNumber"
   mcnNotes: ""
-  description: "Formats a number using a format pattern."
+  description: "Formats a number with a standard or custom .NET numeric pattern, optionally for a locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatnumber/"
 - name: "GetJWT"
   slug: "getjwt"
   category: "Encryption and Encoding"
   syntax: "GetJWT(secret, algorithm, jsonPayload)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/getjwt/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Generates a JSON Web Token using the supplied claims, algorithm, and secret."
+  description: "Generates a JSON Web Token signed with the supplied inline secret. The payload is passed through verbatim and is only Base64url-encoded, never encrypted."
   guideUrl: "https://ampscript.guide/getjwt/"
 - name: "GetJWTByKeyName"
   slug: "getjwtbykeyname"
@@ -829,7 +846,7 @@
 - name: "GetSendTime"
   slug: "getsendtime"
   category: "Date and Time"
-  syntax: "GetSendTime([persistFormat])"
+  syntax: "GetSendTime([boolAllSubscribers])"
   returnType: "date"
   verified: false
   differsFromDocs: false
@@ -837,7 +854,7 @@
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the scheduled send time for the current job. In STO context returns the Einstein-optimized time."
+  description: "Returns a send timestamp: by default the time the send completed for the individual subscriber, or with a true argument the job start or publish time. Outside a send context, such as on a CloudPage, it returns the current system time instead of a send time, in every argument spelling."
   guideUrl: "https://ampscript.guide/getsendtime/"
 - name: "GetSocialPublishURL"
   slug: "getsocialpublishurl"
@@ -870,13 +887,14 @@
   category: "Utility"
   syntax: "GUID()"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/guid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Generates a new globally unique identifier (GUID)."
+  description: "Generates a new globally unique identifier. Every call returns a different value, so store the result in a variable when the same identifier is needed twice."
   guideUrl: "https://ampscript.guide/guid/"
 - name: "HTTPGet"
   slug: "httpget"
@@ -948,13 +966,14 @@
   category: "Utility"
   syntax: "IIf(expression, trueValue, falseValue)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/iif/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "iif"
   mcnNotes: ""
-  description: "Returns one of two values based on a boolean expression (inline if)."
+  description: "Returns one of two values based on a boolean expression (inline if). Only a real comparison or a boolean-returning function selects the true branch; a plain string or number always selects the false branch. Only the selected branch is evaluated, so a call that would abort the page is safe in the branch that is not taken."
   guideUrl: "https://ampscript.guide/iif/"
 - name: "Image"
   slug: "image"
@@ -972,15 +991,16 @@
 - name: "IndexOf"
   slug: "indexof"
   category: "String"
-  syntax: "IndexOf(sourceString, substring)"
+  syntax: "IndexOf(sourceString, substring[, occurrence])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/indexof/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "indexOf"
   mcnNotes: ""
-  description: "Returns the 1-based position of the first occurrence of a substring."
+  description: "Returns the 1-based position of a substring, matching case-insensitively. An undocumented third argument selects which occurrence to locate."
   guideUrl: "https://ampscript.guide/indexof/"
 - name: "InsertData"
   slug: "insertdata"
@@ -1091,65 +1111,70 @@
   category: "Utility"
   syntax: "IsCHTMLBrowser(userAgent)"
   returnType: "boolean"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/ischtmlbrowser/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns true if the subscriber's browser is identified as a compact HTML (cHTML) device."
+  description: "Tests a user agent string for a compact HTML (cHTML) feature-phone browser. Feature-phone agents such as i-mode and KDDI handsets are recognised; modern desktop and mobile agents are not."
   guideUrl: "https://ampscript.guide/ischtmlbrowser/"
 - name: "IsEmailAddress"
   slug: "isemailaddress"
   category: "Utility"
   syntax: "IsEmailAddress(value)"
   returnType: "boolean"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/isemailaddress/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns true if the value is a syntactically valid email address."
+  description: "Checks a value against email address syntax only; it never tests whether the mailbox or domain exists. Surrounding whitespace and a domain without a top-level domain are both rejected."
   guideUrl: "https://ampscript.guide/isemailaddress/"
 - name: "IsNull"
   slug: "isnull"
   category: "Utility"
   syntax: "IsNull(value)"
   returnType: "boolean"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/isnull/"
+  differsFromDocs: true
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns true if the value is null."
+  description: "Returns true only for a genuine null, which in practice means a data extension field with no value. An unset or undeclared variable, an empty string, whitespace and every ordinary value all return false, so this is not a general emptiness test."
   guideUrl: "https://ampscript.guide/isnull/"
 - name: "IsNullDefault"
   slug: "isnulldefault"
   category: "Utility"
   syntax: "IsNullDefault(value, defaultValue)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/isnulldefault/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the value if not null, otherwise returns the default."
+  description: "Returns the value if not null, otherwise returns the default. Outside a Smart Capture form the default is never reached: on a CloudPage every empty-ish input returns the empty string instead, so it cannot be used as a general fallback."
   guideUrl: "https://ampscript.guide/isnulldefault/"
 - name: "IsPhoneNumber"
   slug: "isphonenumber"
   category: "Utility"
   syntax: "IsPhoneNumber(value)"
   returnType: "boolean"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/isphonenumber/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns true if the value is a valid phone number."
+  description: "Checks a value against the North American Numbering Plan. Dashes, dots, spaces and parentheses are tolerated, but a leading plus sign, any letter, a number outside the plan and a leading country-code digit all fail."
   guideUrl: "https://ampscript.guide/isphonenumber/"
 - name: "Length"
   slug: "length"
@@ -1182,14 +1207,15 @@
   slug: "localdatetosystemdate"
   category: "Date and Time"
   syntax: "LocalDateToSystemDate(timeToConvert)"
-  returnType: "string"
-  verified: false
+  returnType: "date"
+  verified: true
+  url: "/engagement/ampscript/functions/localdatetosystemdate/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Converts a local date to the Marketing Cloud system date (Central Time)."
+  description: "Converts a date in the time zone configured on the account to the Marketing Cloud system date (Central Time, no daylight saving). The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/localdatetosystemdate/"
 - name: "LongSFID"
   slug: "longsfid"
@@ -1288,26 +1314,28 @@
   category: "Encryption and Encoding"
   syntax: "MD5(stringToConvert[, charSet])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/md5/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the MD5 hash of the input value."
+  description: "Returns the MD5 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/md5/"
 - name: "MicrositeURL"
   slug: "micrositeurl"
   category: "Utility"
   syntax: "MicrositeURL(pageId[, paramName1, paramValue1, paramNameN, paramValueN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/micrositeurl/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Generates a tracked URL to a microsite page, optionally passing parameters."
+  description: "Builds a Classic Content microsite URL whose single encrypted query string carries the page reference and any extra name-value pairs. Every call produces a fresh token, so two calls with identical arguments never match."
   guideUrl: "https://ampscript.guide/micrositeurl/"
 - name: "MMS_Content_URL"
   slug: "mms_content_url"
@@ -1394,78 +1422,84 @@
   category: "Date and Time"
   syntax: "Now([persistFormat])"
   returnType: "date"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/now/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "now"
   mcnNotes: ""
-  description: "Returns the current system date and time (Central Time). Pass 1 to persist the value across renders."
+  description: "Returns the current system date and time in Central Standard Time, with no daylight-saving adjustment. Every call within one render returns the same instant."
   guideUrl: "https://ampscript.guide/now/"
 - name: "Output"
   slug: "output"
   category: "Utility"
   syntax: "Output(content)"
   returnType: "void"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/output/"
+  differsFromDocs: true
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Writes a value to the rendered output. Used inside script blocks to emit content."
+  description: "Writes the result of a nested function call into the rendered content. A string literal, a bare variable or a number renders nothing at all, without raising an error."
   guideUrl: "https://ampscript.guide/output/"
 - name: "OutputLine"
   slug: "outputline"
   category: "Utility"
   syntax: "OutputLine(content)"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/outputline/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Writes a value followed by a line break to the rendered output."
+  description: "Writes the result of a nested function call into the rendered content, followed by a carriage return and line feed. A string literal, a bare variable or a number renders only the line break. The break is not an HTML line break, so an HTML view keeps everything on one line unless the content sits inside a preformatted element."
   guideUrl: "https://ampscript.guide/outputline/"
 - name: "ProperCase"
   slug: "propercase"
   category: "String"
   syntax: "ProperCase(sourceString)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/propercase/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "properCase"
   mcnNotes: ""
-  description: "Converts a string to proper (title) case, capitalizing the first letter of each word."
+  description: "Converts a value to proper (title) case. Every letter after the first of a word is forced to lower case, so existing internal capitals are lost."
   guideUrl: "https://ampscript.guide/propercase/"
 - name: "QueryParameter"
   slug: "queryparameter"
   category: "Utility"
   syntax: "QueryParameter(parameterName)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/queryparameter/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the value of a URL query string parameter from the current page request."
+  description: "Returns the value of a URL query string parameter from the current page request. The name is matched without regard to case, percent-encoded characters arrive decoded, and a name supplied more than once yields the values joined by a comma."
   guideUrl: "https://ampscript.guide/queryparameter/"
 - name: "RaiseError"
   slug: "raiseerror"
   category: "Utility"
   syntax: "RaiseError(message[, skipSubscriber, apiErrorCode, apiErrorNumber, preserveDataExt])"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/raiseerror/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "raiseError"
   mcnNotes: ""
-  description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error."
+  description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Outside a send it is not a graceful abort: on a landing page it discards everything already written and answers the same generic failure any other aborting call gives, with the message nowhere in the response."
   guideUrl: "https://ampscript.guide/raiseerror/"
 - name: "Random"
   slug: "random"
@@ -1499,78 +1533,84 @@
   category: "Utility"
   syntax: "Redirect(url)"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/redirect/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Performs an HTTP redirect to the specified URL. Landing pages only."
+  description: "Performs an HTTP redirect to the specified URL. Landing pages only. The response is a 302 whose Location is the supplied value verbatim, and everything written before the call is discarded along with the page body. Not to be confused with RedirectTo, which emits no redirect at all."
   guideUrl: "https://ampscript.guide/redirect/"
 - name: "RedirectTo"
   slug: "redirectto"
   category: "Utility"
   syntax: "RedirectTo(url)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/redirectto/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Creates a trackable redirect URL, typically used in email links."
+  description: "Marks a URL held in a variable or field as a tracked email link. It never redirects the current request and never halts the script; outside a tracked send it hands the value straight back."
   guideUrl: "https://ampscript.guide/redirectto/"
 - name: "RegExMatch"
   slug: "regexmatch"
   category: "String"
-  syntax: "RegExMatch(sourceString, regExPattern, returnValue[, regExOptions])"
+  syntax: "RegExMatch(sourceString, regExPattern, returnValue[, regExOptions, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/regexmatch/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Tests a string against a regular expression pattern and returns first occurrence of the matching regular expression pattern."
+  description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Matching is case-sensitive unless the IgnoreCase option is passed."
   guideUrl: "https://ampscript.guide/regexmatch/"
 - name: "Replace"
   slug: "replace"
   category: "String"
-  syntax: "Replace(sourceString, searchSubstring, replacementSubstring)"
+  syntax: "Replace(sourceString, searchSubstring[, replacementSubstring])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/replace/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "replace"
   mcnNotes: ""
-  description: "Replaces all occurrences of a substring with a new value."
+  description: "Replaces all occurrences of a substring with a new value, matching case-insensitively. The source is scanned once, so text formed by a replacement is not replaced again."
   guideUrl: "https://ampscript.guide/replace/"
 - name: "ReplaceList"
   slug: "replacelist"
   category: "String"
   syntax: "ReplaceList(sourceString, replacementString, searchString1[, searchStringN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/replacelist/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Replaces multiple old values in a string with a single new value."
+  description: "Replaces every occurrence of each supplied search value with one common replacement value, matching case-insensitively. The search values are applied one after another in the order given, so text produced by an earlier replacement can still be matched by a later one."
   guideUrl: "https://ampscript.guide/replacelist/"
 - name: "RequestParameter"
   slug: "requestparameter"
   category: "Utility"
   syntax: "RequestParameter(parameterName)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/requestparameter/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the value of a form post or query string parameter from the current request."
+  description: "Returns the value of a form post or query string parameter from the current request. The name is matched without regard to case, percent-encoded characters arrive decoded, and a name supplied more than once yields the values joined by a comma."
   guideUrl: "https://ampscript.guide/requestparameter/"
 - name: "RetrieveMSCRMRecords"
   slug: "retrievemscrmrecords"
@@ -1694,78 +1734,84 @@
   category: "Encryption and Encoding"
   syntax: "SHA1(stringToConvert[, charSet])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/sha1/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the SHA-1 hash of the input value."
+  description: "Returns the SHA-1 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha1/"
 - name: "SHA256"
   slug: "sha256"
   category: "Encryption and Encoding"
   syntax: "SHA256(stringToConvert[, charSet])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/sha256/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the SHA-256 hash of the input value."
+  description: "Returns the SHA-256 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha256/"
 - name: "SHA512"
   slug: "sha512"
   category: "Encryption and Encoding"
   syntax: "SHA512(stringToConvert[, charSet])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/sha512/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the SHA-512 hash of the input value."
+  description: "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha512/"
 - name: "StringToDate"
   slug: "stringtodate"
   category: "Date and Time"
   syntax: "StringToDate(dateString)"
   returnType: "date"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/stringtodate/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: "In MCN, returns a locale-formatted string (G standard format, e.g. \"5/15/2026 1:23:45 PM\") instead of a dateTime object. Cannot be reliably passed to FormatDate() or other date functions in MCN - use FormatDate() directly instead."
-  description: "Converts a date string to a date value."
+  description: "Converts a date string to a date value. Behaves identically to DateParse for every input format tested, but takes no second argument, so DateParse is the only one of the two that can return the instant in UTC. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected."
   guideUrl: "https://ampscript.guide/stringtodate/"
 - name: "StringToHex"
   slug: "stringtohex"
   category: "Encryption and Encoding"
   syntax: "StringToHex(sourceString[, charSet])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/stringtohex/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Converts a string to its hexadecimal representation."
+  description: "Converts a string to its hexadecimal representation. The bytes rendered are the UTF-8 encoding of the input unless charSet names another encoding."
   guideUrl: "https://ampscript.guide/stringtohex/"
 - name: "Substring"
   slug: "substring"
   category: "String"
   syntax: "Substring(sourceString, startPosition[, substringLength])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/substring/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "substring"
   mcnNotes: ""
-  description: "Extracts a portion of a string starting at the given index for the specified length."
+  description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 is treated as the first character."
   guideUrl: "https://ampscript.guide/substring/"
 - name: "Subtract"
   slug: "subtract"
@@ -1785,14 +1831,15 @@
   slug: "systemdatetolocaldate"
   category: "Date and Time"
   syntax: "SystemDateToLocalDate(systemTime)"
-  returnType: "string"
-  verified: false
+  returnType: "date"
+  verified: true
+  url: "/engagement/ampscript/functions/systemdatetolocaldate/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Converts a Marketing Cloud system date (Central Time) to the subscriber's local time."
+  description: "Converts a Marketing Cloud system date (Central Time, no daylight saving) to the time zone configured on the account. The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/systemdatetolocaldate/"
 - name: "TransformXML"
   slug: "transformxml"
@@ -1838,13 +1885,14 @@
   category: "String"
   syntax: "Trim(sourceString)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/trim/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "trim"
   mcnNotes: ""
-  description: "Removes leading and trailing whitespace from a string."
+  description: "Removes leading and trailing whitespace from a value. Tabs, line breaks and the non-breaking space count as whitespace."
   guideUrl: "https://ampscript.guide/trim/"
 - name: "UpdateData"
   slug: "updatedata"
@@ -1969,26 +2017,28 @@
   category: "Encryption and Encoding"
   syntax: "URLEncode(urlToEncode[, encodeAllChars, encodeAllStrings])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/urlencode/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "URL-encodes a string for safe inclusion in a URL."
+  description: "URL-encodes a string for safe inclusion in a URL. By default only the part after a question mark is touched, so a value that is not a URL passes through unchanged unless the third argument is switched on."
   guideUrl: "https://ampscript.guide/urlencode/"
 - name: "v"
   slug: "v"
   category: "Utility"
   syntax: "v(variableName)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/v/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Short alias for retrieving a variable value inline. Equivalent to %%=v(@var)=%%."
+  description: "Outputs a value inline, normally a variable reference. A string or number literal and a nested function call are accepted as well, each rendering its own value."
   guideUrl: "https://ampscript.guide/v/"
 - name: "Verb"
   slug: "verb"
@@ -2034,11 +2084,12 @@
   category: "Utility"
   syntax: "WrapLongURL(url)"
   returnType: "string"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/wraplongurl/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Wraps a long URL to prevent line-break issues in email clients."
+  description: "Shortens a long URL for email clients that truncate long hyperlinks. Outside an email send the argument comes back unchanged, so a CloudPage never sees a shortened link."
   guideUrl: "https://ampscript.guide/wraplongurl/"

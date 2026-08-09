@@ -1,0 +1,169 @@
+# Test scripts for /engagement/ampscript/functions/datediff/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Fetch one branch
+# at a time: ?b=ctrl, ?b=safe, ?b=trunc, ?b=bound, ?b=case, ?b=dtype,
+# ?b=sec, ?b=wk, ?b=ms, ?b=qt, ?b=longd, ?b=bogus, ?b=emptytok, ?b=baddate,
+# ?b=baddate2, ?b=emptydate, ?b=numdate, ?b=a2, ?b=a4.
+#
+# ?b=ctrl is the control: it calls DateDiff in its plainest form. If ctrl
+# renders and a rejecting branch does not, the abort belongs to the function
+# rather than to the harness or the deployment.
+#
+# Every branch uses fixed date pairs rather than Now(), so every value below
+# is deterministic and reproducible.
+behaviour: |
+  %%[
+    VAR @b, @s, @e, @p1, @p2
+    SET @b = RequestParameter("b")
+    SET @s = "2026-01-10 08:00:00"
+    SET @e = "2026-01-11 07:00:00"
+    SET @p1 = "2026-03-04 13:52:07"
+    SET @p2 = "2027-05-09 09:15:31"
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRL=[", DateDiff("2026-01-10 08:00:00", "2026-01-11 08:00:00", "D"), "]"))
+      OutputLine(Concat("CTRLH=[", DateDiff(@s, @e, "H"), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* the five accepted units, the sign convention, and a same-instant pair */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("SPAN_Y=[", DateDiff(@p1, @p2, "Y"), "]"))
+      OutputLine(Concat("SPAN_M=[", DateDiff(@p1, @p2, "M"), "]"))
+      OutputLine(Concat("SPAN_D=[", DateDiff(@p1, @p2, "D"), "]"))
+      OutputLine(Concat("SPAN_H=[", DateDiff(@p1, @p2, "H"), "]"))
+      OutputLine(Concat("SPAN_MI=[", DateDiff(@p1, @p2, "MI"), "]"))
+      OutputLine(Concat("FWD_H=[", DateDiff(@s, @e, "H"), "]"))
+      OutputLine(Concat("REV_H=[", DateDiff(@e, @s, "H"), "]"))
+      OutputLine(Concat("SAME_D=[", DateDiff(@s, @s, "D"), "]"))
+      OutputLine(Concat("ARITH=[", Add(DateDiff(@s, @e, "H"), 1), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* partial intervals are neither rounded nor truncated */
+    IF @b == "trunc" THEN
+      OutputLine(Concat("--- trunc start ---"))
+      OutputLine(Concat("T23H_D=[", DateDiff(@s, @e, "D"), "]"))
+      OutputLine(Concat("T90MI_H=[", DateDiff("2026-01-10 08:00:00", "2026-01-10 09:30:00", "H"), "]"))
+      OutputLine(Concat("T59MI_H=[", DateDiff("2026-01-10 08:00:00", "2026-01-10 08:59:00", "H"), "]"))
+      OutputLine(Concat("T364D_Y=[", DateDiff("2026-01-10 08:00:00", "2027-01-09 08:00:00", "Y"), "]"))
+      OutputLine(Concat("T366D_Y=[", DateDiff("2026-01-10 08:00:00", "2027-01-11 08:00:00", "Y"), "]"))
+      OutputLine(Concat("T29D_M=[", DateDiff("2026-01-10 08:00:00", "2026-02-08 08:00:00", "M"), "]"))
+      OutputLine(Concat("TNEG23H_D=[", DateDiff(@e, @s, "D"), "]"))
+      OutputLine(Concat("TNEG90MI_H=[", DateDiff("2026-01-10 09:30:00", "2026-01-10 08:00:00", "H"), "]"))
+      OutputLine(Concat("TSEC_MI=[", DateDiff("2026-01-10 08:00:00", "2026-01-10 08:00:59", "MI"), "]"))
+      OutputLine(Concat("--- trunc done ---"))
+    ENDIF
+
+    /* the result counts boundaries of the requested unit */
+    IF @b == "bound" THEN
+      OutputLine(Concat("--- bound start ---"))
+      OutputLine(Concat("NYE_Y=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "Y"), "]"))
+      OutputLine(Concat("NYE_M=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "M"), "]"))
+      OutputLine(Concat("NYE_D=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "D"), "]"))
+      OutputLine(Concat("NYE_MI=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "MI"), "]"))
+      OutputLine(Concat("ALMOSTY=[", DateDiff("2026-01-01 00:00:00", "2026-12-31 23:59:00", "Y"), "]"))
+      OutputLine(Concat("ALMOSTM=[", DateDiff("2026-01-01 00:00:00", "2026-01-31 23:59:00", "M"), "]"))
+      OutputLine(Concat("ALMOSTD=[", DateDiff("2026-01-10 00:00:00", "2026-01-10 23:59:00", "D"), "]"))
+      OutputLine(Concat("SECIGN=[", DateDiff("2026-01-10 08:00:59", "2026-01-10 08:01:00", "MI"), "]"))
+      OutputLine(Concat("--- bound done ---"))
+    ENDIF
+
+    /* the unit token ignores case in every spelling */
+    IF @b == "case" THEN
+      OutputLine(Concat("--- case start ---"))
+      OutputLine(Concat("cY=[", DateDiff(@p1, @p2, "y"), "]"))
+      OutputLine(Concat("cM=[", DateDiff(@p1, @p2, "m"), "]"))
+      OutputLine(Concat("cD=[", DateDiff(@p1, @p2, "d"), "]"))
+      OutputLine(Concat("cH=[", DateDiff(@p1, @p2, "h"), "]"))
+      OutputLine(Concat("cMI=[", DateDiff(@p1, @p2, "mi"), "]"))
+      OutputLine(Concat("cMi=[", DateDiff(@p1, @p2, "Mi"), "]"))
+      OutputLine(Concat("cmI=[", DateDiff(@p1, @p2, "mI"), "]"))
+      OutputLine(Concat("--- case done ---"))
+    ENDIF
+
+    /* date strings and real date values are interchangeable in both positions */
+    IF @b == "dtype" THEN
+      OutputLine(Concat("--- dtype start ---"))
+      OutputLine(Concat("BOTHSTR=[", DateDiff("2026-01-10", "2026-01-12", "D"), "]"))
+      OutputLine(Concat("USSTR=[", DateDiff("1/10/2026", "1/12/2026", "D"), "]"))
+      OutputLine(Concat("WORDSTR=[", DateDiff("10 January 2026", "12 January 2026", "D"), "]"))
+      OutputLine(Concat("BOTHVAL=[", DateDiff(Now(), DateAdd(Now(), 2, "D"), "D"), "]"))
+      OutputLine(Concat("MIXVAL1=[", DateDiff(DateAdd("2026-01-10", 0, "D"), "2026-01-12", "D"), "]"))
+      OutputLine(Concat("MIXVAL2=[", DateDiff("2026-01-10", DateAdd("2026-01-10", 2, "D"), "D"), "]"))
+      OutputLine(Concat("--- dtype done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - each renders NOTHING at all */
+    IF @b == "sec" THEN
+      OutputLine(Concat("--- sec start ---"))
+      OutputLine(Concat("SEC=[", DateDiff(@s, "2026-01-10 08:00:59", "S"), "]"))
+    ENDIF
+
+    IF @b == "wk" THEN
+      OutputLine(Concat("--- wk start ---"))
+      OutputLine(Concat("WK=[", DateDiff(@p1, @p2, "W"), "]"))
+    ENDIF
+
+    IF @b == "ms" THEN
+      OutputLine(Concat("--- ms start ---"))
+      OutputLine(Concat("MS=[", DateDiff(@p1, @p2, "MS"), "]"))
+    ENDIF
+
+    IF @b == "qt" THEN
+      OutputLine(Concat("--- qt start ---"))
+      OutputLine(Concat("QT=[", DateDiff(@p1, @p2, "Q"), "]"))
+    ENDIF
+
+    IF @b == "longd" THEN
+      OutputLine(Concat("--- longd start ---"))
+      OutputLine(Concat("LONGD=[", DateDiff(@p1, @p2, "day"), "]"))
+    ENDIF
+
+    IF @b == "bogus" THEN
+      OutputLine(Concat("--- bogus start ---"))
+      OutputLine(Concat("BOGUS=[", DateDiff(@p1, @p2, "ZZ"), "]"))
+    ENDIF
+
+    IF @b == "emptytok" THEN
+      OutputLine(Concat("--- emptytok start ---"))
+      OutputLine(Concat("EMPTYTOK=[", DateDiff(@p1, @p2, ""), "]"))
+    ENDIF
+
+    IF @b == "baddate" THEN
+      OutputLine(Concat("--- baddate start ---"))
+      OutputLine(Concat("BADDATE=[", DateDiff("not a date at all", @p2, "D"), "]"))
+    ENDIF
+
+    IF @b == "baddate2" THEN
+      OutputLine(Concat("--- baddate2 start ---"))
+      OutputLine(Concat("BADDATE2=[", DateDiff(@p1, "not a date at all", "D"), "]"))
+    ENDIF
+
+    IF @b == "emptydate" THEN
+      OutputLine(Concat("--- emptydate start ---"))
+      OutputLine(Concat("EMPTYDATE=[", DateDiff("", @p2, "D"), "]"))
+    ENDIF
+
+    IF @b == "numdate" THEN
+      OutputLine(Concat("--- numdate start ---"))
+      OutputLine(Concat("NUMDATE=[", DateDiff(20260304, @p2, "D"), "]"))
+    ENDIF
+
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      OutputLine(Concat("A2=[", DateDiff(@p1, @p2), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", DateDiff(@p1, @p2, "D", "extra"), "]"))
+    ENDIF
+  ]%%

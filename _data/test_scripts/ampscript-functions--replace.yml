@@ -1,0 +1,75 @@
+# Test scripts for /engagement/ampscript/functions/replace/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=case, ?b=shape,
+# ?b=unicode, ?b=a0, ?b=a1, ?b=a4.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* documented forms plus the accepted argument types */
+    IF @b == "safe" THEN
+      OutputLine(Concat("BASIC=[", Replace("Hello World", "World", "There"), "]"))
+      OutputLine(Concat("ALLOCC=[", Replace("one,two,three", ",", " / "), "]"))
+      OutputLine(Concat("WHOLE=[", Replace("abc", "abc", "xyz"), "]"))
+      OutputLine(Concat("MISSING=[", Replace("Hello World", "zzz", "!"), "]"))
+      OutputLine(Concat("LONGER=[", Replace("ab", "abcdef", "z"), "]"))
+      OutputLine(Concat("REMOVE=[", Replace("a-b-c", "-", ""), "]"))
+      OutputLine(Concat("EMPTYSRC=[", Replace("", "x", "y"), "]"))
+      OutputLine(Concat("NUMSRC=[", Replace(101101, "0", "9"), "]"))
+      OutputLine(Concat("NUMNEEDLE=[", Replace("a1b1c", 1, "-"), "]"))
+      OutputLine(Concat("NUMREPL=[", Replace("a-b", "-", 7), "]"))
+      OutputLine(Concat("BOOLSRC=[", Replace(true, "ru", "X"), "]"))
+      OutputLine(Concat("BOOLNEEDLE=[", Replace("is true here", true, "X"), "]"))
+      OutputLine(Concat("BOOLREPL=[", Replace("a-b", "-", true), "]"))
+    ENDIF
+
+    /* matching ignores case */
+    IF @b == "case" THEN
+      OutputLine(Concat("UPPERNEEDLE=[", Replace("Hello World", "WORLD", "There"), "]"))
+      OutputLine(Concat("LOWERNEEDLE=[", Replace("Hello World", "world", "There"), "]"))
+      OutputLine(Concat("MIXEDNEEDLE=[", Replace("Hello World", "hELLO", "Howdy"), "]"))
+      OutputLine(Concat("MULTICASE=[", Replace("Cat cat CAT", "cat", "dog"), "]"))
+    ENDIF
+
+    /* the two-argument form, the single-pass scan, and the empty search string */
+    IF @b == "shape" THEN
+      OutputLine(Concat("DROP=[", Replace("abc", "b"), "]"))
+      OutputLine(Concat("RECURSE=[", Replace("aaa", "aa", "a"), "]"))
+      OutputLine(Concat("SELFREF=[", Replace("cat", "cat", "cat dog"), "]"))
+      OutputLine(Concat("EMPTYNEEDLE=[", Replace("abc", "", "X"), "]"))
+      OutputLine(Concat("BOTHEMPTY=[", Replace("abc", "", ""), "]"))
+    ENDIF
+
+    /* non-ASCII text survives in both directions */
+    IF @b == "unicode" THEN
+      VAR @u
+      SET @u = Concat("caf", Char(233), " time")
+      OutputLine(Concat("UNILEN=[", Length(@u), "]"))
+      OutputLine(Concat("UNIREPL=[", Replace(@u, Char(233), "e"), "]"))
+      OutputLine(Concat("UNIINTO=[", Replace("cafe time", "e t", Concat(Char(233), " T")), "]"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", Replace(), "]"))
+    ENDIF
+
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      OutputLine(Concat("A1=[", Replace("abc"), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", Replace("abc", "b", "z", "extra"), "]"))
+    ENDIF
+  ]%%

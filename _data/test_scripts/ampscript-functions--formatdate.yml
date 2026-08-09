@@ -1,0 +1,160 @@
+# Test scripts for /engagement/ampscript/functions/formatdate/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Each risky case
+# therefore sits behind its own RequestParameter("b") branch and must be
+# fetched on its own. Branches on this page: ?b=safe, ?b=case, ?b=cross,
+# ?b=time, ?b=std, ?b=locale, ?b=parse, ?b=empties, ?b=hsingle, ?b=Hsingle,
+# ?b=a0, ?b=a5.
+# A branch that renders nothing at all is the failure signal.
+#
+# Everything is measured against ONE fixed instant, 2026-03-04 13:52:07,
+# whose month (03), day (04), hour (13), minute (52) and second (07) are all
+# distinct - which is what makes a token rendering 03 where 52 was expected
+# unambiguously the month.
+behaviour: |
+  %%[
+    VAR @b, @d
+    SET @b = RequestParameter("b")
+    SET @d = "2026-03-04 13:52:07"
+
+    /* the documented custom tokens in the DATE pattern */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("DEF=[", FormatDate(@d), "]"))
+      OutputLine(Concat("yy=[", FormatDate(@d, "yy"), "]"))
+      OutputLine(Concat("yyyy=[", FormatDate(@d, "yyyy"), "]"))
+      OutputLine(Concat("M=[", FormatDate(@d, "M"), "]"))
+      OutputLine(Concat("MM=[", FormatDate(@d, "MM"), "]"))
+      OutputLine(Concat("MMM=[", FormatDate(@d, "MMM"), "]"))
+      OutputLine(Concat("MMMM=[", FormatDate(@d, "MMMM"), "]"))
+      OutputLine(Concat("d=[", FormatDate(@d, "d"), "]"))
+      OutputLine(Concat("dd=[", FormatDate(@d, "dd"), "]"))
+
+      /* the day-name tokens: ddd is corrupted, dddd is the abbreviation and
+         the full name needs a fifth d */
+      OutputLine(Concat("ddd=[", FormatDate(@d, "ddd"), "]"))
+      OutputLine(Concat("dddd=[", FormatDate(@d, "dddd"), "]"))
+      OutputLine(Concat("ddddd=[", FormatDate(@d, "ddddd"), "]"))
+
+      OutputLine(Concat("gg=[", FormatDate(@d, "gg"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the tokens ignore case: each upper form matches its lower twin */
+    IF @b == "case" THEN
+      OutputLine(Concat("--- case start ---"))
+      OutputLine(Concat("Y=[", FormatDate(@d, "Y"), "]"))
+      OutputLine(Concat("YYYY=[", FormatDate(@d, "YYYY"), "]"))
+      OutputLine(Concat("mmmm=[", FormatDate(@d, "mmmm"), "]"))
+      OutputLine(Concat("mm=[", FormatDate(@d, "mm"), "]"))
+      OutputLine(Concat("m=[", FormatDate(@d, "m"), "]"))
+      OutputLine(Concat("DD=[", FormatDate(@d, "DD"), "]"))
+      OutputLine(Concat("DDDD=[", FormatDate(@d, "DDDD"), "]"))
+      OutputLine(Concat("--- case done ---"))
+    ENDIF
+
+    /* the headline: the minutes position of a one-argument pattern renders
+       the month, and no capitalisation changes it */
+    IF @b == "cross" THEN
+      OutputLine(Concat("--- cross start ---"))
+      OutputLine(Concat("REPRO=[", FormatDate(@d, "yyyy-MM-dd HH:mm:ss"), "]"))
+      OutputLine(Concat("REPROLOW=[", FormatDate(@d, "yyyy-mm-dd hh:mm:ss"), "]"))
+      OutputLine(Concat("dHH=[", FormatDate(@d, "HH"), "]"))
+      OutputLine(Concat("dhh=[", FormatDate(@d, "hh"), "]"))
+      OutputLine(Concat("dss=[", FormatDate(@d, "ss"), "]"))
+      OutputLine(Concat("dtt=[", FormatDate(@d, "tt"), "]"))
+      OutputLine(Concat("dzzz=[", FormatDate(@d, "zzz"), "]"))
+      OutputLine(Concat("--- cross done ---"))
+    ENDIF
+
+    /* the same tokens in the TIME pattern, where mm finally means minutes */
+    IF @b == "time" THEN
+      OutputLine(Concat("--- time start ---"))
+      OutputLine(Concat("thh=[", FormatDate(@d, "", "hh"), "]"))
+      OutputLine(Concat("tHH=[", FormatDate(@d, "", "HH"), "]"))
+      OutputLine(Concat("tmm=[", FormatDate(@d, "", "mm"), "]"))
+      OutputLine(Concat("tMM=[", FormatDate(@d, "", "MM"), "]"))
+      OutputLine(Concat("tss=[", FormatDate(@d, "", "ss"), "]"))
+      OutputLine(Concat("ttt=[", FormatDate(@d, "", "tt"), "]"))
+      OutputLine(Concat("tfff=[", FormatDate(@d, "", "fff"), "]"))
+      OutputLine(Concat("tcombo=[", FormatDate(@d, "", "HH:mm:ss"), "]"))
+      OutputLine(Concat("tboth=[", FormatDate(@d, "yyyy-MM-dd", "HH:mm:ss"), "]"))
+      OutputLine(Concat("--- time done ---"))
+    ENDIF
+
+    /* the single-letter standard formats */
+    IF @b == "std" THEN
+      OutputLine(Concat("--- std start ---"))
+      OutputLine(Concat("D=[", FormatDate(@d, "D"), "]"))
+      OutputLine(Concat("F=[", FormatDate(@d, "F"), "]"))
+      OutputLine(Concat("G=[", FormatDate(@d, "G"), "]"))
+      OutputLine(Concat("o=[", FormatDate(@d, "o"), "]"))
+      OutputLine(Concat("r=[", FormatDate(@d, "r"), "]"))
+      OutputLine(Concat("T=[", FormatDate(@d, "T"), "]"))
+      OutputLine(Concat("u=[", FormatDate(@d, "u"), "]"))
+      OutputLine(Concat("U=[", FormatDate(@d, "U"), "]"))
+      OutputLine(Concat("l=[", FormatDate(@d, "l"), "]"))
+      OutputLine(Concat("iso=[", FormatDate(@d, "iso"), "]"))
+      OutputLine(Concat("rfc=[", FormatDate(@d, "rfc"), "]"))
+      OutputLine(Concat("--- std done ---"))
+    ENDIF
+
+    /* the locale argument: hyphen and underscore are interchangeable */
+    IF @b == "locale" THEN
+      OutputLine(Concat("--- locale start ---"))
+      OutputLine(Concat("frD=[", FormatDate(@d, "D", "", "fr-FR"), "]"))
+      OutputLine(Concat("frU=[", FormatDate(@d, "D", "", "fr_FR"), "]"))
+      OutputLine(Concat("frMMMM=[", FormatDate(@d, "MMMM", "", "fr-FR"), "]"))
+      OutputLine(Concat("jaD=[", FormatDate(@d, "D", "", "ja-JP"), "]"))
+      OutputLine(Concat("ukS=[", FormatDate(@d, "S", "", "uk_UA"), "]"))
+      OutputLine(Concat("enS=[", FormatDate(@d, "S", "", "en-US"), "]"))
+      OutputLine(Concat("--- locale done ---"))
+    ENDIF
+
+    /* the accepted input forms, including a real date value */
+    IF @b == "parse" THEN
+      OutputLine(Concat("--- parse start ---"))
+      OutputLine(Concat("ISO=[", FormatDate("2026-03-04T13:52:07.123-0700", "yyyy-MM-dd", "HH:mm:ss"), "]"))
+      OutputLine(Concat("SDATE=[", FormatDate("2026-03-04", "yyyy-MM-dd", "HH:mm:ss"), "]"))
+      OutputLine(Concat("USNP=[", FormatDate("3/4/2026", "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("WORDS=[", FormatDate("4 March 2026 1:52:07 PM", "yyyy-MM-dd", "HH:mm:ss"), "]"))
+      OutputLine(Concat("DATEVAL=[", FormatDate(DateAdd(Now(), 1, "D"), "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("--- parse done ---"))
+    ENDIF
+
+    /* everything that returns empty or passes through instead of failing */
+    IF @b == "empties" THEN
+      OutputLine(Concat("--- empties start ---"))
+      OutputLine(Concat("BAD=[", FormatDate("not a date at all", "yyyy"), "]"))
+      OutputLine(Concat("EMPTY=[", FormatDate("", "yyyy"), "]"))
+      OutputLine(Concat("NUM=[", FormatDate(20260304, "yyyy"), "]"))
+      OutputLine(Concat("BADFMT=[", FormatDate(@d, "qqqq"), "]"))
+      OutputLine(Concat("BADLOC=[", FormatDate(@d, "D", "", "zz-ZZ"), "]"))
+      OutputLine(Concat("--- empties done ---"))
+    ENDIF
+
+    /* these two branches abort the page: the start marker never renders */
+    IF @b == "hsingle" THEN
+      OutputLine(Concat("--- hsingle start ---"))
+      OutputLine(Concat("th=[", FormatDate(@d, "", "h"), "]"))
+    ENDIF
+
+    IF @b == "Hsingle" THEN
+      OutputLine(Concat("--- Hsingle start ---"))
+      OutputLine(Concat("tH=[", FormatDate(@d, "", "H"), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", FormatDate(), "]"))
+    ENDIF
+
+    IF @b == "a5" THEN
+      OutputLine(Concat("--- a5 start ---"))
+      OutputLine(Concat("A5=[", FormatDate(@d, "yyyy", "HH", "en-US", "extra"), "]"))
+    ENDIF
+  ]%%

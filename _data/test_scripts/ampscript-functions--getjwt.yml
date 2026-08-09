@@ -1,0 +1,97 @@
+# Test scripts for /engagement/ampscript/functions/getjwt/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=hs384, ?b=hs512,
+# ?b=lower, ?b=nonjson, ?b=rs256, ?b=bogus, ?b=emptysecret.
+# A branch that renders nothing at all is the failure signal.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+#
+# The secret below is a throwaway invented for this test. Never paste a real
+# signing secret into a page you deploy.
+behaviour: |
+  %%[
+    VAR @b, @sec, @pl, @t1, @t2, @p1, @rest, @p2
+    SET @b = RequestParameter("b")
+    SET @sec = "sfmc-probe-secret-2026"
+    SET @pl = '{"sub":"probe","n":7}'
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Base64Encode("Man"), "]"))
+
+    /* the token for a fixed payload and secret, its three segments, the
+       decoded header, the base64url alphabet, and determinism */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      SET @t1 = GetJWT(@sec, "HS256", @pl)
+      OutputLine(Concat("T1=[", @t1, "]"))
+      OutputLine(Concat("T1LEN=[", Length(@t1), "]"))
+      SET @t2 = GetJWT(@sec, "HS256", @pl)
+      IF @t1 == @t2 THEN
+        OutputLine(Concat("DETERMINISTIC=[yes]"))
+      ELSE
+        OutputLine(Concat("DETERMINISTIC=[no]"))
+      ENDIF
+      SET @p1 = IndexOf(@t1, ".")
+      SET @rest = Substring(@t1, Add(@p1, 1), Subtract(Length(@t1), @p1))
+      SET @p2 = IndexOf(@rest, ".")
+      OutputLine(Concat("SEG1=[", Substring(@t1, 1, Subtract(@p1, 1)), "]"))
+      OutputLine(Concat("SEG2=[", Substring(@rest, 1, Subtract(@p2, 1)), "]"))
+      OutputLine(Concat("SEG3=[", Substring(@rest, Add(@p2, 1), Subtract(Length(@rest), @p2)), "]"))
+      OutputLine(Concat("HEADER=[", Base64Decode(Substring(@t1, 1, Subtract(@p1, 1))), "]"))
+      OutputLine(Concat("HAS_EQ=[", IndexOf(@t1, "="), "] HAS_PLUS=[", IndexOf(@t1, "+"), "] HAS_SLASH=[", IndexOf(@t1, "/"), "]"))
+      OutputLine(Concat("HAS_USCORE=[", IndexOf(@t1, "_"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the two longer HMAC variants */
+    IF @b == "hs384" THEN
+      OutputLine(Concat("--- hs384 start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "HS384", @pl), "]"))
+      OutputLine(Concat("--- hs384 done ---"))
+    ENDIF
+
+    IF @b == "hs512" THEN
+      OutputLine(Concat("--- hs512 start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "HS512", @pl), "]"))
+      OutputLine(Concat("--- hs512 done ---"))
+    ENDIF
+
+    /* the algorithm name is matched case-insensitively */
+    IF @b == "lower" THEN
+      OutputLine(Concat("--- lower start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "hs256", @pl), "]"))
+      OutputLine(Concat("--- lower done ---"))
+    ENDIF
+
+    /* the payload is never parsed - a plain string is signed as readily */
+    IF @b == "nonjson" THEN
+      OutputLine(Concat("--- nonjson start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "HS256", "not json at all"), "]"))
+      OutputLine(Concat("--- nonjson done ---"))
+    ENDIF
+
+    /* each of the three branches below aborts the page - fetch alone */
+    IF @b == "rs256" THEN
+      OutputLine(Concat("--- rs256 start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "RS256", @pl), "]"))
+    ENDIF
+
+    IF @b == "bogus" THEN
+      OutputLine(Concat("--- bogus start ---"))
+      OutputLine(Concat("T=[", GetJWT(@sec, "HS999", @pl), "]"))
+    ENDIF
+
+    IF @b == "emptysecret" THEN
+      OutputLine(Concat("--- emptysecret start ---"))
+      OutputLine(Concat("T=[", GetJWT("", "HS256", @pl), "]"))
+    ENDIF
+  ]%%

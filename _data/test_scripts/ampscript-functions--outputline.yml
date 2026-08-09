@@ -1,0 +1,90 @@
+# Test scripts for /engagement/ampscript/functions/outputline/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Output, OutputLine, GUID and AttributeValue so
+# the four can be exercised from one deploy. The ungated block renders on
+# every request; the remaining cases sit behind their own RequestParameter("b")
+# branch and must be fetched one at a time:
+# ?b=arity, ?b=nest, ?b=nonstr.
+#
+# View the response as raw bytes, not as rendered HTML: the difference from
+# Output is a carriage return plus line feed, which a browser collapses unless
+# the content sits inside a preformatted element.
+behaviour: |
+  %%[
+    VAR @b, @v
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* the injected break, delimited so it is visible as a position rather
+       than inferred. The closing marker lands on the next line. */
+    OutputLine(Concat("--- L start ---"))
+    Output(Concat("<O1>"))
+    Output(Concat("A"))
+    Output(Concat("</O1>"))
+    OutputLine(Concat(""))
+    Output(Concat("<L1>"))
+    OutputLine(Concat("A"))
+    Output(Concat("</L1>"))
+    OutputLine(Concat(""))
+
+    /* an argument that produces no text: the break still appears */
+    Output(Concat("<L2>"))
+    OutputLine(Concat(""))
+    Output(Concat("</L2>"))
+    OutputLine(Concat(""))
+
+    /* a bare literal and a bare variable: only the break appears */
+    SET @v = "vee"
+    Output(Concat("<L3>"))
+    OutputLine("bare")
+    Output(Concat("</L3>"))
+    OutputLine(Concat(""))
+    Output(Concat("<L4>"))
+    OutputLine(@v)
+    Output(Concat("</L4>"))
+    OutputLine(Concat(""))
+
+    /* two calls in a row put each value on its own line */
+    Output(Concat("<L5>"))
+    OutputLine(Concat("P"))
+    OutputLine(Concat("Q"))
+    Output(Concat("</L5>"))
+    OutputLine(Concat(""))
+    OutputLine(Concat("--- L done ---"))
+
+    /* argument counts the catalogued signature does not allow */
+    IF @b == "arity" THEN
+      OutputLine(Concat("--- arity start ---"))
+      OutputLine()
+      OutputLine(Concat("a"), Concat("b"))
+      OutputLine(Concat("a"), Concat("b"), Concat("c"))
+      OutputLine(Concat("--- arity done ---"))
+    ENDIF
+
+    /* nesting the call inside another function: aborts this branch only */
+    IF @b == "nest" THEN
+      OutputLine(Concat("--- nest start ---"))
+      OutputLine(Concat("NEST=[", Concat("x", OutputLine(Concat("y")), "z"), "]"))
+      OutputLine(Concat("--- nest done ---"))
+    ENDIF
+
+    /* non-string arguments */
+    IF @b == "nonstr" THEN
+      OutputLine(Concat("--- nonstr start ---"))
+      Output(Concat("<N1>"))
+      OutputLine(456)
+      Output(Concat("</N1>"))
+      OutputLine(Concat(""))
+      Output(Concat("<N2>"))
+      OutputLine(Now())
+      Output(Concat("</N2>"))
+      OutputLine(Concat(""))
+      OutputLine(Concat("--- nonstr done ---"))
+    ENDIF
+  ]%%

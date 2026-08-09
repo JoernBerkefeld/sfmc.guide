@@ -1,0 +1,73 @@
+# Test scripts for /engagement/ampscript/functions/sha512/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=enc,
+# ?b=nonascii, ?b=csascii, ?b=csbad, ?b=a0, ?b=a3.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @a, @nb
+    SET @b = RequestParameter("b")
+    SET @a = "Hash probe 2026"
+    SET @nb = Concat("Grus", Char(223), " ", Char(8364), Char(228))
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", SHA512(@a), "]"))
+
+    /* the plain one-argument form, its length, and the empty-input digest */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("S5=[", SHA512(@a), "]"))
+      OutputLine(Concat("SL=[", Length(SHA512(@a)), "]"))
+      OutputLine(Concat("ES=[", SHA512(""), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the second argument really changes the digest */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("S8=[", SHA512(@a, "UTF-8"), "]"))
+      OutputLine(Concat("S16=[", SHA512(@a, "UTF-16"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* the default encoding is the UTF-8 byte sequence, not the engine's
+       internal UTF-16 form - only a non-ASCII input can tell them apart */
+    IF @b == "nonascii" THEN
+      OutputLine(Concat("--- nonascii start ---"))
+      OutputLine(Concat("NBIN=[", @nb, "]"))
+      OutputLine(Concat("NS8=[", SHA512(@nb), "]"))
+      OutputLine(Concat("NS16=[", SHA512(@nb, "UTF-16"), "]"))
+      OutputLine(Concat("--- nonascii done ---"))
+    ENDIF
+
+    /* ASCII silently substitutes a question mark for anything it cannot
+       represent, which changes the digest without any signal */
+    IF @b == "csascii" THEN
+      OutputLine(Concat("--- csascii start ---"))
+      OutputLine(Concat("CSASCII=[", SHA512(@nb, "ASCII"), "]"))
+      OutputLine(Concat("--- csascii done ---"))
+    ENDIF
+
+    /* each of the three branches below aborts the page - fetch alone */
+    IF @b == "csbad" THEN
+      OutputLine(Concat("--- csbad start ---"))
+      OutputLine(Concat("CSBAD=[", SHA512(@a, "banana"), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", SHA512(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", SHA512(@a, "UTF-8", "extra"), "]"))
+    ENDIF
+  ]%%

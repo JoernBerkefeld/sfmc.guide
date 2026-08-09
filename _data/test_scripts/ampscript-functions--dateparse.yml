@@ -1,0 +1,164 @@
+# Test scripts for /engagement/ampscript/functions/dateparse/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so an unreadable date string aborts the whole
+# page with HTTP 422 and discards everything rendered before it. Fetch one
+# branch at a time: ?b=ctrl, ?b=formats, ?b=utc, ?b=flags, ?b=tzoff,
+# ?b=chain, ?b=timeonly, ?b=little, ?b=badflag, ?b=dateval,
+# ?b=ordinal, ?b=frmonth, ?b=epoch, ?b=numdate, ?b=baddate, ?b=emptydate,
+# ?b=a0, ?b=a3.
+#
+# ?b=ctrl is the control: it calls DateParse in its plainest form. If ctrl
+# renders and a rejecting branch does not, the abort belongs to the function
+# rather than to the harness or the deployment.
+#
+# Every branch uses a fixed instant rather than Now(), so every value below is
+# deterministic — except ?b=timeonly, whose input carries no date at all, and
+# ?b=dateval, which feeds in the current time on purpose.
+behaviour: |
+  %%[
+    VAR @b, @s, @iso, @isot
+    SET @b = RequestParameter("b")
+    SET @s = "2026-03-04 09:05:07"
+    SET @iso = "2026-03-04"
+    SET @isot = "2026-03-04T09:05:07"
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRL=[", DateParse(@iso, 0), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* the input formats that parse */
+    IF @b == "formats" THEN
+      OutputLine(Concat("--- formats start ---"))
+      OutputLine(Concat("DATETIME=[", DateParse(@s), "]"))
+      OutputLine(Concat("ISO=[", DateParse(@iso), "]"))
+      OutputLine(Concat("ISOT=[", DateParse(@isot), "]"))
+      OutputLine(Concat("ISOTZ=[", DateParse("2026-03-04T09:05:07-06:00"), "]"))
+      OutputLine(Concat("US=[", DateParse("3/4/2026 9:05 AM"), "]"))
+      OutputLine(Concat("WORDA=[", DateParse("4 March 2026"), "]"))
+      OutputLine(Concat("WORDB=[", DateParse("March 4, 2026"), "]"))
+      OutputLine(Concat("DTAMPM=[", DateParse("2026-03-04 9:05:07 AM"), "]"))
+      OutputLine(Concat("RFC=[", DateParse("Wed, 04 Mar 2026 09:05:07 GMT"), "]"))
+      OutputLine(Concat("--- formats done ---"))
+    ENDIF
+
+    /* the flag shifts the instant by the account's offset from UTC */
+    IF @b == "utc" THEN
+      OutputLine(Concat("--- utc start ---"))
+      OutputLine(Concat("U0=[", DateParse(@s, 0), "]"))
+      OutputLine(Concat("U1=[", DateParse(@s, 1), "]"))
+      OutputLine(Concat("UDIFF=[", DateDiff(DateParse(@s, 0), DateParse(@s, 1), "H"), "]"))
+      OutputLine(Concat("NOWRAW=[", Now(), "]"))
+      OutputLine(Concat("NOWUTC=[", DateParse(Now(), 1), "]"))
+      OutputLine(Concat("--- utc done ---"))
+    ENDIF
+
+    /* every spelling of the flag, number, boolean and quoted alike */
+    IF @b == "flags" THEN
+      OutputLine(Concat("--- flags start ---"))
+      OutputLine(Concat("BT=[", DateParse(@s, true), "]"))
+      OutputLine(Concat("BF=[", DateParse(@s, false), "]"))
+      OutputLine(Concat("S1=[", DateParse(@s, "1"), "]"))
+      OutputLine(Concat("S0=[", DateParse(@s, "0"), "]"))
+      OutputLine(Concat("STRUE=[", DateParse(@s, "true"), "]"))
+      OutputLine(Concat("SFALSE=[", DateParse(@s, "false"), "]"))
+      OutputLine(Concat("--- flags done ---"))
+    ENDIF
+
+    /* an offset in the input is converted, not dropped */
+    IF @b == "tzoff" THEN
+      OutputLine(Concat("--- tzoff start ---"))
+      OutputLine(Concat("PLUS2=[", DateParse("2026-03-04T09:05:07+02:00"), "]"))
+      OutputLine(Concat("PLUS2U=[", DateParse("2026-03-04T09:05:07+02:00", 1), "]"))
+      OutputLine(Concat("ZULU=[", DateParse("2026-03-04T09:05:07Z"), "]"))
+      OutputLine(Concat("ZULUU=[", DateParse("2026-03-04T09:05:07Z", 1), "]"))
+      OutputLine(Concat("--- tzoff done ---"))
+    ENDIF
+
+    /* the result is a real date value the other date functions consume */
+    IF @b == "chain" THEN
+      OutputLine(Concat("--- chain start ---"))
+      OutputLine(Concat("PY=[", DatePart(DateParse(@isot), "Y"), "]"))
+      OutputLine(Concat("PMI=[", DatePart(DateParse(@isot), "MI"), "]"))
+      OutputLine(Concat("FD=[", FormatDate(DateParse(@isot), "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("DA=[", DateAdd(DateParse(@iso), 1, "D"), "]"))
+      OutputLine(Concat("DD=[", DateDiff(DateParse(@iso), DateParse("2026-03-06"), "D"), "]"))
+      OutputLine(Concat("LEN=[", Length(DateParse(@iso)), "]"))
+      OutputLine(Concat("--- chain done ---"))
+    ENDIF
+
+    /* a time with no date borrows the day of the render */
+    IF @b == "timeonly" THEN
+      OutputLine(Concat("--- timeonly start ---"))
+      OutputLine(Concat("TIMEONLY=[", DateParse("1:41 PM"), "]"))
+      OutputLine(Concat("--- timeonly done ---"))
+    ENDIF
+
+    /* a day-first date is misread rather than refused */
+    IF @b == "little" THEN
+      OutputLine(Concat("--- little start ---"))
+      OutputLine(Concat("MEANT_5_AUGUST=[", DateParse("5/8/2026"), "]"))
+      OutputLine(Concat("ISO_CONTROL=[", DateParse("2026-08-05"), "]"))
+      OutputLine(Concat("--- little done ---"))
+    ENDIF
+
+    /* the flag is not validated */
+    IF @b == "badflag" THEN
+      OutputLine(Concat("--- badflag start ---"))
+      OutputLine(Concat("BADFLAG=[", DateParse(@s, "spring"), "]"))
+      OutputLine(Concat("--- badflag done ---"))
+    ENDIF
+
+    /* an existing date value is accepted in the first position */
+    IF @b == "dateval" THEN
+      OutputLine(Concat("--- dateval start ---"))
+      OutputLine(Concat("DATEVAL=[", DateParse(Now()), "]"))
+      OutputLine(Concat("--- dateval done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - fetch them ONE at a time */
+    IF @b == "ordinal" THEN
+      OutputLine(Concat("--- ordinal start ---"))
+      OutputLine(Concat("ORDINAL=[", DateParse("March 4th, 2026"), "]"))
+    ENDIF
+
+    IF @b == "frmonth" THEN
+      OutputLine(Concat("--- frmonth start ---"))
+      OutputLine(Concat("FRMONTH=[", DateParse("4 mai 2026"), "]"))
+    ENDIF
+
+    IF @b == "epoch" THEN
+      OutputLine(Concat("--- epoch start ---"))
+      OutputLine(Concat("EPOCH=[", DateParse("1772614800"), "]"))
+    ENDIF
+
+    IF @b == "numdate" THEN
+      OutputLine(Concat("--- numdate start ---"))
+      OutputLine(Concat("NUMDATE=[", DateParse(20260304), "]"))
+    ENDIF
+
+    IF @b == "baddate" THEN
+      OutputLine(Concat("--- baddate start ---"))
+      OutputLine(Concat("BADDATE=[", DateParse("not a date at all"), "]"))
+    ENDIF
+
+    IF @b == "emptydate" THEN
+      OutputLine(Concat("--- emptydate start ---"))
+      OutputLine(Concat("EMPTYDATE=[", DateParse(""), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", DateParse(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", DateParse(@s, 1, "extra"), "]"))
+    ENDIF
+  ]%%

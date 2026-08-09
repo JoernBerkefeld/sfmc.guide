@@ -329,3 +329,1750 @@
         OutputLine(Concat("C0=[", Concat(), "]"))
       ENDIF
     ]%%
+- name: "Char"
+  url: "/engagement/ampscript/functions/char/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-char.html"
+  tagline: "character codes are not capped at 255 - values beyond extended ASCII resolve to their Unicode character"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "char-codes-above-255-work"
+  body: |
+    The official reference frames the accepted domain as the extended ASCII set,
+    codes 0 through 255, and says nothing about what a larger number does. A
+    reader would reasonably assume it is rejected. It is not: passing 256
+    rendered the Latin letter A with a macron (U+0100), and passing 8364
+    rendered the euro sign (U+20AC). The codes are being treated as UTF-16 code
+    unit values, not as byte values.
+
+    Both results were read from a raw byte dump of the response rather than from
+    a console, because an extended-ASCII character and a mis-decoded multi-byte
+    sequence look identical otherwise. The euro sign came back as the three
+    bytes of its UTF-8 encoding, which is what a genuine U+20AC looks like.
+
+    The documentation is silent here rather than wrong, so this is published as
+    an undocumented capability and the entry is not flagged as contradicting the
+    docs. Still, do not lean on it for portability: a number outside 0-255 has no
+    documented contract, and a decimal code is rejected outright with HTTP 422.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* beyond extended ASCII: both render their Unicode character */
+      IF @b == "c256" THEN
+        OutputLine(Concat("--- c256 start ---"))
+        OutputLine(Concat("C256=[", Char(256), "]"))
+        OutputLine(Concat("--- c256 done ---"))
+      ENDIF
+      IF @b == "ceuro" THEN
+        OutputLine(Concat("--- ceuro start ---"))
+        OutputLine(Concat("CEURO=[", Char(8364), "]"))
+        OutputLine(Concat("--- ceuro done ---"))
+      ENDIF
+      /* a decimal code aborts the page with HTTP 422, no marker renders */
+      IF @b == "cdec" THEN
+        OutputLine(Concat("--- cdec start ---"))
+        OutputLine(Concat("CDEC=[", Char(65.7), "]"))
+      ENDIF
+    ]%%
+- name: "IndexOf"
+  url: "/engagement/ampscript/functions/indexof/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html"
+  tagline: "the search is case-insensitive, which no source mentions"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "indexof-is-case-insensitive"
+  body: |
+    Neither the official reference nor the community guide says anything about
+    letter case, and every published example happens to search with matching
+    case, so the behaviour is invisible from the documentation. The search is in
+    fact case-insensitive: searching "Hello World" for an all-caps WORLD returns
+    7, searching it for an all-lowercase world returns the same 7, and searching
+    for a lowercase h against the leading capital H returns 1. A caller who
+    expects a case-sensitive match will silently get hits they never intended.
+
+    There is no flag to turn this off. When case matters, compare the located
+    text yourself - pull it out with Substring and test it - rather than relying
+    on IndexOf returning 0 for a case mismatch.
+
+    The docs are silent here rather than wrong, so the catalog entry is not
+    flagged as contradicting them.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "case" THEN
+        OutputLine(Concat("UPPERNEEDLE=[", IndexOf("Hello World", "WORLD"), "]"))
+        OutputLine(Concat("LOWERNEEDLE=[", IndexOf("Hello World", "world"), "]"))
+        OutputLine(Concat("LOWERH=[", IndexOf("Hello World", "h"), "]"))
+      ENDIF
+    ]%%
+
+- name: "IndexOf"
+  url: "/engagement/ampscript/functions/indexof/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html"
+  tagline: "an undocumented third argument picks which occurrence to locate"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "indexof-third-occurrence-argument"
+  body: |
+    Every source describes exactly two parameters, so a third argument looks
+    like it should abort the page the way a fourth one does. It does not: the
+    call succeeds and the extra number selects which match to report. Searching
+    "Hello World" for the letter o returns 5 with an occurrence of 1 and 8 with
+    an occurrence of 2, and asking for a third o - there are only two - returns
+    0 rather than aborting.
+
+    Two details are worth knowing before leaning on it. Overlapping matches are
+    not counted separately, so asking for the second "aa" inside "aaaa" returns
+    3, not 2. And a negative occurrence resolves to the LAST match regardless of
+    magnitude: on a source with three matches, -1, -2 and -9 all returned the
+    third match's position.
+
+    The argument is real but undocumented, so it has no compatibility guarantee.
+    A decimal, a boolean or a non-numeric string in that position aborts the
+    page with HTTP 422; a numeric string works.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "occurrence" THEN
+        OutputLine(Concat("OCC1=[", IndexOf("Hello World", "o", 1), "]"))
+        OutputLine(Concat("OCC2=[", IndexOf("Hello World", "o", 2), "]"))
+        OutputLine(Concat("OCC3=[", IndexOf("Hello World", "o", 3), "]"))
+        OutputLine(Concat("OCCOVERLAP=[", IndexOf("aaaa", "aa", 2), "]"))
+        OutputLine(Concat("NEG1_ABC=[", IndexOf("abcabcabc", "abc", -1), "]"))
+      ENDIF
+      /* aborts the page: the start marker never renders */
+      IF @b == "occbool" THEN
+        OutputLine(Concat("--- occbool start ---"))
+        OutputLine(Concat("OCCBOOL=[", IndexOf("banana", "na", true), "]"))
+      ENDIF
+    ]%%
+
+- name: "ProperCase"
+  url: "/engagement/ampscript/functions/propercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-propercase.html"
+  tagline: "capitals inside a word are destroyed, not preserved"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "propercase-lowercases-the-rest"
+  body: |
+    The official page describes the capitalising half of the conversion and
+    says nothing about what happens to the remaining letters, so this is
+    undocumented behaviour rather than a documented claim being wrong. At
+    runtime the conversion is destructive: after the first letter of a word is
+    raised, every other letter in that word is forced down.
+
+    `ProperCase("iPhone")` renders `Iphone`, `ProperCase("McDONALD")` renders
+    `Mcdonald`, and `ProperCase("HTML and CSS")` renders `Html And Css`. The
+    obvious use — tidying an all-caps name field — is unaffected, but running
+    it over mixed-case display text silently damages brand names and acronyms.
+
+    Word boundaries are also narrower than they look. Only whitespace and
+    digits start a new word for capitalisation purposes: a letter directly
+    after an apostrophe, hyphen, full stop or comma stays lower case, so
+    `o'neill mcdonald-smith` becomes `O'neill Mcdonald-smith` rather than the
+    `O'Neill McDonald-Smith` a name formatter would want.
+
+    Whitespace itself is untouched — padding and inner runs of spaces survive
+    exactly — so this function never doubles as a trim.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      IF @b == "destructive" THEN
+        /* the rest of each word is forced to lower case */
+        OutputLine(Concat("PM1=[", ProperCase("iPhone"), "]"))
+        OutputLine(Concat("P3=[", ProperCase("McDONALD"), "]"))
+        OutputLine(Concat("PW3=[", ProperCase("HTML and CSS"), "]"))
+        /* punctuation does not start a new word, a digit does */
+        OutputLine(Concat("PW1=[", ProperCase("o'neill mcdonald-smith"), "]"))
+        OutputLine(Concat("PM3=[", ProperCase("a1b c2d"), "]"))
+        /* padding and inner spacing survive */
+        OutputLine(Concat("PW4=[", ProperCase("  spaced   out  "), "]"))
+      ENDIF
+    ]%%
+- name: "Substring"
+  url: "/engagement/ampscript/functions/substring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-substring.html"
+  tagline: "the two numeric arguments disagree about negatives"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "substring-negative-arguments-disagree"
+  body: |
+    Neither the official page nor the community guide states a lower bound for
+    either numeric argument, so this is undocumented behaviour rather than a
+    documented claim being wrong — but the two arguments behave differently
+    enough that a caller can take a page down without realising it.
+
+    A start position below `1` is silently clamped to the first character.
+    `Substring("Hello World", 0, 5)` and `Substring("Hello World", -3, 5)` both
+    render `Hello`, exactly like a start of `1`. Nothing is shifted and nothing
+    is dropped.
+
+    A negative *length*, by contrast, aborts the whole page with HTTP 422 and
+    discards everything rendered before the call. That matters because the
+    idiomatic way to size a substring is to subtract two positions, and a
+    missing separator makes that arithmetic go negative. Guard the computed
+    length before passing it, rather than trusting the clamping that the start
+    position gets.
+
+    An over-long length is safe: asking for more characters than remain returns
+    what is left instead of erroring.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* a start below 1 is clamped - fetch ?b=clamped */
+      IF @b == "clamped" THEN
+        OutputLine(Concat("START1=[", Substring("Hello World", 1, 5), "]"))
+        OutputLine(Concat("START0=[", Substring("Hello World", 0, 5), "]"))
+        OutputLine(Concat("STARTNEG=[", Substring("Hello World", -3, 5), "]"))
+        OutputLine(Concat("LENOVER=[", Substring("Hello World", 7, 99), "]"))
+      ENDIF
+      /* a negative length aborts - fetch ?b=lenneg, the marker never renders */
+      IF @b == "lenneg" THEN
+        OutputLine(Concat("--- lenneg start ---"))
+        OutputLine(Concat("LENNEG=[", Substring("Hello World", 3, -2), "]"))
+      ENDIF
+    ]%%- name: "Replace"
+  url: "/engagement/ampscript/functions/replace/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html"
+  tagline: "matching ignores case, the replacement argument is optional, and the scan is single-pass"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replace-case-insensitive-single-pass"
+  body: |
+    Three behaviours no source describes, all of which change how the function
+    should be called.
+
+    **Casing is ignored when matching.** Searching for `WORLD`, `world` or
+    `hELLO` all hit the differently-cased text in `Hello World`, and a source
+    holding `Cat cat CAT` comes back as three replacements, not one. Every
+    example in both sources happens to use matching case, so the behaviour is
+    invisible from the documentation - and there is no case-sensitive variant to
+    fall back on. The sibling [`IndexOf`](/engagement/ampscript/functions/indexof/)
+    matches the same way.
+
+    **The third argument is optional.** Both sources mark all three parameters
+    required, but a two-argument call runs fine and deletes the search text, so
+    removing a fragment needs no empty-string placeholder.
+
+    **The source is scanned once.** Replacing a doubled letter with a single one
+    inside `aaa` renders `aa`, not `a`: the pair the replacement helped form
+    is never revisited. Text you insert is likewise never re-matched, so a
+    replacement containing the search string is safe rather than looping.
+
+    An empty search string is a no-op that returns the source untouched, rather
+    than inserting the replacement between every character.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* casing is ignored - fetch ?b=case */
+      IF @b == "case" THEN
+        OutputLine(Concat("UPPERNEEDLE=[", Replace("Hello World", "WORLD", "There"), "]"))
+        OutputLine(Concat("MIXEDNEEDLE=[", Replace("Hello World", "hELLO", "Howdy"), "]"))
+        OutputLine(Concat("MULTICASE=[", Replace("Cat cat CAT", "cat", "dog"), "]"))
+      ENDIF
+      /* two arguments delete, and the scan is single-pass - fetch ?b=shape */
+      IF @b == "shape" THEN
+        OutputLine(Concat("DROP=[", Replace("abc", "b"), "]"))
+        OutputLine(Concat("RECURSE=[", Replace("aaa", "aa", "a"), "]"))
+        OutputLine(Concat("SELFREF=[", Replace("cat", "cat", "cat dog"), "]"))
+        OutputLine(Concat("EMPTYNEEDLE=[", Replace("abc", "", "X"), "]"))
+      ENDIF
+    ]%%
+- name: "ReplaceList"
+  url: "/engagement/ampscript/functions/replacelist/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html"
+  tagline: "Search values are applied in sequence, so an earlier replacement can be rewritten by a later one"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replacelist-sequential-cascade"
+  body: |
+    Both sources present the search values as a flat set of delimiters to strip,
+    which hides the two properties that decide whether a call is correct.
+
+    **The search values run one after another, and each one sees the previous
+    result.** `ReplaceList("a", "XY", "a", "X")` renders `XYY`: the first pass
+    turns the source into `XY`, and the second pass then finds the `X` that pass
+    one had just inserted. Order therefore matters -
+    `ReplaceList("abc", "-", "ab", "bc")` gives `-c` while swapping the two
+    search values gives `a-`. Put a search value that could match your own
+    replacement text first, or pick a replacement none of them can match.
+
+    Within a single search value the scan is still one pass, exactly like
+    [`Replace`](/engagement/ampscript/functions/replace/): replacing `aa` with a
+    single `a` inside `aaa` leaves `aa` rather than collapsing further.
+
+    **Matching ignores case.** A lowercase search value rewrites capitalised and
+    all-caps text alike, so `ReplaceList("Red BLUE green", "-", "red", "blue", "GREEN")`
+    blanks all three colours. There is no case-sensitive variant.
+
+    An empty search value is a no-op that returns the source untouched, and an
+    empty replacement simply deletes every match.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* order and cascading - fetch ?b=order */
+      IF @b == "order" THEN
+        OutputLine(Concat("CASCADE=[", ReplaceList("a", "XY", "a", "X"), "]"))
+        OutputLine(Concat("ORDER=[", ReplaceList("abc", "-", "ab", "bc"), "]"))
+        OutputLine(Concat("ORDERREV=[", ReplaceList("abc", "-", "bc", "ab"), "]"))
+        OutputLine(Concat("SINGLEPASS=[", ReplaceList("aaa", "a", "aa"), "]"))
+      ENDIF
+      /* casing is ignored - fetch ?b=case */
+      IF @b == "case" THEN
+        OutputLine(Concat("UPPERNEEDLE=[", ReplaceList("Hello World", "There", "WORLD"), "]"))
+        OutputLine(Concat("MIXEDLIST=[", ReplaceList("Red BLUE green", "-", "red", "blue", "GREEN"), "]"))
+      ENDIF
+    ]%%
+- name: "RegExMatch"
+  url: "/engagement/ampscript/functions/regexmatch/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-regex-match.html"
+  tagline: "The only String function that matches case-sensitively, and its option list is variadic"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "regexmatch-case-sensitive-and-variadic-options"
+  body: |
+    Neither source states how `RegExMatch` treats casing, and the answer is the
+    opposite of every other String function.
+
+    **Matching is case-sensitive by default.**
+    `RegExMatch("ORDER-4821", "order", 0)` renders nothing at all, while the same
+    call with `"IgnoreCase"` appended renders `ORDER`. Its siblings
+    [`IndexOf`](/engagement/ampscript/functions/indexof/),
+    [`Replace`](/engagement/ampscript/functions/replace/) and
+    [`ReplaceList`](/engagement/ampscript/functions/replacelist/) all match
+    regardless of case, so a pattern ported from one of them silently stops
+    matching. Pass the option, or write the pattern to cover both casings.
+
+    **The option list has no upper bound.** The syntax block shows a single
+    trailing option, but five option names on one call were all accepted.
+
+    **An empty result is ambiguous.** No match, a capture-group index past the
+    last group, and a group name that the pattern never declares all return the
+    same empty string at HTTP 200. Only a malformed pattern or an option name
+    that is not a real RegexOptions member behaves differently - those abort the
+    page with HTTP 422 and discard everything rendered before them.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* casing and the option list - fetch ?b=case */
+      IF @b == "case" THEN
+        OutputLine(Concat("CASEDEF=[", RegExMatch("ORDER-4821", "order", 0), "]"))
+        OutputLine(Concat("CASEOPT=[", RegExMatch("ORDER-4821", "order", 0, "IgnoreCase"), "]"))
+        OutputLine(Concat("MANYOPTS=[", RegExMatch("ORDER-4821", "order.4821", 0, "IgnoreCase", "Singleline", "Multiline"), "]"))
+      ENDIF
+      /* the three ways to get an empty string - fetch ?b=empty */
+      IF @b == "empty" THEN
+        OutputLine(Concat("NOMATCH=[", RegExMatch("order-4821-eu", "[0-9][0-9][0-9][0-9][0-9][0-9]", 0), "]"))
+        OutputLine(Concat("BADGROUP=[", RegExMatch("order-4821-eu", "order-([0-9]+)-", 5), "]"))
+        OutputLine(Concat("BADNAME=[", RegExMatch("order-4821-eu", "order-([0-9]+)-", "nope"), "]"))
+      ENDIF
+    ]%%
+
+- name: "URLEncode"
+  url: "/engagement/ampscript/functions/urlencode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html"
+  tagline: "The two flags accept 0/1, true/false and the quoted spellings interchangeably - and by default a non-URL value is not encoded at all"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "urlencode-flag-spellings-and-default-passthrough"
+  body: |
+    **The two optional flags have four accepted spellings, all equivalent.** The
+    official reference describes them as integers while the community reference
+    and our own catalog described them as booleans. Both are right: `0`/`1`,
+    `false`/`true`, and those same four words quoted as strings all reach the
+    same code path. Encoding `spring sale` with the second flag on gave
+    `spring%20sale` whether it was written `0, 1`, `false, true`, or `"0", "1"`,
+    and the fully encoded `spring+sale` for `1, 1`, `true, true` and `"1", "1"`.
+    Neither spelling aborts the page and neither is a silent no-op.
+
+    **An out-of-domain integer is not rejected either.** Passing `2` for both
+    flags rendered the input untouched at HTTP 200, i.e. it behaved like the off
+    state rather than erroring.
+
+    **With no flags, a value that is not a URL is returned completely
+    unchanged.** This is the trap the name hides: encoding only applies to the
+    part after a question mark unless the third argument switches it on. The
+    literal `spring sale` came back as `spring sale`, while the same text inside
+    a query string came back as `spring%20sale`. A caller encoding a bare field
+    value for a link therefore needs `URLEncode(@value, 1, 1)`, not
+    `URLEncode(@value)`.
+  testScript: |
+    %%[ VAR @b, @plain, @url
+      SET @b = RequestParameter("b")
+      SET @plain = "spring sale"
+      SET @url = Concat("https://example.org/go?promo=spring sale&tags=a,b")
+      /* the four spellings of the same two flags - fetch ?b=spellings */
+      IF @b == "spellings" THEN
+        OutputLine(Concat("N01=[", URLEncode(@plain, 0, 1), "]"))
+        OutputLine(Concat("B01=[", URLEncode(@plain, false, true), "]"))
+        OutputLine(Concat("S01=[", URLEncode(@plain, "0", "1"), "]"))
+        OutputLine(Concat("N11=[", URLEncode(@plain, 1, 1), "]"))
+        OutputLine(Concat("B11=[", URLEncode(@plain, true, true), "]"))
+        OutputLine(Concat("S11=[", URLEncode(@plain, "1", "1"), "]"))
+      ENDIF
+      /* the default only touches a query string - fetch ?b=default */
+      IF @b == "default" THEN
+        OutputLine(Concat("PLAIN=[", URLEncode(@plain), "]"))
+        OutputLine(Concat("URL=[", URLEncode(@url), "]"))
+        OutputLine(Concat("OUTOFDOMAIN=[", URLEncode(@plain, 2, 2), "]"))
+      ENDIF
+    ]%%
+
+- name: "FormatDate"
+  url: "/engagement/ampscript/functions/formatdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html"
+  tagline: "mm in the date pattern renders the month, and the day-name tokens are off by one letter"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "formatdate-date-pattern-tokens-mean-something-else"
+  body: |
+    **The two pattern arguments are separate dialects, and both ignore case.**
+    The official reference prints one custom-pattern table and demonstrates it on
+    the second argument, which reads as though a single set of tokens applies
+    everywhere. It does not. In the second argument (the date pattern) `mm` and
+    `MM` both render the **month**; minutes are simply not reachable from there.
+    Move the same pattern into the third argument (the time pattern) and `mm`
+    means minutes again — there, `MM` means minutes too.
+
+    The consequence bites the most common call there is. For the instant
+    `2026-03-04 13:52:07`, the documented pattern
+    `FormatDate(@d, "yyyy-MM-dd HH:mm:ss")` rendered `2026-03-04 13:03:07` — the
+    minutes position printed `03`, the month. Splitting the pattern across the two
+    arguments as `FormatDate(@d, "yyyy-MM-dd", "HH:mm:ss")` rendered
+    `2026-03-04 13:52:07` correctly. Case makes no difference anywhere: `YYYY`
+    matched `yyyy`, `mmmm` matched `MMMM`, and `DDDD` matched `dddd`.
+
+    **Single-letter tokens select a standard format instead of an unpadded
+    number.** The doc lists `d` as the day without a leading zero and `M` as the
+    month without one; `d` actually rendered the whole short date `3/4/2026` and
+    `M` rendered `March 4`. In the time pattern, `h` or `H` on its own does not
+    render an hour at all — it aborts the page with HTTP 422 and discards
+    everything already written. Use the doubled forms.
+
+    **The day-name tokens are off by one repetition, and one of them is
+    corrupted.** The doc promises `dddd` for the full day name and `ddd` for the
+    abbreviation. `dddd` rendered `Wed`, and the full name needed a fifth `d`:
+    `ddddd` rendered `Wednesday`. `ddd` rendered neither — it produced
+    `We4ne74a26`, in which digits taken from the date have replaced letters of the
+    day name, and the same input on a December date produced `ri25a26`. Never use
+    `ddd`.
+  testScript: |
+    %%[ VAR @b, @d
+      SET @b = RequestParameter("b")
+      SET @d = "2026-03-04 13:52:07"
+      /* the minutes position renders the month - fetch ?b=repro */
+      IF @b == "repro" THEN
+        OutputLine(Concat("ONEARG=[", FormatDate(@d, "yyyy-MM-dd HH:mm:ss"), "]"))
+        OutputLine(Concat("SPLIT=[", FormatDate(@d, "yyyy-MM-dd", "HH:mm:ss"), "]"))
+        OutputLine(Concat("DATEmm=[", FormatDate(@d, "mm"), "]"))
+        OutputLine(Concat("TIMEmm=[", FormatDate(@d, "", "mm"), "]"))
+      ENDIF
+      /* the day-name tokens are shifted, and ddd is corrupted - fetch ?b=daynames */
+      IF @b == "daynames" THEN
+        OutputLine(Concat("d4=[", FormatDate(@d, "dddd"), "]"))
+        OutputLine(Concat("d5=[", FormatDate(@d, "ddddd"), "]"))
+        OutputLine(Concat("d3=[", FormatDate(@d, "ddd"), "]"))
+        OutputLine(Concat("SINGLEd=[", FormatDate(@d, "d"), "]"))
+        OutputLine(Concat("SINGLEM=[", FormatDate(@d, "M"), "]"))
+      ENDIF
+    ]%%
+
+- name: "DateAdd"
+  url: "/engagement/ampscript/functions/dateadd/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html"
+  tagline: "anything outside the five listed units destroys the page instead of returning a value"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "dateadd-unlisted-unit-aborts-the-page"
+  body: |
+    **The unit list is exhaustive, and the penalty for leaving it is the whole
+    page.** The reference lists `Y`, `M`, `D`, `H` and `MI` without saying what
+    happens to anything else. What happens is an HTTP 422 that discards every
+    byte the page had already written — there is no fallback unit, no ignored
+    argument and no empty-string result to test for.
+
+    A seconds unit, a milliseconds unit, a weeks unit, a quarter unit, the
+    spelled-out words for a day and a minute, an unknown two-letter token and an
+    empty string were each fetched in their own single-call branch and each
+    returned 422 with no output, while a control branch calling `DateAdd` in its
+    plainest form rendered normally in the same deployment.
+
+    The amount argument is just as strict about shape. A whole number works in
+    either sign, and so does the same value written as a string — useful, since a
+    value read out of a data extension arrives as one. A decimal does not: `1.5`
+    and `"1.5"` both abort, as does a word. Nothing is rounded or truncated.
+
+    The date argument behaves the same way, which is worth knowing because the
+    neighbouring [FormatDate](/engagement/ampscript/functions/formatdate/) does
+    the opposite: where `FormatDate` quietly returns an empty string for input it
+    cannot read, `DateAdd` aborts. An unparseable string, an empty string and a
+    plain number each cost the page.
+
+    The one piece of good news is that the unit token ignores case — `mi`, `Mi`
+    and `mI` all produced the same minute as `MI`.
+  testScript: |
+    %%[ VAR @b, @d
+      SET @b = RequestParameter("b")
+      SET @d = "2026-03-04 13:52:07"
+      /* the control - this one renders. Fetch ?b=ctrl */
+      IF @b == "ctrl" THEN
+        OutputLine(Concat("CTRL=[", DateAdd(@d, 1, "D"), "]"))
+        OutputLine(Concat("LOWER=[", DateAdd(@d, 1, "mi"), "]"))
+        OutputLine(Concat("STRAMT=[", DateAdd(@d, "1", "D"), "]"))
+      ENDIF
+      /* each of these renders NOTHING - fetch one at a time */
+      IF @b == "sec" THEN
+        OutputLine(Concat("S=[", DateAdd(@d, 30, "S"), "]"))
+      ENDIF
+      IF @b == "wk" THEN
+        OutputLine(Concat("W=[", DateAdd(@d, 1, "W"), "]"))
+      ENDIF
+      IF @b == "frac" THEN
+        OutputLine(Concat("FRAC=[", DateAdd(@d, 1.5, "D"), "]"))
+      ENDIF
+      IF @b == "baddate" THEN
+        OutputLine(Concat("BAD=[", DateAdd("not a date at all", 1, "D"), "]"))
+      ENDIF
+    ]%%
+
+- name: "DateAdd"
+  url: "/engagement/ampscript/functions/dateadd/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html"
+  tagline: "adding a month to 31 January gives 28 February, and adding it back does not return the 31st"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "dateadd-month-end-clamping-is-lossy"
+  body: |
+    **Month arithmetic clamps to the last valid day, and the clamp loses
+    information.** The reference is silent on what happens when the target month
+    is too short for the day you started on. The answer is that the day is pulled
+    back rather than spilling forward: one month after `2026-01-31` is
+    `2/28/2026`, not `3/3/2026`.
+
+    That much is reasonable. The part that surprises callers is that the
+    operation does not undo itself — subtracting a month from that result gives
+    `1/28/2026`, three days away from where you started. Any code that steps a
+    date forward and back through month boundaries drifts.
+
+    The clamp applies to the result rather than sticking to the value: two months
+    from the same base rendered `3/31/2026`, so the 31st is restored as soon as
+    the target month is long enough. Year arithmetic clamps identically — one
+    year after `2028-02-29` gave `2/28/2029`.
+
+    If you need month-end semantics, compute the day of month yourself rather
+    than relying on a round trip through `DateAdd`.
+  testScript: |
+    %%[ VAR @b, @j
+      SET @b = RequestParameter("b")
+      SET @j = "2026-01-31 13:52:07"
+      /* fetch ?b=roll */
+      IF @b == "roll" THEN
+        OutputLine(Concat("PLUS1M=[", DateAdd(@j, 1, "M"), "]"))
+        OutputLine(Concat("PLUS2M=[", DateAdd(@j, 2, "M"), "]"))
+        OutputLine(Concat("THEREANDBACK=[", DateAdd(DateAdd(@j, 1, "M"), -1, "M"), "]"))
+        OutputLine(Concat("LEAP=[", DateAdd("2028-02-29 09:00:00", 1, "Y"), "]"))
+      ENDIF
+    ]%%
+
+- name: "DateDiff"
+  url: "/engagement/ampscript/functions/datediff/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-diff.html"
+  tagline: "one minute either side of midnight on New Year's Eve is one whole year apart"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "datediff-counts-boundaries-not-elapsed-time"
+  body: |
+    **This function does not measure elapsed time — it counts boundaries.** Both
+    dates are truncated to the requested unit and then subtracted, so what you
+    get back is how many unit boundaries lie between them, not how much time
+    passed. The reference is silent on this, and its own worked example (a whole
+    day, measured in minutes) is the one case where the two readings agree.
+
+    The extreme case makes it obvious. From `2026-12-31 23:59:00` to
+    `2027-01-01 00:00:00` — sixty seconds — the answer is `1` for `Y`, `1` for
+    `M`, `1` for `D` and `1` for `MI`, all at once, because that single minute
+    crosses all four boundaries. Run it the other way and a gap of almost a full
+    year, `2026-01-01 00:00:00` to `2026-12-31 23:59:00`, returns `0` for `Y`.
+
+    The everyday version is the one that bites: `2026-01-10 08:00:00` to
+    `2026-01-11 07:00:00` is 23 hours and returns `1` day, while 23 hours that
+    stay inside one date return `0`. Anything finer than the requested unit is
+    discarded outright — 59 seconds measured in `MI` is `0`, but one second
+    across a minute boundary is `1`.
+
+    So `DateDiff(a, b, "D") == 1` does not mean "a day has passed"; it means
+    "the date changed once". If you need elapsed time, ask for the smallest unit
+    available and divide — and note there is no seconds unit, so `MI` is as fine
+    as it gets.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=bound */
+      IF @b == "bound" THEN
+        OutputLine(Concat("ONEMIN_Y=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "Y"), "]"))
+        OutputLine(Concat("ONEMIN_D=[", DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "D"), "]"))
+        OutputLine(Concat("ALMOSTYEAR_Y=[", DateDiff("2026-01-01 00:00:00", "2026-12-31 23:59:00", "Y"), "]"))
+        OutputLine(Concat("ACROSS23H_D=[", DateDiff("2026-01-10 08:00:00", "2026-01-11 07:00:00", "D"), "]"))
+        OutputLine(Concat("WITHIN23H_D=[", DateDiff("2026-01-10 00:00:00", "2026-01-10 23:59:00", "D"), "]"))
+        OutputLine(Concat("ONESEC_MI=[", DateDiff("2026-01-10 08:00:59", "2026-01-10 08:01:00", "MI"), "]"))
+      ENDIF
+    ]%%
+
+- name: "DatePart"
+  url: "/engagement/ampscript/functions/datepart/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-part.html"
+  tagline: "the hour comes back on a 12-hour clock with nothing to tell AM from PM"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "datepart-hour-is-a-12-hour-clock"
+  body: |
+    **Asking for the hour does not give you the hour of the day.** The value is
+    read off a 12-hour clock and no AM/PM indicator comes with it, so the answer
+    is ambiguous by construction. `19:35:47` returns `7`, and `09:05:07` also
+    returns `9` — the two are indistinguishable from the result alone. The
+    reference says only that `H` extracts hours.
+
+    Midnight is the trap underneath the trap. `00:30` returns `12`, not `0`, and
+    a date string carrying no time part at all — `2026-03-04` — also returns
+    `12`, because midnight on a 12-hour clock is twelve o'clock. So a missing
+    time is not distinguishable from noon or from half past midnight either.
+
+    Anything that compares hours, buckets a send into a time of day, or feeds the
+    number back into a date will be wrong for half the day. Pull the hour with
+    [FormatDate](/engagement/ampscript/functions/formatdate/) and an `HH` pattern
+    when you need a 24-hour value, and treat `DatePart(..., "H")` as display-only.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=hour */
+      IF @b == "hour" THEN
+        OutputLine(Concat("EVENING=[", DatePart("2026-11-23 19:35:47", "H"), "]"))
+        OutputLine(Concat("MORNING=[", DatePart("2026-03-04 09:05:07", "H"), "]"))
+        OutputLine(Concat("AFTERMIDNIGHT=[", DatePart("2026-03-04 00:30:00", "H"), "]"))
+        OutputLine(Concat("NOON=[", DatePart("2026-03-04 12:30:00", "H"), "]"))
+        OutputLine(Concat("NOTIMEPART=[", DatePart("2026-03-04", "H"), "]"))
+      ENDIF
+    ]%%
+
+- name: "DatePart"
+  url: "/engagement/ampscript/functions/datepart/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-part.html"
+  tagline: "month and day are zero-padded, hour and minute are not"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "datepart-inconsistent-zero-padding"
+  body: |
+    **The padding is not uniform across the parts.** From
+    `2026-03-04 09:05:07`, the month renders as `03` and the day as `04` — two
+    characters each — while the hour renders as `9` and the minute as `5`, one
+    character each. `Length()` over the same two calls confirms it: `2` for the
+    month, `1` for the hour.
+
+    Concatenating the parts to build a timestamp therefore produces a ragged
+    string rather than a fixed-width one, and comparing the text of two parts
+    compares padded values against unpadded ones. The numbers themselves are
+    fine — `Add(DatePart(@d, "Y"), 1)` and `Multiply(DatePart(@d, "M"), 10)` both
+    work without conversion, so the padding only matters when the value is
+    treated as text.
+
+    Use [FormatDate](/engagement/ampscript/functions/formatdate/) when the width
+    has to be predictable.
+  testScript: |
+    %%[ VAR @b, @d
+      SET @b = RequestParameter("b")
+      SET @d = "2026-03-04 09:05:07"
+      /* fetch ?b=pad */
+      IF @b == "pad" THEN
+        OutputLine(Concat("MONTH=[", DatePart(@d, "M"), "]"))
+        OutputLine(Concat("DAY=[", DatePart(@d, "D"), "]"))
+        OutputLine(Concat("HOUR=[", DatePart(@d, "H"), "]"))
+        OutputLine(Concat("MINUTE=[", DatePart(@d, "MI"), "]"))
+        OutputLine(Concat("LEN_MONTH=[", Length(DatePart(@d, "M")), "]"))
+        OutputLine(Concat("LEN_HOUR=[", Length(DatePart(@d, "H")), "]"))
+      ENDIF
+    ]%%
+
+- name: "DateParse"
+  url: "/engagement/ampscript/functions/dateparse/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-parse.html"
+  tagline: "an unsupported date string aborts the page instead of being rejected gracefully"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "dateparse-unsupported-input-aborts-the-page"
+  body: |
+    **The reference lists the formats that are not supported, but never says what
+    happens when you pass one.** The answer is that the whole render is thrown
+    away. `March 4th, 2026` with an ordinal suffix, `4 mai 2026` with a
+    non-English month, an empty string, free text and a bare number each returned
+    HTTP 422 with no output at all — not an empty value, not an error token, and
+    not the partial page written above the call.
+
+    An epoch-style number is worth calling out separately, because it looks like
+    it ought to work: `1772614800` passed as a string aborts exactly the same way,
+    and so does the unquoted number `20260304`. There is no numeric input path.
+
+    This matters most when the string comes from a data extension field or a query
+    string, where a single malformed row takes the page down. Validate the value
+    before it reaches the function — there is no return value you can test for
+    afterwards, because there is no "afterwards". This is the same unforgiving
+    failure mode as [DateAdd](/engagement/ampscript/functions/dateadd/) and
+    [DatePart](/engagement/ampscript/functions/datepart/), and the opposite of
+    [FormatDate](/engagement/ampscript/functions/formatdate/), which returns an
+    empty string.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch one at a time: ?b=ordinal, ?b=frmonth, ?b=epoch, ?b=empty */
+      IF @b == "ordinal" THEN
+        OutputLine(Concat("ORDINAL=[", DateParse("March 4th, 2026"), "]"))
+      ENDIF
+      IF @b == "frmonth" THEN
+        OutputLine(Concat("FRMONTH=[", DateParse("4 mai 2026"), "]"))
+      ENDIF
+      IF @b == "epoch" THEN
+        OutputLine(Concat("EPOCH=[", DateParse("1772614800"), "]"))
+      ENDIF
+      IF @b == "empty" THEN
+        OutputLine(Concat("EMPTY=[", DateParse(""), "]"))
+      ENDIF
+    ]%%
+
+- name: "DateParse"
+  url: "/engagement/ampscript/functions/dateparse/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-parse.html"
+  tagline: "a day-first date is silently read month-first rather than refused"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "dateparse-day-first-dates-are-silently-misread"
+  body: |
+    **The reference calls little-endian notation unsupported, which reads like it
+    will be rejected. It is not — it is quietly misread.** `5/8/2026`, meant as
+    the 5th of August, parsed without complaint and came back as
+    `5/8/2026 12:00:00 AM`, i.e. the 8th of May. No abort, no empty value, nothing
+    to test for: the page renders a plausible date that is four months wrong.
+
+    That makes it more dangerous than the formats that abort, because those at
+    least announce themselves. Any European-formatted string arriving from an
+    import, a form post or a partner feed is at risk, and roughly a third of
+    day-first dates in a year are also valid month-first dates, so the failure is
+    intermittent rather than reproducible on the first row you check.
+
+    Normalise to an ISO `yyyy-MM-dd` string before parsing, and never rely on the
+    function to notice that a date is the wrong way round.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=little */
+      IF @b == "little" THEN
+        OutputLine(Concat("MEANT_5_AUGUST=[", DateParse("5/8/2026"), "]"))
+        OutputLine(Concat("ISO_CONTROL=[", DateParse("2026-08-05"), "]"))
+      ENDIF
+    ]%%
+
+- name: "SystemDateToLocalDate"
+  url: "/engagement/ampscript/functions/systemdatetolocaldate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-system-date-to-local-date.html"
+  tagline: "the shift is seasonal, not a fixed offset — a summer instant moves one hour further than a winter one"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "systemdatetolocaldate-seasonal-shift"
+  body: |
+    **The reference explains that system time is Central Standard Time with no
+    daylight-saving adjustment, and that local time comes from the account
+    configuration — but it never says what that combination does to the size of
+    the shift.** It varies by season, because only one side of the conversion is
+    frozen.
+
+    Two fixed inputs, same wall-clock time, six months apart, measured with
+    `DateDiff` in minutes on the account this was proven on:
+    `2026-01-15 09:30:00` moved forward `420` minutes, while
+    `2026-07-15 09:30:00` moved forward `480`. Exactly one hour more in summer.
+    [LocalDateToSystemDate](#localdatetosystemdate-seasonal-shift) mirrors it with
+    `-420` and `-480`.
+
+    So never hard-code the offset, and never derive it once and reuse it: call the
+    function for each instant you convert. The literal minute counts above belong
+    to one account's configured time zone — on another account the two numbers
+    differ, but the one-hour seasonal gap remains as long as the configured zone
+    observes daylight saving.
+  testScript: |
+    %%[ VAR @b, @w, @s
+      SET @b = RequestParameter("b")
+      SET @w = "2026-01-15 09:30:00"
+      SET @s = "2026-07-15 09:30:00"
+      /* fetch ?b=offset */
+      IF @b == "offset" THEN
+        OutputLine(Concat("WIN_S2L_MIN=[", DateDiff(DateParse(@w), SystemDateToLocalDate(@w), "MI"), "]"))
+        OutputLine(Concat("SUM_S2L_MIN=[", DateDiff(DateParse(@s), SystemDateToLocalDate(@s), "MI"), "]"))
+      ENDIF
+    ]%%
+
+- name: "LocalDateToSystemDate"
+  url: "/engagement/ampscript/functions/localdatetosystemdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-local-date-to-system-date.html"
+  tagline: "a date with no time part is pushed into the previous day"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "localdatetosystemdate-seasonal-shift"
+  body: |
+    **The same seasonal shift as
+    [SystemDateToLocalDate](#systemdatetolocaldate-seasonal-shift), with the sign
+    reversed — `-420` minutes in January and `-480` in July on the account this
+    was proven on — plus one consequence the reference does not mention at all.**
+
+    A string carrying no time part is treated as midnight, and subtracting the
+    offset from midnight lands on the day before. `LocalDateToSystemDate("2026-01-15")`
+    rendered `1/14/2026 5:00:00 PM`. Anything that then formats only the date part
+    reports the 14th for a value the caller supplied as the 15th, silently and with
+    nothing to test for.
+
+    Convert timestamps, not bare dates. If a date-only value has to be converted,
+    decide explicitly which wall-clock time it stands for and pass that instead of
+    letting midnight decide for you.
+  testScript: |
+    %%[ VAR @b, @w, @s
+      SET @b = RequestParameter("b")
+      SET @w = "2026-01-15 09:30:00"
+      SET @s = "2026-07-15 09:30:00"
+      /* fetch ?b=offset */
+      IF @b == "offset" THEN
+        OutputLine(Concat("WIN_L2S_MIN=[", DateDiff(DateParse(@w), LocalDateToSystemDate(@w), "MI"), "]"))
+        OutputLine(Concat("SUM_L2S_MIN=[", DateDiff(DateParse(@s), LocalDateToSystemDate(@s), "MI"), "]"))
+        OutputLine(Concat("DATEONLY=[", LocalDateToSystemDate("2026-01-15"), "]"))
+      ENDIF
+    ]%%
+
+- name: "StringToDate"
+  url: "/engagement/ampscript/functions/stringtodate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-string-to-date.html"
+  tagline: "Indistinguishable from DateParse at runtime, minus DateParse's UTC switch"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "stringtodate-duplicate-of-dateparse"
+  body: |
+    **Neither reference mentions the other, yet the two functions produced
+    character-for-character identical output for every input tried.**
+
+    Nine input shapes were rendered side by side in a single render — the ISO
+    date, the ISO date-time, the `T`-separated timestamp, an offset timestamp, a
+    Zulu timestamp, an `RFC`-style `GMT` string, the US slash form and both
+    spelled-out month orderings. Every pair matched exactly, `Length()` over both
+    results returned `20`, and a `DateDiff` between the two results over the same
+    fixed input was `0`. The failure side matched too: free text, an empty string
+    and a bare number abort the page with HTTP 422 under either name, and a
+    day-first `5/8/2026` is silently read as the 8th of May by both.
+
+    The one real difference is arity. `DateParse` takes an optional second
+    argument that returns the instant in UTC; `StringToDate` accepts exactly one
+    argument, and a two-argument call aborts the page — including the
+    `"UTF-8"` encoding argument the community guide still lists. Use
+    [DateParse](/engagement/ampscript/functions/dateparse/) when a UTC conversion
+    might ever be needed; otherwise the choice is cosmetic.
+  testScript: |
+    %%[ VAR @b, @s
+      SET @b = RequestParameter("b")
+      SET @s = "2026-03-04 09:05:07"
+      /* fetch ?b=same */
+      IF @b == "same" THEN
+        OutputLine(Concat("SD=[", StringToDate(@s), "] DP=[", DateParse(@s), "]"))
+        OutputLine(Concat("XDIFF=[", DateDiff(StringToDate(@s), DateParse(@s), "H"), "]"))
+      ENDIF
+      /* fetch ?b=twoargs - expect HTTP 422 with no output */
+      IF @b == "twoargs" THEN
+        OutputLine(Concat("A2=[", StringToDate(@s, "UTF-8"), "]"))
+      ENDIF
+    ]%%
+
+- name: "GetSendTime"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-get-send-time.html"
+  tagline: "Outside a send it silently becomes Now(), with no signal that the send semantics never applied"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "getsendtime-outside-a-send-returns-now"
+  body: |
+    **On a CloudPage this function neither fails nor returns an empty value — it
+    returns the current system time, indistinguishable from `Now()`.**
+
+    The reference describes three send situations and what each returns; a
+    CloudPage is none of them, and the page is silent about what happens there.
+    Both calls were rendered side by side in a single render and matched to the
+    **microsecond**, not merely to the second: `FormatDate(..., "ffffff")` read
+    `507042` for `GetSendTime()` and `507042` for `Now()`, while `DateDiff`
+    between the two returned `0`. Passing the job-level argument changes nothing
+    either — `1`, `0`, `true`, `false`, all four of those spellings quoted, and
+    even a word that is not a flag at all were each accepted and returned that
+    same instant.
+
+    The result is a genuine date value the other date functions consume
+    directly, so nothing downstream misbehaves — which is exactly what makes it
+    risky. A page that calls it gets a plausible timestamp and no indication
+    that no send time was ever involved. Use
+    [Now](/engagement/ampscript/functions/now/) explicitly outside a send, and
+    treat a `GetSendTime()` value in CloudPage code as a bug rather than a
+    fallback.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=same - the two values match to the microsecond */
+      IF @b == "same" THEN
+        OutputLine(Concat("GS=[", GetSendTime(), "] NOW=[", Now(), "]"))
+        OutputLine(Concat("GSTICK=[", FormatDate(GetSendTime(), "ffffff"), "]"))
+        OutputLine(Concat("NOWTICK=[", FormatDate(Now(), "ffffff"), "]"))
+        OutputLine(Concat("DIFFMI=[", DateDiff(GetSendTime(), Now(), "MI"), "]"))
+      ENDIF
+      /* fetch ?b=flags - no spelling of the argument changes the value */
+      IF @b == "flags" THEN
+        OutputLine(Concat("G1=[", GetSendTime(1), "] GT=[", GetSendTime(true), "]"))
+        OutputLine(Concat("S1=[", GetSendTime("1"), "] BAD=[", GetSendTime("spring"), "]"))
+      ENDIF
+    ]%%
+- name: "Base64Decode"
+  url: "/engagement/ampscript/functions/base64decode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-decode.html"
+  tagline: "Malformed Base64 takes the whole page down with HTTP 422 instead of returning an empty value"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "base64decode-malformed-input-aborts"
+  body: |
+    **A value that is not well-formed Base64 aborts the entire page.** No empty
+    string, no partial result, no error token — HTTP 422 and everything already
+    rendered is discarded.
+
+    Three malformed shapes were each proven on their own gate:
+    `Base64Decode("not!base64###")` (characters outside the alphabet),
+    `Base64Decode("SGVsbG8")` (a length that is not a multiple of four) and
+    `Base64Decode("SGVsbG8=====")` (over-padding). All three returned HTTP 422
+    with not even the block's own start marker rendered, while an ungated
+    control block in the same deployment kept returning HTTP 200 — so the
+    aborts belong to the function, not to the harness.
+
+    The middle case is the one that bites in production: `SGVsbG8` is the
+    correct payload for `Hello` with its single `=` stripped, so a token that
+    merely lost its padding somewhere in transit is fatal. Since AMPscript has
+    no `try`/`catch`, there is no way to recover after the fact. Validate any
+    externally supplied value before it reaches the function — a non-empty
+    check plus `Mod(Length(@raw), 4) == 0` catches both realistic cases.
+
+    The empty string is the one exception: it decodes to the empty string at
+    HTTP 200.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* each gate below aborts the page - fetch them one at a time */
+      IF @b == "badchars" THEN
+        OutputLine(Concat("--- badchars start ---"))
+        OutputLine(Concat("B1=[", Base64Decode("not!base64###"), "]"))
+      ENDIF
+      IF @b == "badpad" THEN
+        OutputLine(Concat("--- badpad start ---"))
+        OutputLine(Concat("B2=[", Base64Decode("SGVsbG8"), "]"))
+      ENDIF
+      IF @b == "overpad" THEN
+        OutputLine(Concat("--- overpad start ---"))
+        OutputLine(Concat("B3=[", Base64Decode("SGVsbG8====="), "]"))
+      ENDIF
+      /* fetch ?b=empty - the one malformed-looking input that is accepted */
+      IF @b == "empty" THEN
+        OutputLine(Concat("BDE=[", Base64Decode(""), "]"))
+      ENDIF
+    ]%%
+- name: "Base64Encode"
+  url: "/engagement/ampscript/functions/base64encode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-encode.html"
+  tagline: "The encoding argument accepts six names, two of which silently mangle the input"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "base64encode-wider-encoding-domain"
+  body: |
+    **The optional second argument accepts a wider set of encoding names than
+    any source lists, and two of them are lossy without saying so.**
+
+    `UTF-8`, `UTF-16` (little-endian), `UTF-16BE`, `UTF-32`, `ASCII` and
+    `ISO-8859-1` were all accepted, and each produced the Base64 of exactly
+    those bytes — every value matched an independent implementation character
+    for character. That is the same accepted domain
+    [StringToHex](#stringtohex-wider-charset-domain) and the hash family show,
+    which suggests one shared encoding lookup behind all of them.
+
+    The trap is that `ASCII` and `ISO-8859-1` replace anything they cannot
+    represent with a question mark and still return HTTP 200. A string
+    containing `é` and `€` came back as `Y2FmPz8=` under `ASCII` — the
+    encoding of `caf??` — and as `Y2Fm6T8=` under `ISO-8859-1`, which keeps
+    `é` and loses only `€`. The result looks perfectly valid and decodes
+    cleanly; the characters are simply gone.
+
+    An unrecognised name is not tolerated at all: `banana`, and an empty
+    encoding name, each aborted the page with HTTP 422 rather than falling
+    back to the default.
+  testScript: |
+    %%[ VAR @b, @nb
+      SET @b = RequestParameter("b")
+      SET @nb = Concat("caf", Char(233), Char(8364))
+      /* fetch ?b=enc - all six names are honoured, two of them lossily */
+      IF @b == "enc" THEN
+        OutputLine(Concat("NBIN=[", @nb, "]"))
+        OutputLine(Concat("BE8=[", Base64Encode(@nb, "UTF-8"), "]"))
+        OutputLine(Concat("BE16=[", Base64Encode(@nb, "UTF-16"), "]"))
+        OutputLine(Concat("BE16BE=[", Base64Encode(@nb, "UTF-16BE"), "]"))
+        OutputLine(Concat("BE32=[", Base64Encode(@nb, "UTF-32"), "]"))
+        OutputLine(Concat("BEASC=[", Base64Encode(@nb, "ASCII"), "]"))
+        OutputLine(Concat("BEISO=[", Base64Encode(@nb, "ISO-8859-1"), "]"))
+      ENDIF
+      /* fetch ?b=badenc alone - it aborts the page */
+      IF @b == "badenc" THEN
+        OutputLine(Concat("--- badenc start ---"))
+        OutputLine(Concat("BEBAD=[", Base64Encode("probe", "banana"), "]"))
+      ENDIF
+    ]%%
+- name: "StringToHex"
+  url: "/engagement/ampscript/functions/stringtohex/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-to-hex.html"
+  tagline: "charSet accepts four names beyond the documented pair, and two of them substitute 3f silently"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "stringtohex-wider-charset-domain"
+  body: |
+    **The reference lists `UTF-8` and `UTF-16`. Four more names work, and two
+    of them quietly change the input first.**
+
+    `UTF-16BE`, `UTF-32`, `ASCII` and `ISO-8859-1` were each accepted and each
+    rendered the hex of precisely those bytes, verified against an independent
+    implementation. On a string containing `é` and `€`: `636166c3a9e282ac`
+    under `UTF-8`, `630061006600e900ac20` under `UTF-16` (so `UTF-16` means
+    little-endian), `00630061006600e920ac` under `UTF-16BE`, and
+    `630000006100000066000000e9000000ac200000` under `UTF-32`.
+
+    `ASCII` gave `6361663f3f` and `ISO-8859-1` gave `636166e93f` — `3f` is a
+    question mark, substituted for every character the encoding cannot carry.
+    `ISO-8859-1` keeps `é` as the single byte `e9` and loses only `€`. Both
+    return HTTP 200 with no signal that anything was replaced.
+
+    The same domain appears on
+    [Base64Encode](#base64encode-wider-encoding-domain) and on the hash family,
+    so it is a platform-wide encoding lookup rather than a quirk of one
+    function. An unrecognised name still aborts the page with HTTP 422.
+  testScript: |
+    %%[ VAR @b, @nb
+      SET @b = RequestParameter("b")
+      SET @nb = Concat("caf", Char(233), Char(8364))
+      /* fetch ?b=enc - all six names are honoured, two of them lossily */
+      IF @b == "enc" THEN
+        OutputLine(Concat("NBIN=[", @nb, "]"))
+        OutputLine(Concat("SH8=[", StringToHex(@nb, "UTF-8"), "]"))
+        OutputLine(Concat("SH16=[", StringToHex(@nb, "UTF-16"), "]"))
+        OutputLine(Concat("SH16BE=[", StringToHex(@nb, "UTF-16BE"), "]"))
+        OutputLine(Concat("SH32=[", StringToHex(@nb, "UTF-32"), "]"))
+        OutputLine(Concat("SHASC=[", StringToHex(@nb, "ASCII"), "]"))
+        OutputLine(Concat("SHISO=[", StringToHex(@nb, "ISO-8859-1"), "]"))
+      ENDIF
+      /* fetch ?b=badenc alone - it aborts the page */
+      IF @b == "badenc" THEN
+        OutputLine(Concat("--- badenc start ---"))
+        OutputLine(Concat("SHBAD=[", StringToHex("probe", "banana"), "]"))
+      ENDIF
+    ]%%
+- name: "GetJWT"
+  url: "/engagement/ampscript/functions/getjwt/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt.html"
+  tagline: "the algorithm name is matched case-insensitively, which no source states"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "getjwt-case-insensitive-algorithm"
+  body: |
+    **The reference lists the three algorithm names in upper case and says
+    nothing about spelling. Lower case works identically.**
+
+    `hs256` produced exactly the token `HS256` produces — the same signature,
+    and a header that still decodes to `{"alg":"HS256","typ":"JWT"}`. The
+    engine normalises the name before it reaches the header, so a lower-case
+    call is indistinguishable from an upper-case one at the receiving end.
+
+    The docs are silent rather than wrong here, but the tolerance is worth
+    knowing because the surrounding behaviour is unforgiving: anything outside
+    the three HMAC names aborts the page with HTTP 422 rather than falling back
+    to a default. `RS256`, which the companion `GetJWTByKeyName()` documents,
+    is rejected by this function, and so is an empty secret.
+  testScript: |
+    %%[ VAR @b, @sec, @pl
+      SET @b = RequestParameter("b")
+      SET @sec = "sfmc-probe-secret-2026"
+      SET @pl = '{"sub":"probe","n":7}'
+      /* fetch ?b=lower - the token is identical to the HS256 one */
+      IF @b == "lower" THEN
+        OutputLine(Concat("UPPER=[", GetJWT(@sec, "HS256", @pl), "]"))
+        OutputLine(Concat("LOWER=[", GetJWT(@sec, "hs256", @pl), "]"))
+      ENDIF
+      /* fetch ?b=rs256 alone - it aborts the page */
+      IF @b == "rs256" THEN
+        OutputLine(Concat("--- rs256 start ---"))
+        OutputLine(Concat("T=[", GetJWT(@sec, "RS256", @pl), "]"))
+      ENDIF
+    ]%%
+- name: "GetJWT"
+  url: "/engagement/ampscript/functions/getjwt/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt.html"
+  tagline: "the payload is never parsed as JSON, so a malformed payload is signed and shipped silently"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "getjwt-payload-not-validated"
+  body: |
+    **The parameter is named for JSON and the reference calls a JSON object
+    typical, but nothing checks it.**
+
+    Passing the plain string `not json at all` returned a perfectly valid
+    token whose middle segment is simply the Base64url encoding of that
+    string. No error, no empty result, HTTP 200. The payload is copied into
+    the token untouched, and the only thing the function guarantees is that it
+    was not altered afterwards.
+
+    The consequence is that a payload built by string concatenation — an
+    unescaped quote in a name, a missing comma, an empty personalisation
+    string — produces a token that looks correct on the page and fails only
+    when the receiving system tries to parse it. Validate the payload before
+    signing; the token is not the place where the mistake will surface.
+
+    The companion `GetJWTByKeyName()` documents a `FunctionExecutionException`
+    for a malformed payload, which makes the silence of the inline form the
+    more surprising half of the pair.
+  testScript: |
+    %%[ VAR @b, @sec
+      SET @b = RequestParameter("b")
+      SET @sec = "sfmc-probe-secret-2026"
+      /* fetch ?b=nonjson - the plain string is signed as readily */
+      IF @b == "nonjson" THEN
+        OutputLine(Concat("T=[", GetJWT(@sec, "HS256", "not json at all"), "]"))
+      ENDIF
+    ]%%
+- name: "IsNull"
+  url: "/engagement/ampscript/functions/isnull/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-null.html"
+  tagline: "the reference's own example says an unset variable returns true; on a CloudPage it returns false"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "isnull-unset-variable-not-null"
+  body: |
+    **The usage example on the official page declares a variable with `VAR`,
+    never assigns it, and states the result is true. That shape returned
+    `False` on a live CloudPage.**
+
+    The gate printed its own start and done markers at HTTP 200 next to a
+    known-good control block, so the page ran to completion — this is a result
+    rather than a swallowed abort.
+
+    Sixteen further inputs gave the same answer: an undeclared variable, the
+    empty string, whitespace, `0`, the string `"0"`, the string `"false"`, an
+    ordinary string, a date, an attribute that does not exist, a request
+    parameter that was not supplied, `_subscriberkey`, `firstname`,
+    `_messagecontext`, `jobid`, and an unset variable routed through both `v()`
+    and `Concat()`. Not one produced the true token, while `Empty()` probed in
+    the same run rendered `True` readily — so the engine does render the token,
+    this function just never reached it.
+
+    In practice the function answers a narrower question than its name
+    suggests: a genuine database null in a data extension field. For "is this
+    value missing or blank", use `Empty()` instead — writing `IsNull()` there
+    silently takes the false branch for every input a page variable can hold.
+  testScript: |
+    %%[ VAR @b, @unset
+      SET @b = RequestParameter("b")
+      /* fetch ?b=unset - the official example's shape, rendered as False */
+      IF @b == "unset" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("N_UNSET=[", IsNull(@unset), "]"))
+        OutputLine(Concat("E_UNSET=[", Empty(@unset), "]"))
+      ENDIF
+    ]%%
+- name: "Format"
+  url: "/engagement/ampscript/functions/format/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-format.html"
+  tagline: "the documented data-format value Number takes the whole page down"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "format-number-data-format-aborts"
+  body: |
+    **The official reference names two values for the third parameter, `Date`
+    and `Number`. Passing the literal `Number` aborts the page with HTTP 422
+    and discards every byte of output.**
+
+    Both `Format(1234.555, "C2", "Number")` and the four-argument
+    `Format(1234.555, "C2", "Number", "de-DE")` failed the same way, in
+    single-call gates, next to a known-good control block that rendered on its
+    own request — so this is the argument value being rejected, not a broken
+    harness and not an argument-count problem.
+
+    An invented value such as `Banana` produced exactly the same abort, which
+    is the tell: the runtime recognises only `Date` (in any capitalisation)
+    and the empty string, and treats everything else as unusable.
+
+    The parameter is not merely optional for numbers — it is unusable for
+    them. Number formatting works with the third parameter left out entirely,
+    and when a locale is needed the empty string keeps the fourth slot
+    reachable:
+
+    - `Format(1234.555, "C2")` → `$1,234.56`
+    - `Format(1234.555, "C2", "", "de-DE")` → the German form with the euro
+      sign at the end
+
+    Anyone following the reference literally and writing `"Number"` gets a
+    blank page rather than a formatted number.
+  testScript: |
+    %%[ VAR @b, @n
+      SET @b = RequestParameter("b")
+      SET @n = 1234.555
+      /* fetch ?b=numflag - aborts with HTTP 422, no output at all */
+      IF @b == "numflag" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("N=[", Format(@n, "C2", "Number"), "]"))
+      ENDIF
+      /* fetch ?b=emptyflag - renders, and the locale still applies */
+      IF @b == "emptyflag" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("E=[", Format(@n, "C2", "", "de-DE"), "]"))
+      ENDIF
+    ]%%
+
+- name: "IsEmailAddress"
+  url: "/engagement/ampscript/functions/isemailaddress/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-email-address.html"
+  tagline: "an address whose domain has no top-level domain is rejected, though the reference lists it as valid"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "isemailaddress-single-label-domain-rejected"
+  body: |
+    **The official result table lists an address whose domain is a single
+    label — no dot, no `.com` — as valid, with a note that such domains are
+    rare but real. The engine returns `False` for that shape.**
+
+    `IsEmailAddress("tomas.q@example")` rendered `False` in a block that
+    printed its own start and done markers at HTTP 200, next to a known-good
+    control that rendered in the same response.
+
+    Every other row of the same table matched what the engine did: the
+    missing at sign, the double at sign, the missing local part and the
+    missing second-level domain all returned `False`, and a well-formed
+    address returned `True`. The single-label domain is the one row that does
+    not hold.
+
+    In practice this only bites when validating addresses at intranet-style
+    hosts. It is worth knowing before writing a workaround for a case the
+    docs promise works.
+
+    A separate, undocumented quirk is worth pairing with it: a leading or
+    trailing space is enough to fail the check, so an untrimmed form field
+    reads as invalid. Trim before validating.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=tld - the docs say True, the engine renders False */
+      IF @b == "tld" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("NO_TLD=[", IsEmailAddress("tomas.q@example"), "]"))
+        OutputLine(Concat("WITH_TLD=[", IsEmailAddress("tomas.q@example.com"), "]"))
+      ENDIF
+      /* fetch ?b=space - undocumented: whitespace is not trimmed */
+      IF @b == "space" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("LEAD=[", IsEmailAddress(" tomas.q@example.com"), "]"))
+        OutputLine(Concat("TRAIL=[", IsEmailAddress("tomas.q@example.com "), "]"))
+      ENDIF
+    ]%%
+
+- name: "Domain"
+  url: "/engagement/ampscript/functions/domain/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html"
+  tagline: "a multi-level domain comes back whole and keeps its original casing"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "domain-multilevel-and-casing"
+  body: |
+    **The docs are silent on multi-level domains and on casing. Both matter
+    when the extracted value is compared against something.**
+
+    `Domain("tomas.q@a.b.example.co.uk")` renders `a.b.example.co.uk` — every
+    label, with no reduction to a registrable domain — and a five-label
+    domain likewise came back in full.
+
+    `Domain("Tomas.Q@Example.COM")` renders `Example.COM`. A comparison
+    against a lowercase allow-list therefore needs `Lowercase` around the
+    call, which is easy to omit because the usual test address is already
+    lowercase.
+
+    Neither behaviour contradicts anything the reference claims — it simply
+    does not address either case. The function is a split on the first at
+    sign and nothing more: values that
+    [IsEmailAddress](#isemailaddress-single-label-domain-rejected) rejects
+    still produce a domain.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=dom */
+      IF @b == "dom" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("MULTI=[", Domain("tomas.q@a.b.example.co.uk"), "]"))
+        OutputLine(Concat("CASE=[", Domain("Tomas.Q@Example.COM"), "]"))
+        OutputLine(Concat("TWO_AT=[", Domain("a@b@example.com"), "]"))
+        OutputLine(Concat("NO_AT=[", Domain("example.com"), "]"))
+      ENDIF
+    ]%%
+
+- name: "IsCHTMLBrowser"
+  url: "/engagement/ampscript/functions/ischtmlbrowser/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-is-chtml-browser.html"
+  tagline: "an empty user agent aborts the page instead of returning false"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "ischtmlbrowser-empty-user-agent-aborts"
+  body: |
+    **Passing an empty value aborts the request with HTTP 422 and discards
+    everything the page had already rendered.**
+
+    The gate whose only content was `IsCHTMLBrowser("")` failed, while three
+    sibling gates on the same deploy — the empty string put through
+    `IsEmailAddress`, `IsPhoneNumber` and `Domain` — each rendered normally
+    at HTTP 200, as did the plain request. So the page compiled and only this
+    branch died.
+
+    The realistic way to meet it is the documented usage itself: the
+    reference suggests passing `HTTPRequestHeader("user-agent")` straight in.
+    A request that sends no user-agent header leaves that empty, and the page
+    goes blank for the visitor. Read the header into a variable, check it
+    with `Empty`, and only then call:
+
+    ```
+    IF NOT Empty(@ua) THEN
+      SET @chtml = IsCHTMLBrowser(@ua)
+    ENDIF
+    ```
+
+    Composing the two calls inline also aborts, independently of whether a
+    header was sent — the variable is not optional styling.
+
+    The docs are silent about the empty case rather than wrong about it.
+  testScript: |
+    %%[ VAR @b, @ua
+      SET @b = RequestParameter("b")
+      SET @ua = HTTPRequestHeader("user-agent")
+      /* fetch ?b=safe - guarded, renders for every visitor */
+      IF @b == "safe" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        IF NOT Empty(@ua) THEN
+          OutputLine(Concat("LIVE=[", IsCHTMLBrowser(@ua), "]"))
+        ELSE
+          OutputLine(Concat("LIVE=[no-user-agent-sent]"))
+        ENDIF
+      ENDIF
+      /* fetch ?b=empty - aborts with HTTP 422, no output at all */
+      IF @b == "empty" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("E=[", IsCHTMLBrowser(""), "]"))
+      ENDIF
+    ]%%
+
+- name: "Output"
+  url: "/engagement/ampscript/functions/output/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html"
+  tagline: "a literal argument renders nothing instead of the documented error"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "output-literal-renders-nothing"
+  body: |
+    The official reference states that the argument must be a function call,
+    and that any other value — a string literal is the example it gives —
+    makes the function return an error.
+
+    On a live Engagement CloudPage nothing of the sort happens. A literal, a
+    bare variable and a bare number each render **nothing at all**, at HTTP
+    200, with every surrounding marker printing normally. There is no error
+    text, no status, no abort — the argument is simply dropped.
+
+    That silence is the reason a debugging line can vanish without a trace.
+    Wrap every value in a function call, even a single-argument `Concat`, and
+    the value appears:
+
+    ```
+    Output(Concat("checkpoint reached"))
+    ```
+
+    The same applies to [OutputLine](/engagement/ampscript/functions/outputline/),
+    where a dropped literal still leaves its line break behind — see
+    [the arity card](#outputline-arity-and-empty-argument).
+  testScript: |
+    %%[ VAR @v
+      SET @v = "vee"
+      /* each pair is delimited so a dropped value is visible as a position */
+      Output(Concat("<function>"))
+      Output(Concat("shown"))
+      Output(Concat("</function>"))
+      OutputLine(Concat(""))
+      Output(Concat("<literal>"))
+      Output("dropped")
+      Output(Concat("</literal>"))
+      OutputLine(Concat(""))
+      Output(Concat("<variable>"))
+      Output(@v)
+      Output(Concat("</variable>"))
+      OutputLine(Concat(""))
+      Output(Concat("<number>"))
+      Output(123)
+      Output(Concat("</number>"))
+    ]%%
+
+- name: "OutputLine"
+  url: "/engagement/ampscript/functions/outputline/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html"
+  tagline: "undocumented: no argument at all is legal, and several are written in turn"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "outputline-arity-and-empty-argument"
+  body: |
+    Both output functions are documented with exactly one parameter. The
+    runtime is looser than that, and the docs are silent rather than wrong.
+
+    A call with **no argument** renders happily: `Output()` writes nothing and
+    `OutputLine()` writes just the line break. A call with **two or three**
+    arguments writes each value in turn with no separator between them, and
+    the line-ending form still emits a single break after the last one — so
+    three arguments give one line, not three.
+
+    An argument that produces no text behaves the same way: the line-ending
+    form still emits its break, which is why an empty call is the idiomatic
+    way to end a line in a probe harness.
+
+    None of this belongs in production code — the single-argument form is the
+    one the docs support — but it does mean a stray extra argument fails
+    silently rather than announcing itself. A wrong argument count in a
+    *different* function aborts the page; here it does not.
+  testScript: |
+    %%[
+      Output(Concat("<none>"))
+      Output()
+      Output(Concat("</none>"))
+      OutputLine(Concat(""))
+      Output(Concat("<three>"))
+      Output(Concat("a"), Concat("b"), Concat("c"))
+      Output(Concat("</three>"))
+      OutputLine(Concat(""))
+      Output(Concat("<threeline>"))
+      OutputLine(Concat("a"), Concat("b"), Concat("c"))
+      Output(Concat("</threeline>"))
+    ]%%
+
+- name: "AttributeValue"
+  url: "/engagement/ampscript/functions/attributevalue/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-attribute-value.html"
+  tagline: "undocumented: resolves system attributes on a page with no subscriber, ignores case, but aborts on an empty name"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "attributevalue-cloudpage-and-empty-name"
+  body: |
+    The reference describes this function purely in send terms — subscriber
+    profiles, sendable data extension fields, journey entry attributes. It
+    says nothing about a CloudPage, where there is no subscriber at all.
+
+    Three things turn out to be true there, none of them documented.
+
+    **System attributes still resolve.** `AttributeValue("_messagecontext")`
+    gives `LANDINGPAGE`, `AttributeValue("memberid")` gives the business unit
+    MID and `AttributeValue("jobid")` gives `0`. Subscriber-scoped names such
+    as the email address are empty, as you would expect.
+
+    **The name is matched without regard to case.** `_messagecontext` and
+    `_MessageContext` return the same value.
+
+    **An empty name aborts the page.** Every unknown name answers empty, which
+    is the whole point of the function, but an empty *name* returns HTTP 422
+    and takes the surrounding block down with it. If the name comes from a
+    variable, check it first:
+
+    ```
+    IF NOT Empty(@attrName) THEN
+      SET @value = AttributeValue(@attrName)
+    ENDIF
+    ```
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=safe - the documented and the undocumented resolutions */
+      IF @b == "safe" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("MISSING=[", AttributeValue("NoSuchAttributeZq7"), "]"))
+        OutputLine(Concat("MSGCTX=[", AttributeValue("_messagecontext"), "]"))
+        OutputLine(Concat("MIXEDCASE=[", AttributeValue("_MessageContext"), "]"))
+        OutputLine(Concat("MID=[", AttributeValue("memberid"), "]"))
+      ENDIF
+      /* fetch ?b=empty - aborts with HTTP 422, no output at all */
+      IF @b == "empty" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("E=[", AttributeValue(""), "]"))
+      ENDIF
+    ]%%
+
+- name: "RequestParameter"
+  url: "/engagement/ampscript/functions/requestparameter/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-request-parameter.html"
+  tagline: "undocumented: names ignore case, a repeated parameter comes back comma-joined, and the value is handed over raw"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "requestparameter-case-duplicates-and-raw-values"
+  body: |
+    The official page describes one thing only: pass a parameter name, get its
+    value. Everything below is behaviour it is silent about — none of it
+    contradicts the page, but all of it will surprise a caller.
+
+    **The name ignores case.** A request carrying `?Foo=1` answers `1` for
+    `RequestParameter("foo")`, `RequestParameter("FOO")` and
+    `RequestParameter("Foo")` alike. [QueryParameter](#queryparameter-is-the-same-function-on-a-get)
+    behaves identically.
+
+    **A repeated name is joined, not resolved.** `?x=1&x=2` returns the single
+    string `1,2` — three characters, not `1` and not `2`. Code that expects a
+    scalar quietly receives a comma-separated list, so a numeric comparison or
+    a lookup key built from it silently goes wrong.
+
+    **The value arrives decoded and unescaped.** `%20` becomes a space, `+`
+    becomes a space, `%25` becomes `%`, `%26` becomes `&` — and whatever the
+    caller sent is returned verbatim. That means anything you render into
+    markup must be escaped by you; the function does no escaping of its own.
+
+    **An absent parameter is an empty string, never a failure.** `Empty()`
+    answers true on it and the page still returns HTTP 200, so a guard is
+    cheap:
+
+    ```
+    IF Empty(RequestParameter("id")) THEN
+      SET @id = "unknown"
+    ENDIF
+    ```
+
+    One thing that is *not* a property of the function: a query string
+    containing an unencoded-looking HTML tag, e.g. `?ht=%3Cb%3Ex%3C%2Fb%3E`,
+    makes the request itself return HTTP 422 — the same URL fails even when
+    no AMPscript on the page reads that parameter at all.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=case&Foo=1 - all three spellings answer 1 */
+      IF @b == "case" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("LOW=[", RequestParameter("foo"), "]"))
+        OutputLine(Concat("UPP=[", RequestParameter("FOO"), "]"))
+        OutputLine(Concat("MIX=[", RequestParameter("Foo"), "]"))
+      ENDIF
+      /* fetch ?b=dup&x=1&x=2 - one value, comma-joined, three characters long */
+      IF @b == "dup" THEN
+        OutputLine(Concat("DUP=[", RequestParameter("x"), "]"))
+        OutputLine(Concat("LEN=[", Length(RequestParameter("x")), "]"))
+      ENDIF
+      /* fetch ?b=enc&sp=a%20b - the value arrives decoded */
+      IF @b == "enc" THEN
+        OutputLine(Concat("SP=[", RequestParameter("sp"), "]"))
+        OutputLine(Concat("LEN=[", Length(RequestParameter("sp")), "]"))
+      ENDIF
+    ]%%
+
+- name: "QueryParameter"
+  url: "/engagement/ampscript/functions/queryparameter/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-query-parameter.html"
+  tagline: "the official page's claim that it behaves like RequestParameter holds byte-for-byte on a GET, and it too takes only one argument"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "queryparameter-is-the-same-function-on-a-get"
+  body: |
+    The official page says the two functions behave the same way and exist only
+    for backward compatibility. On a live CloudPage GET that is exactly what
+    happens: reading the same parameter with both functions in one block gives
+    identical strings of identical length, for a plain value, a decoded space,
+    a decoded ampersand, a percent sign, a missing parameter, a repeated
+    parameter and a name spelled in the wrong case. There is no GET input that
+    separates them.
+
+    Two things the page does not say. A **second argument is not accepted** —
+    `QueryParameter("p", 1)` aborts with HTTP 422, as does the same shape on
+    `RequestParameter`, so neither has a hidden decode-or-not flag. And a
+    **numeric argument** is accepted without failing, but never matches a
+    parameter, so it always answers empty.
+
+    A POST body was not exercised, so the equivalence above is stated for GET
+    only. See [RequestParameter](#requestparameter-case-duplicates-and-raw-values)
+    for the shared behaviour of both.
+  testScript: |
+    %%[ VAR @b
+      SET @b = RequestParameter("b")
+      /* fetch ?b=cmp&p=hello - both functions, same parameter, same block */
+      IF @b == "cmp" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("RP=[", RequestParameter("p"), "]"))
+        OutputLine(Concat("QP=[", QueryParameter("p"), "]"))
+        IF RequestParameter("p") == QueryParameter("p") THEN
+          OutputLine(Concat("EQ=[same]"))
+        ELSE
+          OutputLine(Concat("EQ=[diff]"))
+        ENDIF
+      ENDIF
+      /* fetch ?b=two&p=hello - HTTP 422, a second argument is not accepted */
+      IF @b == "two" THEN
+        OutputLine(Concat("TWO=[", QueryParameter("p", 1), "]"))
+      ENDIF
+    ]%%
+
+- name: "v"
+  url: "/engagement/ampscript/functions/v/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-v.html"
+  tagline: "undocumented: it outputs literals and nested function results too, not only variables"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "v-accepts-more-than-a-variable"
+  body: |
+    Both the official page and the community guide describe a single job:
+    output the value of a variable. The runtime accepts rather more than that,
+    and nothing warns you about the one case that bites.
+
+    **A string literal is output as itself.** `v("p")` renders `p`. That is the
+    trap: pass a *parameter name* by mistake — `v("id")` where you meant
+    `v(RequestParameter("id"))` — and the page renders the word `id` instead of
+    failing, so the bug ships silently.
+
+    **A number literal is output as itself**, and **a nested function call is
+    evaluated**: wrapping a request-parameter read renders the parameter's
+    value, identical to reading it into a variable first.
+
+    **Exactly one argument.** Zero arguments and two arguments each abort with
+    HTTP 422.
+  testScript: |
+    %%[ VAR @b, @word
+      SET @b = RequestParameter("b")
+      SET @word = "zeta"
+      /* fetch ?b=safe&p=hello */
+      IF @b == "safe" THEN
+        OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+        OutputLine(Concat("VAR=[", v(@word), "]"))
+        OutputLine(Concat("LIT=[", v("p"), "]"))
+        OutputLine(Concat("NUM=[", v(5), "]"))
+        OutputLine(Concat("NEST=[", v(RequestParameter("p")), "]"))
+      ENDIF
+      /* fetch ?b=zero - HTTP 422 */
+      IF @b == "zero" THEN
+        OutputLine(Concat("ZERO=[", v(), "]"))
+      ENDIF
+      /* fetch ?b=two - HTTP 422 */
+      IF @b == "two" THEN
+        OutputLine(Concat("TWO=[", v(@word, @word), "]"))
+      ENDIF
+    ]%%
+
+- name: "WrapLongURL"
+  url: "/engagement/ampscript/functions/wraplongurl/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-wrap-long-url.html"
+  tagline: "the documented shortening never happens outside a send — a page gets the input back unchanged"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "wraplongurl-no-shortening-outside-a-send"
+  body: |
+    The official reference states the shortening unconditionally: a URL longer
+    than 975 characters comes back as a short link that redirects to the
+    original address. No page render ever produced one.
+
+    A URL assembled in-page to 1048 characters was returned at exactly 1048
+    characters, character for character the input, and the two calls in the
+    same render compared identical. A 27-character URL, an empty string, a word
+    that is not a URL and a bare number likewise came straight back, the number
+    as its decimal digits.
+
+    The community guide supplies the condition the official page omits —
+    shortening is applied when the message is sent — which explains the gap.
+    The consequence for testing is the part that matters: a CloudPage is not a
+    valid place to check whether shortening works, and a caller cannot tell
+    from the return value alone whether it happened.
+  testScript: |
+    %%[ VAR @b, @s, @long, @u1, @u2
+      SET @b = RequestParameter("b")
+      /* fetch ?b=long - the input comes back at its original length */
+      IF @b == "long" THEN
+        SET @s = "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz01"
+        SET @s = Concat(@s, @s)
+        SET @s = Concat(@s, @s)
+        SET @s = Concat(@s, @s)
+        SET @s = Concat(@s, @s)
+        SET @long = Concat("https://example.com/p?q=", @s)
+        SET @u1 = WrapLongURL(@long)
+        SET @u2 = WrapLongURL(@long)
+        OutputLine(Concat("IN_LEN=[", Length(@long), "] OUT_LEN=[", Length(@u1), "]"))
+        OutputLine(Concat("UNCHANGED=[", IIf(@u1 == @long, "unchanged", "changed"), "]"))
+        OutputLine(Concat("SAME=[", IIf(@u1 == @u2, "identical", "different"), "]"))
+      ENDIF
+    ]%%

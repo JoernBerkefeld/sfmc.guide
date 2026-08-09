@@ -1,0 +1,95 @@
+# Test scripts for /engagement/ampscript/functions/encryptsymmetric/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Two things about AMPscript shape this harness:
+#   1. A rejected argument VALUE aborts the whole page with HTTP 422, so each
+#      risky case sits behind its own RequestParameter("b") branch and must be
+#      fetched one at a time. Branches here: ?b=safe, ?b=aesu, ?b=des,
+#      ?b=tdes, ?b=desmode, ?b=emptyext.
+#   2. A wrong argument COUNT is rejected at compile time and kills EVERY
+#      branch, including ones that are never selected. Arity probes therefore
+#      cannot live in this script - deploy them one call at a time.
+# Every VAR is declared once in a single top-level block: re-declaring a
+# variable inside an IF branch is also a compile-time abort.
+# A branch that renders nothing at all is the failure signal.
+#
+# The passphrase, salt and IV below are throwaway literals invented for this
+# probe. Never put a real key or passphrase in a CloudPage.
+behaviour: |
+  %%[
+    VAR @b, @asc, @non, @pw, @salt, @iv
+    VAR @e1, @e1b, @d1, @e2, @d2
+    SET @b = RequestParameter("b")
+    SET @asc = "SFMC probe 2026"
+    SET @non = Concat("caf", Char(233), Char(8364))
+    SET @pw = "zzThrowawayPhrase2026"
+    SET @salt = "0011223344556677"
+    SET @iv = "000102030405060708090a0b0c0d0e0f"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Base64Encode("Man"), "]"))
+
+    /* round trip for ASCII and non-ASCII, ciphertext shape and length, and
+       whether two identical calls produce the identical ciphertext */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "aes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @e1b = EncryptSymmetric(@asc, "aes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d1 = DecryptSymmetric(@e1, "aes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @e2 = EncryptSymmetric(@non, "aes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d2 = DecryptSymmetric(@e2, "aes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      OutputLine(Concat("E1=[", @e1, "] LEN=[", Length(@e1), "]"))
+      OutputLine(Concat("DETERMINISTIC=[", IIF(@e1 == @e1b, "yes", "no"), "]"))
+      OutputLine(Concat("ROUNDTRIP_ASCII=[", IIF(@d1 == @asc, "yes", "no"), "]"))
+      OutputLine(Concat("ROUNDTRIP_NONASCII=[", IIF(@d2 == @non, "yes", "no"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the cipher name is case-insensitive */
+    IF @b == "aesu" THEN
+      OutputLine(Concat("--- aesu start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "AES", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d1 = DecryptSymmetric(@e1, "AES", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      OutputLine(Concat("AESU=[", @d1, "]"))
+      OutputLine(Concat("--- aesu done ---"))
+    ENDIF
+
+    /* other accepted cipher names */
+    IF @b == "des" THEN
+      OutputLine(Concat("--- des start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "des", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d1 = DecryptSymmetric(@e1, "des", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      OutputLine(Concat("DES=[", @e1, "] BACK=[", @d1, "]"))
+      OutputLine(Concat("--- des done ---"))
+    ENDIF
+
+    IF @b == "tdes" THEN
+      OutputLine(Concat("--- tdes start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "tripledes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d1 = DecryptSymmetric(@e1, "tripledes", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      OutputLine(Concat("TDES=[", @e1, "] BACK=[", @d1, "]"))
+      OutputLine(Concat("--- tdes done ---"))
+    ENDIF
+
+    /* the compound cipher;mode;padding form - note the padding residue in
+       the decrypted value */
+    IF @b == "desmode" THEN
+      OutputLine(Concat("--- desmode start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "des;mode=ecb;padding=zeros", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      SET @d1 = DecryptSymmetric(@e1, "des;mode=ecb;padding=zeros", @noKey, @pw, @noKey, @salt, @noKey, @iv)
+      OutputLine(Concat("DESMODE=[", @e1, "] BACK=[", @d1, "] BACKLEN=[", Length(@d1), "]"))
+      OutputLine(Concat("--- desmode done ---"))
+    ENDIF
+
+    /* empty strings in the external-key positions behave like omitting them */
+    IF @b == "emptyext" THEN
+      OutputLine(Concat("--- emptyext start ---"))
+      SET @e1 = EncryptSymmetric(@asc, "aes", "", @pw, "", @salt, "", @iv)
+      SET @d1 = DecryptSymmetric(@e1, "aes", "", @pw, "", @salt, "", @iv)
+      OutputLine(Concat("EMPTYEXT=[", @e1, "] BACK=[", @d1, "]"))
+      OutputLine(Concat("--- emptyext done ---"))
+    ENDIF
+  ]%%

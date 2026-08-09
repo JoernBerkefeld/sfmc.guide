@@ -1,0 +1,62 @@
+# Test scripts for /engagement/ampscript/functions/isemailaddress/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers IsEmailAddress, IsPhoneNumber, Domain and
+# IsCHTMLBrowser so the four can be exercised from one deploy. The ungated
+# block renders on every request; the risky inputs sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time:
+# ?b=e_empty, ?b=g_num, ?b=g_tok.
+# A branch that renders nothing at all is the failure signal.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* the accepted/rejected matrix - safe on every request */
+    OutputLine(Concat("--- E start ---"))
+    OutputLine(Concat("E1_valid=[", IsEmailAddress("tomas.q@example.com"), "]"))
+    OutputLine(Concat("E2_plustag=[", IsEmailAddress("tomas.q+news@example.com"), "]"))
+    OutputLine(Concat("E3_subdomain=[", IsEmailAddress("tomas.q@mail.corp.example.com"), "]"))
+    OutputLine(Concat("E4_no_at=[", IsEmailAddress("tomas.q.example.com"), "]"))
+    OutputLine(Concat("E5_no_tld=[", IsEmailAddress("tomas.q@example"), "]"))
+    OutputLine(Concat("E6_lead_space=[", IsEmailAddress(" tomas.q@example.com"), "]"))
+    OutputLine(Concat("E7_trail_space=[", IsEmailAddress("tomas.q@example.com "), "]"))
+    OutputLine(Concat("E8_absurd=[", IsEmailAddress("a.b-c_d+e9@x-y.z.example.museum"), "]"))
+    OutputLine(Concat("E9_double_at=[", IsEmailAddress("a@b@example.com"), "]"))
+    OutputLine(Concat("E10_no_local=[", IsEmailAddress("@example.com"), "]"))
+    OutputLine(Concat("E11_no_sld=[", IsEmailAddress("a@.com"), "]"))
+    OutputLine(Concat("--- E done ---"))
+
+    /* the empty string, in its own branch: the sibling IsCHTMLBrowser aborts
+       on it, so the four functions must not share one empty-string branch */
+    IF @b == "e_empty" THEN
+      OutputLine(Concat("--- e_empty start ---"))
+      OutputLine(Concat("E_EMPTY=[", IsEmailAddress(""), "]"))
+      OutputLine(Concat("--- e_empty done ---"))
+    ENDIF
+
+    /* a non-string argument */
+    IF @b == "g_num" THEN
+      OutputLine(Concat("--- g_num start ---"))
+      OutputLine(Concat("E_NUM=[", IsEmailAddress(123), "]"))
+      OutputLine(Concat("--- g_num done ---"))
+    ENDIF
+
+    /* the rendered literals compared against real booleans */
+    IF @b == "g_tok" THEN
+      OutputLine(Concat("--- g_tok start ---"))
+      OutputLine(Concat("E_EQTRUE=[", IIf(IsEmailAddress("tomas.q@example.com") == true, "matches-true", "no"), "]"))
+      OutputLine(Concat("E_EQFALSE=[", IIf(IsEmailAddress("nope") == false, "matches-false", "no"), "]"))
+      OutputLine(Concat("--- g_tok done ---"))
+    ENDIF
+  ]%%

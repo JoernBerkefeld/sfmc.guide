@@ -1,0 +1,126 @@
+# Test scripts for /engagement/ampscript/functions/stringtodate/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so an unreadable date string aborts the whole
+# page with HTTP 422 and discards everything rendered before it. Fetch one
+# branch at a time: ?b=ctrl, ?b=formats, ?b=chain, ?b=little, ?b=timeonly,
+# ?b=dateval, ?b=a0, ?b=a2enc, ?b=a2flag, ?b=a3, ?b=bad, ?b=empty, ?b=num.
+#
+# ?b=ctrl is the control: it calls both functions in their plainest form. If
+# ctrl renders and a rejecting branch does not, the abort belongs to the
+# function rather than to the harness or the deployment.
+#
+# ?b=formats deliberately prints StringToDate and DateParse side by side on the
+# SAME line for the same input, so the equivalence is same-render rather than
+# same-account-different-request.
+#
+# Every branch uses a fixed instant rather than Now(), so every value below is
+# deterministic — except ?b=timeonly, whose input carries no date at all, and
+# ?b=dateval, which feeds in the current time on purpose.
+behaviour: |
+  %%[
+    VAR @b, @s, @iso, @isot
+    SET @b = RequestParameter("b")
+    SET @s = "2026-03-04 09:05:07"
+    SET @iso = "2026-03-04"
+    SET @isot = "2026-03-04T09:05:07"
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRLSD=[", StringToDate(@iso), "]"))
+      OutputLine(Concat("CTRLDP=[", DateParse(@iso), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* every accepted format, next to the DateParse result for the same input */
+    IF @b == "formats" THEN
+      OutputLine(Concat("--- formats start ---"))
+      OutputLine(Concat("ISO_S=[", StringToDate(@iso), "] ISO_D=[", DateParse(@iso), "]"))
+      OutputLine(Concat("DT_S=[", StringToDate(@s), "] DT_D=[", DateParse(@s), "]"))
+      OutputLine(Concat("ISOT_S=[", StringToDate(@isot), "] ISOT_D=[", DateParse(@isot), "]"))
+      OutputLine(Concat("US_S=[", StringToDate("3/4/2026 9:05 AM"), "] US_D=[", DateParse("3/4/2026 9:05 AM"), "]"))
+      OutputLine(Concat("WA_S=[", StringToDate("4 March 2026"), "] WA_D=[", DateParse("4 March 2026"), "]"))
+      OutputLine(Concat("WB_S=[", StringToDate("March 4, 2026"), "] WB_D=[", DateParse("March 4, 2026"), "]"))
+      OutputLine(Concat("TZ_S=[", StringToDate("2026-03-04T09:05:07+02:00"), "] TZ_D=[", DateParse("2026-03-04T09:05:07+02:00"), "]"))
+      OutputLine(Concat("Z_S=[", StringToDate("2026-03-04T09:05:07Z"), "] Z_D=[", DateParse("2026-03-04T09:05:07Z"), "]"))
+      OutputLine(Concat("RFC_S=[", StringToDate("Wed, 04 Mar 2026 09:05:07 GMT"), "] RFC_D=[", DateParse("Wed, 04 Mar 2026 09:05:07 GMT"), "]"))
+      OutputLine(Concat("LEN_S=[", Length(StringToDate(@iso)), "] LEN_D=[", Length(DateParse(@iso)), "]"))
+      OutputLine(Concat("--- formats done ---"))
+    ENDIF
+
+    /* the result is a real date value the other date functions consume */
+    IF @b == "chain" THEN
+      OutputLine(Concat("--- chain start ---"))
+      OutputLine(Concat("PY=[", DatePart(StringToDate(@isot), "Y"), "]"))
+      OutputLine(Concat("PMI=[", DatePart(StringToDate(@isot), "MI"), "]"))
+      OutputLine(Concat("FD=[", FormatDate(StringToDate(@isot), "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("DA=[", DateAdd(StringToDate(@iso), 1, "D"), "]"))
+      OutputLine(Concat("DD=[", DateDiff(StringToDate(@iso), StringToDate("2026-03-06"), "D"), "]"))
+      OutputLine(Concat("XDIFF=[", DateDiff(StringToDate(@s), DateParse(@s), "H"), "]"))
+      OutputLine(Concat("--- chain done ---"))
+    ENDIF
+
+    /* a day-first date is misread rather than refused, under both names */
+    IF @b == "little" THEN
+      OutputLine(Concat("--- little start ---"))
+      OutputLine(Concat("MEANT_5_AUGUST_S=[", StringToDate("5/8/2026"), "]"))
+      OutputLine(Concat("MEANT_5_AUGUST_D=[", DateParse("5/8/2026"), "]"))
+      OutputLine(Concat("ISO_CONTROL=[", StringToDate("2026-08-05"), "]"))
+      OutputLine(Concat("--- little done ---"))
+    ENDIF
+
+    /* a time with no date borrows the day of the render */
+    IF @b == "timeonly" THEN
+      OutputLine(Concat("--- timeonly start ---"))
+      OutputLine(Concat("TO_S=[", StringToDate("1:41 PM"), "] TO_D=[", DateParse("1:41 PM"), "]"))
+      OutputLine(Concat("--- timeonly done ---"))
+    ENDIF
+
+    /* an existing date value is accepted, not just a string */
+    IF @b == "dateval" THEN
+      OutputLine(Concat("--- dateval start ---"))
+      OutputLine(Concat("DV=[", StringToDate(Now()), "]"))
+      OutputLine(Concat("--- dateval done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - fetch them ONE at a time */
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", StringToDate(), "]"))
+    ENDIF
+
+    /* the encoding argument some references list is rejected, not ignored */
+    IF @b == "a2enc" THEN
+      OutputLine(Concat("--- a2enc start ---"))
+      OutputLine(Concat("A2ENC=[", StringToDate(@s, "UTF-8"), "]"))
+    ENDIF
+
+    /* the DateParse UTC flag has no counterpart here */
+    IF @b == "a2flag" THEN
+      OutputLine(Concat("--- a2flag start ---"))
+      OutputLine(Concat("A2FLAG=[", StringToDate(@s, 1), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", StringToDate(@s, 1, "extra"), "]"))
+    ENDIF
+
+    IF @b == "bad" THEN
+      OutputLine(Concat("--- bad start ---"))
+      OutputLine(Concat("BAD=[", StringToDate("not a date at all"), "]"))
+    ENDIF
+
+    IF @b == "empty" THEN
+      OutputLine(Concat("--- empty start ---"))
+      OutputLine(Concat("EMPTY=[", StringToDate(""), "]"))
+    ENDIF
+
+    IF @b == "num" THEN
+      OutputLine(Concat("--- num start ---"))
+      OutputLine(Concat("NUM=[", StringToDate(20260304), "]"))
+    ENDIF
+  ]%%

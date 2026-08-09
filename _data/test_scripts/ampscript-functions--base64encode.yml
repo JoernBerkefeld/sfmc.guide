@@ -1,0 +1,77 @@
+# Test scripts for /engagement/ampscript/functions/base64encode/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=empty, ?b=enc,
+# ?b=badenc, ?b=emptyenc, ?b=a0, ?b=a3.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @a, @nb
+    SET @b = RequestParameter("b")
+    SET @a = "SFMC AMPscript 2026"
+    SET @nb = Concat("caf", Char(233), Char(8364))
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Base64Encode("Man"), "]"))
+
+    /* the plain one-argument form, its length, the three padding shapes and
+       the UTF-8 default proven with a non-ASCII input */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("BE=[", Base64Encode(@a), "]"))
+      OutputLine(Concat("BEL=[", Length(Base64Encode(@a)), "]"))
+      OutputLine(Concat("NBIN=[", @nb, "]"))
+      OutputLine(Concat("BEN=[", Base64Encode(@nb), "]"))
+      OutputLine(Concat("PAD3=[", Base64Encode("Man"), "]"))
+      OutputLine(Concat("PAD2=[", Base64Encode("Ma"), "]"))
+      OutputLine(Concat("PAD1=[", Base64Encode("M"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the empty string is encoded, not refused */
+    IF @b == "empty" THEN
+      OutputLine(Concat("--- empty start ---"))
+      OutputLine(Concat("BEE=[", Base64Encode(""), "]"))
+      OutputLine(Concat("--- empty done ---"))
+    ENDIF
+
+    /* the encoding argument is honoured, and the accepted name set is wider
+       than either source documents; ASCII and ISO-8859-1 substitute silently */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("BE8=[", Base64Encode(@nb, "UTF-8"), "]"))
+      OutputLine(Concat("BE16=[", Base64Encode(@nb, "UTF-16"), "]"))
+      OutputLine(Concat("BE16BE=[", Base64Encode(@nb, "UTF-16BE"), "]"))
+      OutputLine(Concat("BE32=[", Base64Encode(@nb, "UTF-32"), "]"))
+      OutputLine(Concat("BEASC=[", Base64Encode(@nb, "ASCII"), "]"))
+      OutputLine(Concat("BEISO=[", Base64Encode(@nb, "ISO-8859-1"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* each of the four branches below aborts the page - fetch alone */
+    IF @b == "badenc" THEN
+      OutputLine(Concat("--- badenc start ---"))
+      OutputLine(Concat("BEBAD=[", Base64Encode(@a, "banana"), "]"))
+    ENDIF
+
+    IF @b == "emptyenc" THEN
+      OutputLine(Concat("--- emptyenc start ---"))
+      OutputLine(Concat("BEEMPT=[", Base64Encode(@a, ""), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", Base64Encode(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", Base64Encode(@a, "UTF-8", "extra"), "]"))
+    ENDIF
+  ]%%

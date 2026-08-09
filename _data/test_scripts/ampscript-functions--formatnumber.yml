@@ -1,0 +1,88 @@
+# Test scripts for /engagement/ampscript/functions/formatnumber/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Format, FormatCurrency and FormatNumber so the
+# three can be compared on the same fixed input, 1234.555. Every group sits
+# behind its own RequestParameter("b") branch and must be fetched one at a
+# time. Branches for FormatNumber: ?b=s1 (standard patterns), ?b=s2 (custom
+# patterns, rounding, negatives) and ?b=s3 (locales).
+# A branch that renders nothing at all is the failure signal.
+#
+# Read the output as raw UTF-8 rather than through a console: several results
+# contain a non-breaking space, a euro sign or a yen sign, and a mis-set
+# console encoding turns them into question marks.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @n, @ns, @neg
+    SET @b = RequestParameter("b")
+    SET @n = 1234.555
+    SET @ns = "1234.555"
+    SET @neg = -1234.555
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* every standard pattern letter, plus precision digits and lowercase */
+    IF @b == "s1" THEN
+      OutputLine("--- s1 start ---")
+      OutputLine(Concat("C=[", FormatNumber(@n, "C"), "]"))
+      OutputLine(Concat("E=[", FormatNumber(@n, "E"), "]"))
+      OutputLine(Concat("F=[", FormatNumber(@n, "F"), "]"))
+      OutputLine(Concat("G=[", FormatNumber(@n, "G"), "]"))
+      OutputLine(Concat("N=[", FormatNumber(@n, "N"), "]"))
+      OutputLine(Concat("P=[", FormatNumber(@n, "P"), "]"))
+      OutputLine(Concat("N0=[", FormatNumber(@n, "N0"), "]"))
+      OutputLine(Concat("N3=[", FormatNumber(@n, "N3"), "]"))
+      OutputLine(Concat("C0=[", FormatNumber(@n, "C0"), "]"))
+      OutputLine(Concat("lowc=[", FormatNumber(@n, "c"), "]"))
+      OutputLine(Concat("lown=[", FormatNumber(@n, "n"), "]"))
+      OutputLine(Concat("Dint=[", FormatNumber(123, "D"), "]"))
+      OutputLine(Concat("Xint=[", FormatNumber(123, "X"), "]"))
+      OutputLine(Concat("R=[", FormatNumber(@n, "R"), "]"))
+      OutputLine("--- s1 done ---")
+    ENDIF
+
+    /* custom patterns, the half-up rounding cases and negative numbers */
+    IF @b == "s2" THEN
+      OutputLine("--- s2 start ---")
+      OutputLine(Concat("zero=[", FormatNumber(@neg, "0000"), "]"))
+      OutputLine(Concat("digit=[", FormatNumber(@neg, "###0"), "]"))
+      OutputLine(Concat("dec=[", FormatNumber(@neg, "#0.00"), "]"))
+      OutputLine(Concat("grp=[", FormatNumber(@n, "#,##0.00"), "]"))
+      OutputLine(Concat("sect=[", FormatNumber(@neg, "#0.00;(#0.00)"), "]"))
+      OutputLine(Concat("badfmt=[", FormatNumber(@n, "qqqq"), "]"))
+      OutputLine(Concat("negN2=[", FormatNumber(@neg, "N2"), "]"))
+      OutputLine(Concat("negC2=[", FormatNumber(@neg, "C2"), "]"))
+      OutputLine(Concat("half25=[", FormatNumber(2.5, "N0"), "]"))
+      OutputLine(Concat("half35=[", FormatNumber(3.5, "N0"), "]"))
+      OutputLine(Concat("up=[", FormatNumber(1.005, "N2"), "]"))
+      OutputLine(Concat("dn=[", FormatNumber(1.004, "N2"), "]"))
+      OutputLine(Concat("neghalf=[", FormatNumber(-2.5, "N0"), "]"))
+      OutputLine(Concat("numstr=[", FormatNumber(@ns, "N2"), "]"))
+      OutputLine("--- s2 done ---")
+    ENDIF
+
+    /* locale names: hyphen and underscore, language-only, unknown, empty */
+    IF @b == "s3" THEN
+      OutputLine("--- s3 start ---")
+      OutputLine(Concat("enUSdash=[", FormatNumber(@n, "N2", "en-US"), "]"))
+      OutputLine(Concat("enUSunder=[", FormatNumber(@n, "N2", "en_US"), "]"))
+      OutputLine(Concat("deDE=[", FormatNumber(@n, "N2", "de-DE"), "]"))
+      OutputLine(Concat("frFR=[", FormatNumber(@n, "N2", "fr-FR"), "]"))
+      OutputLine(Concat("jaJP=[", FormatNumber(@n, "N2", "ja-JP"), "]"))
+      OutputLine(Concat("hiIN=[", FormatNumber(@n, "N2", "hi-IN"), "]"))
+      OutputLine(Concat("deDEC2=[", FormatNumber(@n, "C2", "de-DE"), "]"))
+      OutputLine(Concat("jaJPC=[", FormatNumber(@n, "C", "ja-JP"), "]"))
+      OutputLine(Concat("bare=[", FormatNumber(@n, "N2", "de"), "]"))
+      OutputLine(Concat("bogus=[", FormatNumber(@n, "N2", "zz-ZZ"), "]"))
+      OutputLine(Concat("empt=[", FormatNumber(@n, "N2", ""), "]"))
+      OutputLine("--- s3 done ---")
+    ENDIF
+  ]%%

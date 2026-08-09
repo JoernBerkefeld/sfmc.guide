@@ -1,0 +1,73 @@
+# Test scripts for /engagement/ampscript/functions/format/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Format, FormatCurrency and FormatNumber so the
+# three can be compared on the same fixed input. Every group sits behind its
+# own RequestParameter("b") branch and must be fetched one at a time.
+# Branches for Format: ?b=s6 (numbers), ?b=s7 (dates, including the side by
+# side comparison with FormatDate) and ?b=s8 (the third parameter, which is
+# where the documented value Number fails).
+# A branch that renders nothing at all is the failure signal.
+#
+# ?b=s8 is EXPECTED to return HTTP 422 with no output: it passes the literal
+# Number that the official reference names. Its neighbour branches rendering
+# at HTTP 200 in the same deploy are what prove the abort belongs to that
+# argument value and not to the harness.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @n, @ns, @neg, @d
+    SET @b = RequestParameter("b")
+    SET @n = 1234.555
+    SET @ns = "1234.555"
+    SET @neg = -1234.555
+    SET @d = "2026-03-04 13:52:07"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* numbers, with no third argument, plus the empty-string route to a
+       localised number */
+    IF @b == "s6" THEN
+      OutputLine("--- s6 start ---")
+      OutputLine(Concat("C2=[", Format(@n, "C2"), "]"))
+      OutputLine(Concat("N2=[", Format(@n, "N2"), "]"))
+      OutputLine(Concat("P=[", Format(@n, "P"), "]"))
+      OutputLine(Concat("E=[", Format(@n, "E"), "]"))
+      OutputLine(Concat("cust=[", Format(@n, "#,##0.00"), "]"))
+      OutputLine(Concat("neg=[", Format(@neg, "C2"), "]"))
+      OutputLine(Concat("numstr=[", Format(@ns, "C2"), "]"))
+      OutputLine(Concat("a4empt=[", Format(@n, "C2", "", "de-DE"), "]"))
+      OutputLine("--- s6 done ---")
+    ENDIF
+
+    /* dates - and the comparison that matters, both calls on the identical
+       input and pattern so the difference cannot be blamed on anything else */
+    IF @b == "s7" THEN
+      OutputLine("--- s7 start ---")
+      OutputLine(Concat("dD=[", Format(@d, "D", "Date"), "]"))
+      OutputLine(Concat("dd=[", Format(@d, "d", "Date"), "]"))
+      OutputLine(Concat("dpat=[", Format(@d, "yyyy-MM-dd HH:mm:ss", "Date"), "]"))
+      OutputLine(Concat("dnoflag=[", Format(@d, "yyyy-MM-dd HH:mm:ss"), "]"))
+      OutputLine(Concat("fdcmp=[", FormatDate(@d, "yyyy-MM-dd HH:mm:ss"), "]"))
+      OutputLine(Concat("dddd=[", Format(@d, "dddd", "Date"), "]"))
+      OutputLine(Concat("dlow=[", Format(@d, "D", "date"), "]"))
+      OutputLine(Concat("dfr=[", Format(@d, "D", "Date", "fr-FR"), "]"))
+      OutputLine(Concat("dde=[", Format(@d, "dddd", "Date", "de-DE"), "]"))
+      OutputLine("--- s7 done ---")
+    ENDIF
+
+    /* the documented value that does not work. Fetch this branch LAST and
+       expect HTTP 422 with no markers at all */
+    IF @b == "s8" THEN
+      OutputLine("--- s8 start ---")
+      OutputLine(Concat("numflag=[", Format(@n, "C2", "Number"), "]"))
+      OutputLine("--- s8 done ---")
+    ENDIF
+  ]%%

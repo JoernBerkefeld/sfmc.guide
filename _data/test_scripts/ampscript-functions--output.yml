@@ -1,0 +1,86 @@
+# Test scripts for /engagement/ampscript/functions/output/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Output, OutputLine, GUID and AttributeValue so
+# the four can be exercised from one deploy. The ungated block renders on
+# every request; the remaining cases sit behind their own RequestParameter("b")
+# branch and must be fetched one at a time:
+# ?b=arity, ?b=nest, ?b=nonstr.
+#
+# A branch that aborts is gate-local here: the wrong argument count kills only
+# the selected branch, so the ungated control keeps rendering and the plain
+# request still returns HTTP 200. That is what makes the argument-count cases
+# safe to keep in this bundle.
+behaviour: |
+  %%[
+    VAR @b, @v
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* what is written, delimited so any injected byte is visible.
+       Compare each pair against its OutputLine twin below it. */
+    OutputLine(Concat("--- O start ---"))
+    Output(Concat("<O1>"))
+    Output(Concat("A"))
+    Output(Concat("</O1>"))
+    OutputLine(Concat(""))
+    Output(Concat("<L1>"))
+    OutputLine(Concat("A"))
+    Output(Concat("</L1>"))
+    OutputLine(Concat(""))
+
+    /* an argument that produces no text */
+    Output(Concat("<O2>"))
+    Output(Concat(""))
+    Output(Concat("</O2>"))
+    OutputLine(Concat(""))
+
+    /* a bare literal and a bare variable: both render nothing */
+    SET @v = "vee"
+    Output(Concat("<O3>"))
+    Output("bare")
+    Output(Concat("</O3>"))
+    OutputLine(Concat(""))
+    Output(Concat("<O4>"))
+    Output(@v)
+    Output(Concat("</O4>"))
+    OutputLine(Concat(""))
+    OutputLine(Concat("--- O done ---"))
+
+    /* argument counts the catalogued signature does not allow */
+    IF @b == "arity" THEN
+      OutputLine(Concat("--- arity start ---"))
+      Output()
+      Output(Concat("a"), Concat("b"))
+      OutputLine(Concat(""))
+      Output(Concat("a"), Concat("b"), Concat("c"))
+      OutputLine(Concat(""))
+      OutputLine(Concat("--- arity done ---"))
+    ENDIF
+
+    /* nesting the call inside another function: aborts this branch only */
+    IF @b == "nest" THEN
+      OutputLine(Concat("--- nest start ---"))
+      OutputLine(Concat("NEST=[", Concat("x", Output(Concat("y")), "z"), "]"))
+      OutputLine(Concat("--- nest done ---"))
+    ENDIF
+
+    /* non-string arguments */
+    IF @b == "nonstr" THEN
+      OutputLine(Concat("--- nonstr start ---"))
+      Output(Concat("<N1>"))
+      Output(123)
+      Output(Concat("</N1>"))
+      OutputLine(Concat(""))
+      Output(Concat("<N2>"))
+      Output(FormatDate(Now(), "yyyy-MM-dd"))
+      Output(Concat("</N2>"))
+      OutputLine(Concat(""))
+      OutputLine(Concat("--- nonstr done ---"))
+    ENDIF
+  ]%%

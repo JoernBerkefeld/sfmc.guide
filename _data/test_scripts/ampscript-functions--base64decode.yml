@@ -1,0 +1,89 @@
+# Test scripts for /engagement/ampscript/functions/base64decode/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=empty, ?b=enc,
+# ?b=flag, ?b=badchars, ?b=badpad, ?b=overpad, ?b=a0, ?b=a4.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @a, @nb, @e8, @e16
+    SET @b = RequestParameter("b")
+    SET @a = "SFMC AMPscript 2026"
+    SET @nb = Concat("caf", Char(233), Char(8364))
+    SET @e8 = "U0ZNQyBBTVBzY3JpcHQgMjAyNg=="
+    SET @e16 = "UwBGAE0AQwAgAEEATQBQAHMAYwByAGkAcAB0ACAAMgAwADIANgA="
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Base64Decode("TWFu"), "]"))
+
+    /* decoding a fixed literal, plus the round trip in both directions in
+       the same render - the non-ASCII one is the interesting case */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("BD=[", Base64Decode(@e8), "]"))
+      OutputLine(Concat("RT=[", Base64Decode(Base64Encode(@a)), "]"))
+      OutputLine(Concat("NBIN=[", @nb, "]"))
+      OutputLine(Concat("RTN=[", Base64Decode(Base64Encode(@nb)), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the empty string is the one malformed-looking input that is accepted */
+    IF @b == "empty" THEN
+      OutputLine(Concat("--- empty start ---"))
+      OutputLine(Concat("BDE=[", Base64Decode(""), "]"))
+      OutputLine(Concat("--- empty done ---"))
+    ENDIF
+
+    /* the second argument names the encoding the decoded bytes are read as;
+       omitting it on a UTF-16 payload leaves a NUL between every character */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("BD8=[", Base64Decode(@e8, "UTF-8"), "]"))
+      OutputLine(Concat("BD16=[", Base64Decode(@e16, "UTF-16"), "]"))
+      OutputLine(Concat("BD16X=[", Base64Decode(@e16), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* the third argument is a send-time flag; all four spellings are accepted
+       and none of them changes a successful decode */
+    IF @b == "flag" THEN
+      OutputLine(Concat("--- flag start ---"))
+      OutputLine(Concat("F1=[", Base64Decode(@e8, "UTF-8", 1), "]"))
+      OutputLine(Concat("F0=[", Base64Decode(@e8, "UTF-8", 0), "]"))
+      OutputLine(Concat("FT=[", Base64Decode(@e8, "UTF-8", true), "]"))
+      OutputLine(Concat("FF=[", Base64Decode(@e8, "UTF-8", false), "]"))
+      OutputLine(Concat("--- flag done ---"))
+    ENDIF
+
+    /* each of the five branches below aborts the page - fetch alone */
+    IF @b == "badchars" THEN
+      OutputLine(Concat("--- badchars start ---"))
+      OutputLine(Concat("B1=[", Base64Decode("not!base64###"), "]"))
+    ENDIF
+
+    IF @b == "badpad" THEN
+      OutputLine(Concat("--- badpad start ---"))
+      OutputLine(Concat("B2=[", Base64Decode("SGVsbG8"), "]"))
+    ENDIF
+
+    IF @b == "overpad" THEN
+      OutputLine(Concat("--- overpad start ---"))
+      OutputLine(Concat("B3=[", Base64Decode("SGVsbG8====="), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", Base64Decode(), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", Base64Decode(@e8, "UTF-8", 1, "extra"), "]"))
+    ENDIF
+  ]%%

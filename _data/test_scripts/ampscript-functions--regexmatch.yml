@@ -1,0 +1,59 @@
+# Test scripts for /engagement/ampscript/functions/regexmatch/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=manyopts,
+# ?b=badregex, ?b=badopt, ?b=a2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* group selection, casing, edge shapes and the accepted argument types */
+    IF @b == "safe" THEN
+      OutputLine(Concat("G0=[", RegExMatch("order-4821-eu", "[0-9]+", 0), "]"))
+      OutputLine(Concat("G1=[", RegExMatch("order-4821-eu", "order-([0-9]+)-", 1), "]"))
+      OutputLine(Concat("G2=[", RegExMatch("order-4821-eu", "order-([0-9]+)-([a-z]+)", 2), "]"))
+      OutputLine(Concat("GSTR0=[", RegExMatch("order-4821-eu", "[0-9]+", "0"), "]"))
+      OutputLine(Concat("NAMED=[", RegExMatch("order-4821-eu", "order-(?<num>[0-9]+)-", "num"), "]"))
+      OutputLine(Concat("NOMATCH=[", RegExMatch("order-4821-eu", "[0-9][0-9][0-9][0-9][0-9][0-9]", 0), "]"))
+      OutputLine(Concat("CASEDEF=[", RegExMatch("ORDER-4821", "order", 0), "]"))
+      OutputLine(Concat("CASEOPT=[", RegExMatch("ORDER-4821", "order", 0, "IgnoreCase"), "]"))
+      OutputLine(Concat("OPTLOWER=[", RegExMatch("ORDER-4821", "order", 0, "ignorecase"), "]"))
+      OutputLine(Concat("NUMSRC=[", RegExMatch(4821, "[0-9]+", 0), "]"))
+      OutputLine(Concat("EMPTYSRC=[", RegExMatch("", "[0-9]+", 0), "]"))
+      OutputLine(Concat("FIRSTONLY=[", RegExMatch("a1 b2 c3", "[a-z][0-9]", 0), "]"))
+      OutputLine(Concat("GROUPMISS=[", RegExMatch("order-4821-eu", "[0-9]+", 1), "]"))
+      OutputLine(Concat("BADGROUP=[", RegExMatch("order-4821-eu", "order-([0-9]+)-", 5), "]"))
+      OutputLine(Concat("BADNAME=[", RegExMatch("order-4821-eu", "order-([0-9]+)-", "nope"), "]"))
+      OutputLine(Concat("TWOOPTS=[", RegExMatch("ORDER-4821", "order.4821", 0, "IgnoreCase", "Singleline"), "]"))
+    ENDIF
+
+    /* the option list has no upper bound */
+    IF @b == "manyopts" THEN
+      OutputLine(Concat("--- manyopts start ---"))
+      OutputLine(Concat("MANYOPTS=[", RegExMatch("ORDER-4821", "order.4821", 0, "IgnoreCase", "Singleline", "Multiline", "ExplicitCapture", "IgnorePatternWhitespace"), "]"))
+      OutputLine(Concat("--- manyopts done ---"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "badregex" THEN
+      OutputLine(Concat("--- badregex start ---"))
+      OutputLine(Concat("BADREGEX=[", RegExMatch("order-4821-eu", "order-([0-9]+", 0), "]"))
+    ENDIF
+
+    IF @b == "badopt" THEN
+      OutputLine(Concat("--- badopt start ---"))
+      OutputLine(Concat("BADOPT=[", RegExMatch("order-4821-eu", "[0-9]+", 0, "NotARealOption"), "]"))
+    ENDIF
+
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      OutputLine(Concat("A2=[", RegExMatch("order-4821-eu", "[0-9]+"), "]"))
+    ENDIF
+  ]%%

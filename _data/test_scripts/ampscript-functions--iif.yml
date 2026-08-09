@@ -1,0 +1,133 @@
+# Test scripts for /engagement/ampscript/functions/iif/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Empty, IsNull, IsNullDefault and IIf so the four
+# can be compared on the same inputs. Every input sits behind its own
+# RequestParameter("b") branch and must be fetched one at a time. Branches for
+# IIf: ?b=f_bool, ?b=f_und, ?b=f_unset, ?b=f_es, ?b=f_sp, ?b=f_z, ?b=f_z0,
+# ?b=f_sf, ?b=f_val, ?b=f_type, ?b=f_lazyf, ?b=f_lazyt, ?b=f_ctrl.
+# A branch that renders nothing at all is the failure signal.
+#
+# The three branches that matter most are f_lazyf, f_lazyt and f_ctrl. The
+# first two put a page-aborting call in the branch that is NOT selected; the
+# third calls that same aborting function directly. Without f_ctrl a pair of
+# surviving pages would only show that nothing bad happened - with it they
+# show the abort was reachable and simply was never reached.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @unset, @es, @sp, @z, @z0, @sf, @val
+    SET @b = RequestParameter("b")
+    SET @es = ""
+    SET @sp = "   "
+    SET @z = 0
+    SET @z0 = "0"
+    SET @sf = "false"
+    SET @val = "hello"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* comparisons and boolean-returning functions in the condition slot */
+    IF @b == "f_bool" THEN
+      OutputLine(Concat("--- f_bool start ---"))
+      OutputLine(Concat("F_EXPT=[", IIf(1 == 1, "T", "F"), "]"))
+      OutputLine(Concat("F_EXPF=[", IIf(1 == 2, "T", "F"), "]"))
+      OutputLine(Concat("F_FN=[", IIf(Empty(@es), "T", "F"), "]"))
+      OutputLine(Concat("F_NOT=[", IIf(NOT Empty(@es), "T", "F"), "]"))
+      OutputLine(Concat("--- f_bool done ---"))
+    ENDIF
+
+    /* a name that was never declared, in the condition slot */
+    IF @b == "f_und" THEN
+      OutputLine(Concat("--- f_und start ---"))
+      OutputLine(Concat("F_UND=[", IIf(@zzz_never_declared, "T", "F"), "]"))
+      OutputLine(Concat("--- f_und done ---"))
+    ENDIF
+
+    /* declared with VAR, never assigned */
+    IF @b == "f_unset" THEN
+      OutputLine(Concat("--- f_unset start ---"))
+      OutputLine(Concat("F_UNSET=[", IIf(@unset, "T", "F"), "]"))
+      OutputLine(Concat("--- f_unset done ---"))
+    ENDIF
+
+    /* the explicitly empty string */
+    IF @b == "f_es" THEN
+      OutputLine(Concat("--- f_es start ---"))
+      OutputLine(Concat("F_ES=[", IIf(@es, "T", "F"), "]"))
+      OutputLine(Concat("--- f_es done ---"))
+    ENDIF
+
+    /* three spaces - the input a truthy language would call true */
+    IF @b == "f_sp" THEN
+      OutputLine(Concat("--- f_sp start ---"))
+      OutputLine(Concat("F_SP=[", IIf(@sp, "T", "F"), "]"))
+      OutputLine(Concat("--- f_sp done ---"))
+    ENDIF
+
+    /* the number zero */
+    IF @b == "f_z" THEN
+      OutputLine(Concat("--- f_z start ---"))
+      OutputLine(Concat("F_Z=[", IIf(@z, "T", "F"), "]"))
+      OutputLine(Concat("--- f_z done ---"))
+    ENDIF
+
+    /* the string "0" */
+    IF @b == "f_z0" THEN
+      OutputLine(Concat("--- f_z0 start ---"))
+      OutputLine(Concat("F_Z0=[", IIf(@z0, "T", "F"), "]"))
+      OutputLine(Concat("--- f_z0 done ---"))
+    ENDIF
+
+    /* the string "false" */
+    IF @b == "f_sf" THEN
+      OutputLine(Concat("--- f_sf start ---"))
+      OutputLine(Concat("F_SF=[", IIf(@sf, "T", "F"), "]"))
+      OutputLine(Concat("--- f_sf done ---"))
+    ENDIF
+
+    /* a genuine non-empty string as the condition */
+    IF @b == "f_val" THEN
+      OutputLine(Concat("--- f_val start ---"))
+      OutputLine(Concat("F_VAL=[", IIf(@val, "T", "F"), "]"))
+      OutputLine(Concat("--- f_val done ---"))
+    ENDIF
+
+    /* non-string branch values: a number and a date */
+    IF @b == "f_type" THEN
+      OutputLine(Concat("--- f_type start ---"))
+      OutputLine(Concat("F_NUMBR=[", IIf(1 == 1, 42, 7), "]"))
+      OutputLine(Concat("F_DATEBR=[", IIf(1 == 2, "no", Now()), "]"))
+      OutputLine(Concat("--- f_type done ---"))
+    ENDIF
+
+    /* page-aborting call parked in the FALSE branch while TRUE is selected */
+    IF @b == "f_lazyf" THEN
+      OutputLine(Concat("--- f_lazyf start ---"))
+      OutputLine(Concat("F_LAZYF=[", IIf(1 == 1, "T", RaiseError("iif-false-branch-evaluated")), "]"))
+      OutputLine(Concat("--- f_lazyf done ---"))
+    ENDIF
+
+    /* the same probe in the other direction */
+    IF @b == "f_lazyt" THEN
+      OutputLine(Concat("--- f_lazyt start ---"))
+      OutputLine(Concat("F_LAZYT=[", IIf(1 == 2, RaiseError("iif-true-branch-evaluated"), "F"), "]"))
+      OutputLine(Concat("--- f_lazyt done ---"))
+    ENDIF
+
+    /* the control that makes the two branches above mean something: the same
+       aborting call, invoked directly. This branch must NOT render - expect
+       HTTP 422 with no start marker */
+    IF @b == "f_ctrl" THEN
+      OutputLine(Concat("--- f_ctrl start ---"))
+      OutputLine(Concat("F_CTRL=[", RaiseError("iif-control-direct-call"), "]"))
+      OutputLine(Concat("--- f_ctrl done ---"))
+    ENDIF
+  ]%%

@@ -1,0 +1,72 @@
+# Test scripts for /engagement/ampscript/functions/replacelist/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=order, ?b=case,
+# ?b=emptyneedle, ?b=a0, ?b=a1, ?b=a2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* documented forms, edge shapes and the accepted argument types */
+    IF @b == "safe" THEN
+      OutputLine(Concat("BASIC=[", ReplaceList("a-b/c", "_", "-", "/"), "]"))
+      OutputLine(Concat("ONESEARCH=[", ReplaceList("Hello World", "There", "World"), "]"))
+      OutputLine(Concat("ALLOCC=[", ReplaceList("a,b,c;d", "+", ",", ";"), "]"))
+      OutputLine(Concat("MANY=[", ReplaceList("a1b2c3d4e5", "*", "1", "2", "3", "4", "5"), "]"))
+      OutputLine(Concat("MISSING=[", ReplaceList("Hello World", "!", "zzz", "qqq"), "]"))
+      OutputLine(Concat("DUPSEARCH=[", ReplaceList("aXa", "-", "a", "a"), "]"))
+      OutputLine(Concat("EMPTYREPL=[", ReplaceList("a-b/c", "", "-", "/"), "]"))
+      OutputLine(Concat("EMPTYSRC=[", ReplaceList("", "x", "a"), "]"))
+      OutputLine(Concat("NUMSRC=[", ReplaceList(101101, "9", "0"), "]"))
+      OutputLine(Concat("NUMREPL=[", ReplaceList("a-b", 7, "-"), "]"))
+      OutputLine(Concat("NUMNEEDLE=[", ReplaceList("a1b", "-", 1), "]"))
+      OutputLine(Concat("BOOLSRC=[", ReplaceList(true, "X", "ru"), "]"))
+      OutputLine(Concat("BOOLREPL=[", ReplaceList("a-b", true, "-"), "]"))
+      OutputLine(Concat("BOOLNEEDLE=[", ReplaceList("is true here", "X", true), "]"))
+    ENDIF
+
+    /* the search values run in sequence, so order matters and results cascade */
+    IF @b == "order" THEN
+      OutputLine(Concat("CASCADE=[", ReplaceList("a", "XY", "a", "X"), "]"))
+      OutputLine(Concat("ORDER=[", ReplaceList("abc", "-", "ab", "bc"), "]"))
+      OutputLine(Concat("ORDERREV=[", ReplaceList("abc", "-", "bc", "ab"), "]"))
+      OutputLine(Concat("SINGLEPASS=[", ReplaceList("aaa", "a", "aa"), "]"))
+    ENDIF
+
+    /* matching ignores case */
+    IF @b == "case" THEN
+      OutputLine(Concat("UPPERNEEDLE=[", ReplaceList("Hello World", "There", "WORLD"), "]"))
+      OutputLine(Concat("MULTICASE=[", ReplaceList("Cat cat CAT", "dog", "cat"), "]"))
+      OutputLine(Concat("MIXEDLIST=[", ReplaceList("Red BLUE green", "-", "red", "blue", "GREEN"), "]"))
+    ENDIF
+
+    /* an empty search value inserts nothing */
+    IF @b == "emptyneedle" THEN
+      OutputLine(Concat("--- emptyneedle start ---"))
+      OutputLine(Concat("EMPTYNEEDLE=[", ReplaceList("abc", "X", ""), "]"))
+      OutputLine(Concat("--- emptyneedle done ---"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", ReplaceList(), "]"))
+    ENDIF
+
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      OutputLine(Concat("A1=[", ReplaceList("abc"), "]"))
+    ENDIF
+
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      OutputLine(Concat("A2=[", ReplaceList("abc", "z"), "]"))
+    ENDIF
+  ]%%

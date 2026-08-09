@@ -1,0 +1,72 @@
+# Test scripts for /engagement/ampscript/functions/urlencode/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=strflag,
+# ?b=numsrc, ?b=outdomain, ?b=a0, ?b=a4.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @plain, @url
+    SET @b = RequestParameter("b")
+    SET @plain = "spring sale"
+    SET @url = Concat("https://example.org/go?promo=spring sale&tags=a,b")
+
+    /* the defaults, and the integer and boolean spellings of both flags */
+    IF @b == "safe" THEN
+      OutputLine(Concat("A1PLAIN=[", URLEncode(@plain), "]"))
+      OutputLine(Concat("A1URL=[", URLEncode(@url), "]"))
+      OutputLine(Concat("N00=[", URLEncode(@url, 0, 0), "]"))
+      OutputLine(Concat("B00=[", URLEncode(@url, false, false), "]"))
+      OutputLine(Concat("N10=[", URLEncode(@url, 1, 0), "]"))
+      OutputLine(Concat("B10=[", URLEncode(@url, true, false), "]"))
+      OutputLine(Concat("N01=[", URLEncode(@plain, 0, 1), "]"))
+      OutputLine(Concat("B01=[", URLEncode(@plain, false, true), "]"))
+      OutputLine(Concat("N11=[", URLEncode(@plain, 1, 1), "]"))
+      OutputLine(Concat("B11=[", URLEncode(@plain, true, true), "]"))
+      OutputLine(Concat("A2N0=[", URLEncode(@url, 0), "]"))
+      OutputLine(Concat("A2N1=[", URLEncode(@url, 1), "]"))
+      OutputLine(Concat("A2BF=[", URLEncode(@url, false), "]"))
+      OutputLine(Concat("A2BT=[", URLEncode(@url, true), "]"))
+      OutputLine(Concat("EMPTY=[", URLEncode(""), "]"))
+    ENDIF
+
+    /* the same two flags written as quoted strings */
+    IF @b == "strflag" THEN
+      OutputLine(Concat("--- strflag start ---"))
+      OutputLine(Concat("S11=[", URLEncode(@plain, "1", "1"), "]"))
+      OutputLine(Concat("STRUE=[", URLEncode(@plain, "true", "true"), "]"))
+      OutputLine(Concat("S01=[", URLEncode(@plain, "0", "1"), "]"))
+      OutputLine(Concat("SFALSETRUE=[", URLEncode(@plain, "false", "true"), "]"))
+      OutputLine(Concat("--- strflag done ---"))
+    ENDIF
+
+    /* a number is accepted as the input */
+    IF @b == "numsrc" THEN
+      OutputLine(Concat("--- numsrc start ---"))
+      OutputLine(Concat("NUMSRC=[", URLEncode(4821, 1, 1), "]"))
+      OutputLine(Concat("--- numsrc done ---"))
+    ENDIF
+
+    /* a flag value outside 0/1 is accepted and behaves like the off state */
+    IF @b == "outdomain" THEN
+      OutputLine(Concat("--- outdomain start ---"))
+      OutputLine(Concat("OUT22=[", URLEncode(@plain, 2, 2), "]"))
+      OutputLine(Concat("--- outdomain done ---"))
+    ENDIF
+
+    /* both branches below abort the page: the start marker never renders */
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", URLEncode(), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", URLEncode(@plain, 1, 1, 1), "]"))
+    ENDIF
+  ]%%

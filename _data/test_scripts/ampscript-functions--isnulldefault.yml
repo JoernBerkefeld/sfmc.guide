@@ -1,0 +1,118 @@
+# Test scripts for /engagement/ampscript/functions/isnulldefault/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Empty, IsNull, IsNullDefault and IIf so the four
+# can be compared on the same inputs. Every input sits behind its own
+# RequestParameter("b") branch and must be fetched one at a time. Branches for
+# IsNullDefault: ?b=d_und, ?b=d_unset, ?b=d_es, ?b=d_sp, ?b=d_z, ?b=d_z0,
+# ?b=d_sf, ?b=d_val, ?b=d_date, ?b=d_rp, ?b=a_attr, ?b=s_prof.
+# A branch that renders nothing at all is the failure signal.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @unset, @es, @sp, @z, @z0, @sf, @val
+    SET @b = RequestParameter("b")
+    SET @es = ""
+    SET @sp = "   "
+    SET @z = 0
+    SET @z0 = "0"
+    SET @sf = "false"
+    SET @val = "hello"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* a name that was never declared */
+    IF @b == "d_und" THEN
+      OutputLine(Concat("--- d_und start ---"))
+      OutputLine(Concat("D_UND=[", IsNullDefault(@zzz_never_declared, "DEF"), "]"))
+      OutputLine(Concat("--- d_und done ---"))
+    ENDIF
+
+    /* declared with VAR, never assigned */
+    IF @b == "d_unset" THEN
+      OutputLine(Concat("--- d_unset start ---"))
+      OutputLine(Concat("D_UNSET=[", IsNullDefault(@unset, "DEF"), "]"))
+      OutputLine(Concat("--- d_unset done ---"))
+    ENDIF
+
+    /* the explicitly empty string */
+    IF @b == "d_es" THEN
+      OutputLine(Concat("--- d_es start ---"))
+      OutputLine(Concat("D_ES=[", IsNullDefault(@es, "DEF"), "]"))
+      OutputLine(Concat("--- d_es done ---"))
+    ENDIF
+
+    /* three spaces - returned verbatim, so the brackets show them */
+    IF @b == "d_sp" THEN
+      OutputLine(Concat("--- d_sp start ---"))
+      OutputLine(Concat("D_SP=[", IsNullDefault(@sp, "DEF"), "]"))
+      OutputLine(Concat("--- d_sp done ---"))
+    ENDIF
+
+    /* the number zero, as a variable and inline */
+    IF @b == "d_z" THEN
+      OutputLine(Concat("--- d_z start ---"))
+      OutputLine(Concat("D_Z=[", IsNullDefault(@z, "DEF"), "]"))
+      OutputLine(Concat("D_ZLIT=[", IsNullDefault(0, "DEF"), "]"))
+      OutputLine(Concat("--- d_z done ---"))
+    ENDIF
+
+    /* the string "0" */
+    IF @b == "d_z0" THEN
+      OutputLine(Concat("--- d_z0 start ---"))
+      OutputLine(Concat("D_Z0=[", IsNullDefault(@z0, "DEF"), "]"))
+      OutputLine(Concat("--- d_z0 done ---"))
+    ENDIF
+
+    /* the string "false" - lowercase, unlike the token Empty renders */
+    IF @b == "d_sf" THEN
+      OutputLine(Concat("--- d_sf start ---"))
+      OutputLine(Concat("D_SF=[", IsNullDefault(@sf, "DEF"), "]"))
+      OutputLine(Concat("--- d_sf done ---"))
+    ENDIF
+
+    /* a genuine value, as a variable and inline */
+    IF @b == "d_val" THEN
+      OutputLine(Concat("--- d_val start ---"))
+      OutputLine(Concat("D_VAL=[", IsNullDefault(@val, "DEF"), "]"))
+      OutputLine(Concat("D_VLIT=[", IsNullDefault("hello", "DEF"), "]"))
+      OutputLine(Concat("--- d_val done ---"))
+    ENDIF
+
+    /* a date value, and a number in the default position */
+    IF @b == "d_date" THEN
+      OutputLine(Concat("--- d_date start ---"))
+      OutputLine(Concat("D_DATE=[", IsNullDefault(Now(), "DEF"), "]"))
+      OutputLine(Concat("D_DEFNUM=[", IsNullDefault(@unset, 42), "]"))
+      OutputLine(Concat("--- d_date done ---"))
+    ENDIF
+
+    /* the form-field shape both references use in their examples; fetch
+       without a tier parameter in the query string */
+    IF @b == "d_rp" THEN
+      OutputLine(Concat("--- d_rp start ---"))
+      OutputLine(Concat("D_RP=[", IsNullDefault(RequestParameter("tier"), "Basic"), "]"))
+      OutputLine(Concat("--- d_rp done ---"))
+    ENDIF
+
+    /* an attribute that does not exist */
+    IF @b == "a_attr" THEN
+      OutputLine(Concat("--- a_attr start ---"))
+      OutputLine(Concat("D_ATTR=[", IsNullDefault(AttributeValue("zzNoSuchAttribute"), "DEF"), "]"))
+      OutputLine(Concat("--- a_attr done ---"))
+    ENDIF
+
+    /* a profile attribute outside a send */
+    IF @b == "s_prof" THEN
+      OutputLine(Concat("--- s_prof start ---"))
+      OutputLine(Concat("D_PROF=[", IsNullDefault(firstname, "DEF"), "]"))
+      OutputLine(Concat("--- s_prof done ---"))
+    ENDIF
+  ]%%

@@ -1,0 +1,85 @@
+# Test scripts for /engagement/ampscript/functions/now/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. The risky case
+# therefore sits behind its own RequestParameter("b") branch and must be
+# fetched on its own. Branches on this page: ?b=safe, ?b=flags,
+# ?b=strflags, ?b=badarg, ?b=a2.
+# A branch that renders nothing at all is the failure signal.
+#
+# Every value this script prints is a clock reading, so compare the SHAPE
+# and the RELATIONSHIPS between the lines rather than expecting fixed
+# literals: the timestamps change on every request by design.
+behaviour: |
+  %%[
+    VAR @b, @cap
+    SET @b = RequestParameter("b")
+
+    /* the default value, its date-ness, its timezone and its stability */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+
+      /* the rendered format: US short date, then a 12-hour clock */
+      OutputLine(Concat("NOW0=[", Now(), "]"))
+
+      /* a real date value - the other date functions consume it directly */
+      OutputLine(Concat("ADD3H=[", DateAdd(Now(), 3, "H"), "]"))
+      OutputLine(Concat("DIFF3H=[", DateDiff(Now(), DateAdd(Now(), 3, "H"), "H"), "]"))
+      OutputLine(Concat("PARTY=[", DatePart(Now(), "Y"), "]"))
+      OutputLine(Concat("PARTH=[", DatePart(Now(), "H"), "]"))
+
+      /* the timezone, by comparison: LOCAL is the business unit's own time,
+         and OFFSETMIN is how far ahead of the system clock it runs */
+      OutputLine(Concat("LOCAL=[", SystemDateToLocalDate(Now()), "]"))
+      OutputLine(Concat("OFFSETMIN=[", DateDiff(Now(), SystemDateToLocalDate(Now()), "MI"), "]"))
+
+      /* frozen for the render: TICKA and TICKB are two separate calls read
+         to six fractional-second digits, and they match */
+      SET @cap = Now()
+      OutputLine(Concat("TICKA=[", FormatDate(Now(), "ffffff"), "]"))
+      OutputLine(Concat("TICKB=[", FormatDate(Now(), "ffffff"), "]"))
+      OutputLine(Concat("CAP1=[", @cap, "]"))
+      OutputLine(Concat("SECOND=[", Now(), "]"))
+      OutputLine(Concat("DRIFTMS=[", DateDiff(@cap, Now(), "MI"), "]"))
+
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the argument as a number and as a boolean - D1 is 0 because none of
+       them changes the value on a CloudPage */
+    IF @b == "flags" THEN
+      OutputLine(Concat("--- flags start ---"))
+      OutputLine(Concat("N1=[", Now(1), "]"))
+      OutputLine(Concat("N0=[", Now(0), "]"))
+      OutputLine(Concat("BT=[", Now(true), "]"))
+      OutputLine(Concat("BF=[", Now(false), "]"))
+      OutputLine(Concat("D1=[", DateDiff(Now(), Now(1), "MI"), "]"))
+      OutputLine(Concat("--- flags done ---"))
+    ENDIF
+
+    /* the same argument written as quoted strings */
+    IF @b == "strflags" THEN
+      OutputLine(Concat("--- strflags start ---"))
+      OutputLine(Concat("S1=[", Now("1"), "]"))
+      OutputLine(Concat("S0=[", Now("0"), "]"))
+      OutputLine(Concat("STRUE=[", Now("true"), "]"))
+      OutputLine(Concat("SFALSE=[", Now("false"), "]"))
+      OutputLine(Concat("--- strflags done ---"))
+    ENDIF
+
+    /* a value that is not a flag at all is accepted rather than rejected */
+    IF @b == "badarg" THEN
+      OutputLine(Concat("--- badarg start ---"))
+      OutputLine(Concat("BAD=[", Now("spring"), "]"))
+      OutputLine(Concat("--- badarg done ---"))
+    ENDIF
+
+    /* this branch aborts the page: the start marker never renders */
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      OutputLine(Concat("A2=[", Now(1, 1), "]"))
+    ENDIF
+  ]%%

@@ -1,0 +1,69 @@
+# Test scripts for /engagement/ampscript/functions/stringtohex/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=empty, ?b=enc,
+# ?b=badenc, ?b=a0, ?b=a3.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @a, @nb
+    SET @b = RequestParameter("b")
+    SET @a = "SFMC AMPscript 2026"
+    SET @nb = Concat("caf", Char(233), Char(8364))
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", StringToHex("AB"), "]"))
+
+    /* the plain one-argument form, its length, and the UTF-8 default proven
+       with a non-ASCII input that no ASCII-only vector could settle */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("SH=[", StringToHex(@a), "]"))
+      OutputLine(Concat("SHL=[", Length(StringToHex(@a)), "]"))
+      OutputLine(Concat("NBIN=[", @nb, "]"))
+      OutputLine(Concat("SHN=[", StringToHex(@nb), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the empty string yields the empty string */
+    IF @b == "empty" THEN
+      OutputLine(Concat("--- empty start ---"))
+      OutputLine(Concat("SHE=[", StringToHex(""), "]"))
+      OutputLine(Concat("--- empty done ---"))
+    ENDIF
+
+    /* the charSet argument accepts far more names than the two documented,
+       and ASCII and ISO-8859-1 substitute 3f without any signal */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("SH8=[", StringToHex(@nb, "UTF-8"), "]"))
+      OutputLine(Concat("SH16=[", StringToHex(@nb, "UTF-16"), "]"))
+      OutputLine(Concat("SH16BE=[", StringToHex(@nb, "UTF-16BE"), "]"))
+      OutputLine(Concat("SH32=[", StringToHex(@nb, "UTF-32"), "]"))
+      OutputLine(Concat("SHASC=[", StringToHex(@nb, "ASCII"), "]"))
+      OutputLine(Concat("SHISO=[", StringToHex(@nb, "ISO-8859-1"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* each of the three branches below aborts the page - fetch alone */
+    IF @b == "badenc" THEN
+      OutputLine(Concat("--- badenc start ---"))
+      OutputLine(Concat("SHBAD=[", StringToHex(@a, "banana"), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", StringToHex(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", StringToHex(@a, "UTF-8", "extra"), "]"))
+    ENDIF
+  ]%%

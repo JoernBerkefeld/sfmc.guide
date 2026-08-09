@@ -1,0 +1,146 @@
+# Test scripts for /engagement/ampscript/functions/isnull/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Empty, IsNull, IsNullDefault and IIf so the four
+# can be compared on the same inputs. Every input sits behind its own
+# RequestParameter("b") branch and must be fetched one at a time. Branches for
+# IsNull: ?b=n_und, ?b=n_unset, ?b=n_es, ?b=n_sp, ?b=n_z, ?b=n_z0, ?b=n_sf,
+# ?b=n_val, ?b=n_date, ?b=a_attr, ?b=a_rp, ?b=s_sub, ?b=s_prof, ?b=s_msgctx,
+# ?b=s_var.
+# A branch that renders nothing at all is the failure signal.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @unset, @es, @sp, @z, @z0, @sf, @val
+    SET @b = RequestParameter("b")
+    SET @es = ""
+    SET @sp = "   "
+    SET @z = 0
+    SET @z0 = "0"
+    SET @sf = "false"
+    SET @val = "hello"
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* a name that was never declared */
+    IF @b == "n_und" THEN
+      OutputLine(Concat("--- n_und start ---"))
+      OutputLine(Concat("N_UND=[", IsNull(@zzz_never_declared), "]"))
+      OutputLine(Concat("--- n_und done ---"))
+    ENDIF
+
+    /* declared with VAR, never assigned - the shape the official example uses */
+    IF @b == "n_unset" THEN
+      OutputLine(Concat("--- n_unset start ---"))
+      OutputLine(Concat("N_UNSET=[", IsNull(@unset), "]"))
+      OutputLine(Concat("--- n_unset done ---"))
+    ENDIF
+
+    /* the explicitly empty string - the documented difference from Empty */
+    IF @b == "n_es" THEN
+      OutputLine(Concat("--- n_es start ---"))
+      OutputLine(Concat("N_ES=[", IsNull(@es), "]"))
+      OutputLine(Concat("E_ES=[", Empty(@es), "]"))
+      OutputLine(Concat("--- n_es done ---"))
+    ENDIF
+
+    /* three spaces */
+    IF @b == "n_sp" THEN
+      OutputLine(Concat("--- n_sp start ---"))
+      OutputLine(Concat("N_SP=[", IsNull(@sp), "]"))
+      OutputLine(Concat("--- n_sp done ---"))
+    ENDIF
+
+    /* the number zero, as a variable and inline */
+    IF @b == "n_z" THEN
+      OutputLine(Concat("--- n_z start ---"))
+      OutputLine(Concat("N_Z=[", IsNull(@z), "]"))
+      OutputLine(Concat("N_ZLIT=[", IsNull(0), "]"))
+      OutputLine(Concat("--- n_z done ---"))
+    ENDIF
+
+    /* the string "0" */
+    IF @b == "n_z0" THEN
+      OutputLine(Concat("--- n_z0 start ---"))
+      OutputLine(Concat("N_Z0=[", IsNull(@z0), "]"))
+      OutputLine(Concat("--- n_z0 done ---"))
+    ENDIF
+
+    /* the string "false" */
+    IF @b == "n_sf" THEN
+      OutputLine(Concat("--- n_sf start ---"))
+      OutputLine(Concat("N_SF=[", IsNull(@sf), "]"))
+      OutputLine(Concat("--- n_sf done ---"))
+    ENDIF
+
+    /* a genuine value, as a variable and inline */
+    IF @b == "n_val" THEN
+      OutputLine(Concat("--- n_val start ---"))
+      OutputLine(Concat("N_VAL=[", IsNull(@val), "]"))
+      OutputLine(Concat("N_VLIT=[", IsNull("hello"), "]"))
+      OutputLine(Concat("--- n_val done ---"))
+    ENDIF
+
+    /* a date value, to show a non-string argument is accepted */
+    IF @b == "n_date" THEN
+      OutputLine(Concat("--- n_date start ---"))
+      OutputLine(Concat("N_DATE=[", IsNull(Now()), "]"))
+      OutputLine(Concat("--- n_date done ---"))
+    ENDIF
+
+    /* an attribute that does not exist */
+    IF @b == "a_attr" THEN
+      OutputLine(Concat("--- a_attr start ---"))
+      OutputLine(Concat("N_ATTR=[", IsNull(AttributeValue("zzNoSuchAttribute")), "]"))
+      OutputLine(Concat("E_ATTR=[", Empty(AttributeValue("zzNoSuchAttribute")), "]"))
+      OutputLine(Concat("--- a_attr done ---"))
+    ENDIF
+
+    /* a query-string parameter that was not supplied */
+    IF @b == "a_rp" THEN
+      OutputLine(Concat("--- a_rp start ---"))
+      OutputLine(Concat("N_RP=[", IsNull(RequestParameter("zzNoSuchParam")), "]"))
+      OutputLine(Concat("E_RP=[", Empty(RequestParameter("zzNoSuchParam")), "]"))
+      OutputLine(Concat("--- a_rp done ---"))
+    ENDIF
+
+    /* the subscriber key on an anonymous page request */
+    IF @b == "s_sub" THEN
+      OutputLine(Concat("--- s_sub start ---"))
+      OutputLine(Concat("N_SUB=[", IsNull(_subscriberkey), "]"))
+      OutputLine(Concat("E_SUB=[", Empty(_subscriberkey), "]"))
+      OutputLine(Concat("--- s_sub done ---"))
+    ENDIF
+
+    /* a profile attribute outside a send */
+    IF @b == "s_prof" THEN
+      OutputLine(Concat("--- s_prof start ---"))
+      OutputLine(Concat("N_PROF=[", IsNull(firstname), "]"))
+      OutputLine(Concat("E_PROF=[", Empty(firstname), "]"))
+      OutputLine(Concat("--- s_prof done ---"))
+    ENDIF
+
+    /* send-context tokens that only exist inside a job */
+    IF @b == "s_msgctx" THEN
+      OutputLine(Concat("--- s_msgctx start ---"))
+      OutputLine(Concat("N_MSG=[", IsNull(_messagecontext), "]"))
+      OutputLine(Concat("N_JOB=[", IsNull(jobid), "]"))
+      OutputLine(Concat("--- s_msgctx done ---"))
+    ENDIF
+
+    /* the unset variable routed through two different accessors, in case the
+       accessor rather than the value decides the answer */
+    IF @b == "s_var" THEN
+      OutputLine(Concat("--- s_var start ---"))
+      OutputLine(Concat("N_V=[", IsNull(v(@unset)), "]"))
+      OutputLine(Concat("N_CONCAT=[", IsNull(Concat(@unset)), "]"))
+      OutputLine(Concat("--- s_var done ---"))
+    ENDIF
+  ]%%

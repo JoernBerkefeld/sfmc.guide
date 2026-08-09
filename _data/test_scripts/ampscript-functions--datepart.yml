@@ -1,0 +1,198 @@
+# Test scripts for /engagement/ampscript/functions/datepart/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Fetch one branch
+# at a time: ?b=ctrl, ?b=safe, ?b=longs, ?b=case, ?b=caselong, ?b=dtype,
+# ?b=gyear, ?b=gmonth, ?b=gmname, ?b=gday, ?b=ghour, ?b=gminute,
+# ?b=sec, ?b=seclong, ?b=wk, ?b=dayname, ?b=qt, ?b=bogus, ?b=emptytok,
+# ?b=baddate, ?b=emptydate, ?b=numdate, ?b=a1, ?b=a3.
+#
+# ?b=ctrl is the control: it calls DatePart in its plainest form. If ctrl
+# renders and a rejecting branch does not, the abort belongs to the function
+# rather than to the harness or the deployment.
+#
+# Every branch uses fixed instants rather than Now(), so every value below
+# is deterministic and reproducible.
+behaviour: |
+  %%[
+    VAR @b, @d1, @d2
+    SET @b = RequestParameter("b")
+    SET @d1 = "2026-03-04 09:05:07"
+    SET @d2 = "2026-11-23 19:35:47"
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRL=[", DatePart(@d1, "Y"), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* the five abbreviations, the 12-hour clock, the padding and arithmetic */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("P1Y=[", DatePart(@d1, "Y"), "]"))
+      OutputLine(Concat("P1M=[", DatePart(@d1, "M"), "]"))
+      OutputLine(Concat("P1D=[", DatePart(@d1, "D"), "]"))
+      OutputLine(Concat("P1H=[", DatePart(@d1, "H"), "]"))
+      OutputLine(Concat("P1MI=[", DatePart(@d1, "MI"), "]"))
+      OutputLine(Concat("P2Y=[", DatePart(@d2, "Y"), "]"))
+      OutputLine(Concat("P2M=[", DatePart(@d2, "M"), "]"))
+      OutputLine(Concat("P2D=[", DatePart(@d2, "D"), "]"))
+      OutputLine(Concat("P2H=[", DatePart(@d2, "H"), "]"))
+      OutputLine(Concat("P2MI=[", DatePart(@d2, "MI"), "]"))
+      OutputLine(Concat("LENM=[", Length(DatePart(@d1, "M")), "]"))
+      OutputLine(Concat("LENH=[", Length(DatePart(@d1, "H")), "]"))
+      OutputLine(Concat("ARITH=[", Add(DatePart(@d1, "Y"), 1), "]"))
+      OutputLine(Concat("ARITHM=[", Multiply(DatePart(@d1, "M"), 10), "]"))
+      OutputLine(Concat("MIDNIGHT=[", DatePart("2026-03-04 00:30:00", "H"), "]"))
+      OutputLine(Concat("NOON=[", DatePart("2026-03-04 12:30:00", "H"), "]"))
+      OutputLine(Concat("DATEONLY_H=[", DatePart("2026-03-04", "H"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the six long-form tokens the official reference does not name */
+    IF @b == "longs" THEN
+      OutputLine(Concat("--- longs start ---"))
+      OutputLine(Concat("LYEAR=[", DatePart(@d1, "year"), "]"))
+      OutputLine(Concat("LMONTH=[", DatePart(@d1, "month"), "]"))
+      OutputLine(Concat("LMONTHNAME=[", DatePart(@d1, "monthName"), "]"))
+      OutputLine(Concat("LDAY=[", DatePart(@d1, "day"), "]"))
+      OutputLine(Concat("LHOUR=[", DatePart(@d2, "hour"), "]"))
+      OutputLine(Concat("LMINUTE=[", DatePart(@d1, "minute"), "]"))
+      OutputLine(Concat("--- longs done ---"))
+    ENDIF
+
+    /* the abbreviations ignore case */
+    IF @b == "case" THEN
+      OutputLine(Concat("--- case start ---"))
+      OutputLine(Concat("cY=[", DatePart(@d1, "y"), "]"))
+      OutputLine(Concat("cM=[", DatePart(@d1, "m"), "]"))
+      OutputLine(Concat("cD=[", DatePart(@d1, "d"), "]"))
+      OutputLine(Concat("cH=[", DatePart(@d2, "h"), "]"))
+      OutputLine(Concat("cMI=[", DatePart(@d1, "mi"), "]"))
+      OutputLine(Concat("cMi=[", DatePart(@d1, "Mi"), "]"))
+      OutputLine(Concat("--- case done ---"))
+    ENDIF
+
+    /* so do the long forms */
+    IF @b == "caselong" THEN
+      OutputLine(Concat("--- caselong start ---"))
+      OutputLine(Concat("cYEAR=[", DatePart(@d1, "YEAR"), "]"))
+      OutputLine(Concat("cMNAME=[", DatePart(@d1, "MONTHNAME"), "]"))
+      OutputLine(Concat("cmname=[", DatePart(@d1, "monthname"), "]"))
+      OutputLine(Concat("--- caselong done ---"))
+    ENDIF
+
+    /* date values and date strings are interchangeable */
+    IF @b == "dtype" THEN
+      OutputLine(Concat("--- dtype start ---"))
+      OutputLine(Concat("VALNOW=[", DatePart(Now(), "Y"), "]"))
+      OutputLine(Concat("VALADD=[", DatePart(DateAdd(@d1, 1, "D"), "D"), "]"))
+      OutputLine(Concat("ISO=[", DatePart("2026-03-04", "D"), "]"))
+      OutputLine(Concat("USSTR=[", DatePart("3/4/2026 9:05 AM", "D"), "]"))
+      OutputLine(Concat("WORDSTR=[", DatePart("4 March 2026", "M"), "]"))
+      OutputLine(Concat("ISOT=[", DatePart("2026-03-04T09:05:07", "MI"), "]"))
+      OutputLine(Concat("--- dtype done ---"))
+    ENDIF
+
+    /* each long form again in isolation, so none rides on a neighbour */
+    IF @b == "gyear" THEN
+      OutputLine(Concat("--- gyear start ---"))
+      OutputLine(Concat("GYEAR=[", DatePart(@d1, "year"), "]"))
+      OutputLine(Concat("--- gyear done ---"))
+    ENDIF
+
+    IF @b == "gmonth" THEN
+      OutputLine(Concat("--- gmonth start ---"))
+      OutputLine(Concat("GMONTH=[", DatePart(@d1, "month"), "]"))
+      OutputLine(Concat("--- gmonth done ---"))
+    ENDIF
+
+    IF @b == "gmname" THEN
+      OutputLine(Concat("--- gmname start ---"))
+      OutputLine(Concat("GMNAME=[", DatePart(@d1, "monthName"), "]"))
+      OutputLine(Concat("--- gmname done ---"))
+    ENDIF
+
+    IF @b == "gday" THEN
+      OutputLine(Concat("--- gday start ---"))
+      OutputLine(Concat("GDAY=[", DatePart(@d1, "day"), "]"))
+      OutputLine(Concat("--- gday done ---"))
+    ENDIF
+
+    IF @b == "ghour" THEN
+      OutputLine(Concat("--- ghour start ---"))
+      OutputLine(Concat("GHOUR=[", DatePart(@d2, "hour"), "]"))
+      OutputLine(Concat("--- ghour done ---"))
+    ENDIF
+
+    IF @b == "gminute" THEN
+      OutputLine(Concat("--- gminute start ---"))
+      OutputLine(Concat("GMINUTE=[", DatePart(@d1, "minute"), "]"))
+      OutputLine(Concat("--- gminute done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - each renders NOTHING at all */
+    IF @b == "sec" THEN
+      OutputLine(Concat("--- sec start ---"))
+      OutputLine(Concat("SEC=[", DatePart(@d1, "S"), "]"))
+    ENDIF
+
+    IF @b == "seclong" THEN
+      OutputLine(Concat("--- seclong start ---"))
+      OutputLine(Concat("SECLONG=[", DatePart(@d1, "second"), "]"))
+    ENDIF
+
+    IF @b == "wk" THEN
+      OutputLine(Concat("--- wk start ---"))
+      OutputLine(Concat("WK=[", DatePart(@d1, "W"), "]"))
+    ENDIF
+
+    IF @b == "dayname" THEN
+      OutputLine(Concat("--- dayname start ---"))
+      OutputLine(Concat("DAYNAME=[", DatePart(@d1, "dayName"), "]"))
+    ENDIF
+
+    IF @b == "qt" THEN
+      OutputLine(Concat("--- qt start ---"))
+      OutputLine(Concat("QT=[", DatePart(@d1, "Q"), "]"))
+    ENDIF
+
+    IF @b == "bogus" THEN
+      OutputLine(Concat("--- bogus start ---"))
+      OutputLine(Concat("BOGUS=[", DatePart(@d1, "ZZ"), "]"))
+    ENDIF
+
+    IF @b == "emptytok" THEN
+      OutputLine(Concat("--- emptytok start ---"))
+      OutputLine(Concat("EMPTYTOK=[", DatePart(@d1, ""), "]"))
+    ENDIF
+
+    IF @b == "baddate" THEN
+      OutputLine(Concat("--- baddate start ---"))
+      OutputLine(Concat("BADDATE=[", DatePart("not a date at all", "Y"), "]"))
+    ENDIF
+
+    IF @b == "emptydate" THEN
+      OutputLine(Concat("--- emptydate start ---"))
+      OutputLine(Concat("EMPTYDATE=[", DatePart("", "Y"), "]"))
+    ENDIF
+
+    IF @b == "numdate" THEN
+      OutputLine(Concat("--- numdate start ---"))
+      OutputLine(Concat("NUMDATE=[", DatePart(20260304, "Y"), "]"))
+    ENDIF
+
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      OutputLine(Concat("A1=[", DatePart(@d1), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", DatePart(@d1, "Y", "extra"), "]"))
+    ENDIF
+  ]%%

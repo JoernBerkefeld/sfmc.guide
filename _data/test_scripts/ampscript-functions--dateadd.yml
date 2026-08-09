@@ -1,0 +1,159 @@
+# Test scripts for /engagement/ampscript/functions/dateadd/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. DateAdd rejects
+# far more than most functions, so almost every branch here is a single call.
+# Fetch one branch at a time: ?b=safe, ?b=case, ?b=amt, ?b=roll, ?b=dtype,
+# ?b=ctrl, ?b=sec, ?b=wk, ?b=longd, ?b=bogus, ?b=emptytok, ?b=frac,
+# ?b=fracstr, ?b=amtword, ?b=baddate, ?b=emptydate, ?b=numdate, ?b=a2, ?b=a4.
+#
+# ?b=ctrl is the control: it calls DateAdd in its plainest form. If ctrl
+# renders and a rejecting branch does not, the abort belongs to the function
+# rather than to the harness or the deployment.
+#
+# Everything is measured against two fixed base instants,
+# 2026-03-04 13:52:07 and 2026-01-31 13:52:07, so every value below is
+# deterministic and reproducible.
+behaviour: |
+  %%[
+    VAR @b, @d, @j
+    SET @b = RequestParameter("b")
+    SET @d = "2026-03-04 13:52:07"
+    SET @j = "2026-01-31 13:52:07"
+
+    /* the five accepted units, plus a numeric-string amount */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("BASE=[", @d, "]"))
+      OutputLine(Concat("Y=[", DateAdd(@d, 1, "Y"), "]"))
+      OutputLine(Concat("M=[", DateAdd(@d, 1, "M"), "]"))
+      OutputLine(Concat("D=[", DateAdd(@d, 1, "D"), "]"))
+      OutputLine(Concat("H=[", DateAdd(@d, 1, "H"), "]"))
+      OutputLine(Concat("MI=[", DateAdd(@d, 1, "MI"), "]"))
+      OutputLine(Concat("STRAMT=[", DateAdd(@d, "1", "D"), "]"))
+      OutputLine(Concat("STRAMTNEG=[", DateAdd(@d, "-1", "D"), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the unit token ignores case in every spelling */
+    IF @b == "case" THEN
+      OutputLine(Concat("--- case start ---"))
+      OutputLine(Concat("y=[", DateAdd(@d, 1, "y"), "]"))
+      OutputLine(Concat("m=[", DateAdd(@d, 1, "m"), "]"))
+      OutputLine(Concat("d=[", DateAdd(@d, 1, "d"), "]"))
+      OutputLine(Concat("h=[", DateAdd(@d, 1, "h"), "]"))
+      OutputLine(Concat("mi=[", DateAdd(@d, 1, "mi"), "]"))
+      OutputLine(Concat("Mi=[", DateAdd(@d, 1, "Mi"), "]"))
+      OutputLine(Concat("mI=[", DateAdd(@d, 1, "mI"), "]"))
+      OutputLine(Concat("--- case done ---"))
+    ENDIF
+
+    /* negative, zero and large amounts */
+    IF @b == "amt" THEN
+      OutputLine(Concat("--- amt start ---"))
+      OutputLine(Concat("NEG=[", DateAdd(@d, -1, "D"), "]"))
+      OutputLine(Concat("ZERO=[", DateAdd(@d, 0, "D"), "]"))
+      OutputLine(Concat("NEGH=[", DateAdd(@d, -3, "H"), "]"))
+      OutputLine(Concat("BIG=[", DateAdd(@d, 400, "D"), "]"))
+      OutputLine(Concat("--- amt done ---"))
+    ENDIF
+
+    /* month-end clamping, and the fact that it is not reversible */
+    IF @b == "roll" THEN
+      OutputLine(Concat("--- roll start ---"))
+      OutputLine(Concat("JAN31M=[", DateAdd(@j, 1, "M"), "]"))
+      OutputLine(Concat("JAN31M2=[", DateAdd(@j, 2, "M"), "]"))
+      OutputLine(Concat("JAN31BACK=[", DateAdd(DateAdd(@j, 1, "M"), -1, "M"), "]"))
+      OutputLine(Concat("LEAPY=[", DateAdd("2028-02-29 09:00:00", 1, "Y"), "]"))
+      OutputLine(Concat("MAR31MINUS=[", DateAdd("2026-03-31 09:00:00", -1, "M"), "]"))
+      OutputLine(Concat("--- roll done ---"))
+    ENDIF
+
+    /* date strings and real date values are interchangeable */
+    IF @b == "dtype" THEN
+      OutputLine(Concat("--- dtype start ---"))
+      OutputLine(Concat("ISOSTR=[", DateAdd("2026-01-01", 1, "D"), "]"))
+      OutputLine(Concat("USSTR=[", DateAdd("1/1/2026", 1, "D"), "]"))
+      OutputLine(Concat("WORDSTR=[", DateAdd("1 January 2026", 1, "D"), "]"))
+      OutputLine(Concat("NOWVAL=[", FormatDate(DateAdd(Now(), 0, "D"), "yyyy"), "]"))
+      OutputLine(Concat("CHAIN=[", DateAdd(DateAdd(@d, 1, "D"), 1, "D"), "]"))
+      OutputLine(Concat("--- dtype done ---"))
+    ENDIF
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRL=[", DateAdd(@d, 1, "D"), "]"))
+      OutputLine(Concat("CTRLJ=[", DateAdd(@j, 1, "M"), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - each renders NOTHING at all */
+    IF @b == "sec" THEN
+      OutputLine(Concat("--- sec start ---"))
+      OutputLine(Concat("S=[", DateAdd(@d, 30, "S"), "]"))
+    ENDIF
+
+    IF @b == "wk" THEN
+      OutputLine(Concat("--- wk start ---"))
+      OutputLine(Concat("W=[", DateAdd(@d, 1, "W"), "]"))
+    ENDIF
+
+    IF @b == "longd" THEN
+      OutputLine(Concat("--- longd start ---"))
+      OutputLine(Concat("LONGD=[", DateAdd(@d, 1, "day"), "]"))
+    ENDIF
+
+    IF @b == "bogus" THEN
+      OutputLine(Concat("--- bogus start ---"))
+      OutputLine(Concat("BOGUS=[", DateAdd(@d, 1, "ZZ"), "]"))
+    ENDIF
+
+    IF @b == "emptytok" THEN
+      OutputLine(Concat("--- emptytok start ---"))
+      OutputLine(Concat("EMPTYTOK=[", DateAdd(@d, 1, ""), "]"))
+    ENDIF
+
+    IF @b == "frac" THEN
+      OutputLine(Concat("--- frac start ---"))
+      OutputLine(Concat("FRAC=[", DateAdd(@d, 1.5, "D"), "]"))
+    ENDIF
+
+    IF @b == "fracstr" THEN
+      OutputLine(Concat("--- fracstr start ---"))
+      OutputLine(Concat("FRACSTR=[", DateAdd(@d, "1.5", "D"), "]"))
+    ENDIF
+
+    IF @b == "amtword" THEN
+      OutputLine(Concat("--- amtword start ---"))
+      OutputLine(Concat("AMTWORD=[", DateAdd(@d, "two", "D"), "]"))
+    ENDIF
+
+    IF @b == "baddate" THEN
+      OutputLine(Concat("--- baddate start ---"))
+      OutputLine(Concat("BADDATE=[", DateAdd("not a date at all", 1, "D"), "]"))
+    ENDIF
+
+    IF @b == "emptydate" THEN
+      OutputLine(Concat("--- emptydate start ---"))
+      OutputLine(Concat("EMPTYDATE=[", DateAdd("", 1, "D"), "]"))
+    ENDIF
+
+    IF @b == "numdate" THEN
+      OutputLine(Concat("--- numdate start ---"))
+      OutputLine(Concat("NUMDATE=[", DateAdd(20260304, 1, "D"), "]"))
+    ENDIF
+
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      OutputLine(Concat("A2=[", DateAdd(@d, 1), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", DateAdd(@d, 1, "D", "extra"), "]"))
+    ENDIF
+  ]%%

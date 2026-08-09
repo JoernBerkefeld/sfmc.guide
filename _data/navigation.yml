@@ -48,14 +48,122 @@
           url: /engagement/ampscript/functions/subtract/
         - title: "— String functions —"
           url: /engagement/ampscript/functions/#all-functions
+        - title: Char
+          url: /engagement/ampscript/functions/char/
         - title: Concat
           url: /engagement/ampscript/functions/concat/
+        - title: IndexOf
+          url: /engagement/ampscript/functions/indexof/
         - title: Length
           url: /engagement/ampscript/functions/length/
         - title: Lowercase
           url: /engagement/ampscript/functions/lowercase/
+        - title: ProperCase
+          url: /engagement/ampscript/functions/propercase/
+        - title: RegExMatch
+          url: /engagement/ampscript/functions/regexmatch/
+        - title: Replace
+          url: /engagement/ampscript/functions/replace/
+        - title: ReplaceList
+          url: /engagement/ampscript/functions/replacelist/
+        - title: Substring
+          url: /engagement/ampscript/functions/substring/
+        - title: Trim
+          url: /engagement/ampscript/functions/trim/
         - title: Uppercase
           url: /engagement/ampscript/functions/uppercase/
+        - title: "— Date and Time functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: DateAdd
+          url: /engagement/ampscript/functions/dateadd/
+        - title: DateDiff
+          url: /engagement/ampscript/functions/datediff/
+        - title: DateParse
+          url: /engagement/ampscript/functions/dateparse/
+        - title: DatePart
+          url: /engagement/ampscript/functions/datepart/
+        - title: FormatDate
+          url: /engagement/ampscript/functions/formatdate/
+        - title: LocalDateToSystemDate
+          url: /engagement/ampscript/functions/localdatetosystemdate/
+        - title: Now
+          url: /engagement/ampscript/functions/now/
+        - title: StringToDate
+          url: /engagement/ampscript/functions/stringtodate/
+        - title: SystemDateToLocalDate
+          url: /engagement/ampscript/functions/systemdatetolocaldate/
+        - title: "— Encryption and Encoding functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: Base64Decode
+          url: /engagement/ampscript/functions/base64decode/
+        - title: Base64Encode
+          url: /engagement/ampscript/functions/base64encode/
+        - title: DecryptSymmetric
+          url: /engagement/ampscript/functions/decryptsymmetric/
+        - title: EncryptSymmetric
+          url: /engagement/ampscript/functions/encryptsymmetric/
+        - title: GetJWT
+          url: /engagement/ampscript/functions/getjwt/
+        - title: MD5
+          url: /engagement/ampscript/functions/md5/
+        - title: SHA1
+          url: /engagement/ampscript/functions/sha1/
+        - title: SHA256
+          url: /engagement/ampscript/functions/sha256/
+        - title: SHA512
+          url: /engagement/ampscript/functions/sha512/
+        - title: StringToHex
+          url: /engagement/ampscript/functions/stringtohex/
+        - title: URLEncode
+          url: /engagement/ampscript/functions/urlencode/
+        - title: "— Utility functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: AttributeValue
+          url: /engagement/ampscript/functions/attributevalue/
+        - title: Domain
+          url: /engagement/ampscript/functions/domain/
+        - title: Empty
+          url: /engagement/ampscript/functions/empty/
+        - title: Format
+          url: /engagement/ampscript/functions/format/
+        - title: FormatCurrency
+          url: /engagement/ampscript/functions/formatcurrency/
+        - title: FormatNumber
+          url: /engagement/ampscript/functions/formatnumber/
+        - title: GUID
+          url: /engagement/ampscript/functions/guid/
+        - title: IIf
+          url: /engagement/ampscript/functions/iif/
+        - title: IsCHTMLBrowser
+          url: /engagement/ampscript/functions/ischtmlbrowser/
+        - title: IsEmailAddress
+          url: /engagement/ampscript/functions/isemailaddress/
+        - title: IsNull
+          url: /engagement/ampscript/functions/isnull/
+        - title: IsNullDefault
+          url: /engagement/ampscript/functions/isnulldefault/
+        - title: IsPhoneNumber
+          url: /engagement/ampscript/functions/isphonenumber/
+        - title: MicrositeURL
+          url: /engagement/ampscript/functions/micrositeurl/
+        - title: Output
+          url: /engagement/ampscript/functions/output/
+        - title: OutputLine
+          url: /engagement/ampscript/functions/outputline/
+        - title: QueryParameter
+          url: /engagement/ampscript/functions/queryparameter/
+        - title: RaiseError
+          url: /engagement/ampscript/functions/raiseerror/
+        - title: Redirect
+          url: /engagement/ampscript/functions/redirect/
+        - title: RedirectTo
+          url: /engagement/ampscript/functions/redirectto/
+        - title: RequestParameter
+          url: /engagement/ampscript/functions/requestparameter/
+        - title: v
+          url: /engagement/ampscript/functions/v/
+        - title: WrapLongURL
+          url: /engagement/ampscript/functions/wraplongurl/
 
 - title: Next
   url: /next/

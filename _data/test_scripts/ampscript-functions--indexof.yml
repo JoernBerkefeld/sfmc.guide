@@ -1,0 +1,100 @@
+# Test scripts for /engagement/ampscript/functions/indexof/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=occurrence,
+# ?b=occneg, ?b=unicode, ?b=a0, ?b=a1, ?b=a4, ?b=occstrbad, ?b=occdec,
+# ?b=occbool.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* documented forms plus the case-insensitivity and the accepted types */
+    IF @b == "safe" THEN
+      OutputLine(Concat("FIRSTCHAR=[", IndexOf("Hello World", "H"), "]"))
+      OutputLine(Concat("WORD=[", IndexOf("Hello World", "World"), "]"))
+      OutputLine(Concat("LASTCHAR=[", IndexOf("Hello World", "d"), "]"))
+      OutputLine(Concat("WHOLE=[", IndexOf("Hello World", "Hello World"), "]"))
+      OutputLine(Concat("REPEATED=[", IndexOf("banana", "na"), "]"))
+      OutputLine(Concat("MISSING=[", IndexOf("Hello World", "zzz"), "]"))
+      OutputLine(Concat("LONGERNEEDLE=[", IndexOf("ab", "abcdef"), "]"))
+      OutputLine(Concat("UPPERNEEDLE=[", IndexOf("Hello World", "WORLD"), "]"))
+      OutputLine(Concat("LOWERNEEDLE=[", IndexOf("Hello World", "world"), "]"))
+      OutputLine(Concat("LOWERH=[", IndexOf("Hello World", "h"), "]"))
+      OutputLine(Concat("SPACECHAR=[", IndexOf("Dale Cameron", " "), "]"))
+      OutputLine(Concat("EMPTYNEEDLE=[", IndexOf("Hello", ""), "]"))
+      OutputLine(Concat("EMPTYHAY=[", IndexOf("", "a"), "]"))
+      OutputLine(Concat("BOTHEMPTY=[", IndexOf("", ""), "]"))
+      OutputLine(Concat("NUMHAY=[", IndexOf(9876543, "65"), "]"))
+      OutputLine(Concat("NUMNEEDLE=[", IndexOf("a1b2c3", 2), "]"))
+      OutputLine(Concat("BOOLHAY=[", IndexOf(true, "ru"), "]"))
+      OutputLine(Concat("BOOLNEEDLE=[", IndexOf("is true here", true), "]"))
+    ENDIF
+
+    /* the undocumented third argument picks which occurrence to locate */
+    IF @b == "occurrence" THEN
+      OutputLine(Concat("OCC1=[", IndexOf("Hello World", "o", 1), "]"))
+      OutputLine(Concat("OCC2=[", IndexOf("Hello World", "o", 2), "]"))
+      OutputLine(Concat("OCC3=[", IndexOf("Hello World", "o", 3), "]"))
+      OutputLine(Concat("OCCL3=[", IndexOf("Hello World", "l", 3), "]"))
+      OutputLine(Concat("OCCNA2=[", IndexOf("banana", "na", 2), "]"))
+      OutputLine(Concat("OCCOVERLAP=[", IndexOf("aaaa", "aa", 2), "]"))
+      OutputLine(Concat("OCCZERO=[", IndexOf("Hello World", "o", 0), "]"))
+      OutputLine(Concat("OCCSTR=[", IndexOf("banana", "na", "2"), "]"))
+    ENDIF
+
+    /* a negative occurrence resolves to the LAST match, whatever its size */
+    IF @b == "occneg" THEN
+      OutputLine(Concat("NEG1_BANANA=[", IndexOf("banana", "na", -1), "]"))
+      OutputLine(Concat("NEG2_BANANA=[", IndexOf("banana", "na", -2), "]"))
+      OutputLine(Concat("NEG1_ABC=[", IndexOf("abcabcabc", "abc", -1), "]"))
+      OutputLine(Concat("NEG2_ABC=[", IndexOf("abcabcabc", "abc", -2), "]"))
+      OutputLine(Concat("NEG9_ABC=[", IndexOf("abcabcabc", "abc", -9), "]"))
+    ENDIF
+
+    /* positions count UTF-16 code units, matching Length */
+    IF @b == "unicode" THEN
+      VAR @u
+      SET @u = Concat("caf", Char(233), " time")
+      OutputLine(Concat("ULEN=[", Length(@u), "]"))
+      OutputLine(Concat("UAFTER=[", IndexOf(@u, "time"), "]"))
+      OutputLine(Concat("UACCENT=[", IndexOf(@u, Char(233)), "]"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", IndexOf(), "]"))
+    ENDIF
+
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      OutputLine(Concat("A1=[", IndexOf("Hello World"), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", IndexOf("Hello World", "o", 1, 2), "]"))
+    ENDIF
+
+    IF @b == "occstrbad" THEN
+      OutputLine(Concat("--- occstrbad start ---"))
+      OutputLine(Concat("OCCSTRBAD=[", IndexOf("Hello World", "o", "abc"), "]"))
+    ENDIF
+
+    IF @b == "occdec" THEN
+      OutputLine(Concat("--- occdec start ---"))
+      OutputLine(Concat("OCCDEC=[", IndexOf("banana", "na", 1.5), "]"))
+    ENDIF
+
+    IF @b == "occbool" THEN
+      OutputLine(Concat("--- occbool start ---"))
+      OutputLine(Concat("OCCBOOL=[", IndexOf("banana", "na", true), "]"))
+    ENDIF
+  ]%%

@@ -1,0 +1,61 @@
+# Test scripts for /engagement/ampscript/functions/guid/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Output, OutputLine, GUID and AttributeValue so
+# the four can be exercised from one deploy. The ungated block renders on
+# every request; the argument case sits behind its own RequestParameter("b")
+# branch and must be fetched separately: ?b=arity.
+#
+# The values are non-deterministic, so nothing here asserts a literal
+# identifier — the shape is measured instead, and every measurement is
+# repeated on more than one sample.
+behaviour: |
+  %%[
+    VAR @b, @g1, @g2, @g3
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    SET @g1 = GUID()
+    SET @g2 = GUID()
+    SET @g3 = GUID()
+
+    OutputLine(Concat("--- G start ---"))
+    OutputLine(Concat("G1=[", @g1, "]"))
+    OutputLine(Concat("G2=[", @g2, "]"))
+    OutputLine(Concat("G3=[", @g3, "]"))
+
+    /* length, on three samples rather than one */
+    OutputLine(Concat("GLEN=[", Length(@g1), "][", Length(@g2), "][", Length(@g3), "]"))
+
+    /* every call differs, including an inline one in the same render */
+    OutputLine(Concat("G12=[", IIf(@g1 == @g2, "same", "different"), "]"))
+    OutputLine(Concat("G13=[", IIf(@g1 == @g3, "same", "different"), "]"))
+    OutputLine(Concat("GINLINE=[", GUID(), "]"))
+
+    /* case, proven in both directions: equal to its own lowercase form is
+       also true of a case-insensitive comparison, so test the upper form too */
+    OutputLine(Concat("GLOWER=[", IIf(@g1 == Lowercase(@g1), "already-lower", "has-upper"), "]"))
+    OutputLine(Concat("GUPPER=[", IIf(@g1 == Uppercase(@g1), "same-as-upper", "differs-from-upper"), "]"))
+
+    /* separator positions and the five groups between them */
+    OutputLine(Concat("GSEP=[", Substring(@g1, 9, 1), "][", Substring(@g1, 14, 1), "][", Substring(@g1, 19, 1), "][", Substring(@g1, 24, 1), "]"))
+    OutputLine(Concat("GGRP=[", Substring(@g1, 1, 8), "][", Substring(@g1, 10, 4), "][", Substring(@g1, 15, 4), "][", Substring(@g1, 20, 4), "][", Substring(@g1, 25, 12), "]"))
+
+    /* no braces: 0 is the not-found answer, and the hyphen search proves it
+       is not a match at the first position */
+    OutputLine(Concat("GBRACE=[", IndexOf(@g1, "{"), "][", IndexOf(@g1, "}"), "]"))
+    OutputLine(Concat("GHYPH=[", IndexOf(@g1, "-"), "]"))
+    OutputLine(Concat("--- G done ---"))
+
+    /* any argument at all: aborts this branch only */
+    IF @b == "arity" THEN
+      OutputLine(Concat("--- arity start ---"))
+      OutputLine(Concat("GA1=[", GUID("x"), "]"))
+      OutputLine(Concat("--- arity done ---"))
+    ENDIF
+  ]%%

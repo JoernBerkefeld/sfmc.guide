@@ -1,0 +1,79 @@
+# Test scripts for /engagement/ampscript/functions/redirect/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Part of ONE shared harness covering RaiseError and Redirect. This function
+# TERMINATES THE REQUEST, so every case sits ALONE in its own gate and the
+# ungated path never calls it — the deployed page renders normally at HTTP 200
+# until you ask for a gate.
+#
+# FETCH THESE WITH AUTOMATIC REDIRECT FOLLOWING DISABLED, or the status code
+# and the Location header cannot be read. In PowerShell:
+#   $r = [System.Net.WebRequest]::Create($url); $r.AllowAutoRedirect = $false
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=rd        the redirect itself, with markers before and after the call
+#   ?b=rt        RedirectTo against the SAME target, for the comparison
+#   ?b=rdnum     a bare number as the target
+# These return HTTP 422 — that IS the result, and the ungated control line
+# proves the deploy is healthy:
+#   ?b=rdempty   ?b=rd0   ?b=rd2
+behaviour: |
+  %%[
+    VAR @b, @s
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* neither marker is delivered: the body is replaced by the short
+       server-generated object-moved payload */
+    IF @b == "rd" THEN
+      OutputLine(Concat("--- rd start ---"))
+      OutputLine(Concat("RD_BEFORE=[written-before]"))
+      Redirect("https://example.com/probe-target?a=1&b=2")
+      OutputLine(Concat("RD_AFTER=[written-after]"))
+      OutputLine(Concat("--- rd done ---"))
+    ENDIF
+
+    /* the very same target through RedirectTo, so the two can be compared
+       in one deploy: this one answers 200 with no Location header */
+    IF @b == "rt" THEN
+      OutputLine(Concat("--- rt start ---"))
+      OutputLine(Concat("RT_BEFORE=[written-before]"))
+      SET @s = RedirectTo("https://example.com/probe-target?a=1&b=2")
+      OutputLine(Concat("RT_RET=[", @s, "] LEN=[", Length(@s), "]"))
+      OutputLine(Concat("RT_AFTER=[written-after]"))
+      OutputLine(Concat("--- rt done ---"))
+    ENDIF
+
+    /* a bare number is accepted and becomes the Location as a relative path */
+    IF @b == "rdnum" THEN
+      OutputLine(Concat("RDNUM_START=[x]"))
+      Redirect(42)
+      OutputLine(Concat("RDNUM_DONE=[x]"))
+    ENDIF
+
+    /* an empty target is not usable: it aborts instead of redirecting */
+    IF @b == "rdempty" THEN
+      OutputLine(Concat("RDEMPTY_START=[x]"))
+      Redirect("")
+      OutputLine(Concat("RDEMPTY_DONE=[x]"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its own
+       branch while every branch above still answers 302 */
+    IF @b == "rd0" THEN
+      OutputLine(Concat("RD0_START=[x]"))
+      Redirect()
+      OutputLine(Concat("RD0_DONE=[x]"))
+    ENDIF
+    IF @b == "rd2" THEN
+      OutputLine(Concat("RD2_START=[x]"))
+      Redirect("https://example.com/probe-a", "https://example.com/probe-b")
+      OutputLine(Concat("RD2_DONE=[x]"))
+    ENDIF
+  ]%%

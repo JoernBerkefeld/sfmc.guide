@@ -1,0 +1,61 @@
+# Test scripts for /engagement/ampscript/functions/isphonenumber/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers IsEmailAddress, IsPhoneNumber, Domain and
+# IsCHTMLBrowser so the four can be exercised from one deploy. The ungated
+# block renders on every request; the remaining inputs sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time:
+# ?b=p_empty, ?b=g_num, ?b=g_tok.
+# A branch that renders nothing at all is the failure signal.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* the accepted/rejected matrix - safe on every request */
+    OutputLine(Concat("--- P start ---"))
+    OutputLine(Concat("P1_plain10=[", IsPhoneNumber("4255550142"), "]"))
+    OutputLine(Concat("P2_dashes=[", IsPhoneNumber("425-555-0142"), "]"))
+    OutputLine(Concat("P3_parens=[", IsPhoneNumber("(829) 555-0142"), "]"))
+    OutputLine(Concat("P4_plus_cc=[", IsPhoneNumber("+14255550142"), "]"))
+    OutputLine(Concat("P5_short=[", IsPhoneNumber("5550142"), "]"))
+    OutputLine(Concat("P6_letters=[", IsPhoneNumber("425-555-CALL"), "]"))
+    OutputLine(Concat("P7_dots=[", IsPhoneNumber("425.555.0185"), "]"))
+    OutputLine(Concat("P8_uk=[", IsPhoneNumber("0161 496 0009"), "]"))
+    OutputLine(Concat("P9_1234567890=[", IsPhoneNumber("1234567890"), "]"))
+    OutputLine(Concat("P10_spaces=[", IsPhoneNumber("647 555 0123"), "]"))
+    OutputLine(Concat("--- P done ---"))
+
+    /* the empty string, in its own branch: the sibling IsCHTMLBrowser aborts
+       on it, so the four functions must not share one empty-string branch */
+    IF @b == "p_empty" THEN
+      OutputLine(Concat("--- p_empty start ---"))
+      OutputLine(Concat("P_EMPTY=[", IsPhoneNumber(""), "]"))
+      OutputLine(Concat("--- p_empty done ---"))
+    ENDIF
+
+    /* an unquoted number rather than a numeric string */
+    IF @b == "g_num" THEN
+      OutputLine(Concat("--- g_num start ---"))
+      OutputLine(Concat("P_NUM=[", IsPhoneNumber(6585550142), "]"))
+      OutputLine(Concat("--- g_num done ---"))
+    ENDIF
+
+    /* the rendered literals compared against real booleans */
+    IF @b == "g_tok" THEN
+      OutputLine(Concat("--- g_tok start ---"))
+      OutputLine(Concat("P_EQTRUE=[", IIf(IsPhoneNumber("4255550142") == true, "matches-true", "no"), "]"))
+      OutputLine(Concat("P_EQFALSE=[", IIf(IsPhoneNumber("0161 496 0009") == false, "matches-false", "no"), "]"))
+      OutputLine(Concat("--- g_tok done ---"))
+    ENDIF
+  ]%%

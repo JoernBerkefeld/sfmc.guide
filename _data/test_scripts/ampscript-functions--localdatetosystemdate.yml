@@ -1,0 +1,145 @@
+# Test scripts for /engagement/ampscript/functions/localdatetosystemdate/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The same bundle covers SystemDateToLocalDate, because the two functions are
+# inverses and every round-trip claim needs both of them in one render.
+#
+# AMPscript has no try/catch, so an unreadable date string aborts the whole
+# page with HTTP 422 and discards everything rendered before it. Fetch one
+# branch at a time: ?b=ctrl, ?b=offset, ?b=rt, ?b=chain, ?b=dateval, ?b=fmt,
+# ?b=s2lbad, ?b=l2sbad, ?b=s2lempty, ?b=l2sempty, ?b=s2la0, ?b=s2la2,
+# ?b=l2sa0, ?b=l2sa2.
+#
+# ?b=ctrl is the control: it calls both functions in their plainest form. If
+# ctrl renders and a rejecting branch does not, the abort belongs to the
+# function rather than to the harness or the deployment.
+#
+# Every branch uses fixed literal instants rather than Now(), so the values are
+# reproducible — except ?b=dateval, which feeds in the current time on purpose.
+# The minute counts depend on the time zone configured on the account, so
+# expect different numbers on a different business unit; the one-hour gap
+# between the winter and the summer measurement is the part that generalises.
+behaviour: |
+  %%[
+    VAR @b, @w, @s
+    SET @b = RequestParameter("b")
+    SET @w = "2026-01-15 09:30:00"
+    SET @s = "2026-07-15 09:30:00"
+
+    /* the control - fetch this whenever a branch below renders nothing */
+    IF @b == "ctrl" THEN
+      OutputLine(Concat("--- ctrl start ---"))
+      OutputLine(Concat("CTRLS2L=[", SystemDateToLocalDate(@w), "]"))
+      OutputLine(Concat("CTRLL2S=[", LocalDateToSystemDate(@w), "]"))
+      OutputLine(Concat("--- ctrl done ---"))
+    ENDIF
+
+    /* the shift is seasonal - winter and summer differ by exactly one hour */
+    IF @b == "offset" THEN
+      OutputLine(Concat("--- offset start ---"))
+      OutputLine(Concat("WIN_IN=[", @w, "]"))
+      OutputLine(Concat("WIN_S2L=[", SystemDateToLocalDate(@w), "]"))
+      OutputLine(Concat("WIN_L2S=[", LocalDateToSystemDate(@w), "]"))
+      OutputLine(Concat("WIN_S2L_MIN=[", DateDiff(DateParse(@w), SystemDateToLocalDate(@w), "MI"), "]"))
+      OutputLine(Concat("WIN_L2S_MIN=[", DateDiff(DateParse(@w), LocalDateToSystemDate(@w), "MI"), "]"))
+      OutputLine(Concat("SUM_IN=[", @s, "]"))
+      OutputLine(Concat("SUM_S2L=[", SystemDateToLocalDate(@s), "]"))
+      OutputLine(Concat("SUM_L2S=[", LocalDateToSystemDate(@s), "]"))
+      OutputLine(Concat("SUM_S2L_MIN=[", DateDiff(DateParse(@s), SystemDateToLocalDate(@s), "MI"), "]"))
+      OutputLine(Concat("SUM_L2S_MIN=[", DateDiff(DateParse(@s), LocalDateToSystemDate(@s), "MI"), "]"))
+      OutputLine(Concat("--- offset done ---"))
+    ENDIF
+
+    /* both compositions return the original instant exactly */
+    IF @b == "rt" THEN
+      OutputLine(Concat("--- rt start ---"))
+      OutputLine(Concat("RT_W_A=[", SystemDateToLocalDate(LocalDateToSystemDate(@w)), "]"))
+      OutputLine(Concat("RT_W_B=[", LocalDateToSystemDate(SystemDateToLocalDate(@w)), "]"))
+      OutputLine(Concat("RT_S_A=[", SystemDateToLocalDate(LocalDateToSystemDate(@s)), "]"))
+      OutputLine(Concat("RT_S_B=[", LocalDateToSystemDate(SystemDateToLocalDate(@s)), "]"))
+      OutputLine(Concat("RT_W_A_MIN=[", DateDiff(DateParse(@w), SystemDateToLocalDate(LocalDateToSystemDate(@w)), "MI"), "]"))
+      OutputLine(Concat("RT_W_B_MIN=[", DateDiff(DateParse(@w), LocalDateToSystemDate(SystemDateToLocalDate(@w)), "MI"), "]"))
+      OutputLine(Concat("RT_S_A_MIN=[", DateDiff(DateParse(@s), SystemDateToLocalDate(LocalDateToSystemDate(@s)), "MI"), "]"))
+      OutputLine(Concat("RT_S_B_MIN=[", DateDiff(DateParse(@s), LocalDateToSystemDate(SystemDateToLocalDate(@s)), "MI"), "]"))
+      OutputLine(Concat("--- rt done ---"))
+    ENDIF
+
+    /* the result is a real date value the other date functions consume */
+    IF @b == "chain" THEN
+      OutputLine(Concat("--- chain start ---"))
+      OutputLine(Concat("S2L_FD=[", FormatDate(SystemDateToLocalDate(@w), "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("L2S_FD=[", FormatDate(LocalDateToSystemDate(@w), "yyyy-MM-dd"), "]"))
+      OutputLine(Concat("S2L_PH=[", DatePart(SystemDateToLocalDate(@w), "H"), "]"))
+      OutputLine(Concat("L2S_PH=[", DatePart(LocalDateToSystemDate(@w), "H"), "]"))
+      OutputLine(Concat("S2L_PY=[", DatePart(SystemDateToLocalDate(@w), "Y"), "]"))
+      OutputLine(Concat("S2L_ADD=[", DateAdd(SystemDateToLocalDate(@w), 1, "D"), "]"))
+      OutputLine(Concat("S2L_LEN=[", Length(SystemDateToLocalDate(@w)), "]"))
+      OutputLine(Concat("L2S_LEN=[", Length(LocalDateToSystemDate(@w)), "]"))
+      OutputLine(Concat("--- chain done ---"))
+    ENDIF
+
+    /* a date value is accepted as well as a string */
+    IF @b == "dateval" THEN
+      OutputLine(Concat("--- dateval start ---"))
+      OutputLine(Concat("S2L_PARSED=[", SystemDateToLocalDate(DateParse(@w)), "]"))
+      OutputLine(Concat("L2S_PARSED=[", LocalDateToSystemDate(DateParse(@w)), "]"))
+      OutputLine(Concat("S2L_NOW=[", SystemDateToLocalDate(Now()), "]"))
+      OutputLine(Concat("L2S_NOW=[", LocalDateToSystemDate(Now()), "]"))
+      OutputLine(Concat("NOWRAW=[", Now(), "]"))
+      OutputLine(Concat("--- dateval done ---"))
+    ENDIF
+
+    /* several string notations, plus the date-only day-shift trap */
+    IF @b == "fmt" THEN
+      OutputLine(Concat("--- fmt start ---"))
+      OutputLine(Concat("S2L_DATEONLY=[", SystemDateToLocalDate("2026-01-15"), "]"))
+      OutputLine(Concat("L2S_DATEONLY=[", LocalDateToSystemDate("2026-01-15"), "]"))
+      OutputLine(Concat("S2L_US=[", SystemDateToLocalDate("1/15/2026 9:30 AM"), "]"))
+      OutputLine(Concat("L2S_US=[", LocalDateToSystemDate("1/15/2026 9:30 AM"), "]"))
+      OutputLine(Concat("S2L_ISOT=[", SystemDateToLocalDate("2026-01-15T09:30:00"), "]"))
+      OutputLine(Concat("--- fmt done ---"))
+    ENDIF
+
+    /* every branch below aborts the page - fetch them ONE at a time */
+    IF @b == "s2lbad" THEN
+      OutputLine(Concat("--- s2lbad start ---"))
+      OutputLine(Concat("S2LBAD=[", SystemDateToLocalDate("not a date at all"), "]"))
+    ENDIF
+
+    IF @b == "l2sbad" THEN
+      OutputLine(Concat("--- l2sbad start ---"))
+      OutputLine(Concat("L2SBAD=[", LocalDateToSystemDate("not a date at all"), "]"))
+    ENDIF
+
+    IF @b == "s2lempty" THEN
+      OutputLine(Concat("--- s2lempty start ---"))
+      OutputLine(Concat("S2LEMPTY=[", SystemDateToLocalDate(""), "]"))
+    ENDIF
+
+    IF @b == "l2sempty" THEN
+      OutputLine(Concat("--- l2sempty start ---"))
+      OutputLine(Concat("L2SEMPTY=[", LocalDateToSystemDate(""), "]"))
+    ENDIF
+
+    IF @b == "s2la0" THEN
+      OutputLine(Concat("--- s2la0 start ---"))
+      OutputLine(Concat("S2LA0=[", SystemDateToLocalDate(), "]"))
+    ENDIF
+
+    IF @b == "s2la2" THEN
+      OutputLine(Concat("--- s2la2 start ---"))
+      OutputLine(Concat("S2LA2=[", SystemDateToLocalDate(@w, 1), "]"))
+    ENDIF
+
+    IF @b == "l2sa0" THEN
+      OutputLine(Concat("--- l2sa0 start ---"))
+      OutputLine(Concat("L2SA0=[", LocalDateToSystemDate(), "]"))
+    ENDIF
+
+    IF @b == "l2sa2" THEN
+      OutputLine(Concat("--- l2sa2 start ---"))
+      OutputLine(Concat("L2SA2=[", LocalDateToSystemDate(@w, 1), "]"))
+    ENDIF
+  ]%%

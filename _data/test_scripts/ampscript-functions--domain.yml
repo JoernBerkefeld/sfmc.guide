@@ -1,0 +1,69 @@
+# Test scripts for /engagement/ampscript/functions/domain/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers IsEmailAddress, IsPhoneNumber, Domain and
+# IsCHTMLBrowser so the four can be exercised from one deploy. The ungated
+# block renders on every request; the remaining inputs sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time:
+# ?b=d_empty, ?b=d_edge, ?b=g_num, ?b=g_tok.
+# A branch that renders nothing at all is the failure signal, and an empty
+# value between the brackets is a real result for this function.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* what is extracted, for the shapes a caller actually meets */
+    OutputLine(Concat("--- D start ---"))
+    OutputLine(Concat("D1_plain=[", Domain("tomas.q@example.com"), "]"))
+    OutputLine(Concat("D2_no_at=[", Domain("example.com"), "]"))
+    OutputLine(Concat("D3_multilevel=[", Domain("tomas.q@a.b.example.co.uk"), "]"))
+    OutputLine(Concat("D4_double_at=[", Domain("a@b@example.com"), "]"))
+    OutputLine(Concat("D5_plustag=[", Domain("tomas.q+news@example.com"), "]"))
+    OutputLine(Concat("D6_upper=[", Domain("Tomas.Q@Example.COM"), "]"))
+    OutputLine(Concat("--- D done ---"))
+
+    /* the empty string, in its own branch: the sibling IsCHTMLBrowser aborts
+       on it, so the four functions must not share one empty-string branch */
+    IF @b == "d_empty" THEN
+      OutputLine(Concat("--- d_empty start ---"))
+      OutputLine(Concat("D_EMPTY=[", Domain(""), "]"))
+      OutputLine(Concat("--- d_empty done ---"))
+    ENDIF
+
+    /* degenerate at-sign placements and a value no validator would accept */
+    IF @b == "d_edge" THEN
+      OutputLine(Concat("--- d_edge start ---"))
+      OutputLine(Concat("D_AT_ONLY=[", Domain("@"), "]"))
+      OutputLine(Concat("D_TRAIL_AT=[", Domain("tomas.q@"), "]"))
+      OutputLine(Concat("D_SPACE=[", Domain("tomas q@example.com"), "]"))
+      OutputLine(Concat("D_NOT_EMAIL=[", Domain("hello@world"), "]"))
+      OutputLine(Concat("D_MULTI2=[", Domain("x@sub.a.b.example.co.uk"), "]"))
+      OutputLine(Concat("--- d_edge done ---"))
+    ENDIF
+
+    /* a non-string argument */
+    IF @b == "g_num" THEN
+      OutputLine(Concat("--- g_num start ---"))
+      OutputLine(Concat("D_NUM=[", Domain(123), "]"))
+      OutputLine(Concat("--- g_num done ---"))
+    ENDIF
+
+    /* the empty result confirmed with a second function rather than read off
+       a blank pair of brackets */
+    IF @b == "g_tok" THEN
+      OutputLine(Concat("--- g_tok start ---"))
+      OutputLine(Concat("D_NULLCHK=[", IIf(Empty(Domain("example.com")), "domain-empty", "domain-not-empty"), "]"))
+      OutputLine(Concat("--- g_tok done ---"))
+    ENDIF
+  ]%%

@@ -1,0 +1,72 @@
+# Test scripts for /engagement/ampscript/functions/propercase/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=pword, ?b=nau,
+# ?b=pnum, ?b=pbool, ?b=pdate, ?b=p0, ?b=p2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @acc
+    SET @b = RequestParameter("b")
+    SET @acc = Concat(Char(233), Char(224), Char(252))
+
+    /* documented form, plus the lower-casing of everything after the first letter */
+    IF @b == "safe" THEN
+      OutputLine(Concat("P1=[", ProperCase("BARB BROWN"), "]"))
+      OutputLine(Concat("P2=[", ProperCase("hello world"), "]"))
+      OutputLine(Concat("P3=[", ProperCase("McDONALD"), "]"))
+      OutputLine(Concat("PEMPTY=[", ProperCase(""), "]"))
+    ENDIF
+
+    /* what counts as a word boundary, and what happens to whitespace */
+    IF @b == "pword" THEN
+      OutputLine(Concat("PW1=[", ProperCase("o'neill mcdonald-smith"), "]"))
+      OutputLine(Concat("PW2=[", ProperCase("abc3def"), "]"))
+      OutputLine(Concat("PW3=[", ProperCase("HTML and CSS"), "]"))
+      OutputLine(Concat("PW4=[", ProperCase("  spaced   out  "), "]"))
+      OutputLine(Concat("PW5=[", ProperCase("a.b,c"), "]"))
+      OutputLine(Concat("PW6=[", ProperCase("x"), "]"))
+      OutputLine(Concat("PM1=[", ProperCase("iPhone"), "]"))
+      OutputLine(Concat("PM2=[", ProperCase("3rd street"), "]"))
+      OutputLine(Concat("PM3=[", ProperCase("a1b c2d"), "]"))
+    ENDIF
+
+    /* non-ASCII: read these as codepoints, not on a console */
+    IF @b == "nau" THEN
+      OutputLine(Concat("ECHO=[", @acc, "]"))
+      OutputLine(Concat("PNAU=[", ProperCase(Concat(@acc, " ", @acc)), "]"))
+      OutputLine(Concat("PSS=[", ProperCase(Concat(Char(223), "trasse")), "]"))
+      OutputLine(Concat("LENPSS=[", Length(ProperCase(Concat(Char(223), "trasse"))), "]"))
+    ENDIF
+
+    /* numbers and dates are accepted and handled as their string form */
+    IF @b == "pnum" THEN
+      OutputLine(Concat("PNUM=[", ProperCase(12345), "]"))
+      OutputLine(Concat("PNUMSTR=[", ProperCase("abc 42def"), "]"))
+    ENDIF
+
+    IF @b == "pdate" THEN
+      OutputLine(Concat("PDATE=[", ProperCase(Now()), "]"))
+    ENDIF
+
+    /* a boolean returns HTTP 200 but renders nothing */
+    IF @b == "pbool" THEN
+      OutputLine(Concat("PBOOL=[", ProperCase(true), "]"))
+    ENDIF
+
+    /* both branches below abort the page: the start marker never renders */
+    IF @b == "p0" THEN
+      OutputLine(Concat("--- p0 start ---"))
+      OutputLine(Concat("P0=[", ProperCase(), "]"))
+    ENDIF
+
+    IF @b == "p2" THEN
+      OutputLine(Concat("--- p2 start ---"))
+      OutputLine(Concat("P2A=[", ProperCase("a b", "c d"), "]"))
+    ENDIF
+  ]%%

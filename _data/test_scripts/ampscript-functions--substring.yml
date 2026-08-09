@@ -1,0 +1,97 @@
+# Test scripts for /engagement/ampscript/functions/substring/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=clamped,
+# ?b=unicode, ?b=lenneg, ?b=startdec, ?b=lendec, ?b=badstr, ?b=startbool,
+# ?b=lenbool, ?b=a0, ?b=a1, ?b=a4.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* documented forms plus the accepted argument types */
+    IF @b == "safe" THEN
+      OutputLine(Concat("HEAD=[", Substring("Hello World", 1, 5), "]"))
+      OutputLine(Concat("MID=[", Substring("Hello World", 7, 3), "]"))
+      OutputLine(Concat("ONE=[", Substring("Hello World", 11, 1), "]"))
+      OutputLine(Concat("REST=[", Substring("Hello World", 7), "]"))
+      OutputLine(Concat("STARTATEND=[", Substring("Hello World", 11), "]"))
+      OutputLine(Concat("STARTPASTEND=[", Substring("Hello World", 20, 3), "]"))
+      OutputLine(Concat("STARTPASTEND2=[", Substring("Hello World", 12), "]"))
+      OutputLine(Concat("LEN0=[", Substring("Hello World", 3, 0), "]"))
+      OutputLine(Concat("EMPTYSRC=[", Substring("", 1, 3), "]"))
+      OutputLine(Concat("NUMSRC=[", Substring(9876543, 3, 2), "]"))
+      OutputLine(Concat("STARTSTR=[", Substring("Hello World", "7", 3), "]"))
+      OutputLine(Concat("LENSTR=[", Substring("Hello World", 7, "3"), "]"))
+      OutputLine(Concat("BOTHSTR=[", Substring("Hello World", "1", "5"), "]"))
+      OutputLine(Concat("SRCBOOL=[", Substring(true, 1, 2), "]"))
+    ENDIF
+
+    /* a start below 1 is clamped, an over-long length is capped */
+    IF @b == "clamped" THEN
+      OutputLine(Concat("START0=[", Substring("Hello World", 0, 5), "]"))
+      OutputLine(Concat("STARTNEG=[", Substring("Hello World", -3, 5), "]"))
+      OutputLine(Concat("LENOVER=[", Substring("Hello World", 7, 99), "]"))
+    ENDIF
+
+    /* positions count UTF-16 code units, matching Length */
+    IF @b == "unicode" THEN
+      VAR @u
+      SET @u = Concat("caf", Char(233), " time")
+      OutputLine(Concat("ULEN=[", Length(@u), "]"))
+      OutputLine(Concat("UACCENTLEN=[", Length(Substring(@u, 4, 1)), "]"))
+      OutputLine(Concat("UAFTER=[", Substring(@u, 6), "]"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "lenneg" THEN
+      OutputLine(Concat("--- lenneg start ---"))
+      OutputLine(Concat("LENNEG=[", Substring("Hello World", 3, -2), "]"))
+    ENDIF
+
+    IF @b == "startdec" THEN
+      OutputLine(Concat("--- startdec start ---"))
+      OutputLine(Concat("STARTDEC=[", Substring("Hello World", 2.5, 3), "]"))
+    ENDIF
+
+    IF @b == "lendec" THEN
+      OutputLine(Concat("--- lendec start ---"))
+      OutputLine(Concat("LENDEC=[", Substring("Hello World", 1, 3.7), "]"))
+    ENDIF
+
+    IF @b == "badstr" THEN
+      OutputLine(Concat("--- badstr start ---"))
+      OutputLine(Concat("BADSTR=[", Substring("Hello World", "abc", 3), "]"))
+    ENDIF
+
+    IF @b == "startbool" THEN
+      OutputLine(Concat("--- startbool start ---"))
+      OutputLine(Concat("STARTBOOL=[", Substring("Hello World", true, 5), "]"))
+    ENDIF
+
+    IF @b == "lenbool" THEN
+      OutputLine(Concat("--- lenbool start ---"))
+      OutputLine(Concat("LENBOOL=[", Substring("Hello World", 1, true), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", Substring(), "]"))
+    ENDIF
+
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      OutputLine(Concat("A1=[", Substring("Hello World"), "]"))
+    ENDIF
+
+    IF @b == "a4" THEN
+      OutputLine(Concat("--- a4 start ---"))
+      OutputLine(Concat("A4=[", Substring("Hello World", 1, 5, 2), "]"))
+    ENDIF
+  ]%%

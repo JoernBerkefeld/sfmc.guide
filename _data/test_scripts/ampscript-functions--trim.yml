@@ -1,0 +1,69 @@
+# Test scripts for /engagement/ampscript/functions/trim/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=ws, ?b=nau,
+# ?b=tnum, ?b=tbool, ?b=tdate, ?b=t0, ?b=t2.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @acc
+    SET @b = RequestParameter("b")
+    SET @acc = Concat(Char(233), Char(224), Char(252))
+
+    /* documented form: leading and trailing spaces removed, inner spacing kept */
+    IF @b == "safe" THEN
+      OutputLine(Concat("T1=[", Trim("  hello  "), "]"))
+      OutputLine(Concat("T2=[", Trim("  a  b  "), "]"))
+      OutputLine(Concat("T3=[", Trim("noPad"), "]"))
+      OutputLine(Concat("TEMPTY=[", Trim(""), "]"))
+      OutputLine(Concat("TWSONLY=[", Trim("     "), "]"))
+      OutputLine(Concat("LENTWSONLY=[", Length(Trim("     ")), "]"))
+    ENDIF
+
+    /* whitespace is broader than the space character - measure, do not eyeball */
+    IF @b == "ws" THEN
+      OutputLine(Concat("LENTAB=[", Length(Trim(Concat(Char(9), "x", Char(9)))), "]"))
+      OutputLine(Concat("LENNL=[", Length(Trim(Concat(Char(10), "x", Char(10)))), "]"))
+      OutputLine(Concat("LENCR=[", Length(Trim(Concat(Char(13), "x", Char(13)))), "]"))
+      OutputLine(Concat("LENNBSP=[", Length(Trim(Concat(Char(160), "x", Char(160)))), "]"))
+      OutputLine(Concat("LENMIX=[", Length(Trim(Concat(Char(9), Char(10), " x ", Char(13), Char(9)))), "]"))
+    ENDIF
+
+    /* non-ASCII payload survives; read these as codepoints, not on a console */
+    IF @b == "nau" THEN
+      OutputLine(Concat("ECHO=[", @acc, "]"))
+      OutputLine(Concat("TNAU=[", Trim(Concat("  ", @acc, "  ")), "]"))
+      OutputLine(Concat("LENTNAU=[", Length(Trim(Concat("  ", @acc, "  "))), "]"))
+    ENDIF
+
+    /* numbers and dates are accepted and handled as their string form */
+    IF @b == "tnum" THEN
+      OutputLine(Concat("TNUM=[", Trim(12345), "]"))
+      OutputLine(Concat("TNUMSTR=[", Trim("  42  "), "]"))
+    ENDIF
+
+    IF @b == "tdate" THEN
+      OutputLine(Concat("TDATE=[", Trim(Now()), "]"))
+    ENDIF
+
+    /* a boolean returns HTTP 200 but renders nothing */
+    IF @b == "tbool" THEN
+      OutputLine(Concat("TBOOL=[", Trim(true), "]"))
+    ENDIF
+
+    /* both branches below abort the page: the start marker never renders */
+    IF @b == "t0" THEN
+      OutputLine(Concat("--- t0 start ---"))
+      OutputLine(Concat("T0=[", Trim(), "]"))
+    ENDIF
+
+    IF @b == "t2" THEN
+      OutputLine(Concat("--- t2 start ---"))
+      OutputLine(Concat("T2A=[", Trim("  a  ", "  b  "), "]"))
+    ENDIF
+  ]%%

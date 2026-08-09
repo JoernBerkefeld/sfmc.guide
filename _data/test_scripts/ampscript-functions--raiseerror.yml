@@ -1,0 +1,106 @@
+# Test scripts for /engagement/ampscript/functions/raiseerror/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Part of ONE shared harness covering RaiseError and Redirect. This function
+# TERMINATES THE REQUEST, so every case sits ALONE in its own gate and the
+# ungated path never calls it — the deployed page renders normally at HTTP 200
+# until you ask for a gate.
+#
+# EVERY GATE BELOW ANSWERS HTTP 422 WITH A FIXED FAILURE NOTICE. That is the
+# result, not a broken deploy: the ungated control line proves the page is fine.
+# Read the status code rather than the body, and fetch with automatic redirect
+# following disabled so the status line is literal. In PowerShell:
+#   $r = [System.Net.WebRequest]::Create($url); $r.AllowAutoRedirect = $false
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=re1     message only, with markers before and after the call
+#   ?b=re2t    second argument unquoted true
+#   ?b=re2f    second argument unquoted false
+#   ?b=re2n1   second argument as the number one
+#   ?b=re2n0   second argument as the number zero
+#   ?b=re2q    second argument as the quoted spelling of true
+#   ?b=re5     the fully specified five-argument form
+#   ?b=re0     no arguments
+#   ?b=re6     six arguments
+#   ?b=ctlabort  the control: an abort caused by something unrelated, whose
+#                response is byte-for-byte identical to every gate above
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* the markers before and after the call are the point: NEITHER is
+       delivered, and neither is the control line above */
+    IF @b == "re1" THEN
+      OutputLine(Concat("--- re1 start ---"))
+      OutputLine(Concat("RE_BEFORE=[written-before]"))
+      RaiseError("probe-msg-one")
+      OutputLine(Concat("RE_AFTER=[written-after]"))
+      OutputLine(Concat("--- re1 done ---"))
+    ENDIF
+
+    /* all three spellings of the flag are accepted and all reach the same
+       abort, so the parameter is not boolean-only */
+    IF @b == "re2t" THEN
+      OutputLine(Concat("--- re2t start ---"))
+      RaiseError("probe-msg-two-true", true)
+      OutputLine(Concat("--- re2t done ---"))
+    ENDIF
+
+    IF @b == "re2f" THEN
+      OutputLine(Concat("--- re2f start ---"))
+      RaiseError("probe-msg-two-false", false)
+      OutputLine(Concat("--- re2f done ---"))
+    ENDIF
+
+    IF @b == "re2n1" THEN
+      OutputLine(Concat("--- re2n1 start ---"))
+      RaiseError("probe-msg-num-one", 1)
+      OutputLine(Concat("--- re2n1 done ---"))
+    ENDIF
+
+    IF @b == "re2n0" THEN
+      OutputLine(Concat("--- re2n0 start ---"))
+      RaiseError("probe-msg-num-zero", 0)
+      OutputLine(Concat("--- re2n0 done ---"))
+    ENDIF
+
+    IF @b == "re2q" THEN
+      OutputLine(Concat("--- re2q start ---"))
+      RaiseError("probe-msg-quoted-true", "true")
+      OutputLine(Concat("--- re2q done ---"))
+    ENDIF
+
+    IF @b == "re5" THEN
+      OutputLine(Concat("--- re5 start ---"))
+      RaiseError("probe-msg-five", true, "PROBECODE", 4321, true)
+      OutputLine(Concat("--- re5 done ---"))
+    ENDIF
+
+    IF @b == "re0" THEN
+      OutputLine(Concat("RE0_START=[x]"))
+      RaiseError()
+      OutputLine(Concat("RE0_DONE=[x]"))
+    ENDIF
+
+    IF @b == "re6" THEN
+      OutputLine(Concat("RE6_START=[x]"))
+      RaiseError("probe-msg-six", true, "PROBECODE", 4321, true, "extra")
+      OutputLine(Concat("RE6_DONE=[x]"))
+    ENDIF
+
+    /* the control gate: it aborts for a reason that has nothing to do with
+       this function, yet the caller sees exactly the same response */
+    IF @b == "ctlabort" THEN
+      OutputLine(Concat("CTL_START=[x]"))
+      OutputLine(Concat("CTL=[", Uppercase(), "]"))
+      OutputLine(Concat("CTL_DONE=[x]"))
+    ENDIF
+  ]%%

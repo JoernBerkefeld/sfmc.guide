@@ -1,0 +1,67 @@
+# Test scripts for /engagement/ampscript/functions/ischtmlbrowser/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers IsEmailAddress, IsPhoneNumber, Domain and
+# IsCHTMLBrowser so the four can be exercised from one deploy. The ungated
+# block renders on every request; the remaining cases sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time:
+# ?b=live, ?b=g_num, ?b=g_tok.
+#
+# The ?b=live branch is the interesting one: fetch it TWICE with two
+# different User-Agent request headers and compare. It also needs a
+# User-Agent header to be present at all - a request that sends none leaves
+# the header empty and that branch aborts.
+#
+# The empty string is deliberately absent: it aborts the page for this
+# function, unlike the other three in the shared harness. Argument-count
+# probes are absent for the same reason - a wrong argument count aborts
+# AMPscript at COMPILE time and kills every branch including the control.
+behaviour: |
+  %%[
+    VAR @b, @ua
+    SET @b = RequestParameter("b")
+
+    /* the header must be read into a variable here; passing the header call
+       inline as the argument below aborts the branch */
+    SET @ua = HTTPRequestHeader("user-agent")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* constructed agents - safe on every request, and the only way to see
+       the true result without a feature phone to hand */
+    OutputLine(Concat("--- C start ---"))
+    OutputLine(Concat("C1_desktop=[", IsCHTMLBrowser("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"), "]"))
+    OutputLine(Concat("C2_imode=[", IsCHTMLBrowser("DoCoMo/2.0 N905i(c100;TB;W24H16)"), "]"))
+    OutputLine(Concat("C3_kddi=[", IsCHTMLBrowser("KDDI-CA31 UP.Browser/6.2.0.7.3.129 (GUI) MMP/2.0"), "]"))
+    OutputLine(Concat("C4_chtml_word=[", IsCHTMLBrowser("chtml"), "]"))
+    OutputLine(Concat("C5_junk=[", IsCHTMLBrowser("zzz-not-a-user-agent"), "]"))
+    OutputLine(Concat("--- C done ---"))
+
+    /* the real request header - fetch this branch twice with two different
+       User-Agent headers to see the answer change */
+    IF @b == "live" THEN
+      OutputLine(Concat("--- live start ---"))
+      OutputLine(Concat("UA3=[", @ua, "]"))
+      OutputLine(Concat("C_LIVE=[", IsCHTMLBrowser(@ua), "]"))
+      OutputLine(Concat("--- live done ---"))
+    ENDIF
+
+    /* a non-string argument */
+    IF @b == "g_num" THEN
+      OutputLine(Concat("--- g_num start ---"))
+      OutputLine(Concat("C_NUM=[", IsCHTMLBrowser(0), "]"))
+      OutputLine(Concat("--- g_num done ---"))
+    ENDIF
+
+    /* the rendered literals compared against real booleans */
+    IF @b == "g_tok" THEN
+      OutputLine(Concat("--- g_tok start ---"))
+      OutputLine(Concat("C_EQTRUE=[", IIf(IsCHTMLBrowser("DoCoMo/2.0 N905i(c100;TB;W24H16)") == true, "matches-true", "no"), "]"))
+      OutputLine(Concat("C_EQFALSE=[", IIf(IsCHTMLBrowser("Mozilla/5.0") == false, "matches-false", "no"), "]"))
+      OutputLine(Concat("--- g_tok done ---"))
+    ENDIF
+  ]%%

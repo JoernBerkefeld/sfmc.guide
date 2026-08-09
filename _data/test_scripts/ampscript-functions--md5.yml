@@ -1,0 +1,98 @@
+# Test scripts for /engagement/ampscript/functions/md5/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=enc, ?b=nonascii,
+# ?b=csascii, ?b=numin, ?b=csbad, ?b=csnodash, ?b=csnum, ?b=csempty, ?b=a0,
+# ?b=a3. A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @a, @nb
+    SET @b = RequestParameter("b")
+    SET @a = "Hash probe 2026"
+    SET @nb = Concat("Grus", Char(223), " ", Char(8364), Char(228))
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", MD5(@a), "]"))
+
+    /* the plain one-argument form, its length, and the empty-input digest */
+    IF @b == "safe" THEN
+      OutputLine(Concat("--- safe start ---"))
+      OutputLine(Concat("M1=[", MD5(@a), "]"))
+      OutputLine(Concat("ML=[", Length(MD5(@a)), "]"))
+      OutputLine(Concat("EM=[", MD5(""), "]"))
+      OutputLine(Concat("--- safe done ---"))
+    ENDIF
+
+    /* the second argument really changes the digest, and names are
+       matched without regard to case */
+    IF @b == "enc" THEN
+      OutputLine(Concat("--- enc start ---"))
+      OutputLine(Concat("M8=[", MD5(@a, "UTF-8"), "]"))
+      OutputLine(Concat("M16=[", MD5(@a, "UTF-16"), "]"))
+      OutputLine(Concat("CSLOW8=[", MD5(@nb, "utf-8"), "]"))
+      OutputLine(Concat("CSLOW16=[", MD5(@nb, "utf-16"), "]"))
+      OutputLine(Concat("--- enc done ---"))
+    ENDIF
+
+    /* the default encoding is the UTF-8 byte sequence, not the engine's
+       internal UTF-16 form - only a non-ASCII input can tell them apart */
+    IF @b == "nonascii" THEN
+      OutputLine(Concat("--- nonascii start ---"))
+      OutputLine(Concat("NBIN=[", @nb, "]"))
+      OutputLine(Concat("NM8=[", MD5(@nb), "]"))
+      OutputLine(Concat("NM16=[", MD5(@nb, "UTF-16"), "]"))
+      OutputLine(Concat("--- nonascii done ---"))
+    ENDIF
+
+    /* ASCII silently substitutes a question mark for anything it cannot
+       represent, which changes the digest without any signal */
+    IF @b == "csascii" THEN
+      OutputLine(Concat("--- csascii start ---"))
+      OutputLine(Concat("CSASCII=[", MD5(@nb, "ASCII"), "]"))
+      OutputLine(Concat("--- csascii done ---"))
+    ENDIF
+
+    /* a number is hashed as the text it renders as */
+    IF @b == "numin" THEN
+      OutputLine(Concat("--- numin start ---"))
+      OutputLine(Concat("NUMIN=[", MD5(2026), "]"))
+      OutputLine(Concat("--- numin done ---"))
+    ENDIF
+
+    /* each of the four branches below aborts the page - fetch alone */
+    IF @b == "csbad" THEN
+      OutputLine(Concat("--- csbad start ---"))
+      OutputLine(Concat("CSBAD=[", MD5(@a, "banana"), "]"))
+    ENDIF
+
+    IF @b == "csnodash" THEN
+      OutputLine(Concat("--- csnodash start ---"))
+      OutputLine(Concat("CSNODASH=[", MD5(@nb, "UTF8"), "]"))
+    ENDIF
+
+    IF @b == "csnum" THEN
+      OutputLine(Concat("--- csnum start ---"))
+      OutputLine(Concat("CSNUM=[", MD5(@a, 8), "]"))
+    ENDIF
+
+    IF @b == "csempty" THEN
+      OutputLine(Concat("--- csempty start ---"))
+      OutputLine(Concat("CSEMPTY=[", MD5(@a, ""), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", MD5(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", MD5(@a, "UTF-8", "extra"), "]"))
+    ENDIF
+  ]%%

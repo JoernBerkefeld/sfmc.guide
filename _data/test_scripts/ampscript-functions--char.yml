@@ -1,0 +1,121 @@
+# Test scripts for /engagement/ampscript/functions/char/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=cp, ?b=sc, ?b=sr,
+# ?b=r0, ?b=c256, ?b=cbig, ?b=cn, ?b=cwrap, ?b=castral, ?b=rn, ?b=cdec,
+# ?b=rdec, ?b=cb, ?b=cbad, ?b=a0, ?b=a3.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* documented forms: printable codes, extended ASCII, the repeat count */
+    IF @b == "safe" THEN
+      OutputLine(Concat("C65=[", Char(65), "]"))
+      OutputLine(Concat("C97=[", Char(97), "]"))
+      OutputLine(Concat("C48=[", Char(48), "]"))
+      OutputLine(Concat("C34=[", Char(34), "]"))
+      OutputLine(Concat("C39=[", Char(39), "]"))
+      OutputLine(Concat("C190=[", Char(190), "]"))
+      OutputLine(Concat("C255=[", Char(255), "]"))
+      OutputLine(Concat("LEN65=[", Length(Char(65)), "]"))
+      OutputLine(Concat("LEN190=[", Length(Char(190)), "]"))
+      OutputLine(Concat("LEN255=[", Length(Char(255)), "]"))
+      OutputLine(Concat("R3=[", Char(65,3), "]"))
+      OutputLine(Concat("R1=[", Char(65,1), "]"))
+      OutputLine(Concat("LENR3=[", Length(Char(65,3)), "]"))
+    ENDIF
+
+    /* control and whitespace codes - read these as raw bytes, not on a console */
+    IF @b == "cp" THEN
+      OutputLine(Concat("P10=[", Char(10), "]"))
+      OutputLine(Concat("P13=[", Char(13), "]"))
+      OutputLine(Concat("P32=[", Char(32), "]"))
+      OutputLine(Concat("P0=[", Char(0), "]"))
+      OutputLine(Concat("P9=[", Char(9), "]"))
+      OutputLine(Concat("LENC0=[", Length(Char(0)), "]"))
+    ENDIF
+
+    /* numeric strings are accepted for either parameter */
+    IF @b == "sc" THEN
+      OutputLine(Concat("SC=[", Char("65"), "]"))
+    ENDIF
+
+    IF @b == "sr" THEN
+      OutputLine(Concat("SR=[", Char(65,"3"), "]"))
+    ENDIF
+
+    /* a zero repeat count yields an empty string */
+    IF @b == "r0" THEN
+      OutputLine(Concat("R0=[", Char(65,0), "]"))
+      OutputLine(Concat("LENR0=[", Length(Char(65,0)), "]"))
+    ENDIF
+
+    /* codes past the documented 0-255 range still resolve */
+    IF @b == "c256" THEN
+      OutputLine(Concat("C256=[", Char(256), "]"))
+      OutputLine(Concat("LENC256=[", Length(Char(256)), "]"))
+    ENDIF
+
+    IF @b == "cbig" THEN
+      OutputLine(Concat("CBIG=[", Char(9731), "]"))
+      OutputLine(Concat("LENCBIG=[", Length(Char(9731)), "]"))
+    ENDIF
+
+    /* out-of-range codes wrap into the 16-bit code-unit range */
+    IF @b == "cn" THEN
+      OutputLine(Concat("CN=[", Char(-1), "]"))
+    ENDIF
+
+    IF @b == "cwrap" THEN
+      OutputLine(Concat("W65601=[", Char(65601), "]"))
+      OutputLine(Concat("LENW=[", Length(Char(65601)), "]"))
+    ENDIF
+
+    IF @b == "castral" THEN
+      OutputLine(Concat("AST=[", Char(128512), "]"))
+      OutputLine(Concat("LENAST=[", Length(Char(128512)), "]"))
+    ENDIF
+
+    /* every branch below aborts the page: the start marker never renders */
+    IF @b == "rn" THEN
+      OutputLine(Concat("--- rn start ---"))
+      OutputLine(Concat("RN=[", Char(65,-1), "]"))
+    ENDIF
+
+    IF @b == "cdec" THEN
+      OutputLine(Concat("--- cdec start ---"))
+      OutputLine(Concat("CDEC=[", Char(65.7), "]"))
+    ENDIF
+
+    IF @b == "rdec" THEN
+      OutputLine(Concat("--- rdec start ---"))
+      OutputLine(Concat("RDEC=[", Char(65,2.5), "]"))
+    ENDIF
+
+    IF @b == "cb" THEN
+      OutputLine(Concat("--- cb start ---"))
+      OutputLine(Concat("CB=[", Char(true), "]"))
+    ENDIF
+
+    IF @b == "cbad" THEN
+      OutputLine(Concat("--- cbad start ---"))
+      OutputLine(Concat("CBAD=[", Char("abc"), "]"))
+    ENDIF
+
+    IF @b == "a0" THEN
+      OutputLine(Concat("--- a0 start ---"))
+      OutputLine(Concat("A0=[", Char(), "]"))
+    ENDIF
+
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
+      OutputLine(Concat("A3=[", Char(65,2,3), "]"))
+    ENDIF
+  ]%%

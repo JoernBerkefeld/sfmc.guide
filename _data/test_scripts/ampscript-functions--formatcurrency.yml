@@ -1,0 +1,68 @@
+# Test scripts for /engagement/ampscript/functions/formatcurrency/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Format, FormatCurrency and FormatNumber so the
+# three can be compared on the same fixed input, 1234.555. Every group sits
+# behind its own RequestParameter("b") branch and must be fetched one at a
+# time. Branches for FormatCurrency: ?b=s4 (locale names and symbols) and
+# ?b=s5 (decimal places, custom symbol, rounding, negatives).
+# A branch that renders nothing at all is the failure signal.
+#
+# Read the output as raw UTF-8 rather than through a console. Nearly every
+# result in s4 carries a non-ASCII character - a euro, pound, yen or rupee
+# sign, a non-breaking space, or an apostrophe used as a group separator -
+# and a mis-set console encoding hides exactly what the branch is there to
+# show.
+#
+# Argument-count probes are NOT in this bundle on purpose: a wrong argument
+# count aborts AMPscript at COMPILE time, which kills every branch on the
+# page including the control block. Each arity boundary needs its own deploy.
+behaviour: |
+  %%[
+    VAR @b, @n, @ns, @neg
+    SET @b = RequestParameter("b")
+    SET @n = 1234.555
+    SET @ns = "1234.555"
+    SET @neg = -1234.555
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* which symbol, which side, which separators - and which names work */
+    IF @b == "s4" THEN
+      OutputLine("--- s4 start ---")
+      OutputLine(Concat("enUS=[", FormatCurrency(@n, "en-US"), "]"))
+      OutputLine(Concat("enUSu=[", FormatCurrency(@n, "en_US"), "]"))
+      OutputLine(Concat("enGB=[", FormatCurrency(@n, "en_GB"), "]"))
+      OutputLine(Concat("deDE=[", FormatCurrency(@n, "de-DE"), "]"))
+      OutputLine(Concat("frFR=[", FormatCurrency(@n, "fr-FR"), "]"))
+      OutputLine(Concat("jaJP=[", FormatCurrency(@n, "ja-JP"), "]"))
+      OutputLine(Concat("ptBR=[", FormatCurrency(@n, "pt-BR"), "]"))
+      OutputLine(Concat("hiIN=[", FormatCurrency(@n, "hi-IN"), "]"))
+      OutputLine(Concat("deCH=[", FormatCurrency(@n, "de-CH"), "]"))
+      OutputLine(Concat("bare=[", FormatCurrency(@n, "de"), "]"))
+      OutputLine(Concat("bogus=[", FormatCurrency(@n, "zz-ZZ"), "]"))
+      OutputLine(Concat("empt=[", FormatCurrency(@n, ""), "]"))
+      OutputLine("--- s4 done ---")
+    ENDIF
+
+    /* decimal places, a replacement symbol, rounding and negatives */
+    IF @b == "s5" THEN
+      OutputLine("--- s5 start ---")
+      OutputLine(Concat("dp0=[", FormatCurrency(@n, "de-CH", 0), "]"))
+      OutputLine(Concat("dp2ja=[", FormatCurrency(@n, "ja-JP", 2), "]"))
+      OutputLine(Concat("dp3=[", FormatCurrency(@n, "de-DE", 3), "]"))
+      OutputLine(Concat("dpstr=[", FormatCurrency(@n, "en-US", "3"), "]"))
+      OutputLine(Concat("sym=[", FormatCurrency(@n, "es-MX", 2, "Mex$"), "]"))
+      OutputLine(Concat("symde=[", FormatCurrency(@n, "de-DE", 2, "CHF"), "]"))
+      OutputLine(Concat("neg=[", FormatCurrency(@neg, "en-US"), "]"))
+      OutputLine(Concat("negde=[", FormatCurrency(@neg, "de-DE"), "]"))
+      OutputLine(Concat("h1=[", FormatCurrency(2.345, "en-US"), "]"))
+      OutputLine(Concat("h2=[", FormatCurrency(2.355, "en-US"), "]"))
+      OutputLine(Concat("numstr=[", FormatCurrency(@ns, "en-US"), "]"))
+      OutputLine("--- s5 done ---")
+    ENDIF
+  ]%%

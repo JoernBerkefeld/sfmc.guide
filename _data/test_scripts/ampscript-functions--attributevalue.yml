@@ -1,0 +1,67 @@
+# Test scripts for /engagement/ampscript/functions/attributevalue/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# One shared harness covers Output, OutputLine, GUID and AttributeValue so
+# the four can be exercised from one deploy. The ungated block renders on
+# every request; the remaining cases sit behind their own RequestParameter("b")
+# branch and must be fetched one at a time:
+# ?b=av_empty, ?b=av_num, ?b=av_arity.
+#
+# An empty value between the brackets is a real result for this function, so
+# the empty check next to each lookup is what tells a result apart from a
+# branch that never ran.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    OutputLine(Concat("--- AV start ---"))
+
+    /* a name that exists nowhere: empty, not an abort — and confirmed with a
+       second function rather than read off a blank pair of brackets */
+    OutputLine(Concat("AV_MISSING=[", AttributeValue("NoSuchAttributeZq7"), "]"))
+    OutputLine(Concat("AV_MISSING_CHK=[", IIf(Empty(AttributeValue("NoSuchAttributeZq7")), "empty", "not-empty"), "]"))
+    OutputLine(Concat("AV_IN_CONCAT=[", Concat("<", AttributeValue("NoSuchAttributeZq7"), ">"), "]"))
+
+    /* system attributes DO resolve on a page with no subscriber */
+    OutputLine(Concat("AV_MSGCTX=[", AttributeValue("_messagecontext"), "]"))
+    OutputLine(Concat("AV_MID=[", AttributeValue("memberid"), "]"))
+    OutputLine(Concat("AV_JOBID=[", AttributeValue("jobid"), "]"))
+
+    /* the same name in a different case resolves to the same value */
+    OutputLine(Concat("AV_MIXEDCASE=[", AttributeValue("_MessageContext"), "]"))
+
+    /* subscriber-scoped names are empty here because the page has no send
+       context — a context statement, not a defect */
+    OutputLine(Concat("AV_EMAIL=[", AttributeValue("emailaddr"), "]"))
+    OutputLine(Concat("AV_SUBKEY=[", AttributeValue("_subscriberkey"), "]"))
+    OutputLine(Concat("--- AV done ---"))
+
+    /* an empty name: aborts this branch only */
+    IF @b == "av_empty" THEN
+      OutputLine(Concat("--- av_empty start ---"))
+      OutputLine(Concat("AV_EMPTYNAME=[", AttributeValue(""), "]"))
+      OutputLine(Concat("--- av_empty done ---"))
+    ENDIF
+
+    /* a non-string argument */
+    IF @b == "av_num" THEN
+      OutputLine(Concat("--- av_num start ---"))
+      OutputLine(Concat("AV_NUM=[", AttributeValue(123), "]"))
+      OutputLine(Concat("--- av_num done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its branch */
+    IF @b == "av_arity" THEN
+      OutputLine(Concat("--- av_arity start ---"))
+      OutputLine(Concat("AV0=[", AttributeValue(), "]"))
+      OutputLine(Concat("AV2=[", AttributeValue("_messagecontext", "x"), "]"))
+      OutputLine(Concat("--- av_arity done ---"))
+    ENDIF
+  ]%%

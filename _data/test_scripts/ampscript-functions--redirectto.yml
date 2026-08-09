@@ -1,0 +1,87 @@
+# Test scripts for /engagement/ampscript/functions/redirectto/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Part of ONE shared harness covering MicrositeURL, WrapLongURL and RedirectTo.
+# This function was treated as potentially side-effecting: every case sits
+# ALONE in its own gate, never sharing a gate with another probe, and the
+# ungated path never calls it — so the deployed page cannot redirect.
+#
+# FETCH THESE WITH AUTOMATIC REDIRECT FOLLOWING DISABLED, or the status code
+# and the Location header cannot be read. In PowerShell:
+#   $r = [System.Net.WebRequest]::Create($url); $r.AllowAutoRedirect = $false
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=rt              assigned form, with markers before and after the call
+#   ?b=rtinline        the same call inline inside the output expression
+#   ?b=rtempty         an empty string
+#   ?b=rtnonurl        a string that is not a URL
+#   ?b=rtnum           a bare number
+# These return HTTP 422 — that IS the arity result, and the ungated control
+# line proves the deploy is healthy:
+#   ?b=rt0             ?b=rt2
+behaviour: |
+  %%[
+    VAR @b, @rt
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* the markers before and after the call are the point: both are
+       delivered, and the response is HTTP 200 with no Location header */
+    IF @b == "rt" THEN
+      OutputLine(Concat("--- rt start ---"))
+      OutputLine(Concat("RT_BEFORE=[written-before]"))
+      SET @rt = RedirectTo("https://example.com/target?a=1&b=2")
+      OutputLine(Concat("RT_RET=[", @rt, "] LEN=[", Length(@rt), "]"))
+      OutputLine(Concat("RT_AFTER=[written-after]"))
+      OutputLine(Concat("--- rt done ---"))
+    ENDIF
+
+    /* the inline form, to rule out the assignment being what suppresses
+       the redirect */
+    IF @b == "rtinline" THEN
+      OutputLine(Concat("--- rtinline start ---"))
+      OutputLine(Concat("RTI_BEFORE=[written-before]"))
+      OutputLine(Concat("RTI=[", RedirectTo("https://example.com/inline"), "]"))
+      OutputLine(Concat("RTI_AFTER=[written-after]"))
+      OutputLine(Concat("--- rtinline done ---"))
+    ENDIF
+
+    /* values that are not usable URLs: none of them is rejected */
+    IF @b == "rtempty" THEN
+      OutputLine(Concat("--- rtempty start ---"))
+      SET @rt = RedirectTo("")
+      OutputLine(Concat("RT_EMPTY=[", @rt, "] LEN=[", Length(@rt), "]"))
+      OutputLine(Concat("--- rtempty done ---"))
+    ENDIF
+
+    IF @b == "rtnonurl" THEN
+      OutputLine(Concat("--- rtnonurl start ---"))
+      SET @rt = RedirectTo("nothing-like-a-url")
+      OutputLine(Concat("RT_NONURL=[", @rt, "] LEN=[", Length(@rt), "]"))
+      OutputLine(Concat("--- rtnonurl done ---"))
+    ENDIF
+
+    IF @b == "rtnum" THEN
+      OutputLine(Concat("--- rtnum start ---"))
+      SET @rt = RedirectTo(42)
+      OutputLine(Concat("RT_NUM=[", @rt, "] LEN=[", Length(@rt), "]"))
+      OutputLine(Concat("--- rtnum done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its own
+       branch with HTTP 422 while every branch above still renders */
+    IF @b == "rt0" THEN
+      OutputLine(Concat("RT0_START=[x]"))
+      OutputLine(Concat("RT0=[", RedirectTo(), "]"))
+    ENDIF
+    IF @b == "rt2" THEN
+      OutputLine(Concat("RT2_START=[x]"))
+      OutputLine(Concat("RT2=[", RedirectTo("https://example.com/a", "https://example.com/b"), "]"))
+    ENDIF
+  ]%%

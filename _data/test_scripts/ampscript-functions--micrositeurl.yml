@@ -1,0 +1,71 @@
+# Test scripts for /engagement/ampscript/functions/micrositeurl/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# ONE shared harness covers MicrositeURL, WrapLongURL and RedirectTo (plus the
+# CloudPagesURL gates, which abort — see the page notes), so all of them can be
+# exercised from a single deploy. Every case sits in its own gate with its own
+# start and done markers, so an aborted gate never hides another's result.
+#
+# Replace the page ID below with one from your own account.
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=msulit          numeric ID, twice, plus the same ID quoted
+#   ?b=msuparams       one extra name-value pair
+#   ?b=msubad          an ID that matches no asset
+# These return HTTP 422 — that IS the arity result, and the ungated control
+# line proves the deploy is healthy:
+#   ?b=msu0            ?b=msu2
+behaviour: |
+  %%[
+    VAR @b, @u1, @u2, @m1
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* a real page ID, called twice, then the same ID as a quoted string:
+       the two tokens differ although the lengths match */
+    IF @b == "msulit" THEN
+      OutputLine(Concat("--- msulit start ---"))
+      SET @u1 = MicrositeURL(1467160)
+      SET @u2 = MicrositeURL(1467160)
+      OutputLine(Concat("MSU_LIT=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("MSU_LIT_SAME=[", IIf(@u1 == @u2, "identical", "different"), "]"))
+      SET @m1 = MicrositeURL("1467160")
+      OutputLine(Concat("MSU_STRLIT=[", @m1, "] LEN=[", Length(@m1), "]"))
+      OutputLine(Concat("--- msulit done ---"))
+    ENDIF
+
+    /* one extra pair: the length grows but neither the name nor the value
+       is readable in the result */
+    IF @b == "msuparams" THEN
+      OutputLine(Concat("--- msuparams start ---"))
+      SET @u1 = MicrositeURL(1467160, "alpha", "one")
+      OutputLine(Concat("MSU_P1=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("MSU_P1_HASALPHA=[", IndexOf(@u1, "alpha"), "]"))
+      OutputLine(Concat("--- msuparams done ---"))
+    ENDIF
+
+    /* an ID that matches no asset: still a well-formed URL */
+    IF @b == "msubad" THEN
+      OutputLine(Concat("--- msubad start ---"))
+      SET @u1 = MicrositeURL(987654321)
+      OutputLine(Concat("MSU_BAD=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("--- msubad done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its own
+       branch with HTTP 422 while every branch above still renders */
+    IF @b == "msu0" THEN
+      OutputLine(Concat("MSU0_START=[x]"))
+      OutputLine(Concat("MSU0=[", MicrositeURL(), "]"))
+    ENDIF
+    IF @b == "msu2" THEN
+      OutputLine(Concat("MSU2_START=[x]"))
+      OutputLine(Concat("MSU2=[", MicrositeURL(1467160, "alpha"), "]"))
+    ENDIF
+  ]%%

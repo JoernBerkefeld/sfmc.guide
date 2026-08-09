@@ -1,0 +1,93 @@
+# Test scripts for /engagement/ampscript/functions/wraplongurl/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Part of ONE shared harness covering MicrositeURL, WrapLongURL and RedirectTo.
+# Every case sits in its own gate with its own start and done markers, so an
+# aborted gate never hides another's result.
+#
+# The long input is assembled in-page by repeated concatenation rather than
+# pasted, so the exact length is printed by the harness itself.
+#
+# Vary the QUERY STRING rather than redeploying. Fetch one at a time:
+#   ?b=wlu             1048-character URL, called twice
+#   ?b=wlushort        a URL well below the threshold
+#   ?b=wluempty        an empty string
+#   ?b=wlunonurl       a string that is not a URL
+#   ?b=wlunum          a bare number
+# These return HTTP 422 — that IS the arity result, and the ungated control
+# line proves the deploy is healthy:
+#   ?b=wlu0            ?b=wlu2
+behaviour: |
+  %%[
+    VAR @b, @s, @long, @short, @u1, @u2
+    SET @b = RequestParameter("b")
+
+    /* known-good control: renders on every request, so a run of HTTP 422s
+       can be told apart from a broken deploy */
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+    OutputLine(Concat("GATE=[", @b, "]"))
+
+    /* a URL well past the documented 975-character threshold, built here so
+       the length is printed rather than assumed; called twice in one render */
+    IF @b == "wlu" THEN
+      OutputLine(Concat("--- wlu start ---"))
+      SET @s = "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz01"
+      SET @s = Concat(@s, @s)
+      SET @s = Concat(@s, @s)
+      SET @s = Concat(@s, @s)
+      SET @s = Concat(@s, @s)
+      SET @long = Concat("https://example.com/p?q=", @s)
+      OutputLine(Concat("WLU_IN_LEN=[", Length(@long), "]"))
+      SET @u1 = WrapLongURL(@long)
+      SET @u2 = WrapLongURL(@long)
+      OutputLine(Concat("WLU_OUT_LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("WLU_SAME=[", IIf(@u1 == @u2, "identical", "different"), "]"))
+      OutputLine(Concat("WLU_UNCHANGED=[", IIf(@u1 == @long, "unchanged", "changed"), "]"))
+      OutputLine(Concat("--- wlu done ---"))
+    ENDIF
+
+    /* a URL already below the threshold */
+    IF @b == "wlushort" THEN
+      OutputLine(Concat("--- wlushort start ---"))
+      SET @short = "https://example.com/a/b?x=1"
+      SET @u1 = WrapLongURL(@short)
+      OutputLine(Concat("WLU_SHORT_OUT=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("WLU_SHORT_UNCHANGED=[", IIf(@u1 == @short, "unchanged", "changed"), "]"))
+      OutputLine(Concat("--- wlushort done ---"))
+    ENDIF
+
+    /* values that are not URLs at all: none of them is rejected */
+    IF @b == "wluempty" THEN
+      OutputLine(Concat("--- wluempty start ---"))
+      SET @u1 = WrapLongURL("")
+      OutputLine(Concat("WLU_EMPTY=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("--- wluempty done ---"))
+    ENDIF
+
+    IF @b == "wlunonurl" THEN
+      OutputLine(Concat("--- wlunonurl start ---"))
+      SET @u1 = WrapLongURL("not-a-url-at-all")
+      OutputLine(Concat("WLU_NONURL=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("--- wlunonurl done ---"))
+    ENDIF
+
+    IF @b == "wlunum" THEN
+      OutputLine(Concat("--- wlunum start ---"))
+      SET @u1 = WrapLongURL(12345)
+      OutputLine(Concat("WLU_NUM=[", @u1, "] LEN=[", Length(@u1), "]"))
+      OutputLine(Concat("--- wlunum done ---"))
+    ENDIF
+
+    /* argument counts the signature does not allow: each aborts its own
+       branch with HTTP 422 while every branch above still renders */
+    IF @b == "wlu0" THEN
+      OutputLine(Concat("WLU0_START=[x]"))
+      OutputLine(Concat("WLU0=[", WrapLongURL(), "]"))
+    ENDIF
+    IF @b == "wlu2" THEN
+      OutputLine(Concat("WLU2_START=[x]"))
+      OutputLine(Concat("WLU2=[", WrapLongURL("https://example.com/a", "https://example.com/b"), "]"))
+    ENDIF
+  ]%%
