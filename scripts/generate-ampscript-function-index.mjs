@@ -35,18 +35,6 @@ function q(value) {
 }
 
 /**
- * Marketing Cloud Next caveat sentence for one function.
- *
- * `mcnHandlebarsGap` is a boolean in the catalog, so it has to become prose
- * here — emitting it raw would print a literal "true" in the rendered table.
- */
-function mcnNotes(f) {
-  return [f.mcnNotes, f.mcnHandlebarsGap === true ? 'No direct Handlebars helper.' : '']
-    .filter(Boolean)
-    .join(' ');
-}
-
-/**
  * Reference pages are flat files (functions/<name>.md), mirroring ssjs.guide.
  * index.md is the directory index, never a function page.
  */
@@ -103,7 +91,8 @@ for (const f of functions) {
   out += `  deprecated: ${Boolean(f.deprecated)}\n`;
   out += `  mcn: ${f.mcnSince ? q(String(f.mcnSince)) : '""'}\n`;
   out += `  handlebarsEquivalent: ${f.handlebarsEquivalent ? q(f.handlebarsEquivalent) : '""'}\n`;
-  out += `  mcnNotes: ${q(mcnNotes(f))}\n`;
+  if (f.handlebarsEquivalent) out += `  handlebarsExact: ${f.handlebarsExact !== false}\n`;
+  out += `  mcnNotes: ${q(f.mcnNotes ?? '')}\n`;
   out += `  description: ${q(f.description)}\n`;
   if (f.guideUrl) out += `  guideUrl: ${q(f.guideUrl)}\n`;
 }

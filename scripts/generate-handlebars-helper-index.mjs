@@ -52,10 +52,30 @@ function syntax(helper) {
   return `{{${call}}}`;
 }
 
-/** AMPscript function name per Handlebars helper, inverted from ampscript-data. */
+/**
+ * AMPscript counterpart per Handlebars helper, inverted from ampscript-data.
+ * Sources are, in priority order, FUNCTIONS then AMPSCRIPT_KEYWORDS then
+ * AMPSCRIPT_OPERATORS. Only the first counterpart seen for a helper is recorded
+ * (functions win, and within a source, catalog order wins), so a helper that
+ * inverts to several AMPscript entries (e.g. getContentBlock ← ContentBlockByID
+ * and ContentBlockByKey) shows one representative counterpart.
+ * Each record carries the counterpart kind and, for functions, its exactness.
+ */
 const ampByHelper = new Map();
+function recordEquivalent(helperName, ampName, kind, exact) {
+  if (!helperName || ampByHelper.has(helperName)) return;
+  ampByHelper.set(helperName, { name: ampName, kind, exact });
+}
 for (const f of amp.FUNCTIONS) {
-  if (f.handlebarsEquivalent) ampByHelper.set(f.handlebarsEquivalent, f.name);
+  if (f.handlebarsEquivalent) {
+    recordEquivalent(f.handlebarsEquivalent, f.name, 'function', f.handlebarsExact !== false);
+  }
+}
+for (const k of amp.AMPSCRIPT_KEYWORDS) {
+  if (k.handlebarsEquivalent) recordEquivalent(k.handlebarsEquivalent, k.name, 'keyword', true);
+}
+for (const op of amp.AMPSCRIPT_OPERATORS) {
+  if (op.handlebarsEquivalent) recordEquivalent(op.handlebarsEquivalent, op.name, 'operator', true);
 }
 
 const helpers = [...hb.HELPERS].sort((a, b) => a.name.localeCompare(b.name));
@@ -86,7 +106,8 @@ let out = `# Handlebars helper catalog for /next/handlebars/helpers/ and, filter
 `;
 
 for (const h of helpers) {
-  const ampName = ampByHelper.get(h.name) || '';
+  const equiv = ampByHelper.get(h.name) || null;
+  const ampName = equiv ? equiv.name : '';
   if (ampName) mapped += 1;
 
   out += `- name: ${q(h.name)}\n`;
@@ -98,6 +119,8 @@ for (const h of helpers) {
   out += `  returnType: ${q(h.returnType || '—')}\n`;
   out += `  mcn: ${h.mcnSince ? q(String(h.mcnSince)) : '""'}\n`;
   out += `  ampscriptEquivalent: ${q(ampName)}\n`;
+  out += `  ampscriptEquivalentKind: ${q(equiv ? equiv.kind : '')}\n`;
+  if (equiv) out += `  ampscriptExact: ${equiv.exact}\n`;
   out += `  subexpressionOnly: ${Boolean(h.subexpressionOnly)}\n`;
   out += `  description: ${q(h.description)}\n`;
   if (h.docUrl) out += `  docUrl: ${q(h.docUrl)}\n`;

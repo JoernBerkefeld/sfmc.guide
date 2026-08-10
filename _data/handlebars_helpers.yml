@@ -20,6 +20,8 @@
   returnType: "number"
   mcn: "65"
   ampscriptEquivalent: "Add"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the sum of two numbers, rounded to 2 decimal places."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-add.html"
@@ -31,7 +33,9 @@
   syntax: "{{and value1 [value2] [...valueN]}}"
   returnType: "boolean"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "and"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns true only when all operands are truthy."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-and.html"
@@ -43,7 +47,9 @@
   syntax: "{{char code [repeated]}}"
   returnType: "string"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "Char"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the Unicode character for a character code, optionally repeated."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-char.html"
@@ -55,7 +61,9 @@
   syntax: "{{compare leftValue operator rightValue}}"
   returnType: "boolean"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "!="
+  ampscriptEquivalentKind: "operator"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Compares two values using a specified operator."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-compare.html"
@@ -68,6 +76,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Concat"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Combines multiple values into a single string. Null values are skipped."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-concat.html"
@@ -80,6 +90,8 @@
   returnType: "string"
   mcn: "67"
   ampscriptEquivalent: "DateAdd"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Adds or subtracts an amount of time to a date."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-dateadd.html"
@@ -92,6 +104,8 @@
   returnType: "integer"
   mcn: "67"
   ampscriptEquivalent: "DateDiff"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Calculates the time difference between two dates in a specified unit."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-datediff.html"
@@ -104,6 +118,8 @@
   returnType: "number"
   mcn: "65"
   ampscriptEquivalent: "Divide"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the quotient of dividing the first value by the second."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-divide.html"
@@ -115,7 +131,9 @@
   syntax: "{{#each collection}}…{{/each}}"
   returnType: "string"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "for"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Iterates over arrays, lists, and objects, rendering a block for each element."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-each.html"
@@ -127,7 +145,9 @@
   syntax: "{{equals value1 value2 [compareAs]}}"
   returnType: "boolean"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "=="
+  ampscriptEquivalentKind: "operator"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Compares two values for equality, optionally by a comparison type."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-equals.html"
@@ -139,7 +159,9 @@
   syntax: "{{fallback value fallbackValue}}"
   returnType: "any"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "IsNullDefault"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Returns a fallback value when the first argument is null, empty, or throws an exception."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-fallback.html"
@@ -152,6 +174,7 @@
   returnType: "array"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Returns a list of items that match a field/operator/value condition."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-filter.html"
@@ -164,6 +187,7 @@
   returnType: "array"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Flattens a nested list of lists into a single list."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-flatten.html"
@@ -176,6 +200,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Format"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Formats output based on a format string and optional type specification."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-format.html"
@@ -188,6 +214,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "FormatCurrency"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Formats a number as a currency value for a locale."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatcurrency.html"
@@ -200,6 +228,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "FormatNumber"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Formats a number as a specific numeric type, such as decimal or percentage."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatnumber.html"
@@ -211,7 +241,9 @@
   syntax: "{{get collection indexOrKey}}"
   returnType: "any"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "Field"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Retrieves a value from a list or map by index or key."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-get.html"
@@ -223,7 +255,9 @@
   syntax: "{{getContentBlock key}}"
   returnType: "string"
   mcn: "67"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "ContentBlockByKey"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Retrieves and renders a content block within a template."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-getcontentblock.html"
@@ -236,6 +270,7 @@
   returnType: "object"
   mcn: "67"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: true
   description: "Constructs an object from key-value pairs. Used only as a subexpression within other helpers."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-hash.html"
@@ -247,7 +282,9 @@
   syntax: "{{#if condition}}…{{/if}}"
   returnType: "string"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "if"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Conditionally renders a block based on whether a value evaluates to true."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-if.html"
@@ -260,6 +297,8 @@
   returnType: "any"
   mcn: "65"
   ampscriptEquivalent: "IIf"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns one of two values based on whether an expression is true or false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-iif.html"
@@ -272,6 +311,8 @@
   returnType: "integer"
   mcn: "65"
   ampscriptEquivalent: "IndexOf"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Returns the 1-based position of a substring within a string (case-insensitive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-indexof.html"
@@ -284,6 +325,8 @@
   returnType: "boolean"
   mcn: "65"
   ampscriptEquivalent: "Empty"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns true when a value is null, undefined, or an empty string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-isempty.html"
@@ -295,7 +338,9 @@
   syntax: "{{jsonPath object expression}}"
   returnType: "any"
   mcn: "67"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "BuildRowsetFromJSON"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Queries and filters JSON objects using a JSONPath expression."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-jsonpath.html"
@@ -308,6 +353,8 @@
   returnType: "integer"
   mcn: "65"
   ampscriptEquivalent: "Length"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the length of a string or the number of elements in an array."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-length.html"
@@ -320,6 +367,7 @@
   returnType: "any"
   mcn: "67"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Dynamically accesses an object property or array element by a variable key."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-lookup.html"
@@ -332,6 +380,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Lowercase"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Converts all letters in a string to lowercase."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-lowercase.html"
@@ -344,6 +394,7 @@
   returnType: "array"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Extracts a specific field from each object in a list."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-map.html"
@@ -356,6 +407,8 @@
   returnType: "number"
   mcn: "65"
   ampscriptEquivalent: "Mod"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the remainder after dividing the first value by the second."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-modulo.html"
@@ -368,6 +421,8 @@
   returnType: "number"
   mcn: "65"
   ampscriptEquivalent: "Multiply"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the product of two numbers, rounded to 2 decimal places."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-multiply.html"
@@ -379,7 +434,9 @@
   syntax: "{{not value}}"
   returnType: "boolean"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "not"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns true when the operand evaluates to false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-not.html"
@@ -392,6 +449,8 @@
   returnType: "string"
   mcn: "67"
   ampscriptEquivalent: "Now"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Returns the current server date and time in UTC. Takes no parameters."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-now.html"
@@ -403,7 +462,9 @@
   syntax: "{{or value1 [value2] [...valueN]}}"
   returnType: "boolean"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "or"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns true when at least one operand is truthy."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-or.html"
@@ -415,7 +476,9 @@
   syntax: "{{personalizationResult key}}"
   returnType: "any"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "AttributeValue"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Retrieves a personalized value by key from the subscriber context."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-personalization-references/mcn-handlebars-reference-personalization-personalizationresult.html"
@@ -428,6 +491,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "ProperCase"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Capitalizes the first letter of each word and lowercases the rest."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-propercase.html"
@@ -439,7 +504,9 @@
   syntax: "{{query object type [...options]}}"
   returnType: "array"
   mcn: "67"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "LookupOrderedRows"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Retrieves multiple records from Sales Cloud or marketing object data sources."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-query.html"
@@ -451,7 +518,9 @@
   syntax: "{{queryFirst object type [...options]}}"
   returnType: "object"
   mcn: "67"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "Lookup"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Retrieves the first record from Sales Cloud, marketing objects, or data graphs matching criteria."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-queryfirst.html"
@@ -464,6 +533,8 @@
   returnType: "void"
   mcn: "67"
   ampscriptEquivalent: "RaiseError"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Throws an exception with a message and optional error code, halting rendering."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-raiseerror.html"
@@ -476,6 +547,8 @@
   returnType: "integer"
   mcn: "65"
   ampscriptEquivalent: "Random"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns a random integer between two values (inclusive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-random.html"
@@ -488,6 +561,7 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Repeats a block a specified number of times, exposing index, first, and last loop variables."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-repeat.html"
@@ -500,6 +574,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Replace"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Replaces every occurrence of a substring with another (case-sensitive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-replace.html"
@@ -511,7 +587,9 @@
   syntax: "{{#set ...assignments}}…{{/set}}"
   returnType: "string"
   mcn: "65"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "var"
+  ampscriptEquivalentKind: "keyword"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Performs local variable assignment within the block scope. Variables do not persist outside the block."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-set.html"
@@ -524,6 +602,7 @@
   returnType: "array"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Returns a portion of a list between two indices (end index exclusive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-slice.html"
@@ -536,6 +615,7 @@
   returnType: "array"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Sorts a list of objects by a field, order, and type."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-sort.html"
@@ -548,6 +628,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Substring"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Extracts a portion of a string starting from a 1-based position."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-substring.html"
@@ -560,6 +642,8 @@
   returnType: "number"
   mcn: "65"
   ampscriptEquivalent: "Subtract"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Returns the difference of subtracting the second value from the first."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-subtract.html"
@@ -571,7 +655,9 @@
   syntax: "{{timeZoneConversion date sourceTZ targetTZ}}"
   returnType: "string"
   mcn: "67"
-  ampscriptEquivalent: ""
+  ampscriptEquivalent: "LocalDateToSystemDate"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: false
   subexpressionOnly: false
   description: "Converts a date from one time zone to another."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-timezoneconversion.html"
@@ -584,6 +670,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Trim"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Removes leading and trailing whitespace from a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-trim.html"
@@ -596,6 +684,7 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Conditionally renders a block based on whether a value evaluates to false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-unless.html"
@@ -608,6 +697,8 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: "Uppercase"
+  ampscriptEquivalentKind: "function"
+  ampscriptExact: true
   subexpressionOnly: false
   description: "Converts all letters in a string to uppercase."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-uppercase.html"
@@ -620,6 +711,7 @@
   returnType: "string"
   mcn: "65"
   ampscriptEquivalent: ""
+  ampscriptEquivalentKind: ""
   subexpressionOnly: false
   description: "Changes the block context to a specified object so properties can be accessed directly."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-with.html"

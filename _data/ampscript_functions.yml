@@ -28,6 +28,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "add"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Computes the sum of two numeric values."
   guideUrl: "https://ampscript.guide/add/"
@@ -80,7 +81,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "personalizationResult"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Reads an attribute of the current message or page context by name, giving an empty value instead of failing when the name is unknown. The name is matched without regard to case, and system attributes such as the message context resolve on a CloudPage even though no subscriber is involved."
   guideUrl: "https://ampscript.guide/attributevalue/"
@@ -245,7 +247,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "jsonPath"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Parses a JSON string and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromjson/"
@@ -287,7 +290,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "char"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns the character for the given numeric character code. Codes above 255 are not rejected — they resolve to the matching Unicode character."
   guideUrl: "https://ampscript.guide/char/"
@@ -342,6 +346,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "concat"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Concatenates two or more string values."
   guideUrl: "https://ampscript.guide/concat/"
@@ -381,7 +386,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
-  mcnNotes: "No direct Handlebars helper."
+  mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its numeric ID."
   guideUrl: "https://ampscript.guide/contentblockbyid/"
 - name: "ContentBlockByKey"
@@ -393,8 +398,9 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
-  mcnNotes: "No direct Handlebars helper."
+  handlebarsEquivalent: "getContentBlock"
+  handlebarsExact: false
+  mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its customer key."
   guideUrl: "https://ampscript.guide/contentblockbykey/"
 - name: "ContentBlockByName"
@@ -407,7 +413,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
-  mcnNotes: "No direct Handlebars helper."
+  mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its folder path and name."
   guideUrl: "https://ampscript.guide/contentblockbyname/"
 - name: "ContentImageByID"
@@ -512,6 +518,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "dateAdd"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Adds a whole number of intervals to a date value. Only the five documented units are accepted and every other unit, including seconds and weeks, aborts the page — as does a non-integer amount or a date the engine cannot parse."
   guideUrl: "https://ampscript.guide/dateadd/"
@@ -526,6 +533,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "dateDiff"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Counts how many boundaries of the requested unit lie between two dates, by truncating both to that unit and subtracting — so a 23-hour gap that crosses midnight counts as 1 day, while 23 hours within one day counts as 0. Finer units than the one requested are ignored rather than rounded."
   guideUrl: "https://ampscript.guide/datediff/"
@@ -634,6 +642,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "divide"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Divides the first number by the second."
   guideUrl: "https://ampscript.guide/divide/"
@@ -662,6 +671,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "isEmpty"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns true when the value is an empty string, an unset variable, or an undeclared variable. Whitespace, the number 0, the string \"0\" and the string \"false\" are all treated as present."
   guideUrl: "https://ampscript.guide/empty/"
@@ -740,7 +750,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "get"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Retrieves the value of a specific field from a rowset row."
   guideUrl: "https://ampscript.guide/field/"
@@ -755,6 +766,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "format"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Formats a number, a date or a string with a .NET format pattern. The third parameter only accepts Date or the empty string; the documented value Number aborts the page."
   guideUrl: "https://ampscript.guide/format/"
@@ -769,6 +781,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "formatCurrency"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Formats a number as a currency amount for a locale, choosing the symbol, the separators and the symbol position from that locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatcurrency/"
@@ -782,7 +795,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "format"
+  handlebarsExact: false
   mcnNotes: "In MCN, uses Java SimpleDateFormat format strings instead of .NET. Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\")."
   description: "Formats a date according to a date pattern, a time pattern and a locale. The two pattern arguments use separate, case-insensitive token sets: in the date pattern mm means month, and minutes are only reachable from the time pattern."
   guideUrl: "https://ampscript.guide/formatdate/"
@@ -797,6 +811,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "formatNumber"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Formats a number with a standard or custom .NET numeric pattern, optionally for a locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatnumber/"
@@ -982,6 +997,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "iif"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns one of two values based on a boolean expression (inline if). Only a real comparison or a boolean-returning function selects the true branch; a plain string or number always selects the false branch. Only the selected branch is evaluated, so a call that would abort the page is safe in the branch that is not taken."
   guideUrl: "https://ampscript.guide/iif/"
@@ -1009,6 +1025,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "indexOf"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns the 1-based position of a substring, matching case-insensitively. An undocumented third argument selects which occurrence to locate."
   guideUrl: "https://ampscript.guide/indexof/"
@@ -1154,7 +1171,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "isEmpty"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns true only for a genuine null, which in practice means a data extension field with no value. An unset or undeclared variable, an empty string, whitespace and every ordinary value all return false, so this is not a general emptiness test."
   guideUrl: "https://ampscript.guide/isnull/"
@@ -1168,7 +1186,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "fallback"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns the value if not null, otherwise returns the default. Outside a Smart Capture form the default is never reached: on a CloudPage every empty-ish input returns the empty string instead, so it cannot be used as a general fallback."
   guideUrl: "https://ampscript.guide/isnulldefault/"
@@ -1197,6 +1216,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "length"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns the number of characters in a string."
   guideUrl: "https://ampscript.guide/length/"
@@ -1223,7 +1243,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "timeZoneConversion"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Converts a date in the time zone configured on the account to the Marketing Cloud system date (Central Time, no daylight saving). The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/localdatetosystemdate/"
@@ -1249,7 +1270,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "queryFirst"
+  handlebarsExact: false
   mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. All filter keys must fully specify the composite primary key."
   description: "Returns a single field value from the first matching row in a data extension."
   guideUrl: "https://ampscript.guide/lookup/"
@@ -1262,7 +1284,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "query"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns a sorted rowset of matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuporderedrows/"
@@ -1275,7 +1298,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "query"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Case-sensitive version of LookupOrderedRows. Returns a sorted rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuporderedrowscs/"
@@ -1288,7 +1312,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "query"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns a rowset of all matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuprows/"
@@ -1301,7 +1326,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "query"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Case-sensitive version of LookupRows. Returns a rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuprowscs/"
@@ -1316,6 +1342,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "lowercase"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Converts a string to all lowercase characters."
   guideUrl: "https://ampscript.guide/lowercase/"
@@ -1371,6 +1398,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "modulo"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns the remainder after dividing the first number by the second (modulo)."
   guideUrl: "https://ampscript.guide/mod/"
@@ -1398,6 +1426,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "multiply"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Computes the product of two numeric values."
   guideUrl: "https://ampscript.guide/multiply/"
@@ -1438,6 +1467,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "now"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns the current system date and time in Central Standard Time, with no daylight-saving adjustment. Every call within one render returns the same instant."
   guideUrl: "https://ampscript.guide/now/"
@@ -1480,6 +1510,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "properCase"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Converts a value to proper (title) case. Every letter after the first of a word is forced to lower case, so existing internal capitals are lost."
   guideUrl: "https://ampscript.guide/propercase/"
@@ -1508,6 +1539,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "raiseError"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Outside a send it is not a graceful abort: on a landing page it discards everything already written and answers the same generic failure any other aborting call gives, with the message nowhere in the response."
   guideUrl: "https://ampscript.guide/raiseerror/"
@@ -1522,6 +1554,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "random"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Returns a random integer between the two specified values (inclusive). Both bounds must be whole numbers; a decimal bound aborts the page. The bounds may be supplied in either order."
   guideUrl: "https://ampscript.guide/random/"
@@ -1591,6 +1624,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "replace"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Replaces all occurrences of a substring with a new value, matching case-insensitively. The source is scanned once, so text formed by a replacement is not replaced again."
   guideUrl: "https://ampscript.guide/replace/"
@@ -1670,7 +1704,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "query"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Retrieves records from a connected Salesforce CRM object."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
@@ -1683,7 +1718,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "get"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns a specific row from a rowset by its 1-based index."
   guideUrl: "https://ampscript.guide/row/"
@@ -1696,7 +1732,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "length"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Returns the number of rows in a rowset."
   guideUrl: "https://ampscript.guide/rowcount/"
@@ -1820,6 +1857,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "substring"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 is treated as the first character."
   guideUrl: "https://ampscript.guide/substring/"
@@ -1834,6 +1872,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "subtract"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Computes the difference between two numeric values."
   guideUrl: "https://ampscript.guide/subtract/"
@@ -1847,7 +1886,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "timeZoneConversion"
+  handlebarsExact: false
   mcnNotes: ""
   description: "Converts a Marketing Cloud system date (Central Time, no daylight saving) to the time zone configured on the account. The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/systemdatetolocaldate/"
@@ -1901,6 +1941,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "trim"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Removes leading and trailing whitespace from a value. Tabs, line breaks and the non-breaking space count as whitespace."
   guideUrl: "https://ampscript.guide/trim/"
@@ -1967,6 +2008,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "uppercase"
+  handlebarsExact: true
   mcnNotes: ""
   description: "Converts a string to all uppercase characters. The German sharp s remains unchanged rather than expanding to SS."
   guideUrl: "https://ampscript.guide/uppercase/"

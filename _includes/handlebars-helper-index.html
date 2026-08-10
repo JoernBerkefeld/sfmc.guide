@@ -15,7 +15,8 @@
 
   Row fields come from scripts/generate-handlebars-helper-index.mjs:
     name, slug, category, origin, helperType, syntax, returnType, mcn,
-    ampscriptEquivalent, subexpressionOnly, description, docUrl
+    ampscriptEquivalent, ampscriptEquivalentKind, ampscriptExact,
+    subexpressionOnly, description, docUrl
 
   Unlike the AMPscript index there is no verified state — no Handlebars helper
   has been through a runtime sweep yet, so every row links out to the official
@@ -132,6 +133,19 @@
   background: rgba(109, 40, 217, 0.08);
   color: #6d28d9;
 }
+/* Approximate-mapping marker, e.g. ContentBlockByKey -> getContentBlock. */
+.hbi-approx {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  padding: 0.1em 0.5em;
+  margin-left: 0.35em;
+  border: 1px solid rgba(202, 138, 4, 0.35);
+  border-radius: 9999px;
+  background: rgba(202, 138, 4, 0.1);
+  color: #a16207;
+}
 .hbi-ver {
   text-align: right;
   white-space: nowrap;
@@ -243,7 +257,7 @@
         <td class="hbi-ver">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
         <td><code>{{ h.returnType }}</code></td>
         {%- unless include.unmapped_only %}
-        <td>{% if h.ampscriptEquivalent != "" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}&mdash;{% endif %}</td>
+        <td>{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="hbi-flag" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="hbi-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
         {%- endunless %}
         <td class="hbi-desc">{{ h.description | escape }}</td>
       </tr>
