@@ -1,0 +1,51 @@
+# Test scripts for /engagement/ampscript/functions/updatesinglesalesforceobject/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Requires an active Marketing Cloud Connect integration to a Sales or Service
+# Cloud org. SAFE-ONLY: this bundle exercises only the FAILURE path, which
+# writes nothing. The success path (return 1) is intentionally NOT shipped here
+# because it mutates a real existing Salesforce record and AMPscript has no
+# delete/revert to clean it up.
+# AMPscript has no try/catch, so on a CloudPage a failed update (unknown object,
+# malformed or non-existent record ID) surfaces the SOAP fault as an uncatchable
+# HTTP 422 page abort instead of returning the documented 0. Each risky case
+# sits behind its own RequestParameter("b") branch.
+# Fetch one branch at a time: ?b=alive, ?b=badobj, ?b=noid, ?b=id18.
+# A fault branch that renders nothing at all is the expected abort signal;
+# ?b=alive proves the page compiles and serves HTTP 200.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* control: proves the harness compiles and the page serves 200 */
+    IF @b == "alive" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* an unknown object name faults and aborts the page */
+    IF @b == "badobj" THEN
+      OutputLine(Concat("badobj start"))
+      VAR @r1
+      SET @r1 = UpdateSingleSalesforceObject("NotARealObject__x", "00Q000000000000AAA", "Description", "zzz")
+      OutputLine(Concat("badobj.result=[", @r1, "]"))
+    ENDIF
+
+    /* a malformed record ID faults and aborts the page */
+    IF @b == "noid" THEN
+      OutputLine(Concat("noid start"))
+      VAR @r2
+      SET @r2 = UpdateSingleSalesforceObject("Lead", "00Q000000000000AAA", "Description", "zzz")
+      OutputLine(Concat("noid.result=[", @r2, "]"))
+    ENDIF
+
+    /* a well-formed but non-existent 18-char Lead ID faults and aborts the page */
+    IF @b == "id18" THEN
+      OutputLine(Concat("id18 start"))
+      VAR @r3
+      SET @r3 = UpdateSingleSalesforceObject("Lead", "00Q9V00000ABCDEUA4", "Description", "zzz")
+      OutputLine(Concat("id18.result=[", @r3, "]"))
+    ENDIF
+  ]%%

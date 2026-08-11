@@ -1,0 +1,71 @@
+# Test scripts for /engagement/ampscript/functions/claimrow/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_CLAIM) built to the claimable schema
+# (CouponCode Text PK, EmailAddress Text, IsClaimed required Boolean default
+# False, ClaimedDate Date nullable) only.
+#
+# AMPscript has no try/catch. A branch that renders nothing at all is the
+# failure signal. Fetch ONE branch per request; drive advancement by passing
+# a DISTINCT claimant with ?em=<value> on each claim.
+#
+# Branches on this page: ?b=reset, ?b=dump, ?b=claim&em=<value>.
+#   reset  reseeds C1..C4 all unclaimed
+#   dump   prints each row's claim state
+#   claim  claims one row for the given ?em value and prints the returned row
+#
+# Advancement proof (run in order, separate requests):
+#   ?b=reset
+#   ?b=claim&em=buyer1@example.com   -> C1
+#   ?b=claim&em=buyer2@example.com   -> C2
+#   ?b=claim&em=buyer3@example.com   -> C3
+#   ?b=claim&em=buyer4@example.com   -> C4
+#   ?b=claim&em=buyer5@example.com   -> EMPTY row (exhausted; docs say "exception")
+#   ?b=claim&em=buyer2@example.com   -> C2 again (per-subscriber idempotency)
+#   ?b=dump                          -> C1..C4 all IsClaimed=True, distinct claimants
+behaviour: |
+  %%[
+    VAR @b, @em, @i, @code, @rs, @row, @cr
+
+    SET @b = RequestParameter("b")
+    SET @em = RequestParameter("em")
+
+    /* reset: reseed C1..C4 all unclaimed (delete then insert - never pass an
+       empty string to the Date column, that aborts the page) */
+    IF @b == "reset" THEN
+      SET @rs = DeleteData("AMP_VERIFY_CLAIM", "CouponCode", "C1")
+      SET @rs = DeleteData("AMP_VERIFY_CLAIM", "CouponCode", "C2")
+      SET @rs = DeleteData("AMP_VERIFY_CLAIM", "CouponCode", "C3")
+      SET @rs = DeleteData("AMP_VERIFY_CLAIM", "CouponCode", "C4")
+      SET @rs = InsertData("AMP_VERIFY_CLAIM", "CouponCode", "C1", "IsClaimed", "False")
+      SET @rs = InsertData("AMP_VERIFY_CLAIM", "CouponCode", "C2", "IsClaimed", "False")
+      SET @rs = InsertData("AMP_VERIFY_CLAIM", "CouponCode", "C3", "IsClaimed", "False")
+      SET @rs = InsertData("AMP_VERIFY_CLAIM", "CouponCode", "C4", "IsClaimed", "False")
+      OutputLine(Concat("reset done"))
+    ENDIF
+
+    /* dump: read each known coupon row by its PK and print its claim state */
+    IF @b == "dump" THEN
+      FOR @i = 1 TO 4 DO
+        SET @code = Concat("C", @i)
+        SET @rs = LookupRows("AMP_VERIFY_CLAIM", "CouponCode", @code)
+        IF RowCount(@rs) > 0 THEN
+          SET @row = Row(@rs, 1)
+          OutputLine(Concat(@code, ": IsClaimed=[", Field(@row, "IsClaimed"), "] EmailAddress=[", Field(@row, "EmailAddress"), "] ClaimedDate=[", Field(@row, "ClaimedDate"), "]"))
+        ELSE
+          OutputLine(Concat(@code, ": MISSING"))
+        ENDIF
+      NEXT @i
+    ENDIF
+
+    /* claim: claim the next unclaimed row for the given distinct claimant.
+       An exhausted DE returns an EMPTY row (Empty() true) rather than raising. */
+    IF @b == "claim" THEN
+      SET @cr = ClaimRow("AMP_VERIFY_CLAIM", "IsClaimed", "EmailAddress", @em)
+      IF Empty(@cr) THEN
+        OutputLine(Concat("claim em=[", @em, "] -> EMPTY row"))
+      ELSE
+        OutputLine(Concat("claim em=[", @em, "] -> CouponCode=[", Field(@cr, "CouponCode"), "] IsClaimed=[", Field(@cr, "IsClaimed"), "] EmailAddress=[", Field(@cr, "EmailAddress"), "]"))
+      ENDIF
+    ENDIF
+  ]%%

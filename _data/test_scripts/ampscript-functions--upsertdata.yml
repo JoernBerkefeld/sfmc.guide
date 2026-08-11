@@ -1,0 +1,32 @@
+# Test scripts for /engagement/ampscript/functions/upsertdata/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=insert, ?b=update, ?b=read, ?b=zzz.
+# The read-back runs in a fresh render (AMPscript caches DE reads per render).
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "insert" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "W2")
+      /* insert path: no matching row exists yet */
+      SET @r = UpsertData("AMP_VERIFY_SCRATCH", 1, "Id", "W2", "FirstName", "Uma", "Score", 7)
+      OutputLine(Concat("UpsertData insert ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "update" THEN
+      /* update path: the row now exists */
+      SET @r = UpsertData("AMP_VERIFY_SCRATCH", 1, "Id", "W2", "FirstName", "Umberto", "Score", 77)
+      OutputLine(Concat("UpsertData update ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("W2 FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "W2"), "] Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "W2"), "]"))
+    ENDIF
+  ]%%

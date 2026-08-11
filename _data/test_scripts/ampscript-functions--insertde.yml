@@ -1,0 +1,26 @@
+# Test scripts for /engagement/ampscript/functions/insertde/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=safe, ?b=read, ?b=zzz.
+# InsertDE returns an empty string (no output); ?b=read (a fresh render)
+# proves the row was inserted.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "D1")
+      SET @r = InsertDE("AMP_VERIFY_SCRATCH", "Id", "D1", "FirstName", "Dora", "Score", 3)
+      OutputLine(Concat("InsertDE ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("D1 rows=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "Id", "D1")), "] FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "D1"), "]"))
+    ENDIF
+  ]%%

@@ -39,7 +39,7 @@
   returnType: "void"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -50,7 +50,8 @@
   category: "Marketing Cloud API"
   syntax: "AddObjectArrayItem(apiObject, arrayProperty, itemToAdd)"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/addobjectarrayitem/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -303,8 +304,9 @@
   category: "Data Extension"
   syntax: "ClaimRow(dataExt, claimColumn, claimantColumn, claimantValue[, additionalColumnNameN, additionalColumnValueN, ...])"
   returnType: "row"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/claimrow/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -316,7 +318,8 @@
   category: "Data Extension"
   syntax: "ClaimRowValue(dataExt, returnValueColumn, claimColumn[, valueIfClaimed, claimantColumnN, claimantValueN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/claimrowvalue/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -459,7 +462,7 @@
   returnType: "string"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -470,7 +473,8 @@
   category: "Marketing Cloud API"
   syntax: "CreateObject(objectName)"
   returnType: "object"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/createobject/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -483,33 +487,35 @@
   category: "Sales and Service Cloud"
   syntax: "CreateSalesforceObject(objectName, numFields, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/createsalesforceobject/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Creates a new record in a connected Salesforce CRM object."
+  description: "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Requires an active Marketing Cloud Connect integration; the field names must be valid API names on the target object, and a fault (unknown object or field) aborts the whole page rather than returning an error value."
   guideUrl: "https://ampscript.guide/createsalesforceobject/"
 - name: "CreateSmsConversation"
   slug: "createsmsconversation"
   category: "MobileConnect"
-  syntax: "CreateSmsConversation(shortCode, keyword, nextKeyword, messageText)"
-  returnType: "void"
+  syntax: "CreateSmsConversation(originationNumber, destinationNumber, nextKeyword, app)"
+  returnType: "boolean"
   verified: false
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Initiates an SMS conversation on a MobileConnect short code."
+  description: "Initiates an SMS conversation with a contact from within a MobileConnect message. Returns true when a conversation is created inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/createsmsconversation/"
 - name: "DataExtensionRowCount"
   slug: "dataextensionrowcount"
   category: "Data Extension"
   syntax: "DataExtensionRowCount(dataExtensionName)"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/dataextensionrowcount/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -594,7 +600,8 @@
   category: "Data Extension"
   syntax: "DeleteData(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/deletedata/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -607,7 +614,8 @@
   category: "Data Extension"
   syntax: "DeleteDE(dataExt, columnName1, valueToDelete1[, columnNameN, valueToDeleteN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/deletede/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -622,7 +630,7 @@
   returnType: "rowset"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -635,7 +643,7 @@
   returnType: "rowset"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -716,22 +724,23 @@
 - name: "EndSmsConversation"
   slug: "endsmsconversation"
   category: "MobileConnect"
-  syntax: "EndSmsConversation(shortCode, keyword)"
-  returnType: "void"
+  syntax: "EndSmsConversation(originationNumber, destinationNumber)"
+  returnType: "boolean"
   verified: false
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Ends an active SMS conversation on a short code."
+  description: "Ends an active SMS conversation with a contact from within a MobileConnect message. Returns true when the conversation is ended inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/endsmsconversation/"
 - name: "ExecuteFilter"
   slug: "executefilter"
   category: "Data Extension"
   syntax: "ExecuteFilter(dataFilterExternalId)"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/executefilter/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -744,7 +753,8 @@
   category: "Data Extension"
   syntax: "ExecuteFilterOrderedRows(dataFilterExternalId, numRows, sortColumn)"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/executefilterorderedrows/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -757,14 +767,15 @@
   category: "Data Extension"
   syntax: "Field(row, fieldName[, exceptionIfNotFound])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/field/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "get"
   handlebarsExact: false
   mcnNotes: ""
-  description: "Retrieves the value of a specific field from a rowset row."
+  description: "Retrieves the value of a named field from a rowset row. The two-argument form aborts the page when the column is absent; pass the optional third argument as 0 (or false) to get an empty string for a possibly-missing column instead."
   guideUrl: "https://ampscript.guide/field/"
 - name: "Format"
   slug: "format"
@@ -845,7 +856,8 @@
   category: "Encryption and Encoding"
   syntax: "GetJWTByKeyName(keyName, algorithm, jsonPayload)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/getjwtbykeyname/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -953,39 +965,42 @@
   category: "HTTP"
   syntax: "HTTPPost(urlEndpoint, contentTypeHeader, contentToPost[, @response, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/httppost/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Performs an HTTP POST request. The response body is stored in the output variable."
+  description: "Performs an HTTP POST request and returns the HTTP status code. The response body is written to the optional output variable."
   guideUrl: "https://ampscript.guide/httppost/"
 - name: "HTTPPost2"
   slug: "httppost2"
   category: "HTTP"
   syntax: "HTTPPost2(url, contentType, contentToPost[, exceptionOnError, @response, @responseRowSet, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/httppost2/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Performs an HTTP POST with access to response headers. Response body and headers are stored in output variables."
+  description: "Performs an HTTP POST and returns the HTTP status code. The response body and the response headers (as a rowset) are written to optional output variables."
   guideUrl: "https://ampscript.guide/httppost2/"
 - name: "HTTPPostWithRetry"
   slug: "httppostwithretry"
   category: "HTTP"
   syntax: "HTTPPostWithRetry(urlEndpoint, contentTypeHeader, content[, numRetries, reschedule, returnExceptionOnError, @responseStatus, @responseContentRowset, headerName1, headerValue1, headerNameN, headerValueN, ...])"
   returnType: "number"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/httppostwithretry/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Posts content to the specified URL with automatic retry logic on failure. Similar to HTTPPost2 but adds configurable retries and rescheduling."
+  description: "Posts content to the specified URL with automatic retry logic on failure, and returns the HTTP status code. Similar to HTTPPost2 but adds configurable retries and rescheduling; the response body and headers (as a rowset) are written to optional output variables."
   guideUrl: "https://ampscript.guide/httppostwithretry/"
 - name: "HTTPRequestHeader"
   slug: "httprequestheader"
@@ -1023,7 +1038,7 @@
   returnType: "string"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -1049,7 +1064,8 @@
   category: "Data Extension"
   syntax: "InsertData(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/insertdata/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1062,7 +1078,8 @@
   category: "Data Extension"
   syntax: "InsertDE(dataExt, columnName1, valueToInsert1[, columnNameN, valueToInsertN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/insertde/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1075,7 +1092,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokeCreate(apiObject, @statusMessage, @errorCode[, createOptionsObject])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokecreate/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1088,7 +1106,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokeDelete(apiObject, @statusMessage, @errorCode[, deleteOptionsObject])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokedelete/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1101,7 +1120,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokeExecute(apiObject[, @statusMessage, @requestId])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokeexecute/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1114,7 +1134,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokePerform(apiObject, actionToPerform[, @statusMessage])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokeperform/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1127,7 +1148,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokeRetrieve(apiObject[, @statusMessage, @requestId])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokeretrieve/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1140,7 +1162,8 @@
   category: "Marketing Cloud API"
   syntax: "InvokeUpdate(apiObject[, @statusMessage, @errorCode, updateOptions])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/invokeupdate/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1242,7 +1265,7 @@
   returnType: "string"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -1268,7 +1291,8 @@
   category: "Sales and Service Cloud"
   syntax: "LongSFID(sfid15)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/longsfid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1281,21 +1305,23 @@
   category: "Data Extension"
   syntax: "Lookup(dataObject, returnColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/lookup/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "queryFirst"
   handlebarsExact: false
   mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. All filter keys must fully specify the composite primary key."
-  description: "Returns a single field value from the first matching row in a data extension."
+  description: "Returns a single field value from the first matching row in a data extension. A no-match returns an empty string."
   guideUrl: "https://ampscript.guide/lookup/"
 - name: "LookupOrderedRows"
   slug: "lookuporderedrows"
   category: "Data Extension"
   syntax: "LookupOrderedRows(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/lookuporderedrows/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1309,7 +1335,8 @@
   category: "Data Extension"
   syntax: "LookupOrderedRowsCS(dataExt, numRows, sortColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/lookuporderedrowscs/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1323,7 +1350,8 @@
   category: "Data Extension"
   syntax: "LookupRows(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/lookuprows/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1337,7 +1365,8 @@
   category: "Data Extension"
   syntax: "LookupRowsCS(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/lookuprowscs/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1678,7 +1707,7 @@
   returnType: "rowset"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -1691,7 +1720,7 @@
   returnType: "rowset"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -1702,48 +1731,52 @@
   category: "Sales and Service Cloud"
   syntax: "RetrieveSalesforceJobSources(jobId)"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/retrievesalesforcejobsources/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Retrieves the data sources associated with a Salesforce-triggered send job."
+  description: "Retrieves the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, and returns them as a rowset. Requires an active Marketing Cloud Connect integration. A job ID with no matching sources returns an empty rowset rather than an error; the function reports nothing about the job status."
   guideUrl: "https://ampscript.guide/retrievesalesforcejobsources/"
 - name: "RetrieveSalesforceObjects"
   slug: "retrievesalesforceobjects"
   category: "Sales and Service Cloud"
   syntax: "RetrieveSalesforceObjects(objectName, fieldsToRetrieve, queryFieldName1, queryFieldOperator1, queryFieldValue1[, queryFieldNameN, queryFieldOperatorN, queryFieldValueN, ...])"
   returnType: "rowset"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/retrievesalesforceobjects/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "query"
   handlebarsExact: false
   mcnNotes: ""
-  description: "Retrieves records from a connected Salesforce CRM object."
+  description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Requires an active Marketing Cloud Connect integration; a call against an unknown object name aborts the page."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
 - name: "Row"
   slug: "row"
   category: "Data Extension"
   syntax: "Row(rowset, rowIndex)"
   returnType: "row"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/row/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: "get"
   handlebarsExact: false
   mcnNotes: ""
-  description: "Returns a specific row from a rowset by its 1-based index."
+  description: "Returns a specific row from a rowset by its 1-based index. Index 0 (or any out-of-range index) aborts the page rather than returning an empty row."
   guideUrl: "https://ampscript.guide/row/"
 - name: "RowCount"
   slug: "rowcount"
   category: "Data Extension"
   syntax: "RowCount(rowset)"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/rowcount/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
@@ -1757,7 +1790,8 @@
   category: "Marketing Cloud API"
   syntax: "SetObjectProperty(apiObject, propertyName, propertyValue)"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/setobjectproperty/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1768,15 +1802,15 @@
 - name: "SetSmsConversationNextKeyword"
   slug: "setsmsconversationnextkeyword"
   category: "MobileConnect"
-  syntax: "SetSmsConversationNextKeyword(shortCode, keyword, nextKeyword)"
-  returnType: "void"
+  syntax: "SetSmsConversationNextKeyword(originationNumber, destinationNumber, keyword)"
+  returnType: "boolean"
   verified: false
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Sets the next expected keyword for an active SMS conversation."
+  description: "Sets the keyword for the next path of an existing SMS conversation, applied when the contact next replies. Does not create a new conversation. Returns true when set inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/setsmsconversationnextkeyword/"
 - name: "SetStateMscrmRecord"
   slug: "setstatemscrmrecord"
@@ -1785,7 +1819,7 @@
   returnType: "void"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -1968,7 +2002,8 @@
   category: "Data Extension"
   syntax: "UpdateData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/updatedata/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1981,7 +2016,8 @@
   category: "Data Extension"
   syntax: "UpdateDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpdate1, updatedValue1[, columnToUpdateN, updatedValueN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/updatede/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1996,7 +2032,7 @@
   returnType: "number"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
@@ -2007,13 +2043,14 @@
   category: "Sales and Service Cloud"
   syntax: "UpdateSingleSalesforceObject(objectName, idToUpdate, fieldName1, fieldValue1[, fieldNameN, fieldValueN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/updatesinglesalesforceobject/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Updates a single record in a connected Salesforce CRM object. Accepts one or more field name and value pairs. Returns 1 on success, 0 otherwise."
+  description: "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect. Accepts one or more field name and value pairs. Returns 1 on success; per the official reference it returns 0 on failure, but on a CloudPage a failed update (unknown object, malformed or non-existent record ID) instead surfaces the SOAP fault as an uncatchable page abort rather than returning 0."
   guideUrl: "https://ampscript.guide/updatesinglesalesforceobject/"
 - name: "Uppercase"
   slug: "uppercase"
@@ -2035,20 +2072,22 @@
   category: "MobileConnect"
   syntax: "UpsertContact(channel, attribute, phoneNumber, keyToUpsert1, valueToUpsert1[, keyToUpsertN, valueToUpsertN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/upsertcontact/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Upserts attributes into a contact record. If the contact exists it is updated; otherwise a new contact is created."
+  description: "Upserts attributes onto a mobile contact matched by phone number. If the contact exists it is updated; otherwise a new contact is created. Returns a status code: 0 when the upsert succeeds and 1 when an error occurs. The only supported channel is 'mobile' and the only supported match attribute is 'phone'. An unknown attribute name returns the error status without writing anything."
   guideUrl: "https://ampscript.guide/upsertcontact/"
 - name: "UpsertData"
   slug: "upsertdata"
   category: "Data Extension"
   syntax: "UpsertData(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/upsertdata/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -2061,7 +2100,8 @@
   category: "Data Extension"
   syntax: "UpsertDE(dataExt, columnValuePairs, searchColumnName1, searchValue1[, searchColumnNameN, searchValueN, ...], columnToUpsert1, upsertedValue1[, columnToUpsertN, upsertedValueN, ...])"
   returnType: "number"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/upsertde/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -2076,7 +2116,7 @@
   returnType: "string"
   verified: false
   differsFromDocs: false
-  deprecated: false
+  deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""

@@ -1,0 +1,50 @@
+# Test scripts for /engagement/ampscript/functions/invokeretrieve/.
+#
+# Rendered by _includes/test-script.html. Read-only: retrieves a data
+# extension DEFINITION by CustomerKey filter — never subscriber PII.
+# Fetch one branch at a time: ?b=hit, ?b=miss, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* a match returns a populated rowset with status OK */
+    IF @b == "hit" THEN
+      VAR @rr, @st, @req, @rows, @sfp
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      AddObjectArrayItem(@rr, "Properties", "CustomerKey")
+      SET @sfp = CreateObject("SimpleFilterPart")
+      SetObjectProperty(@sfp, "Property", "CustomerKey")
+      SetObjectProperty(@sfp, "SimpleOperator", "equals")
+      AddObjectArrayItem(@sfp, "Value", "AMP_VERIFY_SCRATCH")
+      SetObjectProperty(@rr, "Filter", @sfp)
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("hit st=[", @st, "] rc=[", RowCount(@rows), "]"))
+      IF RowCount(@rows) > 0 THEN
+        VAR @r1
+        SET @r1 = Row(@rows, 1)
+        OutputLine(Concat("row1 Name=[", Field(@r1, "Name"), "]"))
+      ENDIF
+    ENDIF
+
+    /* a no-match returns an empty rowset with status OK, not an error */
+    IF @b == "miss" THEN
+      VAR @rr, @st, @req, @rows, @sfp
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      SET @sfp = CreateObject("SimpleFilterPart")
+      SetObjectProperty(@sfp, "Property", "CustomerKey")
+      SetObjectProperty(@sfp, "SimpleOperator", "equals")
+      AddObjectArrayItem(@sfp, "Value", "_no_such_de_zzz_9988")
+      SetObjectProperty(@rr, "Filter", @sfp)
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("miss st=[", @st, "] rc=[", RowCount(@rows), "]"))
+    ENDIF
+  ]%%

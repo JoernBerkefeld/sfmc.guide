@@ -1,0 +1,21 @@
+# Test scripts for /engagement/ampscript/functions/httppost2/.
+#
+# Rendered by _includes/test-script.html. Paste into a CloudPage and deploy.
+#
+# HTTPPost2 makes a live outbound HTTP POST and, unlike HTTPPost, exposes the
+# response headers as a rowset. The safe case targets the public echo endpoint
+# https://postman-echo.com/post, which reflects the request headers and body
+# without side effects (never httpbin.org). Behaviour branch: ?b=post2.
+behaviour: |
+  %%[
+    VAR @b, @s2, @body2, @hdr2
+    SET @b = RequestParameter("b")
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* 6-arg form: status is the return value, @body2 the body, @hdr2 the header rowset. fetch ?b=post2 */
+    IF @b == "post2" THEN
+      SET @s2 = HTTPPost2("https://postman-echo.com/post", "application/json", '{"marker":"amp-post2-yy8"}', true, @body2, @hdr2)
+      OutputLine(Concat("status=[", @s2, "] bodylen=[", Length(@body2), "]"))
+      OutputLine(Concat("hdrRows=[", RowCount(@hdr2), "]"))
+    ENDIF
+  ]%%

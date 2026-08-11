@@ -1,0 +1,34 @@
+# Test scripts for /engagement/ampscript/functions/updatedata/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=seed, ?b=upd, ?b=read, ?b=zzz.
+# Because AMPscript caches DE row reads within a single render, the
+# update and the read-back must run in SEPARATE renders.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "seed" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "W1")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "W1", "FirstName", "Ivan", "Score", 5)
+      OutputLine(Concat("seeded W1"))
+    ENDIF
+
+    IF @b == "upd" THEN
+      /* second arg is the search-pair count */
+      SET @r = UpdateData("AMP_VERIFY_SCRATCH", 1, "Id", "W1", "FirstName", "Ingrid", "Score", 99)
+      OutputLine(Concat("UpdateData ret=[", @r, "]"))
+      /* no-match returns 0 */
+      OutputLine(Concat("UpdateData nomatch ret=[", UpdateData("AMP_VERIFY_SCRATCH", 1, "Id", "NOPE", "FirstName", "Ghost"), "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("W1 FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "W1"), "] Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "W1"), "]"))
+    ENDIF
+  ]%%

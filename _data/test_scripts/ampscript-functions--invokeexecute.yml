@@ -1,0 +1,27 @@
+# Test scripts for /engagement/ampscript/functions/invokeexecute/.
+#
+# Rendered by _includes/test-script.html. Safe: uses an unknown verb, which
+# the API rejects in the result row with ZERO side effect.
+# Fetch one branch at a time: ?b=exec, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "exec" THEN
+      VAR @er, @st, @req, @rc
+      SET @er = CreateObject("ExecuteRequest")
+      SetObjectProperty(@er, "Name", "NotARealExecuteVerbZZ")
+      SET @rc = InvokeExecute(@er, @st, @req)
+      OutputLine(Concat("exec rowCount=[", RowCount(@rc), "] st=[", @st, "]"))
+      IF RowCount(@rc) > 0 THEN
+        VAR @row
+        SET @row = Row(@rc, 1)
+        OutputLine(Concat("row StatusCode=[", Field(@row, "StatusCode"), "] StatusMessage=[", Field(@row, "StatusMessage"), "] ErrorCode=[", Field(@row, "ErrorCode"), "]"))
+      ENDIF
+    ENDIF
+  ]%%

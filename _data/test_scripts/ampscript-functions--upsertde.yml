@@ -1,0 +1,30 @@
+# Test scripts for /engagement/ampscript/functions/upsertde/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=insert, ?b=update, ?b=read, ?b=zzz.
+# UpsertDE returns an empty string; the read-back runs in a fresh render.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "insert" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "D2")
+      SET @r = UpsertDE("AMP_VERIFY_SCRATCH", 1, "Id", "D2", "FirstName", "Enzo", "Score", 8)
+      OutputLine(Concat("UpsertDE insert ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "update" THEN
+      SET @r = UpsertDE("AMP_VERIFY_SCRATCH", 1, "Id", "D2", "FirstName", "Enrico", "Score", 88)
+      OutputLine(Concat("UpsertDE update ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("D2 FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "D2"), "] Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "D2"), "]"))
+    ENDIF
+  ]%%

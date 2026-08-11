@@ -540,7 +540,8 @@
         OutputLine(Concat("--- lenneg start ---"))
         OutputLine(Concat("LENNEG=[", Substring("Hello World", 3, -2), "]"))
       ENDIF
-    ]%%- name: "Replace"
+    ]%%
+- name: "Replace"
   url: "/engagement/ampscript/functions/replace/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html"
   tagline: "matching ignores case, the replacement argument is optional, and the scan is single-pass"
@@ -2565,5 +2566,175 @@
       IF @b == "absent" THEN
         SET @v = HTTPRequestHeader("Referer")
         OutputLine(Concat("absent=[", @v, "] empty=[", Empty(@v), "]"))
+      ENDIF
+    ]%%
+- name: "HTTPPost"
+  url: "/engagement/ampscript/functions/httppost/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post.html"
+  tagline: "The fourth argument receives the response body, not the request status the docs describe"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "httppost-response-arg-is-body"
+  body: |
+    The official reference calls the fourth argument an output parameter that
+    holds the "status" of the request. At runtime that variable receives the
+    response **body** instead — a POST to the echo endpoint filled it with the
+    full echoed JSON (the reflected headers and payload), 299 characters, while
+    the numeric HTTP status code came back as the function's own return value.
+
+    A non-2xx response never surfaces as a status here: a POST that answered
+    `404`, and a POST with an empty URL, each aborted the whole page with
+    HTTP 422 rather than returning a status you could branch on. So the return
+    value is only ever a success status — read the body from the fourth
+    argument, and treat any failure as an aborted page.
+  testScript: |
+    %%[ VAR @b, @st, @resp
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=post1 - status 200, @resp holds the echoed body */
+      IF @b == "post1" THEN
+        SET @st = HTTPPost("https://postman-echo.com/post", "application/json", '{"marker":"amp-post-zz9","n":7}', @resp)
+        OutputLine(Concat("status=[", @st, "] resplen=[", Length(@resp), "]"))
+      ENDIF
+    ]%%
+- name: "HTTPPost2"
+  url: "/engagement/ampscript/functions/httppost2/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post2.html"
+  tagline: "The response argument holds the body while the rowset argument holds the headers"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "httppost2-response-arg-is-body"
+  body: |
+    The official reference labels the fifth argument (`response`) as storing
+    the request "status". At runtime it receives the response **body**, and
+    the sixth argument (`responseRowSet`) receives the response **headers** as
+    a rowset. A POST to the echo endpoint filled the body variable with 289
+    characters of echoed JSON and the rowset with 11 header rows, while the
+    numeric status came back as the function's return value.
+
+    This split — body in one out-variable, headers in a rowset — is what
+    HTTPPost2 adds over plain [HTTPPost](#httppost-response-arg-is-body), whose
+    single out-variable also holds the body.
+  testScript: |
+    %%[ VAR @b, @s2, @body2, @hdr2
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=post2 - status 200, body in @body2, headers in @hdr2 */
+      IF @b == "post2" THEN
+        SET @s2 = HTTPPost2("https://postman-echo.com/post", "application/json", '{"marker":"amp-post2-yy8"}', true, @body2, @hdr2)
+        OutputLine(Concat("status=[", @s2, "] bodylen=[", Length(@body2), "] hdrRows=[", RowCount(@hdr2), "]"))
+      ENDIF
+    ]%%
+- name: "HTTPPostWithRetry"
+  url: "/engagement/ampscript/functions/httppostwithretry/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post-with-retry.html"
+  tagline: "The responseStatus argument holds the body, not the status the docs describe"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "httppostwithretry-response-arg-is-body"
+  body: |
+    The official reference calls the `responseStatus` argument a variable that
+    stores the request "status". At runtime it receives the response **body**
+    instead, and `responseContentRowset` receives the response **headers** as a
+    rowset — the same layout as
+    [HTTPPost2](#httppost2-response-arg-is-body). A POST to the echo endpoint
+    filled the body variable with 289 characters and the rowset with 11 header
+    rows, while the numeric status came back as the function's return value.
+
+    The extra retry controls — `numRetries`, `reschedule` and
+    `returnExceptionOnError` — are all accepted at runtime. Retry-on-failure is
+    documented but hard to observe against a healthy endpoint, so a normal
+    success is what a probe can confirm.
+  testScript: |
+    %%[ VAR @b, @s3, @body3, @rr3
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=retry - status 200, body in @body3, headers in @rr3 */
+      IF @b == "retry" THEN
+        SET @s3 = HTTPPostWithRetry("https://postman-echo.com/post", "application/json", '{"marker":"amp-retry-xx7"}', 2, false, true, @body3, @rr3)
+        OutputLine(Concat("status=[", @s3, "] bodylen=[", Length(@body3), "] rrRows=[", RowCount(@rr3), "]"))
+      ENDIF
+    ]%%
+
+- name: "LongSFID"
+  url: "/engagement/ampscript/functions/longsfid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-long-sfid.html"
+  tagline: "a non-15-character input is passed through unchanged instead of validated"
+  category: "Sales and Service Cloud"
+  object: "Sales and Service Cloud"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "longsfid-non-15-char-passthrough"
+  body: |
+    Both the official reference and ampscript.guide describe `LongSFID` only for a
+    15-character Salesforce ID, and neither says what happens for any other input.
+    At runtime the function does not validate the length: it appends the
+    3-character checksum only to a genuine 15-character ID and otherwise returns
+    the argument **unchanged**, with no error.
+
+    Proven on a CloudPage: `LongSFID("0036000000QKv5TAAT")` (already 18 characters)
+    returned the same 18-character string — it was not transformed a second time.
+    `LongSFID("ABC")` returned `ABC` (3 characters) and `LongSFID("")` returned an
+    empty string. A caller cannot rely on the result being 18 characters, nor on
+    an invalid ID being rejected — guard the input length yourself if that matters.
+  testScript: |
+    %%[ VAR @b, @a, @s, @e
+      SET @b = RequestParameter("b")
+      IF @b == "already18" THEN
+        SET @a = LongSFID("0036000000QKv5TAAT")
+        OutputLine(Concat("already18=[", @a, "] len=[", Length(@a), "]"))
+      ENDIF
+      IF @b == "short" THEN
+        SET @s = LongSFID("ABC")
+        OutputLine(Concat("short=[", @s, "] len=[", Length(@s), "]"))
+      ENDIF
+      IF @b == "empty" THEN
+        SET @e = LongSFID("")
+        OutputLine(Concat("empty=[", @e, "] len=[", Length(@e), "]"))
+      ENDIF
+    ]%%
+
+- name: "ClaimRow"
+  url: "/engagement/ampscript/functions/claimrow/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-claim-row.html"
+  tagline: "an exhausted data extension returns an empty row instead of raising an exception"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "claimrow-exhausted-returns-empty-row"
+  body: |
+    The official reference states that `ClaimRow` returns an exception when there
+    are no unclaimed rows left in the data extension. At runtime it does not raise:
+    it returns an **empty row** and the page keeps rendering, so `Empty()` on the
+    result is `true` and no error is thrown.
+
+    Proven on a CloudPage against a claimable data extension seeded with four
+    unclaimed rows (C1..C4). Four distinct claimants advanced through C1, C2, C3
+    and C4; a fifth distinct claimant — with every row now claimed — received an
+    empty row rather than aborting the page. A caller must therefore guard the
+    result with [`Empty`](/engagement/ampscript/functions/empty/) rather than
+    relying on an exception to signal exhaustion. The scalar twin
+    [`ClaimRowValue`](/engagement/ampscript/functions/claimrowvalue/) instead
+    returns its documented fallback value when exhausted, matching its own docs.
+  testScript: |
+    %%[ VAR @b, @em, @cr
+      SET @b = RequestParameter("b")
+      SET @em = RequestParameter("em")
+      /* claim the next unclaimed row for a distinct claimant; an exhausted DE
+         returns an EMPTY row (Empty() true) rather than raising */
+      IF @b == "claim" THEN
+        SET @cr = ClaimRow("AMP_VERIFY_CLAIM", "IsClaimed", "EmailAddress", @em)
+        IF Empty(@cr) THEN
+          OutputLine(Concat("claim em=[", @em, "] -> EMPTY row"))
+        ELSE
+          OutputLine(Concat("claim em=[", @em, "] -> CouponCode=[", Field(@cr, "CouponCode"), "]"))
+        ENDIF
       ENDIF
     ]%%

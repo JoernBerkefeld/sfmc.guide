@@ -1,0 +1,33 @@
+# Test scripts for /engagement/ampscript/functions/invokecreate/.
+#
+# Rendered by _includes/test-script.html. Destructive: creates then deletes a
+# dedicated throwaway DE (AMPWSPROXYSCRATCH) that this script fully owns.
+# Fetch one branch at a time: ?b=create, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "create" THEN
+      VAR @de, @m, @e, @f, @de3, @dm
+      SET @de = CreateObject("DataExtension")
+      SetObjectProperty(@de, "CustomerKey", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de, "Name", "AMPWSPROXYSCRATCH")
+      SET @f = CreateObject("DataExtensionField")
+      SetObjectProperty(@f, "Name", "Id")
+      SetObjectProperty(@f, "FieldType", "Text")
+      SetObjectProperty(@f, "MaxLength", "50")
+      SetObjectProperty(@f, "IsPrimaryKey", "true")
+      SetObjectProperty(@f, "IsRequired", "true")
+      AddObjectArrayItem(@de, "Fields", @f)
+      OutputLine(Concat("create ret=[", InvokeCreate(@de, @m, @e), "] msg=[", @m, "] err=[", @e, "]"))
+      /* clean up the throwaway DE */
+      SET @de3 = CreateObject("DataExtension")
+      SetObjectProperty(@de3, "CustomerKey", "AMPWSPROXYSCRATCH")
+      OutputLine(Concat("cleanup ret=[", InvokeDelete(@de3, @dm, @e), "]"))
+    ENDIF
+  ]%%

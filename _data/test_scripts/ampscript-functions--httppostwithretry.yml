@@ -1,0 +1,24 @@
+# Test scripts for /engagement/ampscript/functions/httppostwithretry/.
+#
+# Rendered by _includes/test-script.html. Paste into a CloudPage and deploy.
+#
+# HTTPPostWithRetry makes a live outbound HTTP POST with retry controls, and
+# exposes the response body and headers the same way HTTPPost2 does. The safe
+# case targets the public echo endpoint https://postman-echo.com/post, which
+# reflects the request headers and body without side effects (never
+# httpbin.org). Retry-on-failure is documented but is not exercised here because
+# a transient failure cannot be induced safely against a healthy endpoint.
+# Behaviour branch: ?b=retry.
+behaviour: |
+  %%[
+    VAR @b, @s3, @body3, @rr3
+    SET @b = RequestParameter("b")
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* 8-arg form: numRetries/reschedule/returnExceptionOnError accepted; @body3 the body, @rr3 the header rowset. fetch ?b=retry */
+    IF @b == "retry" THEN
+      SET @s3 = HTTPPostWithRetry("https://postman-echo.com/post", "application/json", '{"marker":"amp-retry-xx7"}', 2, false, true, @body3, @rr3)
+      OutputLine(Concat("status=[", @s3, "] bodylen=[", Length(@body3), "]"))
+      OutputLine(Concat("rrRows=[", RowCount(@rr3), "]"))
+    ENDIF
+  ]%%

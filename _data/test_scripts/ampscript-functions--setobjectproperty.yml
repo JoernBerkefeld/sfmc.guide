@@ -1,0 +1,40 @@
+# Test scripts for /engagement/ampscript/functions/setobjectproperty/.
+#
+# Rendered by _includes/test-script.html. SetObjectProperty sets a scalar (or
+# a nested handle) on a CreateObject handle; it is proven by reading the value
+# back through a successful Invoke* round-trip.
+# Fetch one branch at a time: ?b=scalar, ?b=nested, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* scalar property read back: ObjectType drives the retrieve */
+    IF @b == "scalar" THEN
+      VAR @rr, @st, @req, @rows
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("scalar st=[", @st, "] rc=[", RowCount(@rows), "]"))
+    ENDIF
+
+    /* nested-handle property: a SimpleFilterPart handle set as the Filter */
+    IF @b == "nested" THEN
+      VAR @rr, @sfp, @st, @req, @rows
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      SET @sfp = CreateObject("SimpleFilterPart")
+      SetObjectProperty(@sfp, "Property", "CustomerKey")
+      SetObjectProperty(@sfp, "SimpleOperator", "equals")
+      AddObjectArrayItem(@sfp, "Value", "AMP_VERIFY_SCRATCH")
+      SetObjectProperty(@rr, "Filter", @sfp)
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("nested st=[", @st, "] rc=[", RowCount(@rows), "]"))
+    ENDIF
+  ]%%

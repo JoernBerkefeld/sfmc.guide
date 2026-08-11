@@ -1,0 +1,40 @@
+# Test scripts for /engagement/ampscript/functions/invokeupdate/.
+#
+# Rendered by _includes/test-script.html. Destructive: creates, updates, then
+# deletes a dedicated throwaway DE (AMPWSPROXYSCRATCH) this script fully owns.
+# Fetch one branch at a time: ?b=update, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "update" THEN
+      VAR @de, @m, @e, @f, @de2, @de3, @dm
+      /* create the throwaway DE first */
+      SET @de = CreateObject("DataExtension")
+      SetObjectProperty(@de, "CustomerKey", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de, "Name", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de, "Description", "v1")
+      SET @f = CreateObject("DataExtensionField")
+      SetObjectProperty(@f, "Name", "Id")
+      SetObjectProperty(@f, "FieldType", "Text")
+      SetObjectProperty(@f, "MaxLength", "50")
+      SetObjectProperty(@f, "IsPrimaryKey", "true")
+      SetObjectProperty(@f, "IsRequired", "true")
+      AddObjectArrayItem(@de, "Fields", @f)
+      InvokeCreate(@de, @m, @e)
+      /* update the description via a fresh handle keyed the same */
+      SET @de2 = CreateObject("DataExtension")
+      SetObjectProperty(@de2, "CustomerKey", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de2, "Description", "v2 UPDATED")
+      OutputLine(Concat("update ret=[", InvokeUpdate(@de2, @m, @e), "] msg=[", @m, "] err=[", @e, "]"))
+      /* clean up */
+      SET @de3 = CreateObject("DataExtension")
+      SetObjectProperty(@de3, "CustomerKey", "AMPWSPROXYSCRATCH")
+      OutputLine(Concat("cleanup ret=[", InvokeDelete(@de3, @dm, @e), "]"))
+    ENDIF
+  ]%%

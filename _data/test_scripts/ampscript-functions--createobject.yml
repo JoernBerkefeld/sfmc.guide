@@ -1,0 +1,31 @@
+# Test scripts for /engagement/ampscript/functions/createobject/.
+#
+# Rendered by _includes/test-script.html. A full AMPscript block that can be
+# pasted into a CloudPage and deployed as-is. CreateObject is the first link
+# in the SOAP object-builder chain; it is proven by threading its handle
+# through SetObjectProperty / AddObjectArrayItem into an Invoke* round-trip.
+# Fetch one branch at a time: ?b=build, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* build a RetrieveRequest handle and prove it works via a read-only retrieve */
+    IF @b == "build" THEN
+      VAR @rr, @st, @req, @rows, @sfp
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      SET @sfp = CreateObject("SimpleFilterPart")
+      SetObjectProperty(@sfp, "Property", "CustomerKey")
+      SetObjectProperty(@sfp, "SimpleOperator", "equals")
+      AddObjectArrayItem(@sfp, "Value", "AMP_VERIFY_SCRATCH")
+      SetObjectProperty(@rr, "Filter", @sfp)
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("build st=[", @st, "] rc=[", RowCount(@rows), "]"))
+    ENDIF
+  ]%%

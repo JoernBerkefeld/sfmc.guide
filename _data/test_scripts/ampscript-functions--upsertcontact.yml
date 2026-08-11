@@ -1,0 +1,45 @@
+# Test scripts for /engagement/ampscript/functions/upsertcontact/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# SAFE-ONLY: this bundle exercises the ERROR path (return 1), which performs
+# no write, so it can be run without creating or mutating any contact. The
+# success path (return 0) is intentionally NOT shipped here because it creates
+# or updates a real mobile contact keyed on the phone number and AMPscript has
+# no contact-delete function to clean it up.
+# Fetch one branch at a time: ?b=badattr, ?b=badchannel, ?b=badphone.
+# Each returns the literal 1; a branch that renders nothing is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* an attribute name that is not a defined MobileConnect attribute
+       returns 1 (error) and writes nothing */
+    IF @b == "badattr" THEN
+      VAR @r1
+      OutputLine(Concat("badattr start"))
+      SET @r1 = UpsertContact("mobile", "phone", 447700900000, "_NotAnAttribute", "x")
+      OutputLine(Concat("badattr.result=[", @r1, "]"))
+      OutputLine(Concat("badattr done"))
+    ENDIF
+
+    /* an unsupported channel returns 1 (error) and writes nothing */
+    IF @b == "badchannel" THEN
+      VAR @r2
+      OutputLine(Concat("badchannel start"))
+      SET @r2 = UpsertContact("email", "phone", 447700900000, "_ZipCode", "70423")
+      OutputLine(Concat("badchannel.result=[", @r2, "]"))
+      OutputLine(Concat("badchannel done"))
+    ENDIF
+
+    /* a non-numeric phone returns 1 (error) and writes nothing */
+    IF @b == "badphone" THEN
+      VAR @r3
+      OutputLine(Concat("badphone start"))
+      SET @r3 = UpsertContact("mobile", "phone", "notaphone", "_ZipCode", "70423")
+      OutputLine(Concat("badphone.result=[", @r3, "]"))
+      OutputLine(Concat("badphone done"))
+    ENDIF
+  ]%%

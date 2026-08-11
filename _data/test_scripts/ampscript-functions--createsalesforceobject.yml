@@ -1,0 +1,42 @@
+# Test scripts for /engagement/ampscript/functions/createsalesforceobject/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Requires an active Marketing Cloud Connect integration to a Sales or Service
+# Cloud org. SAFE-ONLY: this bundle exercises only the FAULT path, which writes
+# no record. The success path is intentionally NOT shipped here because a
+# successful create inserts a real row into a real Salesforce object and
+# AMPscript has no delete function to clean it up.
+# AMPscript has no try/catch, so a SOAP fault (unknown object or field) aborts
+# the whole page with HTTP 422 and discards everything rendered before it. Each
+# risky case sits behind its own RequestParameter("b") branch.
+# Fetch one branch at a time: ?b=badobj, ?b=badfield, ?b=alive.
+# A fault branch that renders nothing at all is the expected abort signal;
+# ?b=alive proves the page compiles and serves HTTP 200.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* control: proves the harness compiles and the page serves 200 */
+    IF @b == "alive" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* an unknown object name faults and aborts the page: no start marker renders */
+    IF @b == "badobj" THEN
+      OutputLine(Concat("badobj start"))
+      VAR @id1
+      SET @id1 = CreateSalesforceObject("NotARealObject__x", 1, "Subject", "zzz")
+      OutputLine(Concat("badobj.id=[", @id1, "]"))
+    ENDIF
+
+    /* an unknown field name on a real object faults and aborts the page */
+    IF @b == "badfield" THEN
+      OutputLine(Concat("badfield start"))
+      VAR @id2
+      SET @id2 = CreateSalesforceObject("Lead", 1, "NotAFieldName__x", "zzz")
+      OutputLine(Concat("badfield.id=[", @id2, "]"))
+    ENDIF
+  ]%%

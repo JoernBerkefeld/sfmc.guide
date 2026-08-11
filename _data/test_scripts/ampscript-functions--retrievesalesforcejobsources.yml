@@ -1,0 +1,31 @@
+# Test scripts for /engagement/ampscript/functions/retrievesalesforcejobsources/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Requires an active Marketing Cloud Connect integration to a Sales or Service
+# Cloud org. Pass a real numeric job ID from a Salesforce-triggered send to see
+# the populated rowset; a job ID with no matching sources returns an empty
+# rowset rather than an error.
+behaviour: |
+  %%[
+    /* a job ID with no matching sources returns an empty rowset, not an error */
+    VAR @rows, @rc
+    SET @rows = RetrieveSalesforceJobSources(999999999)
+    SET @rc = RowCount(@rows)
+    OutputLine(Concat("rowcount=[", @rc, "] isEmpty=[", Empty(@rows), "]"))
+
+    /* iterate the sources of a real Salesforce send by its numeric job ID */
+    VAR @jobRows, @jobCount, @i, @row
+    SET @jobRows = RetrieveSalesforceJobSources(40029164)
+    SET @jobCount = RowCount(@jobRows)
+    IF @jobCount > 0 THEN
+      FOR @i = 1 TO @jobCount DO
+        SET @row = Row(@jobRows, @i)
+        OutputLine(Concat(
+          "SourceID=", Field(@row, "SourceID"),
+          " SourceType=", Field(@row, "SourceType"),
+          " IsInclusionSource=", Field(@row, "IsInclusionSource")))
+      NEXT @i
+    ENDIF
+  ]%%

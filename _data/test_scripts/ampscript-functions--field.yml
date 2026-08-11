@@ -1,0 +1,35 @@
+# Test scripts for /engagement/ampscript/functions/field/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and reads named fields from a rowset row.
+# The two-arg form aborts the page on a missing column, so the
+# missing-column case sits behind its own branch and is fetched alone.
+# Fetch one branch at a time: ?b=safe, ?b=missing2arg, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @rs, @row
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice", "Score", 10)
+      SET @rs = LookupRows("AMP_VERIFY_SCRATCH", "Id", "A1")
+      SET @row = Row(@rs, 1)
+      /* present column, two-arg form */
+      OutputLine(Concat("Field(FirstName)=[", Field(@row, "FirstName"), "]"))
+      /* missing column, three-arg 0 = do-not-abort, returns empty string */
+      OutputLine(Concat("Field(missing,0)=[", Field(@row, "NoSuchColumn", 0), "]"))
+    ENDIF
+
+    /* fetch ?b=missing2arg - HTTP 422: two-arg Field on a missing column aborts */
+    IF @b == "missing2arg" THEN
+      OutputLine(Concat("--- missing2arg start ---"))
+      SET @rs = LookupRows("AMP_VERIFY_SCRATCH", "Id", "A1")
+      OutputLine(Concat("Field(missing)=[", Field(Row(@rs, 1), "NoSuchColumn"), "]"))
+    ENDIF
+  ]%%

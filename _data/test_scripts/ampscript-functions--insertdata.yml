@@ -1,0 +1,27 @@
+# Test scripts for /engagement/ampscript/functions/insertdata/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=safe, ?b=read, ?b=zzz.
+# ?b=safe inserts and prints the return count; ?b=read (a fresh render)
+# reads the row back - a separate render is required because AMPscript
+# caches DE row reads within a single render.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "W1")
+      SET @r = InsertData("AMP_VERIFY_SCRATCH", "Id", "W1", "FirstName", "Ivan", "Score", 5)
+      OutputLine(Concat("InsertData ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("W1 FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "W1"), "] Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "W1"), "]"))
+    ENDIF
+  ]%%

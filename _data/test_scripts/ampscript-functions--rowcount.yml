@@ -1,0 +1,26 @@
+# Test scripts for /engagement/ampscript/functions/rowcount/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and counts rowsets returned by LookupRows.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A3", "FirstName", "Alice", "Score", 30)
+
+      /* count of a populated rowset */
+      OutputLine(Concat("RowCount(match)=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Alice")), "]"))
+      /* count of an empty rowset - returns 0, never aborts */
+      OutputLine(Concat("RowCount(empty)=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Zoltan")), "]"))
+    ENDIF
+  ]%%

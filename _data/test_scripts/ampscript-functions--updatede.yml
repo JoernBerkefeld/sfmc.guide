@@ -1,0 +1,30 @@
+# Test scripts for /engagement/ampscript/functions/updatede/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=seed, ?b=upd, ?b=read, ?b=zzz.
+# UpdateDE returns an empty string; the read-back runs in a fresh render.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "seed" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "D1")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "D1", "FirstName", "Dora", "Score", 3)
+      OutputLine(Concat("seeded D1"))
+    ENDIF
+
+    IF @b == "upd" THEN
+      SET @r = UpdateDE("AMP_VERIFY_SCRATCH", 1, "Id", "D1", "FirstName", "Dorian", "Score", 33)
+      OutputLine(Concat("UpdateDE ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("D1 FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "D1"), "] Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "D1"), "]"))
+    ENDIF
+  ]%%

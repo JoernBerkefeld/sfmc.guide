@@ -1,0 +1,34 @@
+# Test scripts for /engagement/ampscript/functions/lookuprows/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and reads it back with LookupRows + RowCount + Row + Field.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b, @rs, @rc, @i
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A2", "FirstName", "Bob", "Score", 20)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A3", "FirstName", "Alice", "Score", 30)
+
+      /* rowset of all matching rows, read 1-based */
+      SET @rs = LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Alice")
+      SET @rc = RowCount(@rs)
+      OutputLine(Concat("LookupRows(FirstName=Alice) RowCount=[", @rc, "]"))
+      FOR @i = 1 TO @rc DO
+        OutputLine(Concat("  row ", @i, " Id=[", Field(Row(@rs, @i), "Id"), "] Score=[", Field(Row(@rs, @i), "Score"), "]"))
+      NEXT @i
+
+      /* a no-match returns an empty rowset with RowCount 0 */
+      OutputLine(Concat("LookupRows nomatch RowCount=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Zoltan")), "]"))
+    ENDIF
+  ]%%

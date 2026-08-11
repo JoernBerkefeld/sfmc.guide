@@ -1,0 +1,52 @@
+# Test scripts for /engagement/ampscript/functions/addobjectarrayitem/.
+#
+# Rendered by _includes/test-script.html. AddObjectArrayItem appends to an
+# array-valued property; it is proven both with a scalar item (Properties of a
+# retrieve) and with a nested handle item (Fields of a DataExtension).
+# Fetch one branch at a time: ?b=scalar, ?b=nested, ?b=zzz.
+# The ?b=nested branch is destructive: it creates then deletes a throwaway DE.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* scalar items appended to the Properties array of a retrieve request */
+    IF @b == "scalar" THEN
+      VAR @rr, @st, @req, @rows
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      AddObjectArrayItem(@rr, "Properties", "CustomerKey")
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("scalar st=[", @st, "] rc=[", RowCount(@rows), "]"))
+    ENDIF
+
+    /* nested handle items appended to the Fields array of a DataExtension */
+    IF @b == "nested" THEN
+      VAR @de, @f1, @f2, @m, @e, @dm, @de3
+      SET @de = CreateObject("DataExtension")
+      SetObjectProperty(@de, "CustomerKey", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de, "Name", "AMPWSPROXYSCRATCH")
+      SET @f1 = CreateObject("DataExtensionField")
+      SetObjectProperty(@f1, "Name", "Id")
+      SetObjectProperty(@f1, "FieldType", "Text")
+      SetObjectProperty(@f1, "MaxLength", "50")
+      SetObjectProperty(@f1, "IsPrimaryKey", "true")
+      SetObjectProperty(@f1, "IsRequired", "true")
+      AddObjectArrayItem(@de, "Fields", @f1)
+      SET @f2 = CreateObject("DataExtensionField")
+      SetObjectProperty(@f2, "Name", "Val")
+      SetObjectProperty(@f2, "FieldType", "Text")
+      SetObjectProperty(@f2, "MaxLength", "100")
+      AddObjectArrayItem(@de, "Fields", @f2)
+      OutputLine(Concat("nested create=[", InvokeCreate(@de, @m, @e), "] msg=[", @m, "]"))
+      /* clean up the throwaway DE */
+      SET @de3 = CreateObject("DataExtension")
+      SetObjectProperty(@de3, "CustomerKey", "AMPWSPROXYSCRATCH")
+      OutputLine(Concat("nested delete=[", InvokeDelete(@de3, @dm, @e), "]"))
+    ENDIF
+  ]%%

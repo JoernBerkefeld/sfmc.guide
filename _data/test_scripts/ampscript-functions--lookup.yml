@@ -1,0 +1,35 @@
+# Test scripts for /engagement/ampscript/functions/lookup/.
+#
+# Rendered by _includes/test-script.html. The block seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH: Id Text50 PK, FirstName Text100, Score Number,
+# Active Boolean, Modified Date) and then reads it back with Lookup.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* control branch: proves the page itself renders */
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      /* seed deterministic rows */
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A2", "FirstName", "Bob", "Score", 20)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A3", "FirstName", "Alice", "Score", 30)
+
+      /* scalar return from the first matching row */
+      OutputLine(Concat("Lookup A2.FirstName=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "A2"), "]"))
+      OutputLine(Concat("Lookup A3.Score=[", Lookup("AMP_VERIFY_SCRATCH", "Score", "Id", "A3"), "]"))
+      /* a no-match returns an empty string */
+      OutputLine(Concat("Lookup nomatch=[", Lookup("AMP_VERIFY_SCRATCH", "FirstName", "Id", "NOPE"), "]"))
+      /* variadic two-pair criteria */
+      OutputLine(Concat("Lookup pair.Id=[", Lookup("AMP_VERIFY_SCRATCH", "Id", "FirstName", "Alice", "Score", 30), "]"))
+    ENDIF
+  ]%%

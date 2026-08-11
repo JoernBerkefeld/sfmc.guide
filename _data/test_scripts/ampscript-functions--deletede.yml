@@ -1,0 +1,26 @@
+# Test scripts for /engagement/ampscript/functions/deletede/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=safe, ?b=read, ?b=zzz.
+# DeleteDE returns an empty string; ?b=read (a fresh render) confirms
+# the row is gone via RowCount.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "Y1", "FirstName", "Yara", "Score", 2)
+      SET @r = DeleteDE("AMP_VERIFY_SCRATCH", "Id", "Y1")
+      OutputLine(Concat("DeleteDE ret=[", @r, "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("Y1 rows=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "Id", "Y1")), "]"))
+    ENDIF
+  ]%%

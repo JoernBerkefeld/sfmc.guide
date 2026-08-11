@@ -1,0 +1,53 @@
+# Test scripts for /engagement/ampscript/functions/getjwtbykeyname/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=keymissing.
+# A branch that renders nothing at all is the failure signal.
+#
+# The safe branch needs two Key Management keys in the SAME Business Unit the
+# CloudPage runs in: a Symmetric key with external key AMP_VERIFY_JWT_HS whose
+# stored value is the Base64 string oGbE/i+gRbdjSen3sVYES5DylJE760qsgNWI77UBUdM=,
+# and an Asymmetric key with external key AMP_VERIFY_JWT_RS uploaded from an RSA
+# PGP .asc keypair. The HMAC lines assert a byte-for-byte MATCH against inline
+# GetJWT fed the SAME stored string (not Base64-decoded). The RSA lines render a
+# token whose signature can only be checked off-platform against the public key.
+behaviour: |
+  %%[
+    VAR @b, @json, @key
+    SET @b = RequestParameter("b")
+    SET @json = '{"sub":"amp-verify","iat":"1700000000"}'
+    SET @key = 'oGbE/i+gRbdjSen3sVYES5DylJE760qsgNWI77UBUdM='
+
+    /* safe sweep: every call here succeeds and cannot abort, so they share one request */
+    IF @b == "safe" THEN
+      VAR @hs256, @hs384, @hs512, @rs256, @rs384, @rs512
+      SET @hs256 = GetJWTByKeyName('AMP_VERIFY_JWT_HS','HS256',@json)
+      SET @hs384 = GetJWTByKeyName('AMP_VERIFY_JWT_HS','HS384',@json)
+      SET @hs512 = GetJWTByKeyName('AMP_VERIFY_JWT_HS','HS512',@json)
+      OutputLine(Concat("hs256=[", @hs256, "]"))
+      IF @hs256 == GetJWT(@key,'HS256',@json) THEN OutputLine(Concat("hs256 match=[MATCH]")) ELSE OutputLine(Concat("hs256 match=[MISMATCH]")) ENDIF
+      OutputLine(Concat("hs384=[", @hs384, "]"))
+      IF @hs384 == GetJWT(@key,'HS384',@json) THEN OutputLine(Concat("hs384 match=[MATCH]")) ELSE OutputLine(Concat("hs384 match=[MISMATCH]")) ENDIF
+      OutputLine(Concat("hs512=[", @hs512, "]"))
+      IF @hs512 == GetJWT(@key,'HS512',@json) THEN OutputLine(Concat("hs512 match=[MATCH]")) ELSE OutputLine(Concat("hs512 match=[MISMATCH]")) ENDIF
+      SET @rs256 = GetJWTByKeyName('AMP_VERIFY_JWT_RS','RS256',@json)
+      SET @rs384 = GetJWTByKeyName('AMP_VERIFY_JWT_RS','RS384',@json)
+      SET @rs512 = GetJWTByKeyName('AMP_VERIFY_JWT_RS','RS512',@json)
+      OutputLine(Concat("rs256=[", @rs256, "]"))
+      OutputLine(Concat("rs384=[", @rs384, "]"))
+      OutputLine(Concat("rs512=[", @rs512, "]"))
+    ENDIF
+
+    /* unresolvable key name aborts the page: the start marker never renders */
+    IF @b == "keymissing" THEN
+      VAR @miss
+      OutputLine(Concat("keymissing start"))
+      SET @miss = GetJWTByKeyName('AMP_VERIFY_JWT_DOES_NOT_EXIST','HS256',@json)
+      OutputLine(Concat("keymissing=[", @miss, "]"))
+    ENDIF
+  ]%%

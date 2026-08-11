@@ -1,0 +1,47 @@
+# Test scripts for /engagement/ampscript/functions/invokedelete/.
+#
+# Rendered by _includes/test-script.html. Destructive: creates then deletes a
+# dedicated throwaway DE (AMPWSPROXYSCRATCH) this script fully owns, then
+# confirms it is gone with a retrieve.
+# Fetch one branch at a time: ?b=delete, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "delete" THEN
+      VAR @de, @m, @e, @f, @de3, @rr, @st, @req, @rows
+      /* create the throwaway DE first */
+      SET @de = CreateObject("DataExtension")
+      SetObjectProperty(@de, "CustomerKey", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@de, "Name", "AMPWSPROXYSCRATCH")
+      SET @f = CreateObject("DataExtensionField")
+      SetObjectProperty(@f, "Name", "Id")
+      SetObjectProperty(@f, "FieldType", "Text")
+      SetObjectProperty(@f, "MaxLength", "50")
+      SetObjectProperty(@f, "IsPrimaryKey", "true")
+      SetObjectProperty(@f, "IsRequired", "true")
+      AddObjectArrayItem(@de, "Fields", @f)
+      InvokeCreate(@de, @m, @e)
+      /* delete it */
+      SET @de3 = CreateObject("DataExtension")
+      SetObjectProperty(@de3, "CustomerKey", "AMPWSPROXYSCRATCH")
+      OutputLine(Concat("delete ret=[", InvokeDelete(@de3, @m, @e), "] msg=[", @m, "] err=[", @e, "]"))
+      /* confirm gone */
+      SET @rr = CreateObject("RetrieveRequest")
+      SetObjectProperty(@rr, "ObjectType", "DataExtension")
+      AddObjectArrayItem(@rr, "Properties", "Name")
+      VAR @sfp
+      SET @sfp = CreateObject("SimpleFilterPart")
+      SetObjectProperty(@sfp, "Property", "CustomerKey")
+      SetObjectProperty(@sfp, "SimpleOperator", "equals")
+      AddObjectArrayItem(@sfp, "Value", "AMPWSPROXYSCRATCH")
+      SetObjectProperty(@rr, "Filter", @sfp)
+      SET @rows = InvokeRetrieve(@rr, @st, @req)
+      OutputLine(Concat("confirm gone rc=[", RowCount(@rows), "]"))
+    ENDIF
+  ]%%

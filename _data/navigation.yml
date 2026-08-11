@@ -104,6 +104,8 @@
           url: /engagement/ampscript/functions/encryptsymmetric/
         - title: GetJWT
           url: /engagement/ampscript/functions/getjwt/
+        - title: GetJWTByKeyName
+          url: /engagement/ampscript/functions/getjwtbykeyname/
         - title: MD5
           url: /engagement/ampscript/functions/md5/
         - title: SHA1
@@ -208,6 +210,22 @@
           url: /engagement/ampscript/functions/v/
         - title: WrapLongURL
           url: /engagement/ampscript/functions/wraplongurl/
+        - title: "— Sales and Service Cloud functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: CreateSalesforceObject
+          url: /engagement/ampscript/functions/createsalesforceobject/
+        - title: LongSFID
+          url: /engagement/ampscript/functions/longsfid/
+        - title: RetrieveSalesforceJobSources
+          url: /engagement/ampscript/functions/retrievesalesforcejobsources/
+        - title: RetrieveSalesforceObjects
+          url: /engagement/ampscript/functions/retrievesalesforceobjects/
+        - title: UpdateSingleSalesforceObject
+          url: /engagement/ampscript/functions/updatesinglesalesforceobject/
+        - title: "— MobileConnect functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: UpsertContact
+          url: /engagement/ampscript/functions/upsertcontact/
 
 - title: Next
   url: /next/

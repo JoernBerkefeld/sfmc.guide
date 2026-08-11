@@ -1,0 +1,33 @@
+# Test scripts for /engagement/ampscript/functions/lookuporderedrowscs/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) with a mixed-case fixture and reads it back
+# case-sensitively, sorted and row-limited. Contrasts with the
+# case-insensitive LookupOrderedRows on the same data.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b, @cs, @ci
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O2", "FirstName", "Alice", "Score", 30)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O3", "FirstName", "alice", "Score", 20)
+
+      /* case-sensitive, ordered ascending, top 5 */
+      SET @cs = LookupOrderedRowsCS("AMP_VERIFY_SCRATCH", 5, "Score ASC", "FirstName", "Alice")
+      OutputLine(Concat("OrderedRowsCS(Alice) count=[", RowCount(@cs), "] firstId=[", Field(Row(@cs, 1), "Id"), "]"))
+
+      /* case-insensitive counterpart includes the lowercase row */
+      SET @ci = LookupOrderedRows("AMP_VERIFY_SCRATCH", 5, "Score ASC", "FirstName", "Alice")
+      OutputLine(Concat("OrderedRows(Alice) count=[", RowCount(@ci), "]"))
+    ENDIF
+  ]%%

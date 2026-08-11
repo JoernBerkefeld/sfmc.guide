@@ -1,0 +1,46 @@
+# Test scripts for /engagement/ampscript/functions/httppost/.
+#
+# Rendered by _includes/test-script.html. Paste into a CloudPage and deploy.
+#
+# HTTPPost makes a live outbound HTTP POST. The safe cases target the public
+# echo endpoint https://postman-echo.com/post, which reflects the request
+# headers and body without side effects (never httpbin.org). AMPscript has no
+# try/catch, so a non-2xx response or a bad URL aborts the WHOLE page with HTTP
+# 422 - those two cases live in their OWN files below and must be deployed
+# alone. The main behaviour script only contains cases that return HTTP 200.
+# Behaviour branches: ?b=post1, ?b=min3.
+behaviour: |
+  %%[
+    VAR @b, @st, @resp
+    SET @b = RequestParameter("b")
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* 4-arg form: status is the return value, @resp receives the body. fetch ?b=post1 */
+    IF @b == "post1" THEN
+      SET @st = HTTPPost("https://postman-echo.com/post", "application/json", '{"marker":"amp-post-zz9","n":7}', @resp)
+      OutputLine(Concat("status=[", @st, "] resplen=[", Length(@resp), "]"))
+      OutputLine(Concat("respslice=[", Substring(@resp, 1, 60), "]"))
+    ENDIF
+
+    /* 3-arg minimal form (no out-variable): returns the status. fetch ?b=min3 */
+    IF @b == "min3" THEN
+      SET @st = HTTPPost("https://postman-echo.com/post", "text/plain", "hello-amp")
+      OutputLine(Concat("status=[", @st, "]"))
+    ENDIF
+  ]%%
+# A non-2xx response aborts the WHOLE page with HTTP 422. Deploy alone and
+# expect a blank HTTP 422 response (no CTRL line).
+non_2xx_aborts: |
+  %%[
+    VAR @st, @resp
+    SET @st = HTTPPost("https://postman-echo.com/status/404", "application/json", "{}", @resp)
+    OutputLine(Concat("status=[", @st, "]"))
+  ]%%
+# An empty URL aborts the whole page with HTTP 422. Deploy alone; expect a
+# blank HTTP 422 response.
+empty_url_aborts: |
+  %%[
+    VAR @st, @resp
+    SET @st = HTTPPost("", "application/json", "{}", @resp)
+    OutputLine(Concat("status=[", @st, "]"))
+  ]%%

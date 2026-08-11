@@ -1,0 +1,26 @@
+# Test scripts for /engagement/ampscript/functions/dataextensionrowcount/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and counts its total rows by name.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A2", "FirstName", "Bob")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A3", "FirstName", "Alice")
+
+      /* total rows in the DE, addressed by name/key */
+      OutputLine(Concat("DataExtensionRowCount=[", DataExtensionRowCount("AMP_VERIFY_SCRATCH"), "]"))
+    ENDIF
+  ]%%

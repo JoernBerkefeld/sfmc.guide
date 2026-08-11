@@ -1,0 +1,37 @@
+# Test scripts for /engagement/ampscript/functions/longsfid/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=already18, ?b=short, ?b=empty.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: three known-answer 15-char IDs, all accepted */
+    IF @b == "safe" THEN
+      OutputLine(Concat("LongSFID('0036000000QKv5T')=[", LongSFID("0036000000QKv5T"), "]"))
+      OutputLine(Concat("LongSFID('00Q6F00001APnym')=[", LongSFID("00Q6F00001APnym"), "]"))
+      OutputLine(Concat("LongSFID('001500000ABCDEF')=[", LongSFID("001500000ABCDEF"), "]"))
+    ENDIF
+
+    /* an already-18-char ID is returned unchanged, not transformed again */
+    IF @b == "already18" THEN
+      OutputLine(Concat("already18=[", LongSFID("0036000000QKv5TAAT"), "] len=[", Length(LongSFID("0036000000QKv5TAAT")), "]"))
+    ENDIF
+
+    /* a too-short input is passed through unchanged, no error */
+    IF @b == "short" THEN
+      OutputLine(Concat("short=[", LongSFID("ABC"), "] len=[", Length(LongSFID("ABC")), "]"))
+    ENDIF
+
+    /* an empty string is passed through unchanged */
+    IF @b == "empty" THEN
+      OutputLine(Concat("empty=[", LongSFID(""), "] len=[", Length(LongSFID("")), "]"))
+    ENDIF
+  ]%%

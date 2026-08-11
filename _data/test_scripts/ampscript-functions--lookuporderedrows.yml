@@ -1,0 +1,36 @@
+# Test scripts for /engagement/ampscript/functions/lookuporderedrows/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and reads it back sorted and row-limited.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b, @rs, @rc, @i
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O2", "FirstName", "Alice", "Score", 30)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O3", "FirstName", "alice", "Score", 20)
+
+      /* top 2 by Score ASC */
+      SET @rs = LookupOrderedRows("AMP_VERIFY_SCRATCH", 2, "Score ASC", "FirstName", "Alice")
+      SET @rc = RowCount(@rs)
+      OutputLine(Concat("OrderedRows(2,Score ASC) count=[", @rc, "]"))
+      FOR @i = 1 TO @rc DO
+        OutputLine(Concat("  ", @i, " Id=[", Field(Row(@rs, @i), "Id"), "] Score=[", Field(Row(@rs, @i), "Score"), "]"))
+      NEXT @i
+
+      /* DESC direction */
+      OutputLine(Concat("OrderedRows(5,Score DESC) firstScore=[", Field(Row(LookupOrderedRows("AMP_VERIFY_SCRATCH", 5, "Score DESC", "FirstName", "Alice"), 1), "Score"), "]"))
+      /* numRows limit */
+      OutputLine(Concat("OrderedRows(1,Score ASC) count=[", RowCount(LookupOrderedRows("AMP_VERIFY_SCRATCH", 1, "Score ASC", "FirstName", "Alice")), "]"))
+    ENDIF
+  ]%%

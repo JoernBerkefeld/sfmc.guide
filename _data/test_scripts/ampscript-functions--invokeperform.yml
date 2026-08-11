@@ -1,0 +1,33 @@
+# Test scripts for /engagement/ampscript/functions/invokeperform/.
+#
+# Rendered by _includes/test-script.html. Safe: an invalid action on a
+# QueryDefinition addressed by a nonexistent ObjectID — exercises the function
+# and its return shape without starting any real query or automation.
+# Fetch one branch at a time: ?b=badaction, ?b=noobj, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    /* invalid action: proves acceptance + Error return, no side effect */
+    IF @b == "badaction" THEN
+      VAR @obj, @st, @ret
+      SET @obj = CreateObject("QueryDefinition")
+      SetObjectProperty(@obj, "ObjectID", "00000000-0000-0000-0000-000000000000")
+      SET @ret = InvokePerform(@obj, "notarealaction", @st)
+      OutputLine(Concat("badaction ret=[", @ret, "] st=[", @st, "]"))
+    ENDIF
+
+    /* valid action but nonexistent definition: no query starts */
+    IF @b == "noobj" THEN
+      VAR @obj, @st, @ret
+      SET @obj = CreateObject("QueryDefinition")
+      SetObjectProperty(@obj, "ObjectID", "00000000-0000-0000-0000-000000000000")
+      SET @ret = InvokePerform(@obj, "start", @st)
+      OutputLine(Concat("noobj ret=[", @ret, "] st=[", @st, "]"))
+    ENDIF
+  ]%%

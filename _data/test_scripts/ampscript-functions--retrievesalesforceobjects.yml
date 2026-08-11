@@ -1,0 +1,45 @@
+# Test scripts for /engagement/ampscript/functions/retrievesalesforceobjects/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# Requires an active Marketing Cloud Connect integration to a Sales or Service
+# Cloud org. AMPscript has no try/catch, so a SOAP fault (e.g. an unknown object
+# name) aborts the whole page with HTTP 422 and discards everything rendered
+# before it. Risky cases therefore sit behind their own RequestParameter("b")
+# branch and must be fetched one at a time.
+# Branches on this page: ?b=empty, ?b=match, ?b=badobj.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* a filter that matches nothing returns an empty rowset, not an error */
+    IF @b == "empty" THEN
+      VAR @rows, @rc
+      SET @rows = RetrieveSalesforceObjects("Contact", "Id", "Id", "=", "000000000000000AAA")
+      SET @rc = RowCount(@rows)
+      OutputLine(Concat("empty.rowcount=[", @rc, "] empty.isEmpty=[", Empty(@rows), "]"))
+    ENDIF
+
+    /* a matching filter returns a navigable rowset */
+    IF @b == "match" THEN
+      VAR @rows2, @rc2, @row1
+      SET @rows2 = RetrieveSalesforceObjects("Contact", "Id", "IsDeleted", "=", "false")
+      SET @rc2 = RowCount(@rows2)
+      OutputLine(Concat("match.rowcount=[", @rc2, "]"))
+      IF @rc2 > 0 THEN
+        SET @row1 = Row(@rows2, 1)
+        OutputLine(Concat("match.firstIdLength=[", Length(Field(@row1, "Id")), "]"))
+      ENDIF
+    ENDIF
+
+    /* an unknown object name aborts the page: the start marker never renders */
+    IF @b == "badobj" THEN
+      OutputLine(Concat("badobj start"))
+      VAR @rows3
+      SET @rows3 = RetrieveSalesforceObjects("NotARealObject__x", "Id", "Id", "=", "000000000000000AAA")
+      OutputLine(Concat("badobj.rowcount=[", RowCount(@rows3), "]"))
+    ENDIF
+  ]%%

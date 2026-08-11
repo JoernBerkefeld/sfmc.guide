@@ -1,0 +1,33 @@
+# Test scripts for /engagement/ampscript/functions/row/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) and reads a row by 1-based index.
+# AMPscript has no try/catch, so Row(rowset, 0) aborts the whole page
+# with HTTP 422 - it sits behind its own branch and must be fetched alone.
+# Fetch one branch at a time: ?b=safe, ?b=index0, ?b=zzz.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @rs
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "A3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "A3", "FirstName", "Alice", "Score", 30)
+      SET @rs = LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Alice")
+      OutputLine(Concat("Row 1 Id=[", Field(Row(@rs, 1), "Id"), "] Score=[", Field(Row(@rs, 1), "Score"), "]"))
+    ENDIF
+
+    /* fetch ?b=index0 - HTTP 422, nothing renders: Row(rowset, 0) aborts */
+    IF @b == "index0" THEN
+      OutputLine(Concat("--- index0 start ---"))
+      SET @rs = LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Alice")
+      OutputLine(Concat("Row 0 Id=[", Field(Row(@rs, 0), "Id"), "]"))
+    ENDIF
+  ]%%

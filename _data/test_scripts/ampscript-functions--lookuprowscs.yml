@@ -1,0 +1,30 @@
+# Test scripts for /engagement/ampscript/functions/lookuprowscs/.
+#
+# Rendered by _includes/test-script.html. Seeds a throwaway DE
+# (AMP_VERIFY_SCRATCH) with a mixed-case fixture and contrasts the
+# case-sensitive LookupRowsCS with the case-insensitive LookupRows.
+# Fetch one branch at a time: ?b=safe, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "O3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O1", "FirstName", "Alice")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O2", "FirstName", "Alice")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "O3", "FirstName", "alice")
+
+      /* case-insensitive comparison matches all three */
+      OutputLine(Concat("LookupRows(Alice)=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "FirstName", "Alice")), "]"))
+      /* case-sensitive comparison excludes the lowercase row */
+      OutputLine(Concat("LookupRowsCS(Alice)=[", RowCount(LookupRowsCS("AMP_VERIFY_SCRATCH", "FirstName", "Alice")), "]"))
+      OutputLine(Concat("LookupRowsCS(alice)=[", RowCount(LookupRowsCS("AMP_VERIFY_SCRATCH", "FirstName", "alice")), "]"))
+    ENDIF
+  ]%%

@@ -1,0 +1,37 @@
+# Test scripts for /engagement/ampscript/functions/executefilter/.
+#
+# Rendered by _includes/test-script.html. Requires a pre-existing
+# DE-based data filter (AMP_VERIFY_FILTER: FirstName Equals "Alice",
+# source AMP_VERIFY_SCRATCH). The seed branch writes only to the
+# throwaway scratch DE.
+# Fetch one branch at a time: ?b=seed, ?b=run, ?b=zzz.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "seed" THEN
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "F1")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "F2")
+      DeleteData("AMP_VERIFY_SCRATCH", "Id", "F3")
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "F1", "FirstName", "Alice", "Score", 10)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "F2", "FirstName", "Bob", "Score", 20)
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "F3", "FirstName", "Alice", "Score", 30)
+      OutputLine(Concat("seeded"))
+    ENDIF
+
+    IF @b == "run" THEN
+      VAR @rs, @cnt, @i, @r
+      SET @rs = ExecuteFilter("AMP_VERIFY_FILTER")
+      SET @cnt = RowCount(@rs)
+      OutputLine(Concat("rowCount=[", @cnt, "]"))
+      FOR @i = 1 TO @cnt DO
+        SET @r = Row(@rs, @i)
+        OutputLine(Concat("  ", Field(@r, "Id"), " FirstName=[", Field(@r, "FirstName"), "] Score=[", Field(@r, "Score"), "]"))
+      NEXT @i
+    ENDIF
+  ]%%

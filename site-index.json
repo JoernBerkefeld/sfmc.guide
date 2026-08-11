@@ -7,6 +7,13 @@
     "description": "Computes the sum of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
   },
   {
+    "name": "AddObjectArrayItem",
+    "url": "/engagement/ampscript/functions/addobjectarrayitem/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
     "name": "AMPscript",
     "url": "/engagement/ampscript/",
     "section": "Engagement",
@@ -168,6 +175,20 @@
     "description": "Returns the character for a numeric character code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the code domain is not capped at 255."
   },
   {
+    "name": "ClaimRow",
+    "url": "/engagement/ampscript/functions/claimrow/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "ClaimRowValue",
+    "url": "/engagement/ampscript/functions/claimrowvalue/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
     "name": "CloudPagesURL",
     "url": "/engagement/ampscript/functions/cloudpagesurl/",
     "section": "AMPscript Function Reference",
@@ -231,6 +252,27 @@
     "description": "Returns an HTML img tag for a Content Builder image asset by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
   },
   {
+    "name": "CreateObject",
+    "url": "/engagement/ampscript/functions/createobject/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "CreateSalesforceObject",
+    "url": "/engagement/ampscript/functions/createsalesforceobject/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
+  },
+  {
+    "name": "DataExtensionRowCount",
+    "url": "/engagement/ampscript/functions/dataextensionrowcount/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the total number of rows in a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
     "name": "dataviews.io",
     "url": "/tools/dataviews-io/",
     "section": "Tools",
@@ -271,6 +313,20 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which cipher names work and why an arity mistake cannot be hidden behind a condition."
+  },
+  {
+    "name": "DeleteData",
+    "url": "/engagement/ampscript/functions/deletedata/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Deletes matching rows from a data extension and returns the number of rows deleted. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the return value and what a no-match returns."
+  },
+  {
+    "name": "DeleteDE",
+    "url": "/engagement/ampscript/functions/deletede/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
   },
   {
     "name": "Diagramforce",
@@ -357,11 +413,32 @@
     "description": "ESLint rules for AMPscript, SSJS, and Handlebars — shared team policy for editor and CI, including Next configs."
   },
   {
+    "name": "ExecuteFilter",
+    "url": "/engagement/ampscript/functions/executefilter/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including what an empty filter returns and its case-insensitive matching."
+  },
+  {
+    "name": "ExecuteFilterOrderedRows",
+    "url": "/engagement/ampscript/functions/executefilterorderedrows/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
     "name": "FAQ",
     "url": "/engagement/faq/",
     "section": "Engagement",
     "type": "page",
     "description": "Frequently asked questions for Automations, CloudPages, emails, Journey Builder, and admin."
+  },
+  {
+    "name": "Field",
+    "url": "/engagement/ampscript/functions/field/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Reads a named column from a rowset row. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a missing column aborts the page unless the third argument is passed."
   },
   {
     "name": "Format",
@@ -413,6 +490,13 @@
     "description": "Generates a JSON Web Token signed with an inline secret. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
   },
   {
+    "name": "GetJWTByKeyName",
+    "url": "/engagement/ampscript/functions/getjwtbykeyname/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Generates a JSON Web Token signed with a named Key Management key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
+  },
+  {
     "name": "GetSocialPublishURL",
     "url": "/engagement/ampscript/functions/getsocialpublishurl/",
     "section": "AMPscript Function Reference",
@@ -448,6 +532,27 @@
     "description": "Performs an HTTP GET request and returns the response body. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the status output variable that reports 0 on success and -2 on a failed request."
   },
   {
+    "name": "HTTPPost",
+    "url": "/engagement/ampscript/functions/httppost/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Performs an HTTP POST request and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fourth argument that receives the response body rather than the status the docs describe."
+  },
+  {
+    "name": "HTTPPost2",
+    "url": "/engagement/ampscript/functions/httppost2/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the response argument that holds the body while a separate rowset argument holds the headers."
+  },
+  {
+    "name": "HTTPPostWithRetry",
+    "url": "/engagement/ampscript/functions/httppostwithretry/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Posts content to a URL with automatic retry logic and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the responseStatus argument that holds the response body rather than the status the docs describe."
+  },
+  {
     "name": "HTTPRequestHeader",
     "url": "/engagement/ampscript/functions/httprequestheader/",
     "section": "AMPscript Function Reference",
@@ -467,6 +572,62 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the 1-based position of a substring, matching case-insensitively. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including an undocumented third argument that selects which occurrence to locate."
+  },
+  {
+    "name": "InsertData",
+    "url": "/engagement/ampscript/functions/insertdata/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns the number of rows inserted. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the return value and the read-back."
+  },
+  {
+    "name": "InsertDE",
+    "url": "/engagement/ampscript/functions/insertde/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "InvokeCreate",
+    "url": "/engagement/ampscript/functions/invokecreate/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Create on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+  },
+  {
+    "name": "InvokeDelete",
+    "url": "/engagement/ampscript/functions/invokedelete/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Delete on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+  },
+  {
+    "name": "InvokeExecute",
+    "url": "/engagement/ampscript/functions/invokeexecute/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "InvokePerform",
+    "url": "/engagement/ampscript/functions/invokeperform/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage without moving any data."
+  },
+  {
+    "name": "InvokeRetrieve",
+    "url": "/engagement/ampscript/functions/invokeretrieve/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "InvokeUpdate",
+    "url": "/engagement/ampscript/functions/invokeupdate/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
   },
   {
     "name": "IsCHTMLBrowser",
@@ -516,6 +677,48 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Converts a date in the account's configured time zone to the Marketing Cloud system date. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that a date with no time part lands on the previous day."
+  },
+  {
+    "name": "LongSFID",
+    "url": "/engagement/ampscript/functions/longsfid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a non-15-character input is passed straight through unchanged instead of being validated."
+  },
+  {
+    "name": "Lookup",
+    "url": "/engagement/ampscript/functions/lookup/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns a single field value from the first matching row of a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic name/value criteria and what a no-match returns."
+  },
+  {
+    "name": "LookupOrderedRows",
+    "url": "/engagement/ampscript/functions/lookuporderedrows/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns a sorted, row-limited rowset of matching rows from a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sort direction and the row limit."
+  },
+  {
+    "name": "LookupOrderedRowsCS",
+    "url": "/engagement/ampscript/functions/lookuporderedrowscs/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupOrderedRows."
+  },
+  {
+    "name": "LookupRows",
+    "url": "/engagement/ampscript/functions/lookuprows/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns every matching row of a data extension as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic criteria and what a no-match returns."
+  },
+  {
+    "name": "LookupRowsCS",
+    "url": "/engagement/ampscript/functions/lookuprowscs/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns every matching row of a data extension using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupRows."
   },
   {
     "name": "Lowercase",
@@ -684,6 +887,41 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the value of a form post or query string parameter from the current request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
+  },
+  {
+    "name": "RetrieveSalesforceJobSources",
+    "url": "/engagement/ampscript/functions/retrievesalesforcejobsources/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a job ID with no matching sources returns a clean empty rowset rather than an error."
+  },
+  {
+    "name": "RetrieveSalesforceObjects",
+    "url": "/engagement/ampscript/functions/retrievesalesforceobjects/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that an unknown object name aborts the page and an empty match returns a clean empty rowset."
+  },
+  {
+    "name": "Row",
+    "url": "/engagement/ampscript/functions/row/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns a single row from a rowset by its 1-based index. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that index 0 aborts the page."
+  },
+  {
+    "name": "RowCount",
+    "url": "/engagement/ampscript/functions/rowcount/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the number of rows in a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it returns zero for an empty rowset and never aborts."
+  },
+  {
+    "name": "SetObjectProperty",
+    "url": "/engagement/ampscript/functions/setobjectproperty/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Sets a scalar (or nested-handle) property on a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
   },
   {
     "name": "sf-plugin-mcnext",
@@ -889,11 +1127,53 @@
     "description": "Removes leading and trailing whitespace from a value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that tabs, line breaks and the non-breaking space all count as whitespace."
   },
   {
+    "name": "UpdateData",
+    "url": "/engagement/ampscript/functions/updatedata/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "UpdateDE",
+    "url": "/engagement/ampscript/functions/updatede/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "UpdateSingleSalesforceObject",
+    "url": "/engagement/ampscript/functions/updatesinglesalesforceobject/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
+  },
+  {
     "name": "Uppercase",
     "url": "/engagement/ampscript/functions/uppercase/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Converts a value to upper case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the German sharp s, which is returned untouched instead of expanding to a double S."
+  },
+  {
+    "name": "UpsertContact",
+    "url": "/engagement/ampscript/functions/upsertcontact/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that both a create and an update return 0 and that an unknown attribute returns 1 without writing."
+  },
+  {
+    "name": "UpsertData",
+    "url": "/engagement/ampscript/functions/upsertdata/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+  },
+  {
+    "name": "UpsertDE",
+    "url": "/engagement/ampscript/functions/upsertde/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns an empty string. The email-context twin of UpsertData — the second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
   },
   {
     "name": "URLEncode",

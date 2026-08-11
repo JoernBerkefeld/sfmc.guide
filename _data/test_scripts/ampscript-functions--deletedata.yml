@@ -1,0 +1,28 @@
+# Test scripts for /engagement/ampscript/functions/deletedata/.
+#
+# Rendered by _includes/test-script.html. Destructive: targets a
+# dedicated throwaway DE (AMP_VERIFY_SCRATCH) only.
+# Fetch one branch at a time: ?b=safe, ?b=read, ?b=zzz.
+# ?b=safe seeds then deletes and prints the return count; ?b=read
+# (a fresh render) confirms the row is gone via RowCount.
+behaviour: |
+  %%[
+    VAR @b, @r
+    SET @b = RequestParameter("b")
+
+    IF @b == "zzz" THEN
+      OutputLine(Concat("CTRL=[alive]"))
+    ENDIF
+
+    IF @b == "safe" THEN
+      InsertData("AMP_VERIFY_SCRATCH", "Id", "X1", "FirstName", "Xena", "Score", 1)
+      SET @r = DeleteData("AMP_VERIFY_SCRATCH", "Id", "X1")
+      OutputLine(Concat("DeleteData ret=[", @r, "]"))
+      /* a no-match returns 0 */
+      OutputLine(Concat("DeleteData nomatch ret=[", DeleteData("AMP_VERIFY_SCRATCH", "Id", "NOPE"), "]"))
+    ENDIF
+
+    IF @b == "read" THEN
+      OutputLine(Concat("X1 rows=[", RowCount(LookupRows("AMP_VERIFY_SCRATCH", "Id", "X1")), "]"))
+    ENDIF
+  ]%%

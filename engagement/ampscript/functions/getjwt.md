@@ -87,6 +87,8 @@ Passing the plain string `not json at all` produced a valid token whose middle s
 
 {% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of the gated behaviour harness and give each one its own deployment, or a whole run returns uninformative HTTP 422s." %}
 
+{% include callout.html type="note" title="Keeping the secret out of the page" content="To avoid writing the secret into the page source, use [GetJWTByKeyName](/engagement/ampscript/functions/getjwtbykeyname/) and reference a Key Management key by its external key instead. That variant also unlocks the `RS*` RSA algorithms, which `GetJWT` does not support. Its page covers the Key Management provisioning traps — key type versus algorithm, the fussy asymmetric-key uploader (a gpg `.asc` keypair is accepted while an OpenSSL `.pfx` is rejected), and how to reproduce a token off-platform." %}
+
 ## Availability
 
 | Platform | Available |
