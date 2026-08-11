@@ -1,0 +1,33 @@
+# Test scripts for /engagement/ampscript/functions/contentblockbykey/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. The found and
+# missing cases below are accepted and share one request. Branch: ?b=safe.
+# A branch that renders nothing at all is the failure signal.
+#
+# The key ssjs-guide-test-block is a pre-existing fixture block on the child
+# QA business unit; swap in a customer key that exists on your account.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @sc, @miss, @lit
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: the found render and the missing/default paths are all accepted */
+    IF @b == "safe" THEN
+      /* found: renders the stored block body */
+      OutputLine(Concat("CBK=[", ContentBlockByKey("ssjs-guide-test-block"), "]"))
+
+      /* missing with error flag 0: returns the default content and sets status to -1 */
+      SET @miss = ContentBlockByKey("nosuch-key-zzz", "", 0, "FB-CBK", @sc)
+      OutputLine(Concat("miss=[", @miss, "] sc=[", @sc, "]"))
+
+      /* default content is emitted literally - the inline AMPscript is NOT evaluated */
+      SET @lit = ContentBlockByKey("nosuch-key-zzz", "", 0, "PRE-%%=Add(2,3)=%%-POST", @sc)
+      OutputLine(Concat("lit=[", @lit, "]"))
+    ENDIF
+  ]%%

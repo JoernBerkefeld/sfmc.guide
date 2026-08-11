@@ -1,0 +1,57 @@
+# Test scripts for /engagement/ampscript/functions/transformxml/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a bad transform aborts the whole page with
+# HTTP 422 and discards everything rendered before it. Every failure case
+# sits behind its own RequestParameter("b") branch and must be fetched one
+# at a time. Branches: ?b=ok, ?b=order, ?b=badxml, ?b=badxsl, ?b=emptyxsl.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @xml, @xsl, @res
+    SET @b = RequestParameter("b")
+
+    /* a valid XML string plus a text-output XSLT stylesheet */
+    SET @xml = "<greeting><who>World</who></greeting>"
+    SET @xsl = Concat("<?xml version=", '"', "1.0", '"', "?>")
+    SET @xsl = Concat(@xsl, "<xsl:stylesheet xmlns:xsl=", '"', "http://www.w3.org/1999/XSL/Transform", '"', " version=", '"', "1.0", '"', ">")
+    SET @xsl = Concat(@xsl, "<xsl:output method=", '"', "text", '"', "/>")
+    SET @xsl = Concat(@xsl, "<xsl:template match=", '"', "/greeting", '"', ">Hi [<xsl:value-of select=", '"', "who", '"', "/>]</xsl:template>")
+    SET @xsl = Concat(@xsl, "</xsl:stylesheet>")
+
+    /* happy path: XML first, XSL second -> renders Hi [World] */
+    IF @b == "ok" THEN
+      SET @res = TransformXML(@xml, @xsl)
+      OutputLine(Concat("ok=[", @res, "]"))
+    ENDIF
+
+    /* swapped argument order aborts: the XSL is not valid input to the XML slot */
+    IF @b == "order" THEN
+      OutputLine(Concat("order start"))
+      OutputLine(Concat("order=[", TransformXML(@xsl, @xml), "]"))
+      OutputLine(Concat("order done"))
+    ENDIF
+
+    /* malformed XML (unclosed element) aborts the page */
+    IF @b == "badxml" THEN
+      OutputLine(Concat("badxml start"))
+      OutputLine(Concat("badxml=[", TransformXML("<greeting><who>World</greeting>", @xsl), "]"))
+      OutputLine(Concat("badxml done"))
+    ENDIF
+
+    /* a non-XML stylesheet aborts the page */
+    IF @b == "badxsl" THEN
+      OutputLine(Concat("badxsl start"))
+      OutputLine(Concat("badxsl=[", TransformXML(@xml, "not xml at all"), "]"))
+      OutputLine(Concat("badxsl done"))
+    ENDIF
+
+    /* an empty stylesheet aborts the page */
+    IF @b == "emptyxsl" THEN
+      OutputLine(Concat("emptyxsl start"))
+      OutputLine(Concat("emptyxsl=[", TransformXML(@xml, ""), "]"))
+      OutputLine(Concat("emptyxsl done"))
+    ENDIF
+  ]%%

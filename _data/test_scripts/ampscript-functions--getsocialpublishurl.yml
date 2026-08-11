@@ -1,0 +1,42 @@
+# Test scripts for /engagement/ampscript/functions/getsocialpublishurl/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Risky cases
+# therefore sit behind their own RequestParameter("b") branch and must be
+# fetched one at a time. Branches on this page: ?b=safe, ?b=str, ?b=code11, ?b=param, ?b=empty.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: every call here returns a Social Forward publish URL */
+    IF @b == "safe" THEN
+      OutputLine(Concat("GetSocialPublishURL(1,region)=[", GetSocialPublishURL(1, "Shared content region 1"), "]"))
+    ENDIF
+
+    /* a numeric-string code is accepted the same as the number */
+    IF @b == "str" THEN
+      OutputLine(Concat("GetSocialPublishURL('1',region)=[", GetSocialPublishURL("1", "Shared content region 1"), "]"))
+    ENDIF
+
+    /* another documented network code */
+    IF @b == "code11" THEN
+      OutputLine(Concat("GetSocialPublishURL(11,region)=[", GetSocialPublishURL(11, "Shared content region 1"), "]"))
+    ENDIF
+
+    /* an appended key/value pair is accepted (variadic) */
+    IF @b == "param" THEN
+      OutputLine(Concat("GetSocialPublishURL(1,region,k,v)=[", GetSocialPublishURL(1, "Shared content region 1", "utm_source", "amp"), "]"))
+    ENDIF
+
+    /* an empty content region aborts the page: the start marker never renders */
+    IF @b == "empty" THEN
+      OutputLine(Concat("empty start"))
+      OutputLine(Concat("GetSocialPublishURL(1,'')=[", GetSocialPublishURL(1, ""), "]"))
+      OutputLine(Concat("empty done"))
+    ENDIF
+  ]%%

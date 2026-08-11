@@ -118,12 +118,34 @@
           url: /engagement/ampscript/functions/urlencode/
         - title: "— Content functions —"
           url: /engagement/ampscript/functions/#all-functions
+        - title: BeginImpressionRegion
+          url: /engagement/ampscript/functions/beginimpressionregion/
         - title: BuildRowsetFromJSON
           url: /engagement/ampscript/functions/buildrowsetfromjson/
         - title: BuildRowSetFromString
           url: /engagement/ampscript/functions/buildrowsetfromstring/
         - title: BuildRowSetFromXML
           url: /engagement/ampscript/functions/buildrowsetfromxml/
+        - title: ContentArea
+          url: /engagement/ampscript/functions/contentarea/
+        - title: ContentAreaByName
+          url: /engagement/ampscript/functions/contentareabyname/
+        - title: ContentBlockByID
+          url: /engagement/ampscript/functions/contentblockbyid/
+        - title: ContentBlockByKey
+          url: /engagement/ampscript/functions/contentblockbykey/
+        - title: ContentBlockByName
+          url: /engagement/ampscript/functions/contentblockbyname/
+        - title: ContentImageByID
+          url: /engagement/ampscript/functions/contentimagebyid/
+        - title: ContentImageByKey
+          url: /engagement/ampscript/functions/contentimagebykey/
+        - title: EndImpressionRegion
+          url: /engagement/ampscript/functions/endimpressionregion/
+        - title: TreatAsContent
+          url: /engagement/ampscript/functions/treatascontent/
+        - title: TreatAsContentArea
+          url: /engagement/ampscript/functions/treatascontentarea/
         - title: "— Utility functions —"
           url: /engagement/ampscript/functions/#all-functions
         - title: AttributeValue

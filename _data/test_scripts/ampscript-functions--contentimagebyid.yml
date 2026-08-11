@@ -1,0 +1,32 @@
+# Test scripts for /engagement/ampscript/functions/contentimagebyid/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Only accepted
+# calls share this request. Branch: ?b=safe. A branch that renders nothing
+# at all is the failure signal.
+#
+# The ids 1133955 and 1201143 are pre-existing Content Builder image assets
+# on the child QA business unit; swap in ids that exist on your account. A
+# missing primary id with NO fallback aborts the page, so it is intentionally
+# left out of the safe sweep.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @found, @fallback
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: the found render and the fallback path are both accepted */
+    IF @b == "safe" THEN
+      /* found: a single id renders the stored image as an img tag */
+      SET @found = ContentImageByID(1133955)
+      OutputLine(Concat("found=[", @found, "]"))
+
+      /* fallback: missing primary id + valid fallback id renders the fallback img tag */
+      SET @fallback = ContentImageByID(9999999, 1201143)
+      OutputLine(Concat("fallback=[", @fallback, "]"))
+    ENDIF
+  ]%%

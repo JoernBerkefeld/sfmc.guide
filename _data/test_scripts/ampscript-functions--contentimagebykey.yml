@@ -1,0 +1,32 @@
+# Test scripts for /engagement/ampscript/functions/contentimagebykey/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Only accepted
+# calls share this request. Branch: ?b=safe. A branch that renders nothing
+# at all is the failure signal.
+#
+# The keys sfdcmarketingcloud-518005426 and copado-logo.png-518005426 are
+# pre-existing Content Builder image assets on the child QA business unit;
+# swap in keys that exist on your account. A missing primary key with NO
+# fallback aborts the page, so it is intentionally left out of the safe sweep.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @found, @fallback
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: the found render and the fallback path are both accepted */
+    IF @b == "safe" THEN
+      /* found: a single key renders the stored image as an img tag */
+      SET @found = ContentImageByKey("sfdcmarketingcloud-518005426")
+      OutputLine(Concat("found=[", @found, "]"))
+
+      /* fallback: missing primary key + valid fallback key renders the fallback img tag */
+      SET @fallback = ContentImageByKey("nosuch-key", "copado-logo.png-518005426")
+      OutputLine(Concat("fallback=[", @fallback, "]"))
+    ENDIF
+  ]%%

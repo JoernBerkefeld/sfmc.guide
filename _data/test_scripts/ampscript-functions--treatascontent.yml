@@ -1,0 +1,26 @@
+# Test scripts for /engagement/ampscript/functions/treatascontent/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Every case here
+# is accepted and shares one request. Branch on this page: ?b=safe.
+# A branch that renders nothing at all is the failure signal.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @tacEval, @tacPlain, @tacEmpty
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: every case is accepted and can share one request */
+    IF @b == "safe" THEN
+      SET @tacEval = TreatAsContent("pre-%%=Add(2,3)=%%-post")
+      OutputLine(Concat("tacEval=[", @tacEval, "]"))
+      SET @tacPlain = TreatAsContent("just plain text")
+      OutputLine(Concat("tacPlain=[", @tacPlain, "]"))
+      SET @tacEmpty = TreatAsContent("")
+      OutputLine(Concat("tacEmpty=[", @tacEmpty, "] LEN=[", Length(@tacEmpty), "]"))
+    ENDIF
+  ]%%

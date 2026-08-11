@@ -105,6 +105,13 @@
     "description": "Returns the display name of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
   },
   {
+    "name": "BarcodeURL",
+    "url": "/engagement/ampscript/functions/barcodeurl/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Builds a URL that renders a barcode image from its inputs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the real minimum argument count and the empty value that takes the whole page down."
+  },
+  {
     "name": "Base64Decode",
     "url": "/engagement/ampscript/functions/base64decode/",
     "section": "AMPscript Function Reference",
@@ -117,6 +124,20 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Encodes a value as a Base64 string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes encoded are the UTF-8 form of the input, and that the encoding argument accepts far more names than any source lists."
+  },
+  {
+    "name": "BeginImpressionRegion",
+    "url": "/engagement/ampscript/functions/beginimpressionregion/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Marks the start of an impression tracking region. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the region name must be a literal, and a variable argument aborts the page."
+  },
+  {
+    "name": "BuildOptionList",
+    "url": "/engagement/ampscript/functions/buildoptionlist/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Builds an HTML <option> list from literal value/text pairs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including exactly which pair is marked selected and what a non-matching default does."
   },
   {
     "name": "BuildRowsetFromJSON",
@@ -159,6 +180,55 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Joins two or more values into a single string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the one-argument form the reference never mentions and the boolean values that vanish without a trace."
+  },
+  {
+    "name": "ContentArea",
+    "url": "/engagement/ampscript/functions/contentarea/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a Classic content area by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByID."
+  },
+  {
+    "name": "ContentAreaByName",
+    "url": "/engagement/ampscript/functions/contentareabyname/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Inserts a Classic content area by its folder path and name. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByName."
+  },
+  {
+    "name": "ContentBlockByID",
+    "url": "/engagement/ampscript/functions/contentblockbyid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Retrieves and renders a Content Builder content block by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+  },
+  {
+    "name": "ContentBlockByKey",
+    "url": "/engagement/ampscript/functions/contentblockbykey/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Retrieves and renders a Content Builder content block by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+  },
+  {
+    "name": "ContentBlockByName",
+    "url": "/engagement/ampscript/functions/contentblockbyname/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Retrieves and renders a Content Builder content block by its full Name/path. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+  },
+  {
+    "name": "ContentImageByID",
+    "url": "/engagement/ampscript/functions/contentimagebyid/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns an HTML img tag for a Content Builder image asset by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
+  },
+  {
+    "name": "ContentImageByKey",
+    "url": "/engagement/ampscript/functions/contentimagebykey/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns an HTML img tag for a Content Builder image asset by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
   },
   {
     "name": "dataviews.io",
@@ -252,6 +322,13 @@
     "description": "Encrypts a value with symmetric key encryption and returns Base64. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the ciphertext is deterministic, so equal plaintexts are linkable."
   },
   {
+    "name": "EndImpressionRegion",
+    "url": "/engagement/ampscript/functions/endimpressionregion/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Marks the end of an impression tracking region. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the optional argument accepts boolean, string, and number truthy values to close all open regions."
+  },
+  {
     "name": "eslint-config-ssjs",
     "url": "/tools/eslint-config-ssjs/",
     "section": "Tools",
@@ -336,6 +413,20 @@
     "description": "Generates a JSON Web Token signed with an inline secret. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
   },
   {
+    "name": "GetSocialPublishURL",
+    "url": "/engagement/ampscript/functions/getsocialpublishurl/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns HTML for sharing a content region on a supported social network via Social Forward. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
+  },
+  {
+    "name": "GetSocialPublishURLByName",
+    "url": "/engagement/ampscript/functions/getsocialpublishurlbyname/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns HTML for sharing a content region on a supported social network identified by name via Social Forward. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it yields a bare Publish.aspx URL and aborts the page on an empty region or an unknown network name."
+  },
+  {
     "name": "GUID",
     "url": "/engagement/ampscript/functions/guid/",
     "section": "AMPscript Function Reference",
@@ -348,6 +439,20 @@
     "section": "Next",
     "type": "page",
     "description": "The complete Handlebars helper catalog for Marketing Cloud Next — searchable and filterable, with the Core API version each helper became available in and its AMPscript equivalent where one exists."
+  },
+  {
+    "name": "HTTPGet",
+    "url": "/engagement/ampscript/functions/httpget/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Performs an HTTP GET request and returns the response body. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the status output variable that reports 0 on success and -2 on a failed request."
+  },
+  {
+    "name": "HTTPRequestHeader",
+    "url": "/engagement/ampscript/functions/httprequestheader/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Returns the value of a specified HTTP request header from the inbound request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that custom headers are returned even though the docs restrict it to standard headers."
   },
   {
     "name": "IIf",
@@ -754,6 +859,27 @@
     "section": "tools",
     "type": "page",
     "description": "Editor, CI, CLI, and ecosystem tooling for Marketing Cloud Engagement and Marketing Cloud Next."
+  },
+  {
+    "name": "TransformXML",
+    "url": "/engagement/ampscript/functions/transformxml/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Transforms an XML document using an XSLT stylesheet. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the argument order and the way any bad input takes the whole page down."
+  },
+  {
+    "name": "TreatAsContent",
+    "url": "/engagement/ampscript/functions/treatascontent/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that embedded AMPscript is executed rather than escaped."
+  },
+  {
+    "name": "TreatAsContentArea",
+    "url": "/engagement/ampscript/functions/treatascontentarea/",
+    "section": "AMPscript Function Reference",
+    "type": "page",
+    "description": "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it renders the inline second argument rather than looking the key up."
   },
   {
     "name": "Trim",

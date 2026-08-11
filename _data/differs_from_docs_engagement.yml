@@ -2499,3 +2499,71 @@
         OutputLine(Concat("rc=[", RowCount(@rows), "]"))
       ENDIF
     ]%%
+- name: "BarcodeURL"
+  url: "/engagement/ampscript/functions/barcodeurl/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-barcode-url.html"
+  tagline: "An empty value to encode aborts the whole page instead of returning empty"
+  category: "Content"
+  object: "Content"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "barcodeurl-empty-value-aborts"
+  body: |
+    The reference page says nothing about what happens when the value to encode
+    is empty. Runtime settles it: passing an empty string as the first argument
+    aborts the page with an HTTP 422 and discards everything rendered before it,
+    rather than returning an empty string or a URL that renders a blank barcode.
+
+    Guard the value before calling — check it is non-empty first — because an
+    empty value takes the whole page down, not just the one image.
+  testScript: |
+    %%[ VAR @b, @bc
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* fetch ?b=good - renders a bare LiveContent URL at HTTP 200 */
+      IF @b == "good" THEN
+        SET @bc = BarcodeURL("12345678901", "code128auto", 150, 50)
+        OutputLine(Concat("bc=[", @bc, "]"))
+      ENDIF
+      /* fetch ?b=empty - the whole page aborts with HTTP 422, no output */
+      IF @b == "empty" THEN
+        SET @bc = BarcodeURL("", "code128auto", 150, 50)
+        OutputLine(Concat("bc=[", @bc, "]"))
+      ENDIF
+    ]%%
+- name: "HTTPRequestHeader"
+  url: "/engagement/ampscript/functions/httprequestheader/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-request-header.html"
+  tagline: "Custom non-RFC 7231 headers are returned, though the docs say only standard headers can be"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "httprequestheader-custom-headers-returned"
+  body: |
+    The official reference states that this function can only retrieve the
+    standard HTTP headers defined in RFC 7231. Runtime does not enforce that:
+    a CloudPage request sent with a custom `X-Amp-Probe` header returned that
+    header's value verbatim, exactly as it does for a standard header such as
+    `User-Agent` or `Host`. So you can read arbitrary custom request headers,
+    not just the RFC 7231 set.
+
+    A header that is genuinely absent from the request still returns the empty
+    string — reading `Referer` on a request that sent none rendered empty and
+    `Empty()` reported true — which matches the documented note about missing
+    headers.
+  testScript: |
+    %%[ VAR @b, @v
+      SET @b = RequestParameter("b")
+      OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+      /* send a custom header X-Amp-Probe: probe-value-42, fetch ?b=custom */
+      IF @b == "custom" THEN
+        SET @v = HTTPRequestHeader("X-Amp-Probe")
+        OutputLine(Concat("custom=[", @v, "]"))
+      ENDIF
+      /* fetch ?b=absent with no Referer sent - renders empty */
+      IF @b == "absent" THEN
+        SET @v = HTTPRequestHeader("Referer")
+        OutputLine(Concat("absent=[", @v, "] empty=[", Empty(@v), "]"))
+      ENDIF
+    ]%%

@@ -175,13 +175,14 @@
   category: "Content"
   syntax: "BarcodeURL(valueToConvert, barcodeType, width, height, checksumValue, showText, altText, rotation, transparentBG)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/barcodeurl/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Generates a URL pointing to a barcode image rendered from the given parameters."
+  description: "Generates a URL that renders a barcode image from the given value, symbology, width, and height, plus optional formatting. An empty value aborts the page instead of returning an empty result."
   guideUrl: "https://ampscript.guide/barcodeurl/"
 - name: "Base64Decode"
   slug: "base64decode"
@@ -216,26 +217,28 @@
   category: "Content"
   syntax: "BeginImpressionRegion(regionName)"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/beginimpressionregion/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Marks the start of an impression tracking region."
+  description: "Marks the start of an impression tracking region. The region name must be a literal — a variable argument aborts the page."
   guideUrl: "https://ampscript.guide/beginimpressionregion/"
 - name: "BuildOptionList"
   slug: "buildoptionlist"
   category: "Content"
   syntax: "BuildOptionList(defaultSelection, option1Value, option1Text[, optionValueN, optionTextN, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/buildoptionlist/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Builds HTML <option> elements from a data extension for use in a <select> dropdown."
+  description: "Builds HTML <option> elements from supplied value/text pairs for use in a <select> dropdown, marking the pair whose value matches the default selection as selected."
   guideUrl: "https://ampscript.guide/buildoptionlist/"
 - name: "BuildRowsetFromJSON"
   slug: "buildrowsetfromjson"
@@ -355,7 +358,8 @@
   category: "Content"
   syntax: "ContentArea(contentAreaId[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentarea/"
   differsFromDocs: false
   deprecated: true
   mcn: ""
@@ -368,7 +372,8 @@
   category: "Content"
   syntax: "ContentAreaByName(contentAreaName[, impressionRegionName, errorOnMissingContentArea, errorMessage, statusCode])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentareabyname/"
   differsFromDocs: false
   deprecated: true
   mcn: ""
@@ -381,7 +386,8 @@
   category: "Content"
   syntax: "ContentBlockByID(contentBlockId[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentblockbyid/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
@@ -394,7 +400,8 @@
   category: "Content"
   syntax: "ContentBlockByKey(contentBlockKey[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentblockbykey/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
@@ -408,7 +415,8 @@
   category: "Content"
   syntax: "ContentBlockByName(contentBlockName[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentblockbyname/"
   differsFromDocs: false
   deprecated: false
   mcn: "67"
@@ -419,28 +427,30 @@
 - name: "ContentImageByID"
   slug: "contentimagebyid"
   category: "Content"
-  syntax: "ContentImageByID(id, defaultImageExternalId)"
+  syntax: "ContentImageByID(id[, defaultImageExternalId])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentimagebyid/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the URL of a Content Builder image asset by its numeric ID."
+  description: "Returns an HTML img tag for a Content Builder image asset by its numeric ID. A missing image with no fallback aborts the page."
   guideUrl: "https://ampscript.guide/contentimagebyid/"
 - name: "ContentImageByKey"
   slug: "contentimagebykey"
   category: "Content"
-  syntax: "ContentImageByKey(imageExternalKey, defaultImageExternalKey)"
+  syntax: "ContentImageByKey(imageExternalKey[, defaultImageExternalKey])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/contentimagebykey/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Returns the URL of a Content Builder image asset by its customer key."
+  description: "Returns an HTML img tag for a Content Builder image asset by its customer key. A missing image with no fallback aborts the page."
   guideUrl: "https://ampscript.guide/contentimagebykey/"
 - name: "CreateMSCRMRecord"
   slug: "createmscrmrecord"
@@ -694,7 +704,8 @@
   category: "Content"
   syntax: "EndImpressionRegion([endAllRegions])"
   returnType: "void"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/endimpressionregion/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -886,7 +897,8 @@
   category: "Social"
   syntax: "GetSocialPublishURL(socialNetworkCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/getsocialpublishurl/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -899,7 +911,8 @@
   category: "Social"
   syntax: "GetSocialPublishURLByName(socialNetworkName, countryCode, contentRegion[, socialNetworkParamKey1, socialNetworkParamValue1, ...])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/getsocialpublishurlbyname/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -924,9 +937,10 @@
 - name: "HTTPGet"
   slug: "httpget"
   category: "HTTP"
-  syntax: "HTTPGet(httpGetUrl[, continueOnError, headerName, headerValue])"
+  syntax: "HTTPGet(httpGetUrl[, continueOnError, emptyContentHandling, status])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/httpget/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -978,8 +992,9 @@
   category: "HTTP"
   syntax: "HTTPRequestHeader(headerToRetrieve)"
   returnType: "string"
-  verified: false
-  differsFromDocs: false
+  verified: true
+  url: "/engagement/ampscript/functions/httprequestheader/"
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1896,7 +1911,8 @@
   category: "Content"
   syntax: "TransformXML(xmlDocument, xslDocument)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/transformxml/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
@@ -1909,26 +1925,28 @@
   category: "Content"
   syntax: "TreatAsContent(stringToReturn)"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/treatascontent/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions."
+  description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Plain text and the empty string pass through unchanged."
   guideUrl: "https://ampscript.guide/treatascontent/"
 - name: "TreatAsContentArea"
   slug: "treatascontentarea"
   category: "Content"
   syntax: "TreatAsContentArea(contentKey, contentValue[, impressionRegion])"
   returnType: "string"
-  verified: false
+  verified: true
+  url: "/engagement/ampscript/functions/treatascontentarea/"
   differsFromDocs: false
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
   mcnNotes: ""
-  description: "Treats a string as a content area, optionally assigning it to an impression region."
+  description: "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. An optional third argument names an impression region."
   guideUrl: "https://ampscript.guide/treatascontentarea/"
 - name: "Trim"
   slug: "trim"

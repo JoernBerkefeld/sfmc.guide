@@ -1,0 +1,28 @@
+# Test scripts for /engagement/ampscript/functions/treatascontentarea/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Every case here
+# is accepted and shares one request. Branch on this page: ?b=safe.
+# A branch that renders nothing at all is the failure signal.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @tcaInline, @tcaPlain, @tcaUnknown, @tcaThree
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: every case is accepted and can share one request */
+    IF @b == "safe" THEN
+      SET @tcaInline = TreatAsContentArea("k1", "inline-%%=Add(4,5)=%%-end")
+      OutputLine(Concat("tcaInline=[", @tcaInline, "]"))
+      SET @tcaPlain = TreatAsContentArea("kplain", "plain no ampscript here")
+      OutputLine(Concat("tcaPlain=[", @tcaPlain, "]"))
+      SET @tcaUnknown = TreatAsContentArea("no-such-key-zz", "")
+      OutputLine(Concat("tcaUnknown=[", @tcaUnknown, "] LEN=[", Length(@tcaUnknown), "]"))
+      SET @tcaThree = TreatAsContentArea("k3", "three-%%=Add(6,7)=%%-end", "RegionX")
+      OutputLine(Concat("tcaThree=[", @tcaThree, "]"))
+    ENDIF
+  ]%%

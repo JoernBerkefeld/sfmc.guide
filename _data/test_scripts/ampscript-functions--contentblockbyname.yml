@@ -1,0 +1,32 @@
+# Test scripts for /engagement/ampscript/functions/contentblockbyname/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. The missing /
+# default paths below are accepted and share one request. Branch: ?b=safe.
+# A branch that renders nothing at all is the failure signal.
+#
+# Note: build the block Name at runtime (via a variable) rather than as a
+# string literal - a deploy tool that statically resolves ContentBlockByX
+# references will reject a literal path that does not exist on the account.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+behaviour: |
+  %%[
+    VAR @b, @sc, @miss, @lit, @name
+    SET @b = RequestParameter("b")
+    SET @name = Concat("Content Builder\", "nosuch-name-", "zzz")
+
+    /* safe sweep: the missing/default paths are all accepted */
+    IF @b == "safe" THEN
+      /* missing with error flag 0: returns the default content and sets status to -1 */
+      SET @miss = ContentBlockByName(@name, "", 0, "FB-CBN", @sc)
+      OutputLine(Concat("miss=[", @miss, "] sc=[", @sc, "]"))
+
+      /* default content is emitted literally - the inline AMPscript is NOT evaluated */
+      SET @lit = ContentBlockByName(@name, "", 0, "PRE-%%=Add(2,3)=%%-POST", @sc)
+      OutputLine(Concat("lit=[", @lit, "]"))
+    ENDIF
+  ]%%

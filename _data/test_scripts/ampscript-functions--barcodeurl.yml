@@ -1,0 +1,40 @@
+# Test scripts for /engagement/ampscript/functions/barcodeurl/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# The reference limits BarcodeURL to two calls per message or landing page,
+# so the safe sweep makes exactly two calls. AMPscript has no try/catch, so a
+# wrong arity or an empty value aborts the whole page with HTTP 422 and
+# discards everything rendered before it; those cases sit behind their own
+# RequestParameter("b") branch and must be fetched one at a time — and a
+# wrong-arity branch aborts the page even when its gate is not matched, so it
+# is kept in a separate deploy in practice. Branches: ?b=safe, ?b=empty, ?b=few.
+# A branch that renders nothing at all is the failure signal.
+behaviour: |
+  %%[
+    VAR @b, @four, @opts
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: two accepted calls (the per-page limit) share one request */
+    IF @b == "safe" THEN
+      SET @four = BarcodeURL("12345678901", "code128auto", 150, 50)
+      OutputLine(Concat("four=[", @four, "]"))
+      SET @opts = BarcodeURL("12345678901", "code128auto", 150, 50, "", 1, "MyAlt", 90, 1)
+      OutputLine(Concat("opts=[", @opts, "]"))
+    ENDIF
+
+    /* an empty value aborts the page: the start marker never renders */
+    IF @b == "empty" THEN
+      OutputLine(Concat("empty start"))
+      OutputLine(Concat("empty=[", BarcodeURL("", "code128auto", 150, 50), "]"))
+      OutputLine(Concat("empty done"))
+    ENDIF
+
+    /* three arguments is below the minimum of four and aborts the page */
+    IF @b == "few" THEN
+      OutputLine(Concat("few start"))
+      OutputLine(Concat("few=[", BarcodeURL("12345678901", "code128auto", 150), "]"))
+      OutputLine(Concat("few done"))
+    ENDIF
+  ]%%

@@ -1,0 +1,71 @@
+# Test scripts for /engagement/ampscript/functions/httpget/.
+#
+# Rendered by _includes/test-script.html. Paste into a CloudPage and deploy.
+#
+# HTTPGet makes a live outbound HTTP GET, so the safe cases target a small
+# deterministic public body (https://sfmc.guide/robots.txt, 40 bytes). AMPscript
+# has no try/catch, so a wrong argument count aborts the WHOLE page with HTTP
+# 422 - and it does so at compile time even inside an unreached IF branch. The
+# two arity-abort cases therefore live in their OWN files below; the main
+# behaviour script only contains argument counts that are valid (1..4).
+# Behaviour branches: ?b=g1, ?b=g4, ?b=g2arg, ?b=g3arg, ?b=badurl, ?b=unreach.
+behaviour: |
+  %%[
+    VAR @b, @url, @res, @st
+    SET @b = RequestParameter("b")
+    SET @url = "https://sfmc.guide/robots.txt"
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* 1-arg form: returns the response body string. fetch ?b=g1 */
+    IF @b == "g1" THEN
+      SET @res = HTTPGet(@url)
+      OutputLine(Concat("len=[", Length(@res), "] slice=[", Substring(@res, 1, 25), "]"))
+    ENDIF
+
+    /* full 4-arg form with a status out-variable: status 0 on success. fetch ?b=g4 */
+    IF @b == "g4" THEN
+      SET @res = HTTPGet(@url, true, 0, @st)
+      OutputLine(Concat("len=[", Length(@res), "] status=[", @st, "]"))
+    ENDIF
+
+    /* 2-arg form (continueOnError only). fetch ?b=g2arg */
+    IF @b == "g2arg" THEN
+      SET @res = HTTPGet(@url, true)
+      OutputLine(Concat("len=[", Length(@res), "]"))
+    ENDIF
+
+    /* 3-arg form (continueOnError + emptyContentHandling). fetch ?b=g3arg */
+    IF @b == "g3arg" THEN
+      SET @res = HTTPGet(@url, true, 0)
+      OutputLine(Concat("len=[", Length(@res), "]"))
+    ENDIF
+
+    /* a 404 URL with continueOnError=true: empty body, status -2. fetch ?b=badurl */
+    IF @b == "badurl" THEN
+      SET @res = HTTPGet("https://sfmc.guide/this-page-does-not-exist-xyz-404", true, 0, @st)
+      OutputLine(Concat("len=[", Length(@res), "] status=[", @st, "] empty=[", Empty(@res), "]"))
+    ENDIF
+
+    /* an unresolvable host with continueOnError=true: empty body, status -2. fetch ?b=unreach */
+    IF @b == "unreach" THEN
+      SET @res = HTTPGet("https://this-host-does-not-resolve-zzq.example", true, 0, @st)
+      OutputLine(Concat("len=[", Length(@res), "] status=[", @st, "] empty=[", Empty(@res), "]"))
+    ENDIF
+  ]%%
+# Arity lower bound: a 0-argument call. This aborts the WHOLE page with HTTP 422
+# at compile time, so it CANNOT share a page with any other case - deploy it
+# alone and expect a blank HTTP 422 response (no CTRL line).
+arity_too_few: |
+  %%[
+    VAR @res
+    SET @res = HTTPGet()
+    OutputLine(Concat("len=[", Length(@res), "]"))
+  ]%%
+# Arity upper bound: a 5-argument call. Also aborts the whole page with HTTP 422.
+# Deploy alone; expect a blank HTTP 422 response.
+arity_too_many: |
+  %%[
+    VAR @res, @st
+    SET @res = HTTPGet("https://sfmc.guide/robots.txt", true, 0, @st, "extra")
+    OutputLine(Concat("len=[", Length(@res), "]"))
+  ]%%

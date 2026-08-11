@@ -1,0 +1,31 @@
+# Test scripts for /engagement/ampscript/functions/endimpressionregion/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. Every case here
+# is accepted and shares one request. Branch on this page: ?b=safe.
+# A branch that renders nothing at all is the failure signal.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# The close-of-region / impression effect is a send-time behaviour a CloudPage cannot show.
+behaviour: |
+  %%[
+    VAR @b
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: every accepted flag form emits nothing.
+       Each call sits between adjacent markers to prove no output. */
+    IF @b == "safe" THEN
+      OutputLine(Concat("beforeZero"))
+      EndImpressionRegion()
+      OutputLine(Concat("afterZero"))
+      EndImpressionRegion(true)
+      OutputLine(Concat("afterTrue"))
+      EndImpressionRegion("true")
+      OutputLine(Concat("afterStr"))
+      EndImpressionRegion(1)
+      OutputLine(Concat("afterNum"))
+    ENDIF
+  ]%%

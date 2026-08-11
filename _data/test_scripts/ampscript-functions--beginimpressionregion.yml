@@ -1,0 +1,38 @@
+# Test scripts for /engagement/ampscript/functions/beginimpressionregion/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# AMPscript has no try/catch, so a rejected argument aborts the whole page
+# with HTTP 422 and discards everything rendered before it. The risky case
+# (a variable region name) sits behind its own RequestParameter("b") branch
+# and must be fetched on its own. Branches on this page: ?b=safe, ?b=begvar.
+# A branch that renders nothing at all is the failure signal — that is the
+# expected result for ?b=begvar.
+#
+# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# The impression-tracking effect is a send-time behaviour a CloudPage cannot show.
+behaviour: |
+  %%[
+    VAR @b, @rn
+    SET @b = RequestParameter("b")
+
+    /* safe: a literal region name is accepted and emits nothing.
+       The before/after markers land adjacent, proving no output. */
+    IF @b == "safe" THEN
+      OutputLine(Concat("beforeBegin"))
+      BeginImpressionRegion("nav-region")
+      OutputLine(Concat("afterBegin"))
+      EndImpressionRegion(0)
+      OutputLine(Concat("afterEnd"))
+    ENDIF
+
+    /* risky: a variable region name aborts the page.
+       The start marker never renders; the fetch returns HTTP 422. */
+    IF @b == "begvar" THEN
+      OutputLine(Concat("begvar start"))
+      SET @rn = "dyn-region"
+      BeginImpressionRegion(@rn)
+      OutputLine(Concat("begvar done"))
+    ENDIF
+  ]%%

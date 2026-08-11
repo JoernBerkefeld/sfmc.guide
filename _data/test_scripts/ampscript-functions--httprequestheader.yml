@@ -1,0 +1,55 @@
+# Test scripts for /engagement/ampscript/functions/httprequestheader/.
+#
+# Rendered by _includes/test-script.html. Paste into a CloudPage and deploy.
+#
+# HTTPRequestHeader reads inbound request headers, so prove it by CONTROLLING
+# the fetch: send User-Agent and a custom X-Amp-Probe header, and send NO
+# Referer. AMPscript has no try/catch; a wrong argument count aborts the whole
+# page with HTTP 422 at compile time, so the 2-argument case lives in its own
+# file below. Behaviour branches: ?b=ua, ?b=host, ?b=custom, ?b=absent, ?b=multi.
+behaviour: |
+  %%[
+    VAR @b, @v, @m1, @m2, @m3
+    SET @b = RequestParameter("b")
+    OutputLine(Concat("CTRL=[", Uppercase("ok"), "]"))
+
+    /* present standard header - send User-Agent, fetch ?b=ua */
+    IF @b == "ua" THEN
+      SET @v = HTTPRequestHeader("User-Agent")
+      OutputLine(Concat("ua=[", @v, "] empty=[", Empty(@v), "]"))
+    ENDIF
+
+    /* Host is always present on a CloudPage request. fetch ?b=host */
+    IF @b == "host" THEN
+      SET @v = HTTPRequestHeader("Host")
+      OutputLine(Concat("host=[", @v, "]"))
+    ENDIF
+
+    /* custom non-RFC7231 header - send X-Amp-Probe: probe-value-42, fetch ?b=custom */
+    IF @b == "custom" THEN
+      SET @v = HTTPRequestHeader("X-Amp-Probe")
+      OutputLine(Concat("custom=[", @v, "]"))
+    ENDIF
+
+    /* absent header - send no Referer, fetch ?b=absent, renders empty */
+    IF @b == "absent" THEN
+      SET @v = HTTPRequestHeader("Referer")
+      OutputLine(Concat("absent=[", @v, "] empty=[", Empty(@v), "]"))
+    ENDIF
+
+    /* several reads in one block all succeed. fetch ?b=multi */
+    IF @b == "multi" THEN
+      SET @m1 = HTTPRequestHeader("User-Agent")
+      SET @m2 = HTTPRequestHeader("Host")
+      SET @m3 = HTTPRequestHeader("Referer")
+      OutputLine(Concat("m1=[", @m1, "] m2=[", @m2, "] m3=[", @m3, "]"))
+    ENDIF
+  ]%%
+# Arity upper bound: a 2-argument call. Aborts the whole page with HTTP 422 at
+# compile time, so it must be deployed ALONE - expect a blank HTTP 422 response.
+arity_too_many: |
+  %%[
+    VAR @v
+    SET @v = HTTPRequestHeader("User-Agent", "extra")
+    OutputLine(Concat("v=[", @v, "]"))
+  ]%%

@@ -1,0 +1,24 @@
+# Test scripts for /engagement/ampscript/functions/buildoptionlist/.
+#
+# Rendered by _includes/test-script.html. The script is a full AMPscript
+# block that can be pasted into a CloudPage and deployed as-is.
+#
+# BuildOptionList is safe to call repeatedly, so every case shares one
+# request. Branch on this page: ?b=safe.
+behaviour: |
+  %%[
+    VAR @b, @basic, @numdefault, @nomatch, @single
+    SET @b = RequestParameter("b")
+
+    /* safe sweep: all forms are accepted and can share one request */
+    IF @b == "safe" THEN
+      SET @basic = BuildOptionList("2", "1", "Alpha", "2", "Beta", "3", "Gamma")
+      OutputLine(Concat("basic=[", @basic, "]"))
+      SET @numdefault = BuildOptionList(2, "1", "Alpha", "2", "Beta")
+      OutputLine(Concat("numdefault=[", @numdefault, "]"))
+      SET @nomatch = BuildOptionList("9", "1", "Alpha", "2", "Beta")
+      OutputLine(Concat("nomatch=[", @nomatch, "]"))
+      SET @single = BuildOptionList("1", "1", "One")
+      OutputLine(Concat("single=[", @single, "]"))
+    ENDIF
+  ]%%
