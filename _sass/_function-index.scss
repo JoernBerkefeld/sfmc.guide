@@ -113,8 +113,23 @@
 // column is the least essential, so it is dropped to keep the table readable.
 // Only the Handlebars index carries a `.cat-amp-col`; a no-op elsewhere.
 @media (min-width: 641px) and (max-width: 849px) {
-  .cat-amp-col {
+  .cat-amp-col:not(.cat-mapcol) {
     display: none;
+  }
+}
+
+// Optional mapping column: rendered but hidden by default on pages that only
+// expose the mapping *filter* (helper page → AMPscript column, function page →
+// Handlebars column). JS adds `.cat-show-mapcol` to the table while the filter
+// narrows the list, so you can read the equivalents you are filtering by.
+// Hidden at every width; the reveal display differs per layout (table-cell on
+// desktop, the mobile card treatment restores flex — see the card block below).
+.cat-table .cat-mapcol {
+  display: none;
+}
+@media (min-width: 641px) {
+  .cat-table.cat-show-mapcol .cat-mapcol {
+    display: table-cell;
   }
 }
 
@@ -332,5 +347,11 @@
     margin-bottom: 0.15em;
     font-weight: 600;
     color: $text-muted;
+  }
+
+  // The optional mapping column stays a stacked meta card here too — restore the
+  // flex column display the base `display:none` above suppresses when revealed.
+  .cat-table.cat-show-mapcol .cat-mapcol {
+    display: flex;
   }
 }

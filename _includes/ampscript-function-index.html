@@ -47,6 +47,14 @@
    or any page that opts in with show_mapping=true even without the column. {% endcomment %}
 {% assign afi_show_mapping = false %}
 {% if include.show_handlebars or include.show_mapping %}{% assign afi_show_mapping = true %}{% endif %}
+{% comment %} When the mapping filter is present without the column (show_mapping
+   without show_handlebars), still emit the Handlebars column markup but hidden
+   by default; JS reveals it while the filter is set to anything but "all
+   functions", so the equivalents you filter by are visible. {% endcomment %}
+{% assign afi_render_hb = false %}
+{% if include.show_handlebars %}{% assign afi_render_hb = true %}{% endif %}
+{% assign afi_mapcol_optional = false %}
+{% if afi_show_mapping and include.show_handlebars != true %}{% assign afi_render_hb = true %}{% assign afi_mapcol_optional = true %}{% endif %}
 
 {% if afi_count > 0 %}
 {% assign afi_verified = afi_entries | where: "verified", true | size %}
@@ -113,7 +121,7 @@
       <tr>
         <th>Function</th>
         {%- if include.show_mcn %}<th>API version</th>{% endif %}
-        {%- if include.show_handlebars %}<th>Handlebars</th>{% endif %}
+        {%- if afi_render_hb %}<th class="cat-hb-col{% if afi_mapcol_optional %} cat-mapcol{% endif %}">Handlebars</th>{% endif %}
         <th>Returns</th>
         <th>Description</th>
       </tr>
@@ -136,13 +144,13 @@
         {%- if include.show_mcn %}
         <td class="cat-ver cat-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
-        {%- if include.show_handlebars %}
-        <td class="cat-meta" data-label="Handlebars">
+        {%- if afi_render_hb %}
+        <td class="cat-hb-col cat-meta{% if afi_mapcol_optional %} cat-mapcol{% endif %}" data-label="Handlebars">
           {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
         </td>
         {%- endif %}
         <td class="cat-ret" data-label="Returns"><code>{{ f.returnType }}</code></td>
-        <td class="cat-desc" data-label="Description">{{ f.description | escape }}{% if include.show_handlebars and f.mcnNotes != "" %}<span class="cat-note">{{ f.mcnNotes | escape }}</span>{% endif %}</td>
+        <td class="cat-desc" data-label="Description">{{ f.description | escape }}{% if afi_render_hb and f.mcnNotes != "" %}<span class="cat-note">{{ f.mcnNotes | escape }}</span>{% endif %}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -160,6 +168,15 @@
   var countEl = document.getElementById("afi-count");
   var body = document.getElementById("afi-body");
   if (!body) { return; }
+  var table = body.parentNode;
+
+  // The Handlebars column is only rendered as an optional (hidden) column on the
+  // function page; reveal it whenever the mapping filter narrows the list.
+  function syncMapCol() {
+    if (!table) { return; }
+    var on = mappingSel && mappingSel.value !== "";
+    table.classList.toggle("cat-show-mapcol", !!on);
+  }
 
   var rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   var TOTAL = rows.length;
@@ -288,9 +305,10 @@
   if (searchInput) { searchInput.addEventListener("input", apply); }
   if (catSel) { catSel.addEventListener("change", apply); }
   if (stateSel) { stateSel.addEventListener("change", apply); }
-  if (mappingSel) { mappingSel.addEventListener("change", apply); }
+  if (mappingSel) { mappingSel.addEventListener("change", function () { syncMapCol(); apply(); }); }
   if (sortSel) { sortSel.addEventListener("change", refresh); }
 
+  syncMapCol();
   refresh();
 })();
 </script>

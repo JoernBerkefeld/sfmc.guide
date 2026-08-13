@@ -44,6 +44,13 @@
    It is never useful when every row is already unmapped. {% endcomment %}
 {% assign hbi_show_mapping = false %}
 {% unless include.unmapped_only %}{% if hbi_show_amp or include.show_mapping %}{% assign hbi_show_mapping = true %}{% endif %}{% endunless %}
+{% comment %} When the mapping filter is present without the column (show_mapping
+   without show_amp), still emit the AMPscript column markup but hidden by default;
+   JS reveals it while the filter is set to anything but "all helpers", so the
+   equivalents you filter by are visible. {% endcomment %}
+{% assign hbi_render_amp = hbi_show_amp %}
+{% assign hbi_mapcol_optional = false %}
+{% if hbi_show_mapping and hbi_show_amp == false %}{% assign hbi_render_amp = true %}{% assign hbi_mapcol_optional = true %}{% endif %}
 
 {% if hbi_count > 0 %}
 {% assign hbi_mapped = hbi_entries | where_exp: "h", "h.ampscriptEquivalent != ''" | size %}
@@ -108,7 +115,7 @@
       <tr>
         <th>Helper</th>
         <th>API version</th>
-        {%- if hbi_show_amp %}<th class="cat-amp-col">AMPscript</th>{% endif %}
+        {%- if hbi_render_amp %}<th class="cat-amp-col{% if hbi_mapcol_optional %} cat-mapcol{% endif %}">AMPscript</th>{% endif %}
         <th>Returns</th>
         <th>Description</th>
       </tr>
@@ -130,8 +137,8 @@
           <code class="cat-syntax">{{ h.syntax | escape }}</code>
         </td>
         <td class="cat-ver cat-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
-        {%- if hbi_show_amp %}
-        <td class="cat-amp-col cat-meta" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
+        {%- if hbi_render_amp %}
+        <td class="cat-amp-col cat-meta{% if hbi_mapcol_optional %} cat-mapcol{% endif %}" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         <td class="cat-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
         <td class="cat-desc" data-label="Description">{{ h.description | escape }}</td>
@@ -152,6 +159,15 @@
   var countEl = document.getElementById("hbi-count");
   var body = document.getElementById("hbi-body");
   if (!body) { return; }
+  var table = body.parentNode;
+
+  // The AMPscript column is only rendered as an optional (hidden) column on the
+  // helper page; reveal it whenever the mapping filter narrows the list.
+  function syncMapCol() {
+    if (!table) { return; }
+    var on = mappingSel && mappingSel.value !== "";
+    table.classList.toggle("cat-show-mapcol", !!on);
+  }
 
   var rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   var TOTAL = rows.length;
@@ -263,9 +279,10 @@
   if (searchInput) { searchInput.addEventListener("input", apply); }
   if (catSel) { catSel.addEventListener("change", apply); }
   if (originSel) { originSel.addEventListener("change", apply); }
-  if (mappingSel) { mappingSel.addEventListener("change", apply); }
+  if (mappingSel) { mappingSel.addEventListener("change", function () { syncMapCol(); apply(); }); }
   if (sortSel) { sortSel.addEventListener("change", refresh); }
 
+  syncMapCol();
   refresh();
 })();
 </script>
