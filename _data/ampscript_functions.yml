@@ -7,11 +7,16 @@
 #
 # Source of truth: ampscript-data/src/index.js (names, categories, arity,
 # return type, MCN availability, Handlebars mapping) plus the presence of a flat
-# reference page at engagement/ampscript/functions/<lowercase-name>.md.
+# reference page at engagement/ampscript/functions/<lowercase-name>.md, and
+# ssjs-data/src/index.js (PLATFORM_FUNCTIONS[].ampscriptEquivalent, inverted)
+# for the SSJS mapping.
 #
 # mcn is the Marketing Cloud Next API version the function became available in,
 # or "" when it is Engagement-only. handlebarsEquivalent names the Handlebars
 # helper in handlebars_helpers.yml that covers the same job, or "".
+# ssjsEquivalents is the list of fully-qualified SSJS Platform functions that
+# cover the same job (e.g. Platform.Function.Base64Encode), each with a url to
+# its ssjs.guide page; [] when none.
 #
 # verified: true means the function completed a runtime verification sweep AND
 # has a published reference page. Everything else is catalogued only — its
@@ -29,6 +34,7 @@
   mcn: "67"
   handlebarsEquivalent: "add"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Computes the sum of two numeric values."
   guideUrl: "https://ampscript.guide/add/"
@@ -42,6 +48,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Appends a member to a Dynamics CRM list."
   guideUrl: "https://ampscript.guide/addmscrmlistmember/"
@@ -56,6 +63,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.AddObjectArrayItem"
+      url: "https://ssjs.guide/platform-functions/addobjectarrayitem/"
   mcnNotes: ""
   description: "Appends an item to an API object's array property."
   guideUrl: "https://ampscript.guide/addobjectarrayitem/"
@@ -69,6 +79,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Includes a file attachment in the outgoing message."
   guideUrl: "https://ampscript.guide/attachfile/"
@@ -84,6 +95,7 @@
   mcn: ""
   handlebarsEquivalent: "personalizationResult"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Reads an attribute of the current message or page context by name, giving an empty value instead of failing when the name is unknown. The name is matched without regard to case, and system attributes such as the message context resolve on a CloudPage even though no subscriber is involved."
   guideUrl: "https://ampscript.guide/attributevalue/"
@@ -98,6 +110,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty ID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one."
   guideUrl: "https://ampscript.guide/authenticatedemployeeid/"
@@ -112,6 +125,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the notification email address of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty address rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. It is a separate value from AuthenticatedEmployeeUserName() — neither can be derived from the other."
   guideUrl: "https://ampscript.guide/authenticatedemployeenotificationaddress/"
@@ -126,6 +140,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the login username of the Marketing Cloud user tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty username rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one."
   guideUrl: "https://ampscript.guide/authenticatedemployeeusername/"
@@ -140,6 +155,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. On a public CloudPage, where nobody is signed in, it still returns a non-empty ID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. Called from a child business unit it reports the parent (enterprise) MID, not the child MID, and it is a different value from AuthenticatedEmployeeID()."
   guideUrl: "https://ampscript.guide/authenticatedenterpriseid/"
@@ -154,6 +170,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the member ID (MID) of the business unit the code runs on. On a public CloudPage, where nobody is signed in, it still returns a non-empty MID rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. Called from a child business unit it reports that CHILD MID, unlike AuthenticatedEnterpriseID(), which reports the parent (enterprise) MID in the same render."
   guideUrl: "https://ampscript.guide/authenticatedmemberid/"
@@ -168,6 +185,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the display name of the business unit the code runs on. On a public CloudPage, where nobody is signed in, it still returns a non-empty name rather than an empty value, so it cannot be used to tell an authenticated visitor apart from an anonymous one. It is the business unit name as shown in the Marketing Cloud UI — spaces and punctuation included — not a person and not the login username returned by AuthenticatedEmployeeUserName() in the same render."
   guideUrl: "https://ampscript.guide/authenticatedmembername/"
@@ -182,6 +200,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Generates a URL that renders a barcode image from the given value, symbology, width, and height, plus optional formatting. An empty value aborts the page instead of returning an empty result."
   guideUrl: "https://ampscript.guide/barcodeurl/"
@@ -196,6 +215,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.Base64Decode"
+      url: "https://ssjs.guide/platform-functions/base64decode/"
   mcnNotes: ""
   description: "Decodes a Base64-encoded string. The decoded bytes are read as UTF-8 unless encoding names another character encoding, and any value that is not well-formed Base64 aborts the page instead of returning an empty or partial result."
   guideUrl: "https://ampscript.guide/base64decode/"
@@ -210,6 +232,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.Base64Encode"
+      url: "https://ssjs.guide/platform-functions/base64encode/"
   mcnNotes: ""
   description: "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 representation of the input unless encoding names another character encoding."
   guideUrl: "https://ampscript.guide/base64encode/"
@@ -224,6 +249,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.BeginImpressionRegion"
+      url: "https://ssjs.guide/platform-functions/beginimpressionregion/"
   mcnNotes: ""
   description: "Marks the start of an impression tracking region. The region name must be a literal — a variable argument aborts the page."
   guideUrl: "https://ampscript.guide/beginimpressionregion/"
@@ -238,6 +266,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Builds HTML <option> elements from supplied value/text pairs for use in a <select> dropdown, marking the pair whose value matches the default selection as selected."
   guideUrl: "https://ampscript.guide/buildoptionlist/"
@@ -253,6 +282,7 @@
   mcn: "67"
   handlebarsEquivalent: "jsonPath"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Parses a JSON string and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromjson/"
@@ -267,6 +297,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Splits a delimited string into a single-column rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromstring/"
@@ -281,6 +312,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Parses an XML string using an XPath expression and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromxml/"
@@ -296,6 +328,7 @@
   mcn: ""
   handlebarsEquivalent: "char"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the character for the given numeric character code. Codes above 255 are not rejected — they resolve to the matching Unicode character."
   guideUrl: "https://ampscript.guide/char/"
@@ -310,6 +343,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Atomically claims an unclaimed row in a data extension by setting a key column value."
   guideUrl: "https://ampscript.guide/claimrow/"
@@ -324,6 +358,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Atomically claims a row and returns a specific column value from it."
   guideUrl: "https://ampscript.guide/claimrowvalue/"
@@ -338,6 +373,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Builds the published URL of a CloudPages landing page. Name-value pairs are appended in PAIRS and are folded into a single encrypted query token rather than readable parameters; an odd trailing argument or a page ID that matches no page aborts the page."
   guideUrl: "https://ampscript.guide/cloudpagesurl/"
@@ -353,6 +389,7 @@
   mcn: "67"
   handlebarsEquivalent: "concat"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Concatenates two or more string values."
   guideUrl: "https://ampscript.guide/concat/"
@@ -367,6 +404,9 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentArea"
+      url: "https://ssjs.guide/platform-functions/contentarea/"
   mcnNotes: ""
   description: "Inserts a classic content area by its numeric ID."
   guideUrl: "https://ampscript.guide/contentarea/"
@@ -381,6 +421,9 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentAreaByName"
+      url: "https://ssjs.guide/platform-functions/contentareabyname/"
   mcnNotes: ""
   description: "Inserts a classic content area by its folder path and name."
   guideUrl: "https://ampscript.guide/contentareabyname/"
@@ -395,6 +438,9 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentBlockByID"
+      url: "https://ssjs.guide/platform-functions/contentblockbyid/"
   mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its numeric ID."
   guideUrl: "https://ampscript.guide/contentblockbyid/"
@@ -410,6 +456,9 @@
   mcn: "67"
   handlebarsEquivalent: "getContentBlock"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentBlockByKey"
+      url: "https://ssjs.guide/platform-functions/contentblockbykey/"
   mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its customer key."
   guideUrl: "https://ampscript.guide/contentblockbykey/"
@@ -424,6 +473,9 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentBlockByName"
+      url: "https://ssjs.guide/platform-functions/contentblockbyname/"
   mcnNotes: ""
   description: "Retrieves and renders a Content Builder content block by its folder path and name."
   guideUrl: "https://ampscript.guide/contentblockbyname/"
@@ -438,6 +490,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentImageByID"
+      url: "https://ssjs.guide/platform-functions/contentimagebyid/"
   mcnNotes: ""
   description: "Returns an HTML img tag for a Content Builder image asset by its numeric ID. A missing image with no fallback aborts the page."
   guideUrl: "https://ampscript.guide/contentimagebyid/"
@@ -452,6 +507,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.ContentImageByKey"
+      url: "https://ssjs.guide/platform-functions/contentimagebykey/"
   mcnNotes: ""
   description: "Returns an HTML img tag for a Content Builder image asset by its customer key. A missing image with no fallback aborts the page."
   guideUrl: "https://ampscript.guide/contentimagebykey/"
@@ -465,6 +523,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Creates a new record in Microsoft Dynamics CRM."
   guideUrl: "https://ampscript.guide/createmscrmrecord/"
@@ -479,6 +538,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.CreateObject"
+      url: "https://ssjs.guide/platform-functions/createobject/"
   mcnNotes: ""
   description: "Instantiates a Marketing Cloud SOAP API object for use with Invoke* functions."
   guideUrl: "https://ampscript.guide/createobject/"
@@ -493,6 +555,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Requires an active Marketing Cloud Connect integration; the field names must be valid API names on the target object, and a fault (unknown object or field) aborts the whole page rather than returning an error value."
   guideUrl: "https://ampscript.guide/createsalesforceobject/"
@@ -506,6 +569,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Initiates an SMS conversation with a contact from within a MobileConnect message. Returns true when a conversation is created inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/createsmsconversation/"
@@ -520,6 +584,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the total number of rows in a data extension."
   guideUrl: "https://ampscript.guide/dataextensionrowcount/"
@@ -535,6 +600,7 @@
   mcn: "67"
   handlebarsEquivalent: "dateAdd"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Adds a whole number of intervals to a date value. Only the five documented units are accepted and every other unit, including seconds and weeks, aborts the page — as does a non-integer amount or a date the engine cannot parse."
   guideUrl: "https://ampscript.guide/dateadd/"
@@ -550,6 +616,7 @@
   mcn: "67"
   handlebarsEquivalent: "dateDiff"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Counts how many boundaries of the requested unit lie between two dates, by truncating both to that unit and subtracting — so a 23-hour gap that crosses midnight counts as 1 day, while 23 hours within one day counts as 0. Finer units than the one requested are ignored rather than rounded."
   guideUrl: "https://ampscript.guide/datediff/"
@@ -564,6 +631,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Parses a date string into a date value. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected. An offset or GMT marker in the input is honoured and converted to the account time zone."
   guideUrl: "https://ampscript.guide/dateparse/"
@@ -578,6 +646,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Extracts one component from a date. The hour is reported on a 12-hour clock with no AM/PM indicator, so 19:35 yields 7 and any time at midnight — including a date with no time part at all — yields 12. Month and day come back zero-padded to two digits while hour and minute do not."
   guideUrl: "https://ampscript.guide/datepart/"
@@ -592,6 +661,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Decrypts a Base64 ciphertext produced by EncryptSymmetric, using the same algorithm, passphrase, salt and initialization vector."
   guideUrl: "https://ampscript.guide/decryptsymmetric/"
@@ -606,6 +676,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.DeleteData"
+      url: "https://ssjs.guide/platform-functions/deletedata/"
   mcnNotes: ""
   description: "Deletes rows from a data extension matching the specified key column criteria."
   guideUrl: "https://ampscript.guide/deletedata/"
@@ -620,6 +693,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.DeleteDE"
+      url: "https://ssjs.guide/platform-functions/deletede/"
   mcnNotes: ""
   description: "Deletes rows from a data extension. Email-context variant of DeleteData."
   guideUrl: "https://ampscript.guide/deletede/"
@@ -633,6 +709,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a rowset describing all available Dynamics CRM entity types."
   guideUrl: "https://ampscript.guide/describemscrmentities/"
@@ -646,6 +723,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a rowset of attributes for the specified CRM entity type."
   guideUrl: "https://ampscript.guide/describemscrmentityattributes/"
@@ -661,6 +739,7 @@
   mcn: "67"
   handlebarsEquivalent: "divide"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Divides the first number by the second."
   guideUrl: "https://ampscript.guide/divide/"
@@ -675,6 +754,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns everything after the first at sign, without validating the address or the domain. A value with no at sign, an empty string and a number all return an empty string."
   guideUrl: "https://ampscript.guide/domain/"
@@ -690,6 +770,7 @@
   mcn: "67"
   handlebarsEquivalent: "isEmpty"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns true when the value is an empty string, an unset variable, or an undeclared variable. Whitespace, the number 0, the string \"0\" and the string \"false\" are all treated as present."
   guideUrl: "https://ampscript.guide/empty/"
@@ -704,6 +785,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Encrypts a value using symmetric key encryption and returns the ciphertext as Base64. The result is deterministic: the same inputs produce the same ciphertext on every call."
   guideUrl: "https://ampscript.guide/encryptsymmetric/"
@@ -718,6 +800,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.EndImpressionRegion"
+      url: "https://ssjs.guide/platform-functions/endimpressionregion/"
   mcnNotes: ""
   description: "Marks the end of an impression tracking region."
   guideUrl: "https://ampscript.guide/endimpressionregion/"
@@ -731,6 +816,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Ends an active SMS conversation with a contact from within a MobileConnect message. Returns true when the conversation is ended inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/endsmsconversation/"
@@ -745,6 +831,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Executes a predefined data filter and returns the resulting rowset."
   guideUrl: "https://ampscript.guide/executefilter/"
@@ -759,6 +846,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Executes a predefined data filter and returns results sorted by a column."
   guideUrl: "https://ampscript.guide/executefilterorderedrows/"
@@ -774,6 +862,7 @@
   mcn: "67"
   handlebarsEquivalent: "get"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves the value of a named field from a rowset row. The two-argument form aborts the page when the column is absent; pass the optional third argument as 0 (or false) to get an empty string for a possibly-missing column instead."
   guideUrl: "https://ampscript.guide/field/"
@@ -789,6 +878,7 @@
   mcn: "67"
   handlebarsEquivalent: "format"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Formats a number, a date or a string with a .NET format pattern. The third parameter only accepts Date or the empty string; the documented value Number aborts the page."
   guideUrl: "https://ampscript.guide/format/"
@@ -804,6 +894,7 @@
   mcn: "67"
   handlebarsEquivalent: "formatCurrency"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Formats a number as a currency amount for a locale, choosing the symbol, the separators and the symbol position from that locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatcurrency/"
@@ -819,6 +910,7 @@
   mcn: "67"
   handlebarsEquivalent: "format"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: "In MCN, uses Java SimpleDateFormat format strings instead of .NET. Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\")."
   description: "Formats a date according to a date pattern, a time pattern and a locale. The two pattern arguments use separate, case-insensitive token sets: in the date pattern mm means month, and minutes are only reachable from the time pattern."
   guideUrl: "https://ampscript.guide/formatdate/"
@@ -834,6 +926,7 @@
   mcn: "67"
   handlebarsEquivalent: "formatNumber"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Formats a number with a standard or custom .NET numeric pattern, optionally for a locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatnumber/"
@@ -848,6 +941,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Generates a JSON Web Token signed with the supplied inline secret. The payload is passed through verbatim and is only Base64url-encoded, never encrypted."
   guideUrl: "https://ampscript.guide/getjwt/"
@@ -862,6 +956,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Generates a JSON Web Token using a named encryption key from Key Management."
   guideUrl: "https://ampscript.guide/getjwtbykeyname/"
@@ -875,6 +970,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves metadata for a classic portfolio item."
   guideUrl: "https://ampscript.guide/getportfolioitem/"
@@ -888,6 +984,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves published social media content by its identifier."
   guideUrl: "https://ampscript.guide/getpublishedsocialcontent/"
@@ -901,6 +998,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a send timestamp: by default the time the send completed for the individual subscriber, or with a true argument the job start or publish time. Outside a send context, such as on a CloudPage, it returns the current system time instead of a send time, in every argument spelling."
   guideUrl: "https://ampscript.guide/getsendtime/"
@@ -915,6 +1013,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Optionally accepts repeating key/value parameter pairs."
   guideUrl: "https://ampscript.guide/getsocialpublishurl/"
@@ -929,6 +1028,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns HTML for sharing a content region on a supported social network (identified by name) via Social Forward. Optionally accepts repeating key/value parameter pairs."
   guideUrl: "https://ampscript.guide/getsocialpublishurlbyname/"
@@ -943,6 +1043,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.GUID"
+      url: "https://ssjs.guide/platform-functions/guid/"
   mcnNotes: ""
   description: "Generates a new globally unique identifier. Every call returns a different value, so store the result in a variable when the same identifier is needed twice."
   guideUrl: "https://ampscript.guide/guid/"
@@ -957,6 +1060,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.HTTPGet"
+      url: "https://ssjs.guide/platform-functions/httpget/"
   mcnNotes: ""
   description: "Performs an HTTP GET request and returns the response body."
   guideUrl: "https://ampscript.guide/httpget/"
@@ -971,6 +1077,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.HTTPPost"
+      url: "https://ssjs.guide/platform-functions/httppost/"
   mcnNotes: ""
   description: "Performs an HTTP POST request and returns the HTTP status code. The response body is written to the optional output variable."
   guideUrl: "https://ampscript.guide/httppost/"
@@ -985,6 +1094,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Performs an HTTP POST and returns the HTTP status code. The response body and the response headers (as a rowset) are written to optional output variables."
   guideUrl: "https://ampscript.guide/httppost2/"
@@ -999,6 +1109,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Posts content to the specified URL with automatic retry logic on failure, and returns the HTTP status code. Similar to HTTPPost2 but adds configurable retries and rescheduling; the response body and headers (as a rowset) are written to optional output variables."
   guideUrl: "https://ampscript.guide/httppostwithretry/"
@@ -1013,6 +1124,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the value of a specified HTTP request header from the inbound request."
   guideUrl: "https://ampscript.guide/httprequestheader/"
@@ -1028,6 +1140,7 @@
   mcn: "67"
   handlebarsEquivalent: "iif"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns one of two values based on a boolean expression (inline if). Only a real comparison or a boolean-returning function selects the true branch; a plain string or number always selects the false branch. Only the selected branch is evaluated, so a call that would abort the page is safe in the branch that is not taken."
   guideUrl: "https://ampscript.guide/iif/"
@@ -1041,6 +1154,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns an HTML img tag for the Portfolio image matching the specified external key."
   guideUrl: "https://ampscript.guide/image/"
@@ -1056,6 +1170,7 @@
   mcn: "67"
   handlebarsEquivalent: "indexOf"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the 1-based position of a substring, matching case-insensitively. An undocumented third argument selects which occurrence to locate."
   guideUrl: "https://ampscript.guide/indexof/"
@@ -1070,6 +1185,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InsertData"
+      url: "https://ssjs.guide/platform-functions/insertdata/"
   mcnNotes: ""
   description: "Inserts a new row into a data extension."
   guideUrl: "https://ampscript.guide/insertdata/"
@@ -1084,6 +1202,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InsertDE"
+      url: "https://ssjs.guide/platform-functions/insertde/"
   mcnNotes: ""
   description: "Inserts a new row into a data extension. Email-context variant of InsertData."
   guideUrl: "https://ampscript.guide/insertde/"
@@ -1098,6 +1219,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokeCreate"
+      url: "https://ssjs.guide/platform-functions/invokecreate/"
   mcnNotes: ""
   description: "Calls the SOAP API Create method on the given API object."
   guideUrl: "https://ampscript.guide/invokecreate/"
@@ -1112,6 +1236,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokeDelete"
+      url: "https://ssjs.guide/platform-functions/invokedelete/"
   mcnNotes: ""
   description: "Calls the SOAP API Delete method on the given API object."
   guideUrl: "https://ampscript.guide/invokedelete/"
@@ -1126,6 +1253,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokeExecute"
+      url: "https://ssjs.guide/platform-functions/invokeexecute/"
   mcnNotes: ""
   description: "Calls the SOAP API Execute method on the given API object and returns the API status code."
   guideUrl: "https://ampscript.guide/invokeexecute/"
@@ -1140,6 +1270,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokePerform"
+      url: "https://ssjs.guide/platform-functions/invokeperform/"
   mcnNotes: ""
   description: "Calls the SOAP API Perform method on the given API object."
   guideUrl: "https://ampscript.guide/invokeperform/"
@@ -1154,6 +1287,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokeRetrieve"
+      url: "https://ssjs.guide/platform-functions/invokeretrieve/"
   mcnNotes: ""
   description: "Calls the SOAP API Retrieve method and returns a rowset of results."
   guideUrl: "https://ampscript.guide/invokeretrieve/"
@@ -1168,6 +1304,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.InvokeUpdate"
+      url: "https://ssjs.guide/platform-functions/invokeupdate/"
   mcnNotes: ""
   description: "Calls the SOAP API Update method on the given API object."
   guideUrl: "https://ampscript.guide/invokeupdate/"
@@ -1182,6 +1321,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.IsCHTMLBrowser"
+      url: "https://ssjs.guide/platform-functions/ischtmlbrowser/"
   mcnNotes: ""
   description: "Tests a user agent string for a compact HTML (cHTML) feature-phone browser. Feature-phone agents such as i-mode and KDDI handsets are recognised; modern desktop and mobile agents are not."
   guideUrl: "https://ampscript.guide/ischtmlbrowser/"
@@ -1196,6 +1338,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.IsEmailAddress"
+      url: "https://ssjs.guide/platform-functions/isemailaddress/"
   mcnNotes: ""
   description: "Checks a value against email address syntax only; it never tests whether the mailbox or domain exists. Surrounding whitespace and a domain without a top-level domain are both rejected."
   guideUrl: "https://ampscript.guide/isemailaddress/"
@@ -1211,6 +1356,7 @@
   mcn: "67"
   handlebarsEquivalent: "isEmpty"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns true only for a genuine null, which in practice means a data extension field with no value. An unset or undeclared variable, an empty string, whitespace and every ordinary value all return false, so this is not a general emptiness test."
   guideUrl: "https://ampscript.guide/isnull/"
@@ -1226,6 +1372,7 @@
   mcn: ""
   handlebarsEquivalent: "fallback"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the value if not null, otherwise returns the default. Outside a Smart Capture form the default is never reached: on a CloudPage every empty-ish input returns the empty string instead, so it cannot be used as a general fallback."
   guideUrl: "https://ampscript.guide/isnulldefault/"
@@ -1240,6 +1387,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.IsPhoneNumber"
+      url: "https://ssjs.guide/platform-functions/isphonenumber/"
   mcnNotes: ""
   description: "Checks a value against the North American Numbering Plan. Dashes, dots, spaces and parentheses are tolerated, but a leading plus sign, any letter, a number outside the plan and a leading country-code digit all fail."
   guideUrl: "https://ampscript.guide/isphonenumber/"
@@ -1255,6 +1405,7 @@
   mcn: "67"
   handlebarsEquivalent: "length"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the number of characters in a string."
   guideUrl: "https://ampscript.guide/length/"
@@ -1268,6 +1419,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Generates a URL to a microsite page that serves live, dynamic content."
   guideUrl: "https://ampscript.guide/livecontentmicrositeurl/"
@@ -1283,6 +1435,9 @@
   mcn: ""
   handlebarsEquivalent: "timeZoneConversion"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.LocalDateToSystemDate"
+      url: "https://ssjs.guide/platform-functions/localdatetosystemdate/"
   mcnNotes: ""
   description: "Converts a date in the time zone configured on the account to the Marketing Cloud system date (Central Time, no daylight saving). The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/localdatetosystemdate/"
@@ -1297,6 +1452,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version."
   guideUrl: "https://ampscript.guide/longsfid/"
@@ -1312,6 +1468,9 @@
   mcn: "67"
   handlebarsEquivalent: "queryFirst"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.Lookup"
+      url: "https://ssjs.guide/platform-functions/lookup/"
   mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. All filter keys must fully specify the composite primary key."
   description: "Returns a single field value from the first matching row in a data extension. A no-match returns an empty string."
   guideUrl: "https://ampscript.guide/lookup/"
@@ -1327,6 +1486,9 @@
   mcn: ""
   handlebarsEquivalent: "query"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.LookupOrderedRows"
+      url: "https://ssjs.guide/platform-functions/lookuporderedrows/"
   mcnNotes: ""
   description: "Returns a sorted rowset of matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuporderedrows/"
@@ -1342,6 +1504,7 @@
   mcn: ""
   handlebarsEquivalent: "query"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Case-sensitive version of LookupOrderedRows. Returns a sorted rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuporderedrowscs/"
@@ -1357,6 +1520,9 @@
   mcn: ""
   handlebarsEquivalent: "query"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.LookupRows"
+      url: "https://ssjs.guide/platform-functions/lookuprows/"
   mcnNotes: ""
   description: "Returns a rowset of all matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuprows/"
@@ -1372,6 +1538,7 @@
   mcn: ""
   handlebarsEquivalent: "query"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Case-sensitive version of LookupRows. Returns a rowset of matching rows."
   guideUrl: "https://ampscript.guide/lookuprowscs/"
@@ -1387,6 +1554,7 @@
   mcn: "67"
   handlebarsEquivalent: "lowercase"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a string to all lowercase characters."
   guideUrl: "https://ampscript.guide/lowercase/"
@@ -1401,6 +1569,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.MD5"
+      url: "https://ssjs.guide/platform-functions/md5/"
   mcnNotes: ""
   description: "Returns the MD5 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/md5/"
@@ -1415,6 +1586,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Builds a Classic Content microsite URL whose single encrypted query string carries the page reference and any extra name-value pairs. Every call produces a fresh token, so two calls with identical arguments never match."
   guideUrl: "https://ampscript.guide/micrositeurl/"
@@ -1428,6 +1600,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the URL of MMS content from an inbound mobile-originated (MO) message. Only usable in MobileConnect."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
@@ -1443,6 +1616,7 @@
   mcn: "67"
   handlebarsEquivalent: "modulo"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the remainder after dividing the first number by the second (modulo)."
   guideUrl: "https://ampscript.guide/mod/"
@@ -1456,6 +1630,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the content of an inbound mobile-originated (MO) message. Only usable in MobileConnect. The only accepted argument value is 0."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
@@ -1471,6 +1646,7 @@
   mcn: "67"
   handlebarsEquivalent: "multiply"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Computes the product of two numeric values."
   guideUrl: "https://ampscript.guide/multiply/"
@@ -1484,6 +1660,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a single word that follows the keyword in an inbound mobile-originated (MO) message, by position. Only usable in MobileConnect, chained off Msg(0)."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
@@ -1497,6 +1674,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns all message content that follows the keyword in an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
@@ -1512,6 +1690,9 @@
   mcn: "67"
   handlebarsEquivalent: "now"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.Now"
+      url: "https://ssjs.guide/platform-functions/now/"
   mcnNotes: ""
   description: "Returns the current system date and time in Central Standard Time, with no daylight-saving adjustment. Every call within one render returns the same instant."
   guideUrl: "https://ampscript.guide/now/"
@@ -1526,6 +1707,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Writes the result of a nested function call into the rendered content. A string literal, a bare variable or a number renders nothing at all, without raising an error."
   guideUrl: "https://ampscript.guide/output/"
@@ -1540,6 +1722,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Writes the result of a nested function call into the rendered content, followed by a carriage return and line feed. A string literal, a bare variable or a number renders only the line break. The break is not an HTML line break, so an HTML view keeps everything on one line unless the content sits inside a preformatted element."
   guideUrl: "https://ampscript.guide/outputline/"
@@ -1555,6 +1738,7 @@
   mcn: "67"
   handlebarsEquivalent: "properCase"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a value to proper (title) case. Every letter after the first of a word is forced to lower case, so existing internal capitals are lost."
   guideUrl: "https://ampscript.guide/propercase/"
@@ -1569,6 +1753,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the value of a URL query string parameter from the current page request. The name is matched without regard to case, percent-encoded characters arrive decoded, and a name supplied more than once yields the values joined by a comma."
   guideUrl: "https://ampscript.guide/queryparameter/"
@@ -1584,6 +1769,9 @@
   mcn: "67"
   handlebarsEquivalent: "raiseError"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.RaiseError"
+      url: "https://ssjs.guide/platform-functions/raiseerror/"
   mcnNotes: ""
   description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Outside a send it is not a graceful abort: on a landing page it discards everything already written and answers the same generic failure any other aborting call gives, with the message nowhere in the response."
   guideUrl: "https://ampscript.guide/raiseerror/"
@@ -1599,6 +1787,7 @@
   mcn: "67"
   handlebarsEquivalent: "random"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a random integer between the two specified values (inclusive). Both bounds must be whole numbers; a decimal bound aborts the page. The bounds may be supplied in either order."
   guideUrl: "https://ampscript.guide/random/"
@@ -1612,6 +1801,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Renders a star-rating image using Einstein recommendations data."
   guideUrl: "https://ampscript.guide/ratingstars/"
@@ -1626,6 +1816,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Performs an HTTP redirect to the specified URL. Landing pages only. The response is a 302 whose Location is the supplied value verbatim, and everything written before the call is discarded along with the page body. Not to be confused with RedirectTo, which emits no redirect at all."
   guideUrl: "https://ampscript.guide/redirect/"
@@ -1640,6 +1831,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.RedirectTo"
+      url: "https://ssjs.guide/platform-functions/redirectto/"
   mcnNotes: ""
   description: "Marks a URL held in a variable or field as a tracked email link. It never redirects the current request and never halts the script; outside a tracked send it hands the value straight back."
   guideUrl: "https://ampscript.guide/redirectto/"
@@ -1654,6 +1848,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Matching is case-sensitive unless the IgnoreCase option is passed."
   guideUrl: "https://ampscript.guide/regexmatch/"
@@ -1669,6 +1864,7 @@
   mcn: "67"
   handlebarsEquivalent: "replace"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Replaces all occurrences of a substring with a new value, matching case-insensitively. The source is scanned once, so text formed by a replacement is not replaced again."
   guideUrl: "https://ampscript.guide/replace/"
@@ -1683,6 +1879,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Replaces every occurrence of each supplied search value with one common replacement value, matching case-insensitively. The search values are applied one after another in the order given, so text produced by an earlier replacement can still be matched by a later one."
   guideUrl: "https://ampscript.guide/replacelist/"
@@ -1697,6 +1894,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the value of a form post or query string parameter from the current request. The name is matched without regard to case, percent-encoded characters arrive decoded, and a name supplied more than once yields the values joined by a comma."
   guideUrl: "https://ampscript.guide/requestparameter/"
@@ -1710,6 +1908,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves records from Dynamics CRM using a simple filter."
   guideUrl: "https://ampscript.guide/retrievemscrmrecords/"
@@ -1723,6 +1922,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves records from Dynamics CRM using a FetchXML query."
   guideUrl: "https://ampscript.guide/retrievemscrmrecordsfetchxml/"
@@ -1737,6 +1937,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, and returns them as a rowset. Requires an active Marketing Cloud Connect integration. A job ID with no matching sources returns an empty rowset rather than an error; the function reports nothing about the job status."
   guideUrl: "https://ampscript.guide/retrievesalesforcejobsources/"
@@ -1752,6 +1953,7 @@
   mcn: "67"
   handlebarsEquivalent: "query"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Requires an active Marketing Cloud Connect integration; a call against an unknown object name aborts the page."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
@@ -1767,6 +1969,7 @@
   mcn: "67"
   handlebarsEquivalent: "get"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns a specific row from a rowset by its 1-based index. Index 0 (or any out-of-range index) aborts the page rather than returning an empty row."
   guideUrl: "https://ampscript.guide/row/"
@@ -1782,6 +1985,7 @@
   mcn: "67"
   handlebarsEquivalent: "length"
   handlebarsExact: false
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the number of rows in a rowset."
   guideUrl: "https://ampscript.guide/rowcount/"
@@ -1796,6 +2000,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.SetObjectProperty"
+      url: "https://ssjs.guide/platform-functions/setobjectproperty/"
   mcnNotes: ""
   description: "Sets a property value on a Marketing Cloud API object."
   guideUrl: "https://ampscript.guide/setobjectproperty/"
@@ -1809,6 +2016,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Sets the keyword for the next path of an existing SMS conversation, applied when the contact next replies. Does not create a new conversation. Returns true when set inside a MobileConnect message context, and false in any other context (for example a CloudPage or email). The success path cannot be exercised outside a live MobileConnect send."
   guideUrl: "https://ampscript.guide/setsmsconversationnextkeyword/"
@@ -1822,6 +2030,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Sets the state and status of a Dynamics CRM record."
   guideUrl: "https://ampscript.guide/setstatemscrmrecord/"
@@ -1836,6 +2045,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-1 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha1/"
@@ -1850,6 +2060,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-256 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha256/"
@@ -1864,6 +2075,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha512/"
@@ -1878,6 +2090,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: "In MCN, returns a locale-formatted string (G standard format, e.g. \"5/15/2026 1:23:45 PM\") instead of a dateTime object. Cannot be reliably passed to FormatDate() or other date functions in MCN - use FormatDate() directly instead."
   description: "Converts a date string to a date value. Behaves identically to DateParse for every input format tested, but takes no second argument, so DateParse is the only one of the two that can return the instant in UTC. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected."
   guideUrl: "https://ampscript.guide/stringtodate/"
@@ -1892,6 +2105,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a string to its hexadecimal representation. The bytes rendered are the UTF-8 encoding of the input unless charSet names another encoding."
   guideUrl: "https://ampscript.guide/stringtohex/"
@@ -1907,6 +2121,7 @@
   mcn: "67"
   handlebarsEquivalent: "substring"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 is treated as the first character."
   guideUrl: "https://ampscript.guide/substring/"
@@ -1922,6 +2137,7 @@
   mcn: "67"
   handlebarsEquivalent: "subtract"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Computes the difference between two numeric values."
   guideUrl: "https://ampscript.guide/subtract/"
@@ -1937,6 +2153,9 @@
   mcn: ""
   handlebarsEquivalent: "timeZoneConversion"
   handlebarsExact: false
+  ssjsEquivalents:
+    - name: "Platform.Function.SystemDateToLocalDate"
+      url: "https://ssjs.guide/platform-functions/systemdatetolocaldate/"
   mcnNotes: ""
   description: "Converts a Marketing Cloud system date (Central Time, no daylight saving) to the time zone configured on the account. The shift is not constant: the local side observes daylight saving, so a summer instant moves one hour further than a winter one. A value the date parser cannot read aborts the page instead of returning a sentinel."
   guideUrl: "https://ampscript.guide/systemdatetolocaldate/"
@@ -1951,6 +2170,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Transforms an XML document using an XSLT stylesheet."
   guideUrl: "https://ampscript.guide/transformxml/"
@@ -1965,6 +2185,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.TreatAsContent"
+      url: "https://ssjs.guide/platform-functions/treatascontent/"
   mcnNotes: ""
   description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Plain text and the empty string pass through unchanged."
   guideUrl: "https://ampscript.guide/treatascontent/"
@@ -1979,6 +2202,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. An optional third argument names an impression region."
   guideUrl: "https://ampscript.guide/treatascontentarea/"
@@ -1994,6 +2218,7 @@
   mcn: "67"
   handlebarsEquivalent: "trim"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Removes leading and trailing whitespace from a value. Tabs, line breaks and the non-breaking space count as whitespace."
   guideUrl: "https://ampscript.guide/trim/"
@@ -2008,6 +2233,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.UpdateData"
+      url: "https://ssjs.guide/platform-functions/updatedata/"
   mcnNotes: ""
   description: "Updates existing rows in a data extension that match the specified search columns. Returns the number of rows updated."
   guideUrl: "https://ampscript.guide/updatedata/"
@@ -2022,6 +2250,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.UpdateDE"
+      url: "https://ssjs.guide/platform-functions/updatede/"
   mcnNotes: ""
   description: "Updates existing rows in a data extension. Email-context variant of UpdateData. Returns the number of rows updated."
   guideUrl: "https://ampscript.guide/updatede/"
@@ -2035,6 +2266,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Updates one or more records in a Microsoft Dynamics CRM entity, and returns the number of successfully updated records."
   guideUrl: "https://ampscript.guide/updatemscrmrecords/"
@@ -2049,6 +2281,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect. Accepts one or more field name and value pairs. Returns 1 on success; per the official reference it returns 0 on failure, but on a CloudPage a failed update (unknown object, malformed or non-existent record ID) instead surfaces the SOAP fault as an uncatchable page abort rather than returning 0."
   guideUrl: "https://ampscript.guide/updatesinglesalesforceobject/"
@@ -2064,6 +2297,7 @@
   mcn: "67"
   handlebarsEquivalent: "uppercase"
   handlebarsExact: true
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a string to all uppercase characters. The German sharp s remains unchanged rather than expanding to SS."
   guideUrl: "https://ampscript.guide/uppercase/"
@@ -2078,6 +2312,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Upserts attributes onto a mobile contact matched by phone number. If the contact exists it is updated; otherwise a new contact is created. Returns a status code: 0 when the upsert succeeds and 1 when an error occurs. The only supported channel is 'mobile' and the only supported match attribute is 'phone'. An unknown attribute name returns the error status without writing anything."
   guideUrl: "https://ampscript.guide/upsertcontact/"
@@ -2092,6 +2327,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.UpsertData"
+      url: "https://ssjs.guide/platform-functions/upsertdata/"
   mcnNotes: ""
   description: "Updates a row in a data extension if matching columns and values are found, or inserts a row if no matches are found. Returns the number of rows affected."
   guideUrl: "https://ampscript.guide/upsertdata/"
@@ -2106,6 +2344,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.UpsertDE"
+      url: "https://ssjs.guide/platform-functions/upsertde/"
   mcnNotes: ""
   description: "Updates or inserts a row in a data extension. Email-context variant of UpsertData. Returns the number of rows affected."
   guideUrl: "https://ampscript.guide/upsertde/"
@@ -2119,6 +2360,7 @@
   deprecated: true
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Upserts a Microsoft Dynamics CRM record. Updates the matched record or creates one if no match is found. Returns the GUID of the record."
   guideUrl: "https://ampscript.guide/upsertmscrmrecord/"
@@ -2133,6 +2375,9 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents:
+    - name: "Platform.Function.UrlEncode"
+      url: "https://ssjs.guide/platform-functions/urlencode/"
   mcnNotes: ""
   description: "URL-encodes a string for safe inclusion in a URL. By default only the part after a question mark is touched, so a value that is not a URL passes through unchanged unless the third argument is switched on."
   guideUrl: "https://ampscript.guide/urlencode/"
@@ -2147,6 +2392,7 @@
   deprecated: false
   mcn: "67"
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Outputs a value inline, normally a variable reference. A string or number literal and a nested function call are accepted as well, each rendering its own value."
   guideUrl: "https://ampscript.guide/v/"
@@ -2160,6 +2406,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the keyword (verb) from an inbound mobile-originated (MO) message. Only usable in MobileConnect, chained off Msg(0). Takes no arguments."
   guideUrl: "https://ampscript.guide/mobileconnect-data-strings/"
@@ -2173,6 +2420,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the values of the Web Analytics Tracking (WAT) parameter set with the specified external key, substituting the supplied values for the matching WATP references in the Sender Profile tracking parameter."
   guideUrl: "https://ampscript.guide/wat/"
@@ -2186,6 +2434,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Ordinal placeholder for a parameter value configured in a WAT parameter set. The ordinal maps to the position of the value passed to the WAT function. Configured by Marketing Cloud Support as part of the WAT string."
   guideUrl: "https://ampscript.guide/watp/"
@@ -2200,6 +2449,7 @@
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
+  ssjsEquivalents: []
   mcnNotes: ""
   description: "Shortens a long URL for email clients that truncate long hyperlinks. Outside an email send the argument comes back unchanged, so a CloudPage never sees a shortened link."
   guideUrl: "https://ampscript.guide/wraplongurl/"

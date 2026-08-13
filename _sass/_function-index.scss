@@ -119,16 +119,20 @@
 }
 
 // Optional mapping column: rendered but hidden by default on pages that only
-// expose the mapping *filter* (helper page → AMPscript column, function page →
-// Handlebars column). JS adds `.cat-show-mapcol` to the table while the filter
-// narrows the list, so you can read the equivalents you are filtering by.
+// expose the mapping *filter*, then revealed by JS while that filter narrows the
+// list so you can read the equivalents you are filtering by. Three pairings:
+//   helper page   → AMPscript column (.cat-show-mapcol / .cat-mapcol)
+//   function page → Handlebars column (.cat-show-hbcol / .cat-mapcol--hb)
+//   function page → SSJS column       (.cat-show-ssjscol / .cat-mapcol--ssjs)
 // Hidden at every width; the reveal display differs per layout (table-cell on
 // desktop, the mobile card treatment restores flex — see the card block below).
 .cat-table .cat-mapcol {
   display: none;
 }
 @media (min-width: 641px) {
-  .cat-table.cat-show-mapcol .cat-mapcol {
+  .cat-table.cat-show-mapcol .cat-mapcol,
+  .cat-table.cat-show-hbcol .cat-mapcol--hb,
+  .cat-table.cat-show-ssjscol .cat-mapcol--ssjs {
     display: table-cell;
   }
 }
@@ -176,6 +180,13 @@
 // Inline badge next to a name. Neutral base; a colour modifier gives it meaning:
 //   --warning  AMPscript "differs" / "deprecated" notices (amber)
 //   --form     Handlebars call-form notes: block / subexpression only (purple)
+// One equivalent per line when a function/helper has several counterparts, so a
+// long list (e.g. the query helper's five AMPscript functions) stays readable.
+// The trailing comma is kept as a visual separator; the wrapper is block-level.
+.cat-eq {
+  display: block;
+}
+
 .cat-flag {
   display: inline-flex;
   align-items: center;
@@ -351,7 +362,9 @@
 
   // The optional mapping column stays a stacked meta card here too — restore the
   // flex column display the base `display:none` above suppresses when revealed.
-  .cat-table.cat-show-mapcol .cat-mapcol {
+  .cat-table.cat-show-mapcol .cat-mapcol,
+  .cat-table.cat-show-hbcol .cat-mapcol--hb,
+  .cat-table.cat-show-ssjscol .cat-mapcol--ssjs {
     display: flex;
   }
 }

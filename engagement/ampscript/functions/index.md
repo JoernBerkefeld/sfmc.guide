@@ -16,6 +16,7 @@ This is the runtime-proven half of the AMPscript reference. Every function in th
 ## All functions
 
 {% include ampscript-function-index.html entries=site.data.ampscript_functions
+   show_ssjs_mapping=true
    empty="No functions catalogued yet." %}
 
 ## Related

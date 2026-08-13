@@ -18,7 +18,8 @@
 
   Row fields come from scripts/generate-handlebars-helper-index.mjs:
     name, slug, category, origin, helperType, syntax, returnType, mcn,
-    ampscriptEquivalent, ampscriptEquivalentKind, ampscriptExact,
+    ampscriptEquivalent (comma-joined, for filters),
+    ampscriptEquivalents (list of {name, kind, exact}),
     subexpressionOnly, description, docUrl
 
   Unlike the AMPscript index there is no verified state — no Handlebars helper
@@ -138,7 +139,7 @@
         </td>
         <td class="cat-ver cat-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- if hbi_render_amp %}
-        <td class="cat-amp-col cat-meta{% if hbi_mapcol_optional %} cat-mapcol{% endif %}" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
+        <td class="cat-amp-col cat-meta{% if hbi_mapcol_optional %} cat-mapcol{% endif %}" data-label="AMPscript">{% if h.ampscriptEquivalents.size > 0 %}{% for eq in h.ampscriptEquivalents %}<span class="cat-eq">{% if eq.kind == "function" %}<a href="/next/ampscript/functions/#fn-{{ eq.name | downcase }}"><code>{{ eq.name }}</code></a>{% else %}<code>{{ eq.name }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ eq.kind }}, not a function">{{ eq.kind }}</span>{% endif %}{% if eq.exact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% unless forloop.last %},{% endunless %}</span>{% endfor %}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         <td class="cat-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
         <td class="cat-desc" data-label="Description">{{ h.description | escape }}</td>

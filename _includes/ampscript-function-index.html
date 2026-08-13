@@ -19,11 +19,19 @@
                                the MCN caveat from `mcnNotes`).
     show_mapping    (bool)   - add the "Handlebars mapping" filter without the
                                column (show_handlebars implies this too).
+    show_ssjs       (bool)   - add the "SSJS" column (equivalent Platform
+                               function, linking out to ssjs.guide).
+    show_ssjs_mapping (bool) - add the "SSJS mapping" filter without the column
+                               (show_ssjs implies this too).
+
+  A column requested only through its *_mapping filter is still emitted, hidden
+  by default, and revealed by JS while that filter narrows the list — so the
+  equivalents you filter by are visible.
 
   Row fields come from scripts/generate-ampscript-function-index.mjs:
     name, slug, category, syntax, returnType, verified, url,
     differsFromDocs, deprecated, mcn, handlebarsEquivalent, mcnNotes,
-    description, guideUrl
+    ssjsEquivalents (list of {name, url}), description, guideUrl
 
   A row is only linked when `verified` is true — an unverified row is
   catalogued, not proven, and must never link to a page that does not exist.
@@ -47,14 +55,20 @@
    or any page that opts in with show_mapping=true even without the column. {% endcomment %}
 {% assign afi_show_mapping = false %}
 {% if include.show_handlebars or include.show_mapping %}{% assign afi_show_mapping = true %}{% endif %}
-{% comment %} When the mapping filter is present without the column (show_mapping
-   without show_handlebars), still emit the Handlebars column markup but hidden
-   by default; JS reveals it while the filter is set to anything but "all
-   functions", so the equivalents you filter by are visible. {% endcomment %}
+{% assign afi_show_ssjs_mapping = false %}
+{% if include.show_ssjs or include.show_ssjs_mapping %}{% assign afi_show_ssjs_mapping = true %}{% endif %}
+{% comment %} When a mapping filter is present without its column (show_mapping /
+   show_ssjs_mapping without show_handlebars / show_ssjs), still emit the column
+   markup but hidden by default; JS reveals it while the filter is set to
+   anything but "all functions", so the equivalents you filter by are visible. {% endcomment %}
 {% assign afi_render_hb = false %}
 {% if include.show_handlebars %}{% assign afi_render_hb = true %}{% endif %}
-{% assign afi_mapcol_optional = false %}
-{% if afi_show_mapping and include.show_handlebars != true %}{% assign afi_render_hb = true %}{% assign afi_mapcol_optional = true %}{% endif %}
+{% assign afi_hb_optional = false %}
+{% if afi_show_mapping and include.show_handlebars != true %}{% assign afi_render_hb = true %}{% assign afi_hb_optional = true %}{% endif %}
+{% assign afi_render_ssjs = false %}
+{% if include.show_ssjs %}{% assign afi_render_ssjs = true %}{% endif %}
+{% assign afi_ssjs_optional = false %}
+{% if afi_show_ssjs_mapping and include.show_ssjs != true %}{% assign afi_render_ssjs = true %}{% assign afi_ssjs_optional = true %}{% endif %}
 
 {% if afi_count > 0 %}
 {% assign afi_verified = afi_entries | where: "verified", true | size %}
@@ -92,6 +106,16 @@
     </select>
   </div>
   {%- endif %}
+  {%- if afi_show_ssjs_mapping %}
+  <div class="cat-control">
+    <label for="afi-ssjs-mapping">SSJS mapping</label>
+    <select id="afi-ssjs-mapping">
+      <option value="" selected>All functions</option>
+      <option value="mapped">Has an SSJS equivalent</option>
+      <option value="unmapped">AMPscript only</option>
+    </select>
+  </div>
+  {%- endif %}
   <div class="cat-control">
     <label for="afi-sort">Sort by</label>
     <select id="afi-sort">
@@ -121,7 +145,8 @@
       <tr>
         <th>Function</th>
         {%- if include.show_mcn %}<th>API version</th>{% endif %}
-        {%- if afi_render_hb %}<th class="cat-hb-col{% if afi_mapcol_optional %} cat-mapcol{% endif %}">Handlebars</th>{% endif %}
+        {%- if afi_render_hb %}<th class="cat-hb-col{% if afi_hb_optional %} cat-mapcol cat-mapcol--hb{% endif %}">Handlebars</th>{% endif %}
+        {%- if afi_render_ssjs %}<th class="cat-ssjs-col{% if afi_ssjs_optional %} cat-mapcol cat-mapcol--ssjs{% endif %}">SSJS</th>{% endif %}
         <th>Returns</th>
         <th>Description</th>
       </tr>
@@ -133,6 +158,7 @@
           data-category="{{ f.category | escape }}"
           data-state="{% if f.verified %}verified{% else %}unverified{% endif %}"
           data-mapping="{% if f.handlebarsEquivalent != '' %}mapped{% else %}unmapped{% endif %}"
+          data-ssjs-mapping="{% if f.ssjsEquivalents.size > 0 %}mapped{% else %}unmapped{% endif %}"
           data-version="{{ f.mcn }}"
           id="fn-{{ f.slug }}">
         <td data-label="Function">
@@ -145,8 +171,13 @@
         <td class="cat-ver cat-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         {%- if afi_render_hb %}
-        <td class="cat-hb-col cat-meta{% if afi_mapcol_optional %} cat-mapcol{% endif %}" data-label="Handlebars">
+        <td class="cat-hb-col cat-meta{% if afi_hb_optional %} cat-mapcol cat-mapcol--hb{% endif %}" data-label="Handlebars">
           {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
+        </td>
+        {%- endif %}
+        {%- if afi_render_ssjs %}
+        <td class="cat-ssjs-col cat-meta{% if afi_ssjs_optional %} cat-mapcol cat-mapcol--ssjs{% endif %}" data-label="SSJS">
+          {%- if f.ssjsEquivalents.size > 0 %}{% for eq in f.ssjsEquivalents %}<span class="cat-eq"><a href="{{ eq.url }}" target="_blank" rel="noopener"><code>{{ eq.name }}</code></a>{% unless forloop.last %},{% endunless %}</span>{% endfor %}{% else %}&mdash;{% endif %}
         </td>
         {%- endif %}
         <td class="cat-ret" data-label="Returns"><code>{{ f.returnType }}</code></td>
@@ -164,18 +195,20 @@
   var catSel = document.getElementById("afi-category");
   var stateSel = document.getElementById("afi-state");
   var mappingSel = document.getElementById("afi-mapping");
+  var ssjsMappingSel = document.getElementById("afi-ssjs-mapping");
   var sortSel = document.getElementById("afi-sort");
   var countEl = document.getElementById("afi-count");
   var body = document.getElementById("afi-body");
   if (!body) { return; }
   var table = body.parentNode;
 
-  // The Handlebars column is only rendered as an optional (hidden) column on the
-  // function page; reveal it whenever the mapping filter narrows the list.
-  function syncMapCol() {
+  // The Handlebars and SSJS columns can each be rendered as an optional (hidden)
+  // column; reveal one whenever its own mapping filter narrows the list, so the
+  // equivalents you filter by become visible.
+  function syncMapCols() {
     if (!table) { return; }
-    var on = mappingSel && mappingSel.value !== "";
-    table.classList.toggle("cat-show-mapcol", !!on);
+    table.classList.toggle("cat-show-hbcol", !!(mappingSel && mappingSel.value !== ""));
+    table.classList.toggle("cat-show-ssjscol", !!(ssjsMappingSel && ssjsMappingSel.value !== ""));
   }
 
   var rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
@@ -200,6 +233,7 @@
     var cat = catSel ? catSel.value : "";
     var state = stateSel ? stateSel.value : "";
     var mapping = mappingSel ? mappingSel.value : "";
+    var ssjsMapping = ssjsMappingSel ? ssjsMappingSel.value : "";
     var total = 0;
     var k, row, visible;
 
@@ -209,6 +243,7 @@
       if (cat && row.getAttribute("data-category") !== cat) { visible = false; }
       if (visible && state && row.getAttribute("data-state") !== state) { visible = false; }
       if (visible && mapping && row.getAttribute("data-mapping") !== mapping) { visible = false; }
+      if (visible && ssjsMapping && row.getAttribute("data-ssjs-mapping") !== ssjsMapping) { visible = false; }
       if (visible && !fuzzyMatch(query, row.getAttribute("data-name") || "")) { visible = false; }
       if (visible) {
         row.classList.remove("is-hidden");
@@ -305,10 +340,11 @@
   if (searchInput) { searchInput.addEventListener("input", apply); }
   if (catSel) { catSel.addEventListener("change", apply); }
   if (stateSel) { stateSel.addEventListener("change", apply); }
-  if (mappingSel) { mappingSel.addEventListener("change", function () { syncMapCol(); apply(); }); }
+  if (mappingSel) { mappingSel.addEventListener("change", function () { syncMapCols(); apply(); }); }
+  if (ssjsMappingSel) { ssjsMappingSel.addEventListener("change", function () { syncMapCols(); apply(); }); }
   if (sortSel) { sortSel.addEventListener("change", refresh); }
 
-  syncMapCol();
+  syncMapCols();
   refresh();
 })();
 </script>

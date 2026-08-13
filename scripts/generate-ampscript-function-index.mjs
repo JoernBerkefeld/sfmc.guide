@@ -24,6 +24,35 @@ const ROOT = path.resolve(SITE, '..');
 const PAGES_DIR = path.join(SITE, 'engagement/ampscript/functions');
 
 const amp = require(path.join(ROOT, 'ampscript-data/src/index.js'));
+const ssjs = require(path.join(ROOT, 'ssjs-data/src/index.js'));
+
+/**
+ * AMPscript → SSJS Platform-function map, inverted from ssjs-data's
+ * PLATFORM_FUNCTIONS[].ampscriptEquivalent (SSJS → AMPscript). Every SSJS
+ * platform function that names an AMPscript counterpart shares its name with a
+ * documented ssjs.guide page, so the link target is always
+ * https://ssjs.guide/platform-functions/<lowercase-ssjs-name>/.
+ *
+ * An AMPscript function can have more than one SSJS counterpart, so each key
+ * maps to a list of counterparts (sorted by name) rather than a single one.
+ */
+function ampToSsjs() {
+  const map = new Map();
+  for (const fn of ssjs.PLATFORM_FUNCTIONS) {
+    if (!fn.ampscriptEquivalent) continue;
+    const key = String(fn.ampscriptEquivalent).toLowerCase();
+    const list = map.get(key) || [];
+    list.push({
+      name: `Platform.Function.${fn.name}`,
+      url: `https://ssjs.guide/platform-functions/${fn.name.toLowerCase()}/`,
+    });
+    map.set(key, list);
+  }
+  for (const list of map.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+  return map;
+}
+
+const AMP_TO_SSJS = ampToSsjs();
 
 /** Quote a value for safe single-line YAML output. */
 function q(value) {
@@ -61,11 +90,16 @@ let out = `# AMPscript function catalog for /engagement/ampscript/functions/ and
 #
 # Source of truth: ampscript-data/src/index.js (names, categories, arity,
 # return type, MCN availability, Handlebars mapping) plus the presence of a flat
-# reference page at engagement/ampscript/functions/<lowercase-name>.md.
+# reference page at engagement/ampscript/functions/<lowercase-name>.md, and
+# ssjs-data/src/index.js (PLATFORM_FUNCTIONS[].ampscriptEquivalent, inverted)
+# for the SSJS mapping.
 #
 # mcn is the Marketing Cloud Next API version the function became available in,
 # or "" when it is Engagement-only. handlebarsEquivalent names the Handlebars
 # helper in handlebars_helpers.yml that covers the same job, or "".
+# ssjsEquivalents is the list of fully-qualified SSJS Platform functions that
+# cover the same job (e.g. Platform.Function.Base64Encode), each with a url to
+# its ssjs.guide page; [] when none.
 #
 # verified: true means the function completed a runtime verification sweep AND
 # has a published reference page. Everything else is catalogued only — its
@@ -92,6 +126,16 @@ for (const f of functions) {
   out += `  mcn: ${f.mcnSince ? q(String(f.mcnSince)) : '""'}\n`;
   out += `  handlebarsEquivalent: ${f.handlebarsEquivalent ? q(f.handlebarsEquivalent) : '""'}\n`;
   if (f.handlebarsEquivalent) out += `  handlebarsExact: ${f.handlebarsExact !== false}\n`;
+  const ssjsList = AMP_TO_SSJS.get(slug) || [];
+  if (ssjsList.length > 0) {
+    out += `  ssjsEquivalents:\n`;
+    for (const eq of ssjsList) {
+      out += `    - name: ${q(eq.name)}\n`;
+      out += `      url: ${q(eq.url)}\n`;
+    }
+  } else {
+    out += `  ssjsEquivalents: []\n`;
+  }
   out += `  mcnNotes: ${q(f.mcnNotes ?? '')}\n`;
   out += `  description: ${q(f.description)}\n`;
   if (f.guideUrl) out += `  guideUrl: ${q(f.guideUrl)}\n`;
