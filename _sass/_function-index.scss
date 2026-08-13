@@ -1,0 +1,336 @@
+@use "variables" as *;
+
+// ── Catalog index (ampscript-function-index.html + handlebars-helper-index.html)
+//
+// One shared style sheet for both the AMPscript function index and the
+// Handlebars helper index. Both includes emit the same `.cat-*` markup, so the
+// two catalogs stay visually and behaviourally aligned instead of drifting
+// apart (ssjs.guide's `.sfi-*` function index is the template this mirrors).
+//
+// Rules that only ever match one of the two tables (e.g. the verified chip on
+// AMPscript rows, or the approximate marker on Handlebars rows) are harmless
+// no-ops on the other — no per-table branching is needed.
+
+.cat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-4;
+  align-items: flex-end;
+  margin: $space-6 0 $space-2;
+}
+
+.cat-control {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+
+  > label {
+    font-size: $text-xs;
+    color: $text-muted;
+  }
+
+  select,
+  input[type="search"] {
+    background: $bg-surface;
+    color: $text-primary;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    padding: 0.35em 0.6em;
+    font-size: $text-sm;
+  }
+}
+
+.cat-control--search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+
+  input[type="search"] {
+    width: 100%;
+  }
+}
+
+.cat-count {
+  color: $text-muted;
+  font-size: $text-sm;
+  margin: $space-3 0 $space-4;
+}
+
+.cat-empty {
+  background: $bg-elevated;
+  border: 1px dashed $border-default;
+  border-radius: $radius-md;
+  padding: $space-5;
+  color: $text-secondary;
+}
+
+// Wrap on wide screens; only fall back to horizontal scroll once the viewport
+// is narrow enough that the table collapses into cards (media query below).
+.cat-tablewrap {
+  overflow-x: hidden;
+}
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.5em 0.7em;
+  }
+
+  th {
+    font-size: $text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $text-muted;
+    border-bottom: 1px solid $border-default;
+  }
+
+  // The name column carries the longest content; give it roughly a quarter of
+  // the table so the remaining columns share the rest evenly.
+  th:first-child,
+  td:first-child {
+    width: 25%;
+  }
+
+  td code {
+    font-family: $font-mono;
+    // Long qualified names / object-shape return types are unbreakable tokens;
+    // let them wrap so a column can't force horizontal overflow.
+    overflow-wrap: anywhere;
+  }
+
+  // Muted return type, matching the ssjs.guide function index.
+  td.cat-ret code {
+    color: $text-muted;
+  }
+}
+
+// Between the card breakpoint and the wide layout the AMPscript-equivalent
+// column is the least essential, so it is dropped to keep the table readable.
+// Only the Handlebars index carries a `.cat-amp-col`; a no-op elsewhere.
+@media (min-width: 641px) and (max-width: 849px) {
+  .cat-amp-col {
+    display: none;
+  }
+}
+
+.cat-row.is-hidden {
+  display: none;
+}
+
+// Unverified AMPscript rows are catalogued, not proven; dim their name.
+.cat-row--unverified td:first-child code {
+  color: $text-secondary;
+}
+
+// Category label pill.
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.15em 0.6em;
+  border: 1px solid $border-default;
+  border-radius: $radius-full;
+  background: $bg-elevated;
+  color: $text-secondary;
+}
+
+// Runtime-verification chip. Only verified AMPscript rows carry one.
+.cat-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.15em 0.6em;
+  border: 1px solid;
+  border-radius: $radius-full;
+}
+
+.cat-state--verified {
+  color: $color-success;
+  background: rgba($color-success, 0.08);
+  border-color: rgba($color-success, 0.3);
+}
+
+// Inline badge next to a name. Neutral base; a colour modifier gives it meaning:
+//   --warning  AMPscript "differs" / "deprecated" notices (amber)
+//   --form     Handlebars call-form notes: block / subexpression only (purple)
+.cat-flag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.1em 0.5em;
+  margin-left: 0.35em;
+  border: 1px solid;
+  border-radius: $radius-full;
+}
+
+.cat-flag--warning {
+  border-color: rgba($color-warning, 0.3);
+  background: rgba($color-warning, 0.08);
+  color: $color-warning;
+}
+
+.cat-flag--form {
+  border-color: rgba($color-purple, 0.3);
+  background: rgba($color-purple, 0.08);
+  color: $color-purple;
+}
+
+.cat-flag--deprecated {
+  border-color: rgba($color-danger, 0.3);
+  background: rgba($color-danger, 0.08);
+  color: $color-danger;
+}
+
+// Approximate-mapping marker on a Handlebars row, e.g. a helper whose AMPscript
+// counterpart does the same job with a different call shape.
+.cat-approx {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.1em 0.5em;
+  margin-left: 0.35em;
+  border: 1px solid rgba($color-warning, 0.35);
+  background: rgba($color-warning, 0.1);
+  border-radius: $radius-full;
+  color: $color-warning;
+}
+
+// Marketing Cloud Next API version — numeric, right-aligned.
+.cat-ver {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: $text-secondary;
+}
+
+// Block syntax line shown beneath a Handlebars helper name.
+.cat-syntax {
+  display: block;
+  margin-top: 0.3em;
+  font-size: $text-xs;
+  color: $text-muted;
+}
+
+.cat-desc {
+  color: $text-secondary;
+  // Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow.
+  word-break: break-word;
+}
+
+// Secondary note under an AMPscript description (the Marketing Cloud Next caveat).
+.cat-note {
+  display: block;
+  margin-top: 0.25em;
+  font-size: $text-xs;
+  color: $text-muted;
+}
+
+.cat-legend {
+  font-size: $text-xs;
+  color: $text-muted;
+  margin: 0 0 $space-4;
+}
+
+// On phones the table is unreadable even when wrapped, so each row becomes a
+// stacked info card. The <td> label is drawn from its data-label attribute.
+@media (max-width: 640px) {
+  .cat-tablewrap {
+    overflow-x: auto;
+  }
+
+  .cat-table thead {
+    display: none;
+  }
+
+  .cat-table,
+  .cat-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .cat-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-bottom: $space-4;
+    padding: $space-4;
+    background: $bg-surface;
+    border: 1px solid $border-muted;
+    border-radius: $radius-md;
+  }
+
+  .cat-table td {
+    flex: 0 0 100%;
+    padding: $space-1 0;
+    text-align: left;
+  }
+
+  // The name and its return type form the card heading, sharing the first line
+  // ("ReplaceList Verified → string"); everything else wraps beneath. Explicit
+  // order keeps that pair first even though Returns sits later in the markup.
+  .cat-table td:first-child {
+    order: 1;
+    flex: 1 1 auto;
+    margin-bottom: $space-1;
+    font-size: $text-sm;
+  }
+
+  .cat-table td.cat-ret {
+    order: 2;
+    flex: 0 0 auto;
+    align-self: baseline;
+  }
+
+  // Return type reads as "→ Type" here (card mode only) to echo a signature; on
+  // desktop the arrow would force the narrow column to wrap.
+  .cat-ret code::before {
+    content: "\2192\00a0";
+    color: $text-muted;
+  }
+
+  // Full-width, zero-height flex break: forces every meta cell onto a new row so
+  // the heading line is only the name + return type. A shrinking name cell alone
+  // cannot guarantee this — flex would let a meta cell share the line.
+  .cat-row::after {
+    content: "";
+    order: 3;
+    flex: 0 0 100%;
+    height: 0;
+  }
+
+  // Category, API version and the mapping cell share the next row. Each sizes to
+  // its own content and only wraps when it no longer fits — flex handles spacing.
+  .cat-table td.cat-meta {
+    order: 4;
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cat-table td.cat-desc {
+    order: 5;
+  }
+
+  .cat-table td.cat-ver {
+    text-align: left;
+  }
+
+  // Each meta cell keeps its label on its own line above the value; Name, Returns
+  // (arrow-prefixed) and Description (self-evident) drop theirs.
+  .cat-table td.cat-meta::before {
+    content: attr(data-label) ":";
+    margin-bottom: 0.15em;
+    font-weight: 600;
+    color: $text-muted;
+  }
+}

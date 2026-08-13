@@ -1,9 +1,9 @@
 {% comment %}
   Renders the searchable / filterable / sortable AMPscript function catalog table.
 
-  Shares its shape with ssjs.guide's function index (name, category, returns,
-  description) and with differs-from-docs-list.html's control strip, so the two
-  sites stay visually and behaviourally aligned instead of drifting apart.
+  Shares its shape and `.cat-*` styling (in _sass/_function-index.scss) with
+  handlebars-helper-index.html so the two catalogs stay visually and
+  behaviourally aligned instead of drifting apart.
 
   Usage:
     {% include ampscript-function-index.html entries=site.data.ampscript_functions
@@ -30,8 +30,6 @@
   Verification always happens on Engagement, so the link target stays under
   /engagement/ even when the table is rendered in the Next section.
 
-  Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
-
   `description` MUST be escaped. Several catalog descriptions contain raw HTML
   tag names (BuildOptionList mentions <option> and <select>); emitted verbatim
   they open elements Kramdown never sees closed, which terminates the raw-HTML
@@ -50,261 +48,15 @@
 {% assign afi_show_mapping = false %}
 {% if include.show_handlebars or include.show_mapping %}{% assign afi_show_mapping = true %}{% endif %}
 
-<style>
-.afi-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-  margin: 1.5rem 0 0.5rem;
-}
-.afi-control {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.afi-control > label {
-  font-size: 0.75rem;
-  color: #64748b;
-}
-.afi-control select,
-.afi-control input[type="search"] {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  padding: 0.35em 0.6em;
-  font-size: 0.85rem;
-}
-.afi-control--search {
-  flex: 1 1 16rem;
-  min-width: 12rem;
-}
-.afi-control--search input[type="search"] {
-  width: 100%;
-}
-.afi-count {
-  color: #64748b;
-  font-size: 0.8rem;
-  margin: 0.75rem 0 1rem;
-}
-.afi-empty {
-  background: #f1f5f9;
-  border: 1px dashed #cbd5e1;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
-  color: #475569;
-}
-/* Wrap on wide screens; only fall back to horizontal scroll once the viewport
-   is narrow enough that the table collapses into cards (media query below). */
-.afi-tablewrap {
-  overflow-x: hidden;
-}
-.afi-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-.afi-table th,
-.afi-table td {
-  text-align: left;
-  vertical-align: top;
-  padding: 0.5em 0.7em;
-}
-.afi-table th {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-  border-bottom: 1px solid #cbd5e1;
-}
-/* The Function column carries the longest content; give it roughly a quarter of
-   the table so the remaining columns share the rest evenly. */
-.afi-table th:first-child,
-.afi-table td:first-child {
-  width: 25%;
-}
-.afi-table td code {
-  font-family: monospace;
-  /* Long qualified names / object-shape return types are unbreakable tokens;
-     let them wrap so a column can't force horizontal overflow. */
-  overflow-wrap: anywhere;
-}
-/* Muted return type, matching the ssjs.guide function index (its $text-muted). */
-.afi-table td.afi-ret code {
-  color: #64748b;
-}
-.afi-row.is-hidden {
-  display: none;
-}
-.afi-row--unverified td:first-child code {
-  color: #475569;
-}
-/* Category label pill — same shape as .dfd-tag. */
-.afi-tag {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.7rem;
-  padding: 0.15em 0.6em;
-  border: 1px solid #cbd5e1;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: #475569;
-}
-/* Verified chip — reuses .verified-badge sizing. Only verified rows carry one;
-   its absence is what marks a row as merely catalogued. Sits after the name and
-   may wrap onto its own line when the column is narrow. */
-.afi-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  white-space: nowrap;
-  font-size: 0.7rem;
-  padding: 0.15em 0.6em;
-  border: 1px solid;
-  border-radius: 9999px;
-}
-.afi-state--verified {
-  color: #15803d;
-  background: rgba(21, 128, 61, 0.08);
-  border-color: rgba(21, 128, 61, 0.3);
-}
-.afi-flag {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.68rem;
-  padding: 0.1em 0.5em;
-  margin-left: 0.35em;
-  border: 1px solid rgba(161, 98, 7, 0.3);
-  border-radius: 9999px;
-  background: rgba(161, 98, 7, 0.08);
-  color: #a16207;
-}
-.afi-flag--deprecated {
-  border-color: rgba(185, 28, 28, 0.3);
-  background: rgba(185, 28, 28, 0.08);
-  color: #b91c1c;
-}
-.afi-desc {
-  color: #475569;
-  /* Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow. */
-  word-break: break-word;
-}
-/* Marketing Cloud Next API version — numeric, right-aligned like the old
-   generated markdown table it replaced. */
-.afi-ver {
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  color: #475569;
-}
-.afi-note {
-  display: block;
-  margin-top: 0.25em;
-  font-size: 0.78rem;
-  color: #64748b;
-}
-.afi-legend {
-  font-size: 0.78rem;
-  color: #64748b;
-  margin: 0 0 1rem;
-}
-/* On phones the table is unreadable even when wrapped, so each row becomes a
-   stacked info card. The td label is drawn from its data-label attribute. */
-@media (max-width: 640px) {
-  .afi-tablewrap {
-    overflow-x: auto;
-  }
-  .afi-table thead {
-    display: none;
-  }
-  .afi-table,
-  .afi-table tbody {
-    display: block;
-    width: 100%;
-  }
-  .afi-row {
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 1.25rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-  }
-  .afi-table td {
-    flex: 0 0 100%;
-    padding: 0.25rem 0;
-    text-align: left;
-  }
-  /* The name and its return type form the card heading, sharing the first line
-     ("ReplaceList Verified → string"); everything else wraps beneath. Explicit
-     order keeps that pair first even though Returns sits later in the markup. */
-  .afi-table td:first-child {
-    order: 1;
-    flex: 1 1 auto;
-    margin-bottom: 0.25rem;
-    font-size: 14px;
-  }
-  .afi-table td.afi-ret {
-    order: 2;
-    flex: 0 0 auto;
-    align-self: baseline;
-  }
-  /* Return type reads as "→ Type" here (card mode only) to echo a function
-     signature; on desktop the arrow would force the narrow column to wrap. */
-  .afi-ret code::before {
-    content: "\2192\00a0";
-    color: #94a3b8;
-  }
-  /* Full-width, zero-height flex break: forces every meta cell onto a new row
-     so the heading line is only the name + return type. A shrinking name cell
-     alone cannot guarantee this — flex would let Category share the line. */
-  .afi-row::after {
-    content: "";
-    order: 3;
-    flex: 0 0 100%;
-    height: 0;
-  }
-  .afi-table td.afi-meta {
-    order: 4;
-  }
-  .afi-table td.afi-desc {
-    order: 5;
-  }
-  /* Category, API version and Handlebars share the next row. Each sizes to its
-     own content and only wraps when it no longer fits — flex handles spacing. */
-  .afi-table td.afi-meta {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .afi-table td.afi-ver {
-    text-align: left;
-  }
-  /* Each meta cell keeps its name on its own line above the value; Returns
-     (arrow-prefixed) and Description (self-evident) still drop theirs. */
-  .afi-table td.afi-meta::before {
-    content: attr(data-label) ":";
-    margin-bottom: 0.15em;
-    font-weight: 600;
-    color: #64748b;
-  }
-}
-</style>
-
 {% if afi_count > 0 %}
 {% assign afi_verified = afi_entries | where: "verified", true | size %}
 
-<div class="afi-controls">
-  <div class="afi-control afi-control--search">
+<div class="cat-controls">
+  <div class="cat-control cat-control--search">
     <label for="afi-search">Search</label>
     <input type="search" id="afi-search" placeholder="Filter by name (e.g. FormatDate)" autocomplete="off" spellcheck="false">
   </div>
-  <div class="afi-control">
+  <div class="cat-control">
     <label for="afi-category">Category</label>
     <select id="afi-category">
       <option value="" selected>All categories</option>
@@ -314,7 +66,7 @@
       {% endfor %}
     </select>
   </div>
-  <div class="afi-control">
+  <div class="cat-control">
     <label for="afi-state">Verification</label>
     <select id="afi-state">
       <option value="" selected>All functions</option>
@@ -323,7 +75,7 @@
     </select>
   </div>
   {%- if afi_show_mapping %}
-  <div class="afi-control">
+  <div class="cat-control">
     <label for="afi-mapping">Handlebars mapping</label>
     <select id="afi-mapping">
       <option value="" selected>All functions</option>
@@ -332,7 +84,7 @@
     </select>
   </div>
   {%- endif %}
-  <div class="afi-control">
+  <div class="cat-control">
     <label for="afi-sort">Sort by</label>
     <select id="afi-sort">
       <option value="name" selected>Name (A &rarr; Z)</option>
@@ -345,18 +97,18 @@
   </div>
 </div>
 
-<p class="afi-count" id="afi-count"></p>
+<p class="cat-count" id="afi-count"></p>
 
-<p class="afi-legend">
-  <span class="afi-state afi-state--verified">Verified</span> means the function completed a runtime
+<p class="cat-legend">
+  <span class="cat-state cat-state--verified">Verified</span> means the function completed a runtime
   sweep on a live Engagement CloudPage and has a reference page — the name links to it. A name without
   the badge is listed from the language catalog and has <strong>not</strong> been proven here; use
   <a href="https://ampscript.guide/" target="_blank" rel="noopener">ampscript.guide</a> for those until a
   sweep reaches them.
 </p>
 
-<div class="afi-tablewrap">
-  <table class="afi-table">
+<div class="cat-tablewrap">
+  <table class="cat-table">
     <thead>
       <tr>
         <th>Function</th>
@@ -368,7 +120,7 @@
     </thead>
     <tbody id="afi-body">
       {%- for f in afi_entries %}
-      <tr class="afi-row{% unless f.verified %} afi-row--unverified{% endunless %}"
+      <tr class="cat-row{% unless f.verified %} cat-row--unverified{% endunless %}"
           data-name="{{ f.name | downcase | escape }}"
           data-category="{{ f.category | escape }}"
           data-state="{% if f.verified %}verified{% else %}unverified{% endif %}"
@@ -377,20 +129,20 @@
           id="fn-{{ f.slug }}">
         <td data-label="Function">
           {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
-          {%- if f.verified %} <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
-          {%- if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
-          {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
+          {%- if f.verified %} <span class="cat-state cat-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
+          {%- if f.deprecated %}<span class="cat-flag cat-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
+          {%- if f.differsFromDocs %}<span class="cat-flag cat-flag--warning" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
         {%- if include.show_mcn %}
-        <td class="afi-ver afi-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
+        <td class="cat-ver cat-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         {%- if include.show_handlebars %}
-        <td class="afi-meta" data-label="Handlebars">
+        <td class="cat-meta" data-label="Handlebars">
           {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
         </td>
         {%- endif %}
-        <td class="afi-ret" data-label="Returns"><code>{{ f.returnType }}</code></td>
-        <td class="afi-desc" data-label="Description">{{ f.description | escape }}{% if include.show_handlebars and f.mcnNotes != "" %}<span class="afi-note">{{ f.mcnNotes | escape }}</span>{% endif %}</td>
+        <td class="cat-ret" data-label="Returns"><code>{{ f.returnType }}</code></td>
+        <td class="cat-desc" data-label="Description">{{ f.description | escape }}{% if include.show_handlebars and f.mcnNotes != "" %}<span class="cat-note">{{ f.mcnNotes | escape }}</span>{% endif %}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -409,7 +161,7 @@
   var body = document.getElementById("afi-body");
   if (!body) { return; }
 
-  var rows = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+  var rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   var TOTAL = rows.length;
   var VERIFIED = {{ afi_verified }};
   var NOUN = {{ afi_noun | jsonify }};
@@ -466,7 +218,7 @@
 
   function sortRows() {
     var mode = sortSel ? sortSel.value : "name";
-    var group = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+    var group = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
     var ordered;
 
     if (mode === "category") {
@@ -525,7 +277,7 @@
       body.appendChild(ordered[o]);
     }
     // Rebuild the master row list to reflect new DOM order.
-    rows = Array.prototype.slice.call(body.querySelectorAll(".afi-row"));
+    rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   }
 
   function refresh() {
@@ -543,5 +295,5 @@
 })();
 </script>
 {% else %}
-<p class="afi-empty">{{ include.empty }}</p>
+<p class="cat-empty">{{ include.empty }}</p>
 {% endif %}

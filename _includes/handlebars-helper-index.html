@@ -1,8 +1,9 @@
 {% comment %}
   Renders the searchable / filterable / sortable Handlebars helper catalog table.
 
-  Shares its shape and behaviour with ampscript-function-index.html so the two
-  catalogs on the Next pages stay visually aligned instead of drifting apart.
+  Shares its shape, behaviour and `.cat-*` styling (in _sass/_function-index.scss)
+  with ampscript-function-index.html so the two catalogs on the Next pages stay
+  visually aligned instead of drifting apart.
 
   Usage:
     {% include handlebars-helper-index.html entries=site.data.handlebars_helpers
@@ -24,8 +25,6 @@
   has been through a runtime sweep yet, so every row links out to the official
   Salesforce reference instead of to a page on this site.
 
-  Hex literals mirror _sass/_variables.scss (SCSS vars are compile-time only).
-
   `description` MUST be escaped, for the same reason as in the AMPscript index:
   a raw HTML tag name in a catalog description opens an element Kramdown never
   sees closed, which terminates the raw-HTML block and dumps the rest of the
@@ -46,254 +45,15 @@
 {% assign hbi_show_mapping = false %}
 {% unless include.unmapped_only %}{% if hbi_show_amp or include.show_mapping %}{% assign hbi_show_mapping = true %}{% endif %}{% endunless %}
 
-<style>
-.hbi-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-  margin: 1.5rem 0 0.5rem;
-}
-.hbi-control {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.hbi-control > label {
-  font-size: 0.75rem;
-  color: #64748b;
-}
-.hbi-control select,
-.hbi-control input[type="search"] {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  padding: 0.35em 0.6em;
-  font-size: 0.85rem;
-}
-.hbi-control--search {
-  flex: 1 1 16rem;
-  min-width: 12rem;
-}
-.hbi-control--search input[type="search"] {
-  width: 100%;
-}
-.hbi-count {
-  color: #64748b;
-  font-size: 0.8rem;
-  margin: 0.75rem 0 1rem;
-}
-.hbi-empty {
-  background: #f1f5f9;
-  border: 1px dashed #cbd5e1;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
-  color: #475569;
-}
-/* Wrap on wide screens; only fall back to horizontal scroll once the viewport
-   is narrow enough that the table collapses into cards (media query below). */
-.hbi-tablewrap {
-  overflow-x: hidden;
-}
-.hbi-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-.hbi-table th,
-.hbi-table td {
-  text-align: left;
-  vertical-align: top;
-  padding: 0.5em 0.7em;
-}
-.hbi-table th {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-  border-bottom: 1px solid #cbd5e1;
-}
-/* The Helper column carries the longest content; give it roughly a quarter of
-   the table so the remaining columns share the rest evenly. */
-.hbi-table th:first-child,
-.hbi-table td:first-child {
-  width: 25%;
-}
-/* Between the card breakpoint and the wide layout the AMPscript-equivalent
-   column is the least essential, so it is dropped to keep the table readable. */
-@media (min-width: 641px) and (max-width: 849px) {
-  .hbi-amp-col {
-    display: none;
-  }
-}
-.hbi-table td code {
-  font-family: monospace;
-  /* Long qualified names / object-shape return types are unbreakable tokens;
-     let them wrap so a column can't force horizontal overflow. */
-  overflow-wrap: anywhere;
-}
-/* Muted return type, matching the ssjs.guide function index (its $text-muted). */
-.hbi-table td.hbi-ret code {
-  color: #64748b;
-}
-.hbi-row.is-hidden {
-  display: none;
-}
-/* Category label pill — same shape as .afi-tag. */
-.hbi-tag {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.7rem;
-  padding: 0.15em 0.6em;
-  border: 1px solid #cbd5e1;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: #475569;
-}
-/* Origin / call-form flag, e.g. "block" or "subexpression only". */
-.hbi-flag {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.68rem;
-  padding: 0.1em 0.5em;
-  margin-left: 0.35em;
-  border: 1px solid rgba(109, 40, 217, 0.3);
-  border-radius: 9999px;
-  background: rgba(109, 40, 217, 0.08);
-  color: #6d28d9;
-}
-/* Approximate-mapping marker, e.g. ContentBlockByKey -> getContentBlock. */
-.hbi-approx {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.68rem;
-  padding: 0.1em 0.5em;
-  margin-left: 0.35em;
-  border: 1px solid rgba(202, 138, 4, 0.35);
-  border-radius: 9999px;
-  background: rgba(202, 138, 4, 0.1);
-  color: #a16207;
-}
-.hbi-ver {
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  color: #475569;
-}
-.hbi-syntax {
-  display: block;
-  margin-top: 0.3em;
-  font-size: 0.75rem;
-  color: #64748b;
-}
-.hbi-desc {
-  color: #475569;
-  /* Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow. */
-  word-break: break-word;
-}
-.hbi-legend {
-  font-size: 0.78rem;
-  color: #64748b;
-  margin: 0 0 1rem;
-}
-/* On phones the table is unreadable even when wrapped, so each row becomes a
-   stacked info card. The td label is drawn from its data-label attribute. */
-@media (max-width: 640px) {
-  .hbi-tablewrap {
-    overflow-x: auto;
-  }
-  .hbi-table thead {
-    display: none;
-  }
-  .hbi-table,
-  .hbi-table tbody {
-    display: block;
-    width: 100%;
-  }
-  .hbi-row {
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 1.25rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-  }
-  .hbi-table td {
-    flex: 0 0 100%;
-    padding: 0.25rem 0;
-    text-align: left;
-  }
-  /* The name and its return type form the card heading, sharing the first line
-     ("filter → array"); everything else wraps beneath. Explicit order keeps that
-     pair first even though Returns sits later in the markup. */
-  .hbi-table td:first-child {
-    order: 1;
-    flex: 1 1 auto;
-    margin-bottom: 0.25rem;
-    font-size: 14px;
-  }
-  .hbi-table td.hbi-ret {
-    order: 2;
-    flex: 0 0 auto;
-    align-self: baseline;
-  }
-    /* Return type reads as "→ Type" here (card mode only) to echo a function
-     signature; on desktop the arrow would force the narrow column to wrap. */
-  .hbi-ret code::before {
-    content: "\2192\00a0";
-    color: #94a3b8;
-  }
-  /* Full-width, zero-height flex break: forces every meta cell onto a new row
-     so the heading line is only the name + return type. A shrinking name cell
-     alone cannot guarantee this — flex would let Category share the line. */
-  .hbi-row::after {
-    content: "";
-    order: 3;
-    flex: 0 0 100%;
-    height: 0;
-  }
-  .hbi-table td.hbi-meta {
-    order: 4;
-  }
-  .hbi-table td.hbi-desc {
-    order: 5;
-  }
-  /* Category, API version and AMPscript share the next row. Each sizes to its
-     own content and only wraps when it no longer fits — flex handles spacing. */
-  .hbi-table td.hbi-meta {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .hbi-table td.hbi-ver {
-    text-align: left;
-  }
-  /* Each meta cell keeps its name on its own line above the value; Returns
-     (arrow-prefixed) and Description (self-evident) still drop theirs. */
-  .hbi-table td.hbi-meta::before {
-    content: attr(data-label) ":";
-    margin-bottom: 0.15em;
-    font-weight: 600;
-    color: #64748b;
-  }
-}
-</style>
-
 {% if hbi_count > 0 %}
 {% assign hbi_mapped = hbi_entries | where_exp: "h", "h.ampscriptEquivalent != ''" | size %}
 
-<div class="hbi-controls">
-  <div class="hbi-control hbi-control--search">
+<div class="cat-controls">
+  <div class="cat-control cat-control--search">
     <label for="hbi-search">Search</label>
     <input type="search" id="hbi-search" placeholder="Filter by name (e.g. formatDate)" autocomplete="off" spellcheck="false">
   </div>
-  <div class="hbi-control">
+  <div class="cat-control">
     <label for="hbi-category">Category</label>
     <select id="hbi-category">
       <option value="" selected>All categories</option>
@@ -303,7 +63,7 @@
       {% endfor %}
     </select>
   </div>
-  <div class="hbi-control">
+  <div class="cat-control">
     <label for="hbi-origin">Origin</label>
     <select id="hbi-origin">
       <option value="" selected>All origins</option>
@@ -313,7 +73,7 @@
     </select>
   </div>
   {%- if hbi_show_mapping %}
-  <div class="hbi-control">
+  <div class="cat-control">
     <label for="hbi-mapping">AMPscript mapping</label>
     <select id="hbi-mapping">
       <option value="" selected>All helpers</option>
@@ -322,7 +82,7 @@
     </select>
   </div>
   {%- endif %}
-  <div class="hbi-control">
+  <div class="cat-control">
     <label for="hbi-sort">Sort by</label>
     <select id="hbi-sort">
       <option value="name" selected>Name (A &rarr; Z)</option>
@@ -332,9 +92,9 @@
   </div>
 </div>
 
-<p class="hbi-count" id="hbi-count"></p>
+<p class="cat-count" id="hbi-count"></p>
 
-<p class="hbi-legend">
+<p class="cat-legend">
   Every helper links to the official Salesforce reference &mdash; none of them has been through a
   runtime sweep on this site yet. <strong>API version</strong> is the Marketing Cloud Next Core API
   version the helper became available in.
@@ -342,20 +102,20 @@
   expressed in Handlebars.{% endif %}
 </p>
 
-<div class="hbi-tablewrap">
-  <table class="hbi-table">
+<div class="cat-tablewrap">
+  <table class="cat-table">
     <thead>
       <tr>
         <th>Helper</th>
         <th>API version</th>
-        {%- if hbi_show_amp %}<th class="hbi-amp-col">AMPscript</th>{% endif %}
+        {%- if hbi_show_amp %}<th class="cat-amp-col">AMPscript</th>{% endif %}
         <th>Returns</th>
         <th>Description</th>
       </tr>
     </thead>
     <tbody id="hbi-body">
       {%- for h in hbi_entries %}
-      <tr class="hbi-row"
+      <tr class="cat-row"
           data-name="{{ h.name | downcase | escape }}"
           data-category="{{ h.category | escape }}"
           data-origin="{{ h.origin | escape }}"
@@ -364,17 +124,17 @@
           id="hb-{{ h.slug }}">
         <td data-label="Helper">
           {% if h.docUrl %}<a href="{{ h.docUrl }}" target="_blank" rel="noopener"><code>{{ h.name }}</code></a>{% else %}<code>{{ h.name }}</code>{% endif %}
-          {%- if h.helperType == "block" %}<span class="hbi-flag" title="Block helper — wraps a body">block</span>{% endif %}
-          {%- if h.helperType == "both" %}<span class="hbi-flag" title="Usable inline and as a block helper">inline or block</span>{% endif %}
-          {%- if h.subexpressionOnly %}<span class="hbi-flag" title="Only valid inside another helper call">subexpression only</span>{% endif %}
-          <code class="hbi-syntax">{{ h.syntax | escape }}</code>
+          {%- if h.helperType == "block" %}<span class="cat-flag cat-flag--form" title="Block helper — wraps a body">block</span>{% endif %}
+          {%- if h.helperType == "both" %}<span class="cat-flag cat-flag--form" title="Usable inline and as a block helper">inline or block</span>{% endif %}
+          {%- if h.subexpressionOnly %}<span class="cat-flag cat-flag--form" title="Only valid inside another helper call">subexpression only</span>{% endif %}
+          <code class="cat-syntax">{{ h.syntax | escape }}</code>
         </td>
-        <td class="hbi-ver hbi-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
+        <td class="cat-ver cat-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- if hbi_show_amp %}
-        <td class="hbi-amp-col hbi-meta" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="hbi-flag" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="hbi-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
+        <td class="cat-amp-col cat-meta" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
-        <td class="hbi-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
-        <td class="hbi-desc" data-label="Description">{{ h.description | escape }}</td>
+        <td class="cat-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
+        <td class="cat-desc" data-label="Description">{{ h.description | escape }}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -393,7 +153,7 @@
   var body = document.getElementById("hbi-body");
   if (!body) { return; }
 
-  var rows = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+  var rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   var TOTAL = rows.length;
   var SUFFIX = {% if hbi_show_mapping %}" — {{ hbi_mapped }} with an AMPscript equivalent"{% else %}""{% endif %};
 
@@ -447,7 +207,7 @@
 
   function sortRows() {
     var mode = sortSel ? sortSel.value : "name";
-    var group = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+    var group = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
     var ordered;
 
     if (mode === "category") {
@@ -492,7 +252,7 @@
       body.appendChild(ordered[o]);
     }
     // Rebuild the master row list to reflect new DOM order.
-    rows = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
+    rows = Array.prototype.slice.call(body.querySelectorAll(".cat-row"));
   }
 
   function refresh() {
@@ -510,5 +270,5 @@
 })();
 </script>
 {% else %}
-<p class="hbi-empty">{{ include.empty }}</p>
+<p class="cat-empty">{{ include.empty }}</p>
 {% endif %}
