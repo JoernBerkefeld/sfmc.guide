@@ -51,8 +51,8 @@
 {% assign afi_noun = "functions" %}
 {% if include.mcn_only %}{% assign afi_noun = "Next functions" %}{% endif %}
 {% comment %} The Handlebars-mapping filter shows wherever a Handlebars mapping is
-   relevant: the ampscript-handlebars page (which renders the Handlebars column)
-   or any page that opts in with show_mapping=true even without the column. {% endcomment %}
+   relevant: any page that renders the Handlebars column (show_handlebars) or
+   opts in with show_mapping=true even without the column. {% endcomment %}
 {% assign afi_show_mapping = false %}
 {% if include.show_handlebars or include.show_mapping %}{% assign afi_show_mapping = true %}{% endif %}
 {% assign afi_show_ssjs_mapping = false %}

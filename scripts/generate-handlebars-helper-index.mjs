@@ -2,8 +2,7 @@
  * Regenerates _data/handlebars_helpers.yml from handlebars-data + ampscript-data.
  *
  * The file backs the searchable/filterable catalog table rendered by
- * _includes/handlebars-helper-index.html on /next/handlebars/helpers/ and, in
- * its unmapped-only form, on /next/ampscript-handlebars/.
+ * _includes/handlebars-helper-index.html on /next/handlebars/helpers/.
  *
  * handlebars-data holds no back-reference to AMPscript — the mapping lives in
  * ampscript-data as `handlebarsEquivalent`. This script inverts it so a page can
@@ -98,8 +97,7 @@ if (dangling.length > 0) {
 }
 
 let mapped = 0;
-let out = `# Handlebars helper catalog for /next/handlebars/helpers/ and, filtered to
-# rows with an empty ampscriptEquivalent, /next/ampscript-handlebars/.
+let out = `# Handlebars helper catalog for /next/handlebars/helpers/.
 #
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate with: node sfmc.guide/scripts/generate-handlebars-helper-index.mjs

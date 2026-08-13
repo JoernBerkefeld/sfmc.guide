@@ -10,7 +10,7 @@
 # Row format (all keys except `testScript` and `officialUrl` are required):
 #
 # - name: "FunctionName"                       # AMPscript function / construct as written in code
-#   url: "/next/ampscript-handlebars/#anchor"  # sfmc.guide page documenting it (omit if none yet)
+#   url: "/next/ampscript/functions/#anchor"   # sfmc.guide page documenting it (omit if none yet)
 #   officialUrl: "https://..."                 # the official Salesforce doc page that is wrong
 #   tagline: "short one-line summary of the discrepancy"
 #   category: "Date functions"                 # ampscript-data category, shown as a pill

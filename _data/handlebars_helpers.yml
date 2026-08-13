@@ -1,5 +1,4 @@
-# Handlebars helper catalog for /next/handlebars/helpers/ and, filtered to
-# rows with an empty ampscriptEquivalent, /next/ampscript-handlebars/.
+# Handlebars helper catalog for /next/handlebars/helpers/.
 #
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate with: node sfmc.guide/scripts/generate-handlebars-helper-index.mjs

@@ -21,7 +21,6 @@ Marketing Cloud Next runs a **subset** of the AMPscript surface that Engagement 
 
 ## Related
 
-- [AMPscript and Handlebars](/next/ampscript-handlebars/) — how the two languages sit side by side in a Next template
 - [Handlebars helper reference](/next/handlebars/helpers/) — the full helper catalog, including the ones with no AMPscript counterpart
 - [Differs from official docs (Next)](/next/differs-from-docs/) — where runtime behaviour contradicts the official reference
 - [Full AMPscript catalog (Engagement)](/engagement/ampscript/functions/) — every function, including the ones Next does not support

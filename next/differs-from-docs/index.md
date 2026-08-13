@@ -13,7 +13,7 @@ The official AMPscript documentation is not always right, and Marketing Cloud Ne
 
 {% include callout.html type="note" title="No SSJS on Next" content="Server-Side JavaScript is not an authoring language on Marketing Cloud Next, so SSJS runtime quirks are out of scope for this page and for the Next platform in general." %}
 
-{% include callout.html type="tip" title="Check availability first" content="A quirk only matters here if the function is supported on Next at all. The [AMPscript and Handlebars](/next/ampscript-handlebars/) page lists the supported set and the API version each function arrived in. Engagement-specific findings live on [AMPscript Differs from Official Docs (Engagement)](/engagement/differs-from-docs/)." %}
+{% include callout.html type="tip" title="Check availability first" content="A quirk only matters here if the function is supported on Next at all. The [AMPscript function reference (Next)](/next/ampscript/functions/) page lists the supported set and the API version each function arrived in. Engagement-specific findings live on [AMPscript Differs from Official Docs (Engagement)](/engagement/differs-from-docs/)." %}
 
 ## How to read an entry
 

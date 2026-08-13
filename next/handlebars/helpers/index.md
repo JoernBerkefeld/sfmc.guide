@@ -23,6 +23,5 @@ Handlebars is the templating language of Marketing Cloud Next. This page lists e
 
 ## Related
 
-- [AMPscript and Handlebars](/next/ampscript-handlebars/) — how the two languages sit side by side in a Next template
 - [AMPscript function reference (Next)](/next/ampscript/functions/) — the AMPscript subset Next supports
 - [Differs from official docs (Next)](/next/differs-from-docs/) — where runtime behaviour contradicts the official reference

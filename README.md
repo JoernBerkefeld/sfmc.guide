@@ -24,7 +24,7 @@ node sfmc.guide/scripts/generate-site-content.mjs
 node sfmc.guide/scripts/generate-tools.mjs
 ```
 
-`generate:all` rebuilds `_data/ampscript_functions.yml`, `_data/handlebars_helpers.yml`, `site-index.json` and the Rouge catalogs. The two `_data` files back the function and helper index tables on `/engagement/ampscript/functions/`, `/next/ampscript/functions/`, `/next/handlebars/helpers/` and `/next/ampscript-handlebars/` — regenerate them whenever `ampscript-data` or `handlebars-data` changes. The pre-commit hook runs all four for you, so running them by hand is only needed to preview the result.
+`generate:all` rebuilds `_data/ampscript_functions.yml`, `_data/handlebars_helpers.yml`, `site-index.json` and the Rouge catalogs. The two `_data` files back the function and helper index tables on `/engagement/ampscript/functions/`, `/next/ampscript/functions/` and `/next/handlebars/helpers/` — regenerate them whenever `ampscript-data` or `handlebars-data` changes. The pre-commit hook runs all four for you, so running them by hand is only needed to preview the result.
 
 `generate-site-content.mjs` and `generate-tools.mjs` are **not** part of the hook and overwrite tracked pages under `engagement/` and `tools/` from `../SFMC-Cookbook` and a catalog inside the script. Run them only when you intend to re-scaffold those pages, and review the diff — they will revert hand-edits.
 

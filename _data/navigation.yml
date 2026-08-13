@@ -232,8 +232,6 @@
   children:
     - title: Overview
       url: /next/
-    - title: AMPscript & Handlebars
-      url: /next/ampscript-handlebars/
     - title: AMPscript Function Index
       url: /next/ampscript/functions/
     - title: Handlebars Helper Index

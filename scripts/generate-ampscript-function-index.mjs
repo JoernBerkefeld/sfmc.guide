@@ -82,8 +82,7 @@ const functions = [...amp.FUNCTIONS].sort((a, b) => a.name.localeCompare(b.name)
 let verified = 0;
 let orphanPages = new Set(slugs);
 let out = `# AMPscript function catalog for /engagement/ampscript/functions/ and,
-# filtered to rows with a non-empty mcn, /next/ampscript/functions/ and
-# /next/ampscript-handlebars/.
+# filtered to rows with a non-empty mcn, /next/ampscript/functions/.
 #
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate with: node sfmc.guide/scripts/generate-ampscript-function-index.mjs
