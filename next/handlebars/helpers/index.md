@@ -18,6 +18,7 @@ Handlebars is the templating language of Marketing Cloud Next. This page lists e
 ## All helpers
 
 {% include handlebars-helper-index.html entries=site.data.handlebars_helpers
+   show_amp=false show_mapping=true
    empty="No Handlebars helpers catalogued yet." %}
 
 ## Related

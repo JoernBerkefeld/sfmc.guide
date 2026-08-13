@@ -17,6 +17,8 @@
     show_mcn        (bool)   - add the "API version" column and its sort mode.
     show_handlebars (bool)   - add the "Handlebars" column (equivalent helper +
                                the MCN caveat from `mcnNotes`).
+    show_mapping    (bool)   - add the "Handlebars mapping" filter without the
+                               column (show_handlebars implies this too).
 
   Row fields come from scripts/generate-ampscript-function-index.mjs:
     name, slug, category, syntax, returnType, verified, url,
@@ -42,6 +44,11 @@
 {% assign afi_count = afi_entries | size %}
 {% assign afi_noun = "functions" %}
 {% if include.mcn_only %}{% assign afi_noun = "Next functions" %}{% endif %}
+{% comment %} The Handlebars-mapping filter shows wherever a Handlebars mapping is
+   relevant: the ampscript-handlebars page (which renders the Handlebars column)
+   or any page that opts in with show_mapping=true even without the column. {% endcomment %}
+{% assign afi_show_mapping = false %}
+{% if include.show_handlebars or include.show_mapping %}{% assign afi_show_mapping = true %}{% endif %}
 
 <style>
 .afi-controls {
@@ -88,8 +95,10 @@
   padding: 1.25rem;
   color: #475569;
 }
+/* Wrap on wide screens; only fall back to horizontal scroll once the viewport
+   is narrow enough that the table collapses into cards (media query below). */
 .afi-tablewrap {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 .afi-table {
   width: 100%;
@@ -101,7 +110,6 @@
   text-align: left;
   vertical-align: top;
   padding: 0.5em 0.7em;
-  border-bottom: 1px solid #e2e8f0;
 }
 .afi-table th {
   font-size: 0.72rem;
@@ -109,10 +117,18 @@
   letter-spacing: 0.04em;
   color: #64748b;
   border-bottom: 1px solid #cbd5e1;
-  white-space: nowrap;
+}
+/* The Function column carries the longest content; give it roughly a quarter of
+   the table so the remaining columns share the rest evenly. */
+.afi-table th:first-child,
+.afi-table td:first-child {
+  width: 25%;
 }
 .afi-table td code {
   font-family: monospace;
+  /* Long qualified names / object-shape return types are unbreakable tokens;
+     let them wrap so a column can't force horizontal overflow. */
+  overflow-wrap: anywhere;
 }
 .afi-row.is-hidden {
   display: none;
@@ -169,6 +185,8 @@
 }
 .afi-desc {
   color: #475569;
+  /* Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow. */
+  word-break: break-word;
 }
 /* Marketing Cloud Next API version — numeric, right-aligned like the old
    generated markdown table it replaced. */
@@ -188,6 +206,89 @@
   font-size: 0.78rem;
   color: #64748b;
   margin: 0 0 1rem;
+}
+/* On phones the table is unreadable even when wrapped, so each row becomes a
+   stacked info card. The td label is drawn from its data-label attribute. */
+@media (max-width: 640px) {
+  .afi-tablewrap {
+    overflow-x: auto;
+  }
+  .afi-table thead {
+    display: none;
+  }
+  .afi-table,
+  .afi-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .afi-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+  }
+  .afi-table td {
+    flex: 0 0 100%;
+    padding: 0.25rem 0;
+    text-align: left;
+  }
+  /* The name and its return type form the card heading, sharing the first line
+     ("ReplaceList Verified → string"); everything else wraps beneath. Explicit
+     order keeps that pair first even though Returns sits later in the markup. */
+  .afi-table td:first-child {
+    order: 1;
+    flex: 1 1 auto;
+    margin-bottom: 0.25rem;
+    font-size: 14px;
+  }
+  .afi-table td.afi-ret {
+    order: 2;
+    flex: 0 0 auto;
+    align-self: baseline;
+  }
+  /* Return type reads as "→ Type" here (card mode only) to echo a function
+     signature; on desktop the arrow would force the narrow column to wrap. */
+  .afi-ret code::before {
+    content: "\2192\00a0";
+    color: #94a3b8;
+  }
+  /* Full-width, zero-height flex break: forces every meta cell onto a new row
+     so the heading line is only the name + return type. A shrinking name cell
+     alone cannot guarantee this — flex would let Category share the line. */
+  .afi-row::after {
+    content: "";
+    order: 3;
+    flex: 0 0 100%;
+    height: 0;
+  }
+  .afi-table td.afi-meta {
+    order: 4;
+  }
+  .afi-table td.afi-desc {
+    order: 5;
+  }
+  /* Category, API version and Handlebars share the next row. Each sizes to its
+     own content and only wraps when it no longer fits — flex handles spacing. */
+  .afi-table td.afi-meta {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .afi-table td.afi-ver {
+    text-align: left;
+  }
+  /* Each meta cell keeps its name on its own line above the value; Returns
+     (arrow-prefixed) and Description (self-evident) still drop theirs. */
+  .afi-table td.afi-meta::before {
+    content: attr(data-label) ":";
+    margin-bottom: 0.15em;
+    font-weight: 600;
+    color: #64748b;
+  }
 }
 </style>
 
@@ -217,6 +318,16 @@
       <option value="unverified">Not yet verified</option>
     </select>
   </div>
+  {%- if afi_show_mapping %}
+  <div class="afi-control">
+    <label for="afi-mapping">Handlebars mapping</label>
+    <select id="afi-mapping">
+      <option value="" selected>All functions</option>
+      <option value="mapped">Has a Handlebars equivalent</option>
+      <option value="unmapped">AMPscript only</option>
+    </select>
+  </div>
+  {%- endif %}
   <div class="afi-control">
     <label for="afi-sort">Sort by</label>
     <select id="afi-sort">
@@ -247,8 +358,8 @@
         <th>Function</th>
         <th>Category</th>
         {%- if include.show_mcn %}<th>API version</th>{% endif %}
-        <th>Returns</th>
         {%- if include.show_handlebars %}<th>Handlebars</th>{% endif %}
+        <th>Returns</th>
         <th>Description</th>
       </tr>
     </thead>
@@ -258,26 +369,26 @@
           data-name="{{ f.name | downcase | escape }}"
           data-category="{{ f.category | escape }}"
           data-state="{% if f.verified %}verified{% else %}unverified{% endif %}"
+          data-mapping="{% if f.handlebarsEquivalent != '' %}mapped{% else %}unmapped{% endif %}"
           data-version="{{ f.mcn }}"
           id="fn-{{ f.slug }}">
-        <td>
+        <td data-label="Function">
           {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
           {%- if f.verified %} <span class="afi-state afi-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
           {%- if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
           {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
-        <td><span class="afi-tag">{{ f.category }}</span></td>
+        <td class="afi-meta" data-label="Category"><span class="afi-tag">{{ f.category }}</span></td>
         {%- if include.show_mcn %}
-        <td class="afi-ver">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
+        <td class="afi-ver afi-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
-        <td><code>{{ f.returnType }}</code></td>
         {%- if include.show_handlebars %}
-        <td>
+        <td class="afi-meta" data-label="Handlebars">
           {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
-          {%- if f.mcnNotes != "" %}<span class="afi-note">{{ f.mcnNotes | escape }}</span>{% endif %}
         </td>
         {%- endif %}
-        <td class="afi-desc">{{ f.description | escape }}</td>
+        <td class="afi-ret" data-label="Returns"><code>{{ f.returnType }}</code></td>
+        <td class="afi-desc" data-label="Description">{{ f.description | escape }}{% if include.show_handlebars and f.mcnNotes != "" %}<span class="afi-note">{{ f.mcnNotes | escape }}</span>{% endif %}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -290,6 +401,7 @@
   var searchInput = document.getElementById("afi-search");
   var catSel = document.getElementById("afi-category");
   var stateSel = document.getElementById("afi-state");
+  var mappingSel = document.getElementById("afi-mapping");
   var sortSel = document.getElementById("afi-sort");
   var countEl = document.getElementById("afi-count");
   var body = document.getElementById("afi-body");
@@ -316,6 +428,7 @@
     var query = searchInput ? searchInput.value.toLowerCase() : "";
     var cat = catSel ? catSel.value : "";
     var state = stateSel ? stateSel.value : "";
+    var mapping = mappingSel ? mappingSel.value : "";
     var total = 0;
     var k, row, visible;
 
@@ -324,6 +437,7 @@
       visible = true;
       if (cat && row.getAttribute("data-category") !== cat) { visible = false; }
       if (visible && state && row.getAttribute("data-state") !== state) { visible = false; }
+      if (visible && mapping && row.getAttribute("data-mapping") !== mapping) { visible = false; }
       if (visible && !fuzzyMatch(query, row.getAttribute("data-name") || "")) { visible = false; }
       if (visible) {
         row.classList.remove("is-hidden");
@@ -420,6 +534,7 @@
   if (searchInput) { searchInput.addEventListener("input", apply); }
   if (catSel) { catSel.addEventListener("change", apply); }
   if (stateSel) { stateSel.addEventListener("change", apply); }
+  if (mappingSel) { mappingSel.addEventListener("change", apply); }
   if (sortSel) { sortSel.addEventListener("change", refresh); }
 
   refresh();

@@ -16,7 +16,7 @@ Marketing Cloud Next runs a **subset** of the AMPscript surface that Engagement 
 ## Supported functions
 
 {% include ampscript-function-index.html entries=site.data.ampscript_functions
-   mcn_only=true show_mcn=true show_handlebars=false
+   mcn_only=true show_mcn=true show_handlebars=false show_mapping=true
    empty="No Marketing Cloud Next AMPscript functions catalogued yet." %}
 
 ## Related

@@ -165,7 +165,6 @@
 
     td {
       padding: $space-3 $space-4;
-      border-bottom: 1px solid $border-muted;
       vertical-align: top;
       color: $text-primary;
 
@@ -180,6 +179,14 @@
 
     tbody tr:hover td {
       background-color: $bg-overlay;
+    }
+
+    // Mobile card layouts (afi/hbi/sfi) turn each row into a stacked info box;
+    // the row-hover wash looks wrong there and adds nothing.
+    @media (max-width: 640px) {
+      tbody tr:hover td {
+        background-color: transparent;
+      }
     }
 
     // Column widths (common pattern)

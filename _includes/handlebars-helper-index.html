@@ -12,6 +12,8 @@
     entries       (array)  - a site.data.* list of helper rows (may be empty/nil).
     empty         (string) - sentence shown when there are no entries.
     unmapped_only (bool)   - keep only helpers with no AMPscript counterpart.
+    show_amp      (bool)   - defaults true; pass false to hide the AMPscript
+                             column and its mapping filter (rows are unchanged).
 
   Row fields come from scripts/generate-handlebars-helper-index.mjs:
     name, slug, category, origin, helperType, syntax, returnType, mcn,
@@ -33,6 +35,16 @@
 {% assign hbi_entries = include.entries %}
 {% if include.unmapped_only %}{% assign hbi_entries = hbi_entries | where_exp: "h", "h.ampscriptEquivalent == ''" %}{% endif %}
 {% assign hbi_count = hbi_entries | size %}
+{% comment %} The AMPscript column is shown unless the caller suppresses it
+   (show_amp=false) or the table is already restricted to unmapped helpers,
+   where the column would be empty. {% endcomment %}
+{% assign hbi_show_amp = true %}
+{% if include.unmapped_only or include.show_amp == false %}{% assign hbi_show_amp = false %}{% endif %}
+{% comment %} The AMPscript-mapping filter can appear without the column: it shows
+   whenever the column shows, or when a caller opts in with show_mapping=true.
+   It is never useful when every row is already unmapped. {% endcomment %}
+{% assign hbi_show_mapping = false %}
+{% unless include.unmapped_only %}{% if hbi_show_amp or include.show_mapping %}{% assign hbi_show_mapping = true %}{% endif %}{% endunless %}
 
 <style>
 .hbi-controls {
@@ -79,8 +91,10 @@
   padding: 1.25rem;
   color: #475569;
 }
+/* Wrap on wide screens; only fall back to horizontal scroll once the viewport
+   is narrow enough that the table collapses into cards (media query below). */
 .hbi-tablewrap {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 .hbi-table {
   width: 100%;
@@ -92,7 +106,6 @@
   text-align: left;
   vertical-align: top;
   padding: 0.5em 0.7em;
-  border-bottom: 1px solid #e2e8f0;
 }
 .hbi-table th {
   font-size: 0.72rem;
@@ -100,10 +113,25 @@
   letter-spacing: 0.04em;
   color: #64748b;
   border-bottom: 1px solid #cbd5e1;
-  white-space: nowrap;
+}
+/* The Helper column carries the longest content; give it roughly a quarter of
+   the table so the remaining columns share the rest evenly. */
+.hbi-table th:first-child,
+.hbi-table td:first-child {
+  width: 25%;
+}
+/* Between the card breakpoint and the wide layout the AMPscript-equivalent
+   column is the least essential, so it is dropped to keep the table readable. */
+@media (min-width: 641px) and (max-width: 849px) {
+  .hbi-amp-col {
+    display: none;
+  }
 }
 .hbi-table td code {
   font-family: monospace;
+  /* Long qualified names / object-shape return types are unbreakable tokens;
+     let them wrap so a column can't force horizontal overflow. */
+  overflow-wrap: anywhere;
 }
 .hbi-row.is-hidden {
   display: none;
@@ -160,11 +188,96 @@
 }
 .hbi-desc {
   color: #475569;
+  /* Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow. */
+  word-break: break-word;
 }
 .hbi-legend {
   font-size: 0.78rem;
   color: #64748b;
   margin: 0 0 1rem;
+}
+/* On phones the table is unreadable even when wrapped, so each row becomes a
+   stacked info card. The td label is drawn from its data-label attribute. */
+@media (max-width: 640px) {
+  .hbi-tablewrap {
+    overflow-x: auto;
+  }
+  .hbi-table thead {
+    display: none;
+  }
+  .hbi-table,
+  .hbi-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .hbi-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+  }
+  .hbi-table td {
+    flex: 0 0 100%;
+    padding: 0.25rem 0;
+    text-align: left;
+  }
+  /* The name and its return type form the card heading, sharing the first line
+     ("filter → array"); everything else wraps beneath. Explicit order keeps that
+     pair first even though Returns sits later in the markup. */
+  .hbi-table td:first-child {
+    order: 1;
+    flex: 1 1 auto;
+    margin-bottom: 0.25rem;
+    font-size: 14px;
+  }
+  .hbi-table td.hbi-ret {
+    order: 2;
+    flex: 0 0 auto;
+    align-self: baseline;
+  }
+    /* Return type reads as "→ Type" here (card mode only) to echo a function
+     signature; on desktop the arrow would force the narrow column to wrap. */
+  .hbi-ret code::before {
+    content: "\2192\00a0";
+    color: #94a3b8;
+  }
+  /* Full-width, zero-height flex break: forces every meta cell onto a new row
+     so the heading line is only the name + return type. A shrinking name cell
+     alone cannot guarantee this — flex would let Category share the line. */
+  .hbi-row::after {
+    content: "";
+    order: 3;
+    flex: 0 0 100%;
+    height: 0;
+  }
+  .hbi-table td.hbi-meta {
+    order: 4;
+  }
+  .hbi-table td.hbi-desc {
+    order: 5;
+  }
+  /* Category, API version and AMPscript share the next row. Each sizes to its
+     own content and only wraps when it no longer fits — flex handles spacing. */
+  .hbi-table td.hbi-meta {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .hbi-table td.hbi-ver {
+    text-align: left;
+  }
+  /* Each meta cell keeps its name on its own line above the value; Returns
+     (arrow-prefixed) and Description (self-evident) still drop theirs. */
+  .hbi-table td.hbi-meta::before {
+    content: attr(data-label) ":";
+    margin-bottom: 0.15em;
+    font-weight: 600;
+    color: #64748b;
+  }
 }
 </style>
 
@@ -195,7 +308,7 @@
       <option value="mcn-platform">Marketing Cloud Next platform</option>
     </select>
   </div>
-  {%- unless include.unmapped_only %}
+  {%- if hbi_show_mapping %}
   <div class="hbi-control">
     <label for="hbi-mapping">AMPscript mapping</label>
     <select id="hbi-mapping">
@@ -204,7 +317,7 @@
       <option value="unmapped">Handlebars only</option>
     </select>
   </div>
-  {%- endunless %}
+  {%- endif %}
   <div class="hbi-control">
     <label for="hbi-sort">Sort by</label>
     <select id="hbi-sort">
@@ -221,8 +334,8 @@
   Every helper links to the official Salesforce reference &mdash; none of them has been through a
   runtime sweep on this site yet. <strong>API version</strong> is the Marketing Cloud Next Core API
   version the helper became available in.
-  {%- unless include.unmapped_only %} A row with no <strong>AMPscript equivalent</strong> can only be
-  expressed in Handlebars.{% endunless %}
+  {%- if hbi_show_amp %} A row with no <strong>AMPscript</strong> equivalent can only be
+  expressed in Handlebars.{% endif %}
 </p>
 
 <div class="hbi-tablewrap">
@@ -232,8 +345,8 @@
         <th>Helper</th>
         <th>Category</th>
         <th>API version</th>
+        {%- if hbi_show_amp %}<th class="hbi-amp-col">AMPscript</th>{% endif %}
         <th>Returns</th>
-        {%- unless include.unmapped_only %}<th>AMPscript equivalent</th>{% endunless %}
         <th>Description</th>
       </tr>
     </thead>
@@ -246,20 +359,20 @@
           data-mapping="{% if h.ampscriptEquivalent != '' %}mapped{% else %}unmapped{% endif %}"
           data-version="{{ h.mcn }}"
           id="hb-{{ h.slug }}">
-        <td>
+        <td data-label="Helper">
           {% if h.docUrl %}<a href="{{ h.docUrl }}" target="_blank" rel="noopener"><code>{{ h.name }}</code></a>{% else %}<code>{{ h.name }}</code>{% endif %}
           {%- if h.helperType == "block" %}<span class="hbi-flag" title="Block helper — wraps a body">block</span>{% endif %}
           {%- if h.helperType == "both" %}<span class="hbi-flag" title="Usable inline and as a block helper">inline or block</span>{% endif %}
           {%- if h.subexpressionOnly %}<span class="hbi-flag" title="Only valid inside another helper call">subexpression only</span>{% endif %}
           <code class="hbi-syntax">{{ h.syntax | escape }}</code>
         </td>
-        <td><span class="hbi-tag">{{ h.category }}</span></td>
-        <td class="hbi-ver">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
-        <td><code>{{ h.returnType }}</code></td>
-        {%- unless include.unmapped_only %}
-        <td>{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="hbi-flag" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="hbi-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
-        {%- endunless %}
-        <td class="hbi-desc">{{ h.description | escape }}</td>
+        <td class="hbi-meta" data-label="Category"><span class="hbi-tag">{{ h.category }}</span></td>
+        <td class="hbi-ver hbi-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
+        {%- if hbi_show_amp %}
+        <td class="hbi-amp-col hbi-meta" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="hbi-flag" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="hbi-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
+        {%- endif %}
+        <td class="hbi-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
+        <td class="hbi-desc" data-label="Description">{{ h.description | escape }}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -280,7 +393,7 @@
 
   var rows = Array.prototype.slice.call(body.querySelectorAll(".hbi-row"));
   var TOTAL = rows.length;
-  var SUFFIX = {% if include.unmapped_only %}""{% else %}" — {{ hbi_mapped }} with an AMPscript equivalent"{% endif %};
+  var SUFFIX = {% if hbi_show_mapping %}" — {{ hbi_mapped }} with an AMPscript equivalent"{% else %}""{% endif %};
 
   // VS Code-style subsequence match: every query char must appear in order
   // within the haystack, but not necessarily contiguously. Both are lowercased.
