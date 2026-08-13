@@ -130,6 +130,10 @@
      let them wrap so a column can't force horizontal overflow. */
   overflow-wrap: anywhere;
 }
+/* Muted return type, matching the ssjs.guide function index (its $text-muted). */
+.afi-table td.afi-ret code {
+  color: #64748b;
+}
 .afi-row.is-hidden {
   display: none;
 }
@@ -356,7 +360,6 @@
     <thead>
       <tr>
         <th>Function</th>
-        <th>Category</th>
         {%- if include.show_mcn %}<th>API version</th>{% endif %}
         {%- if include.show_handlebars %}<th>Handlebars</th>{% endif %}
         <th>Returns</th>
@@ -378,7 +381,6 @@
           {%- if f.deprecated %}<span class="afi-flag afi-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
           {%- if f.differsFromDocs %}<span class="afi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
-        <td class="afi-meta" data-label="Category"><span class="afi-tag">{{ f.category }}</span></td>
         {%- if include.show_mcn %}
         <td class="afi-ver afi-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}

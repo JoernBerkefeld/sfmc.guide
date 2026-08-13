@@ -133,6 +133,10 @@
      let them wrap so a column can't force horizontal overflow. */
   overflow-wrap: anywhere;
 }
+/* Muted return type, matching the ssjs.guide function index (its $text-muted). */
+.hbi-table td.hbi-ret code {
+  color: #64748b;
+}
 .hbi-row.is-hidden {
   display: none;
 }
@@ -343,7 +347,6 @@
     <thead>
       <tr>
         <th>Helper</th>
-        <th>Category</th>
         <th>API version</th>
         {%- if hbi_show_amp %}<th class="hbi-amp-col">AMPscript</th>{% endif %}
         <th>Returns</th>
@@ -366,7 +369,6 @@
           {%- if h.subexpressionOnly %}<span class="hbi-flag" title="Only valid inside another helper call">subexpression only</span>{% endif %}
           <code class="hbi-syntax">{{ h.syntax | escape }}</code>
         </td>
-        <td class="hbi-meta" data-label="Category"><span class="hbi-tag">{{ h.category }}</span></td>
         <td class="hbi-ver hbi-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- if hbi_show_amp %}
         <td class="hbi-amp-col hbi-meta" data-label="AMPscript">{% if h.ampscriptEquivalent != "" %}{% if h.ampscriptEquivalentKind == "function" %}<a href="/next/ampscript/functions/#fn-{{ h.ampscriptEquivalent | downcase }}"><code>{{ h.ampscriptEquivalent }}</code></a>{% else %}<code>{{ h.ampscriptEquivalent }}</code><span class="hbi-flag" title="AMPscript {{ h.ampscriptEquivalentKind }}, not a function">{{ h.ampscriptEquivalentKind }}</span>{% endif %}{% if h.ampscriptExact == false %}<span class="hbi-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% else %}&mdash;{% endif %}</td>
