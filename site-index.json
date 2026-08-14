@@ -984,7 +984,7 @@
     "url": "/tools/vscode-sfmc-language/",
     "section": "Tools",
     "type": "page",
-    "description": "VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, snippets."
+    "description": "VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, formatting, snippets."
   },
   {
     "name": "SFMC numberToLocaleString",

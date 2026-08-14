@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "SFMC Language Service"
-description: "VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, snippets."
+description: "VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, formatting, snippets."
 parent: Tools
 parent_url: /tools/
 permalink: /tools/vscode-sfmc-language/
@@ -10,7 +10,9 @@ platforms:
   - next
 ---
 
-Brings language intelligence to Engagement and Marketing Cloud Next content: syntax highlighting, completions, hover docs, diagnostics, and MCP wiring via [mcp-server-sfmc](/tools/mcp-server-sfmc/).
+Brings language intelligence to Engagement and Marketing Cloud Next content: syntax highlighting, completions, hover docs, diagnostics, built-in formatting (Format Document / Format on Save), and MCP wiring via [mcp-server-sfmc](/tools/mcp-server-sfmc/).
+
+Since v3.0.0 the extension bundles [Prettier](https://prettier.io/) and [`prettier-plugin-sfmc`](/tools/prettier-plugin-sfmc/) in-process, so formatting works for AMPscript, SSJS, SFMC HTML, MCN Handlebars, and SQL with no separate install.
 
 Powered by the same catalogs behind [ssjs.guide](https://ssjs.guide) and the ESLint/Prettier plugins.
 

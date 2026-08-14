@@ -39,7 +39,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--engagement">Engagement</span>
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
-  <div class="tool-card-desc">VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, snippets.</div>
+  <div class="tool-card-desc">VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, formatting, snippets.</div>
 
 </a>
 <a class="tool-card" href="/tools/sfmc-language-lsp/">
