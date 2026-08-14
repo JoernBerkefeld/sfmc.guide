@@ -3,6 +3,7 @@ google_analytics: "G-D7F8E6B2XR"
 description: "Technical architecture guide for Salesforce Marketing Cloud Engagement and Marketing Cloud Next — tooling, patterns, and platform references."
 url: "https://sfmc.guide"
 baseurl: ""
+repository: JoernBerkefeld/sfmc.guide
 
 permalink: pretty
 markdown: kramdown

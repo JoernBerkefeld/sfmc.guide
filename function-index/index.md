@@ -3,6 +3,7 @@ layout: page
 title: "Function Index"
 description: "Entry point to the Marketing Cloud function references — AMPscript and Handlebars on sfmc.guide, SSJS on ssjs.guide."
 permalink: /function-index/
+feedback: false
 platforms:
   - engagement
   - next

@@ -404,3 +404,37 @@ img {
     transform: translateX(-50%) translateY(0);
   }
 }
+
+// ── Page feedback ────────────────────────────────────────────────────────────
+
+.page-feedback {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-8;
+  padding-top: $space-4;
+  border-top: 1px solid $border-muted;
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+.page-feedback-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  color: $text-muted;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $text-link;
+  }
+}
+
+.page-feedback-icon {
+  flex-shrink: 0;
+}
+
+.page-feedback-sep {
+  color: $border-default;
+}
