@@ -9,10 +9,15 @@
 # failure signal. Fetch ONE branch per request; drive advancement by passing
 # a DISTINCT claimant with ?em=<value> on each claim.
 #
-# Branches on this page: ?b=reset, ?b=dump, ?b=claim&em=<value>.
-#   reset  reseeds C1..C4 all unclaimed
-#   dump   prints each row's claim state
-#   claim  claims one row for the given ?em value and prints the returned row
+# Branches on this page: ?b=reset, ?b=dump, ?b=claim&em=<value>,
+#   ?b=claimpair&em=<value>&rg=<value>.
+#   reset      reseeds C1..C4 all unclaimed
+#   dump       prints each row's claim state
+#   claim      claims one row for the given ?em value and prints the returned row
+#   claimpair  claims one row AND records an extra column via an optional
+#              trailing name/value pair (proves pairs beyond the 4 required args
+#              are accepted and written to the claimed row). Requires the DE to
+#              carry a nullable Region text column.
 #
 # Advancement proof (run in order, separate requests):
 #   ?b=reset
@@ -25,10 +30,11 @@
 #   ?b=dump                          -> C1..C4 all IsClaimed=True, distinct claimants
 behaviour: |
   %%[
-    VAR @b, @em, @i, @code, @rs, @row, @cr
+    VAR @b, @em, @rg, @i, @code, @rs, @row, @cr
 
     SET @b = RequestParameter("b")
     SET @em = RequestParameter("em")
+    SET @rg = RequestParameter("rg")
 
     /* reset: reseed C1..C4 all unclaimed (delete then insert - never pass an
        empty string to the Date column, that aborts the page) */
@@ -66,6 +72,18 @@ behaviour: |
         OutputLine(Concat("claim em=[", @em, "] -> EMPTY row"))
       ELSE
         OutputLine(Concat("claim em=[", @em, "] -> CouponCode=[", Field(@cr, "CouponCode"), "] IsClaimed=[", Field(@cr, "IsClaimed"), "] EmailAddress=[", Field(@cr, "EmailAddress"), "]"))
+      ENDIF
+    ENDIF
+
+    /* claimpair: claim AND record an extra column via an optional trailing
+       name/value pair beyond the 4 required args. The returned row carries the
+       extra value and it persists to the DE (verify with ?b=dump-style reads). */
+    IF @b == "claimpair" THEN
+      SET @cr = ClaimRow("AMP_VERIFY_CLAIM", "IsClaimed", "EmailAddress", @em, "Region", @rg)
+      IF Empty(@cr) THEN
+        OutputLine(Concat("claimpair em=[", @em, "] -> EMPTY row"))
+      ELSE
+        OutputLine(Concat("claimpair em=[", @em, "] -> CouponCode=[", Field(@cr, "CouponCode"), "] EmailAddress=[", Field(@cr, "EmailAddress"), "] Region=[", Field(@cr, "Region"), "]"))
       ENDIF
     ENDIF
   ]%%

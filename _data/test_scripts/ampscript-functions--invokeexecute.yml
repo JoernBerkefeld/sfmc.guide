@@ -1,27 +1,45 @@
 # Test scripts for /engagement/ampscript/functions/invokeexecute/.
 #
-# Rendered by _includes/test-script.html. Safe: uses an unknown verb, which
-# the API rejects in the result row with ZERO side effect.
-# Fetch one branch at a time: ?b=exec, ?b=zzz.
+# Rendered by _includes/test-script.html. Deployable as-is on a CloudPage.
+# AMPscript has no try/catch: a rejected call aborts the whole page (HTTP 422)
+# and discards prior output, so fetch ONE branch at a time.
+# Safe: every branch uses an unknown verb, which the API rejects in the result
+# row with ZERO side effect.
+#
+# Branches on this page: ?b=a1, ?b=a2, ?b=a3.
+#   a1  InvokeExecute(@er)              1 arg  - out-variables omitted entirely
+#   a2  InvokeExecute(@er, @st)         2 args - only statusMessage supplied
+#   a3  InvokeExecute(@er, @st, @req)   3 args - full form, the known-good control
+# a1 and a2 prove the two out-variables are independently optional (min_args 1).
+# A branch that renders nothing at all is the failure signal.
 behaviour: |
   %%[
-    VAR @b
+    VAR @b, @er, @st, @req, @rc
     SET @b = RequestParameter("b")
+    SET @er = CreateObject("ExecuteRequest")
+    SetObjectProperty(@er, "Name", "NotARealExecuteVerbZZ")
 
-    IF @b == "zzz" THEN
-      OutputLine(Concat("CTRL=[alive]"))
+    /* a1: out-variable pair omitted - proves min_args is 1 */
+    IF @b == "a1" THEN
+      OutputLine(Concat("--- a1 start ---"))
+      SET @rc = InvokeExecute(@er)
+      OutputLine(Concat("a1 rowCount=[", RowCount(@rc), "]"))
+      OutputLine(Concat("--- a1 done ---"))
     ENDIF
 
-    IF @b == "exec" THEN
-      VAR @er, @st, @req, @rc
-      SET @er = CreateObject("ExecuteRequest")
-      SetObjectProperty(@er, "Name", "NotARealExecuteVerbZZ")
+    /* a2: only the statusMessage out-variable supplied */
+    IF @b == "a2" THEN
+      OutputLine(Concat("--- a2 start ---"))
+      SET @rc = InvokeExecute(@er, @st)
+      OutputLine(Concat("a2 rowCount=[", RowCount(@rc), "] st=[", @st, "]"))
+      OutputLine(Concat("--- a2 done ---"))
+    ENDIF
+
+    /* a3: full form - both out-variables receive OverallStatus and the RequestID GUID */
+    IF @b == "a3" THEN
+      OutputLine(Concat("--- a3 start ---"))
       SET @rc = InvokeExecute(@er, @st, @req)
-      OutputLine(Concat("exec rowCount=[", RowCount(@rc), "] st=[", @st, "]"))
-      IF RowCount(@rc) > 0 THEN
-        VAR @row
-        SET @row = Row(@rc, 1)
-        OutputLine(Concat("row StatusCode=[", Field(@row, "StatusCode"), "] StatusMessage=[", Field(@row, "StatusMessage"), "] ErrorCode=[", Field(@row, "ErrorCode"), "]"))
-      ENDIF
+      OutputLine(Concat("a3 rowCount=[", RowCount(@rc), "] st=[", @st, "] req=[", @req, "]"))
+      OutputLine(Concat("--- a3 done ---"))
     ENDIF
   ]%%

@@ -54,6 +54,8 @@ For an unknown verb this renders `rowCount=[1] st=[Error] req=[<guid>]`, and row
 
 **An unrecognised verb is reported in the result row, not by aborting.** Calling an unknown verb returned a single result row with `StatusCode=Error` and a `StatusMessage` naming the missing handler — the page still rendered HTTP 200.
 
+**The two out-variables are optional and independent.** `InvokeExecute(@er)` with no out-variables still runs and returns the rowset; supplying only `@statusMessage` (`InvokeExecute(@er, @st)`) populates it while leaving the RequestID unread. Both one- and two-argument forms rendered at HTTP 200 alongside the full three-argument call.
+
 {% include test-script.html bundle="ampscript-functions--invokeexecute" chapter="behaviour" %}
 
 ## Availability

@@ -349,7 +349,7 @@
 - name: "ClaimRowValue"
   slug: "claimrowvalue"
   category: "Data Extension"
-  syntax: "ClaimRowValue(dataExt, returnValueColumn, claimColumn[, valueIfClaimed, claimantColumnN, claimantValueN, ...])"
+  syntax: "ClaimRowValue(dataExt, returnValueColumn, claimColumn, fallbackValue, claimantColumn, claimantValue[, additionalColumnNameN, additionalColumnValueN, ...])"
   returnType: "string"
   verified: true
   url: "/engagement/ampscript/functions/claimrowvalue/"
@@ -359,7 +359,7 @@
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
-  description: "Atomically claims a row and returns a specific column value from it."
+  description: "Atomically claims a row and returns a specific column value from it, or a caller-supplied fallback when no unclaimed rows remain."
   guideUrl: "https://ampscript.guide/claimrowvalue/"
 - name: "CloudPagesURL"
   slug: "cloudpagesurl"

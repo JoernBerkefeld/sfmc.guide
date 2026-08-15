@@ -7,7 +7,7 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/claimrow/
 platforms:
   - engagement
-syntax: "ClaimRow(dataExt, claimColumn, claimantColumn, claimantValue)"
+syntax: "ClaimRow(dataExt, claimColumn, claimantColumn, claimantValue[, additionalColumnNameN, additionalColumnValueN, ...])"
 return_type: row
 min_args: 4
 verification: verified
@@ -27,6 +27,8 @@ differs_from_docs: true
 | `claimColumn` | string | Yes | Boolean column that marks a row as claimed; must be required and default to `False` |
 | `claimantColumn` | string | Yes | Column written with the claimant value when a row is claimed |
 | `claimantValue` | string | Yes | The value identifying who is claiming — a distinct value claims the next row; a repeated value returns that claimant's existing row |
+| `additionalColumnNameN` | string | No | Name of a further column to write on the claimed row (record extra context at claim time). Repeatable as name/value pairs. |
+| `additionalColumnValueN` | string | No | Value written to the paired `additionalColumnNameN` column on the claimed row |
 
 ## Example
 
@@ -51,6 +53,8 @@ Each **distinct** `claimantValue` claims the next unclaimed row: the first calle
 **A claimable data extension needs the documented schema.** A text primary key, a claimant text column, a **required** non-nullable Boolean claim column defaulting to `False`, and (optionally) a nullable claimant date column. This schema was created via the API and advanced correctly — no Contact Builder UI wizard was required.
 
 **Exhaustion returns an empty row, not an exception.** The official reference says `ClaimRow` returns an exception when no unclaimed rows remain. At runtime it returns an **empty row** and the page keeps rendering, so `Empty()` on the result is `true` and nothing aborts. Guard with `Empty()` rather than expecting a raised error.
+
+**Optional trailing name/value pairs record extra columns on the claimed row.** Beyond the four required arguments you may append repeated `columnName, columnValue` pairs. Each pair is written to the claimed row alongside the claim, so `ClaimRow("Coupons", "IsClaimed", "EmailAddress", emailaddr, "Region", "Central")` records `Region = Central` on the row it claims. Runtime-proven: the returned row carried the extra column value and it persisted to the data extension. The pairs record additional context — they are **not** extra filter criteria for choosing which row to claim.
 
 {% include callout.html type="warning" title="Drive advancement across separate renders" content="AMPscript caches data-extension reads within a single render. Prove advancement across **separate HTTP requests**, each passing a distinct claimant — a single render that claims repeatedly reads the cached state and appears not to advance." %}
 

@@ -9,10 +9,20 @@
 # failure signal. Fetch ONE branch per request; drive advancement by passing
 # a DISTINCT claimant with ?em=<value> on each claim.
 #
-# Branches on this page: ?b=reset, ?b=dump, ?b=claim&em=<value>.
-#   reset  reseeds C1..C4 all unclaimed
-#   dump   prints each row's claim state
-#   claim  claims the next unclaimed row's CouponCode for the given ?em value
+# Branches on this page: ?b=reset, ?b=dump, ?b=claim&em=<value>,
+#   ?b=claimpair&em=<value>&rg=<value>.
+#   reset      reseeds C1..C4 all unclaimed
+#   dump       prints each row's claim state
+#   claim      claims the next unclaimed row's CouponCode for the given ?em value
+#   claimpair  claims AND records an extra column via an optional trailing
+#              name/value pair (8-arg form: six required args + one pair).
+#              Requires the DE to carry a nullable Region text column.
+#
+# Arity note (runtime-proven by bisection, NOT shipped as a branch because an
+# invalid arity aborts the whole page at compile time): the FIRST SIX arguments
+# are all required. A 3-arg and a 4-arg call each returned HTTP 422; the 6-arg
+# call rendered at HTTP 200. Only argument 7 onward (additional name/value
+# pairs) is optional.
 #
 # Advancement + fallback proof (run in order, separate requests):
 #   ?b=reset
@@ -25,10 +35,11 @@
 #   ?b=dump                            -> C1..C4 all IsClaimed=True, distinct claimants
 behaviour: |
   %%[
-    VAR @b, @em, @i, @code, @rs, @row, @v
+    VAR @b, @em, @rg, @i, @code, @rs, @row, @v
 
     SET @b = RequestParameter("b")
     SET @em = RequestParameter("em")
+    SET @rg = RequestParameter("rg")
 
     /* reset: reseed C1..C4 all unclaimed (delete then insert - never pass an
        empty string to the Date column, that aborts the page) */
@@ -64,5 +75,13 @@ behaviour: |
     IF @b == "claim" THEN
       SET @v = ClaimRowValue("AMP_VERIFY_CLAIM", "CouponCode", "IsClaimed", "FALLBACK", "EmailAddress", @em)
       OutputLine(Concat("claim em=[", @em, "] -> value=[", @v, "]"))
+    ENDIF
+
+    /* claimpair: 8-arg form - six required args plus one optional trailing
+       name/value pair (Region). Records the extra column on the claimed row
+       and still returns the scalar CouponCode. */
+    IF @b == "claimpair" THEN
+      SET @v = ClaimRowValue("AMP_VERIFY_CLAIM", "CouponCode", "IsClaimed", "FALLBACK", "EmailAddress", @em, "Region", @rg)
+      OutputLine(Concat("claimpair em=[", @em, "] rg=[", @rg, "] -> value=[", @v, "]"))
     ENDIF
   ]%%
