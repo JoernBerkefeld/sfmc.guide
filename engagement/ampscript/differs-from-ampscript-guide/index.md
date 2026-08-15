@@ -33,7 +33,7 @@ These change what a working call looks like — a wrong argument count, or a con
 
 - **ampscript.guide says:** when the data extension has no unclaimed rows left, the function returns an error.
 - **Reality:** exhausting the pool returns an **empty row** and the page keeps rendering — nothing is thrown. A caller must guard with `Empty()` rather than expecting a raised error, so ampscript.guide's exhaustion path is wrong.
-- **Verdict — Runtime confirms sfmc.guide.** Proof: [ClaimRow](/engagement/ampscript/functions/claimrow/) test script. *(ampscript.guide was correct that the function also accepts extra optional name/value pairs — that gap was on sfmc.guide's side and has been fixed, so it is not counted here.)*
+- **Verdict — Runtime confirms sfmc.guide.** Proof: [ClaimRow](/engagement/ampscript/functions/claimrow/) test script.
 
 ### [`GetSocialPublishURLByName`](/engagement/ampscript/functions/getsocialpublishurlbyname/)
 
@@ -67,7 +67,7 @@ Same call shape in most of these, but a difference in optionality, an accepted t
 
 - **ampscript.guide says:** the fallback value and the two claimant arguments (positions 4–6) are optional.
 - **Reality:** an arity-bisection probe shows a three-argument and a four-argument call each **abort the page** (HTTP 422 at compile time), while the six-argument call renders — so the first six arguments are all genuinely **required**. Only argument seven onward (extra name/value pairs) is optional. A reader who trusted ampscript.guide and omitted an argument gets a broken page.
-- **Verdict — Runtime confirms sfmc.guide.** Marking positions 4–6 optional is wrong. (This also corrected the central catalog, which had shipped `minArgs: 3`.) Proof: [ClaimRowValue](/engagement/ampscript/functions/claimrowvalue/) test script.
+- **Verdict — Runtime confirms sfmc.guide.** Marking positions 4–6 optional is wrong. Proof: [ClaimRowValue](/engagement/ampscript/functions/claimrowvalue/) test script.
 
 ### [`ContentArea`](/engagement/ampscript/functions/contentarea/)
 
