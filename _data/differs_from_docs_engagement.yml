@@ -2059,6 +2059,11 @@
     The consequence for testing is the part that matters: a CloudPage is not a
     valid place to check whether shortening works, and a caller cannot tell
     from the return value alone whether it happened.
+
+    The **email preview context behaves the same way**: rendered through the
+    Email Preview API against a seeded sendable row, `WrapLongURL` returned the
+    long URL unchanged, exactly as on a CloudPage. So neither a CloudPage nor an
+    email *preview* exercises the shortening — only a live send does.
   testScript: |
     %%[ VAR @b, @s, @long, @u1, @u2
       SET @b = RequestParameter("b")
@@ -2738,3 +2743,252 @@
         ENDIF
       ENDIF
     ]%%
+
+- name: "Output"
+  url: "/engagement/ampscript/functions/output/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html"
+  tagline: "email/send context: Output is rejected in sendable email content as an unrecognized function — it is CloudPage-only in practice"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "output-not-available-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference lists `Output` as a general AMPscript utility without noting any
+    context restriction. Rendered through the Email Preview API against a seeded
+    sendable row, an isolated `%%=Output(Concat("O","K"))=%%` was rejected with
+    HTTP 400, errorcode 19691: *"The function call uses an unrecognized function
+    name. Function Name: Output"*.
+
+    The rejection is the function itself, not the harness: `OutputLine` — with
+    the identical CAN-SPAM footer, in the same run — rendered normally. So
+    `Output` works on a CloudPage (where it is verified) but is **not available
+    in sendable email content**. Use `OutputLine` to write into an email, or
+    keep `Output` to landing pages.
+  testScript: |
+    %%=Output(Concat("O","K"))=%%
+    <!-- In sendable email content this aborts the render with errorcode 19691
+         (unrecognized function name). OutputLine works in email; Output does not. -->
+
+- name: "IsCHTMLBrowser"
+  url: "/engagement/ampscript/functions/ischtmlbrowser/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-is-chtml-browser.html"
+  tagline: "email/send context: not valid in sendable content — the send parser rejects it as non-sendable-only"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "ischtmlbrowser-not-valid-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents `IsCHTMLBrowser` as an AMPscript function without noting
+    that it is restricted to non-sendable content. Rendered through the Email
+    Preview API against a seeded sendable row, an isolated
+    `%%=IsCHTMLBrowser("DoCoMo/2.0 N905i")=%%` was rejected with HTTP 400,
+    errorcode 10004: *"IsCHTMLBrowser Function is not valid in content. This
+    function is only allowed in non sendable content."*
+
+    So the function is a CloudPage / landing-page feature (non-sendable
+    content), where it evaluates the user-agent string it is given. It cannot be
+    used inside a sendable email — which also fits its purpose, since a
+    user-agent is a request-time value that does not exist at send time.
+  testScript: |
+    %%=IsCHTMLBrowser("DoCoMo/2.0 N905i")=%%
+    <!-- In sendable email content this aborts the render with errorcode 10004
+         ("only allowed in non sendable content"). Use it on CloudPages only. -->
+
+- name: "CreateObject"
+  url: "/engagement/ampscript/functions/createobject/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api-object/mc-ampscript-reference-api-object-create-object.html"
+  tagline: "email/send context: the whole WSProxy object model (CreateObject, SetObjectProperty, AddObjectArrayItem, InvokeCreate/Retrieve/Update/Delete/Execute/Perform) is rejected in sendable email content"
+  category: "API Object"
+  object: "API Object"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "createobject-wsproxy-not-available-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents the WSProxy AMPscript object model — `CreateObject`,
+    `SetObjectProperty`, `AddObjectArrayItem` and the `Invoke*` verbs
+    (`InvokeCreate`, `InvokeRetrieve`, `InvokeUpdate`, `InvokeDelete`,
+    `InvokeExecute`, `InvokePerform`) — without noting that it is restricted to
+    non-sendable content. Rendered through the Email Preview API against a
+    seeded sendable row, an isolated `CreateObject("DataExtension")` (and
+    `CreateObject("QueryDefinition")`) was rejected with HTTP 400, errorcode
+    10004: *"CreateObject Function is not valid in content. This function is
+    only allowed in non sendable content."*
+
+    Because every `Invoke*` verb and every `SetObjectProperty` /
+    `AddObjectArrayItem` call operates on a handle returned by `CreateObject`,
+    the entire object model is a **CloudPage / landing-page (non-sendable
+    content) feature** — it cannot run inside a sendable email. For
+    data-extension reads inside an email use the `Lookup*` / `LookupRows*` /
+    `Field` / `Row` family instead, which do render in sendable content.
+  testScript: |
+    %%[ VAR @de SET @de = CreateObject("DataExtension") ]%%
+    <!-- In sendable email content this aborts the render with errorcode 10004
+         ("only allowed in non sendable content"). The whole WSProxy family
+         (SetObjectProperty, AddObjectArrayItem, Invoke*) is CloudPage-only. -->
+
+- name: "ExecuteFilter"
+  url: "/engagement/ampscript/functions/executefilter/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter.html"
+  tagline: "email/send context: not valid in sendable content — the send parser rejects it as non-sendable-only"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "executefilter-not-available-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents `ExecuteFilter` without noting a context restriction.
+    Rendered through the Email Preview API against a seeded sendable row, an
+    isolated `%%[ SET @rs = ExecuteFilter("<filter>") ]%%` was rejected with
+    HTTP 400, errorcode 10004: *"ExecuteFilter Function is not valid in content.
+    This function is only allowed in non sendable content."*
+
+    So `ExecuteFilter` is a CloudPage / landing-page (non-sendable content)
+    feature and cannot be used inside a sendable email. To read filtered data in
+    an email, resolve the rows another way (e.g. `LookupRows` against the target
+    DE), which does render in sendable content.
+  testScript: |
+    %%[ SET @rs = ExecuteFilter("AMP_VERIFY_FILTER") ]%%
+    <!-- In sendable email content this aborts the render with errorcode 10004
+         ("only allowed in non sendable content"). Use it on CloudPages only. -->
+
+- name: "ExecuteFilterOrderedRows"
+  url: "/engagement/ampscript/functions/executefilterorderedrows/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter-ordered-rows.html"
+  tagline: "email/send context: not valid in sendable content — the send parser rejects it as non-sendable-only"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "executefilterorderedrows-not-available-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents `ExecuteFilterOrderedRows` without noting a context
+    restriction. Rendered through the Email Preview API against a seeded
+    sendable row, an isolated
+    `%%[ SET @rs = ExecuteFilterOrderedRows("<filter>", 1, "Score desc") ]%%`
+    was rejected with HTTP 400, errorcode 10004: *"ExecuteFilterOrderedRows
+    Function is not valid in content. This function is only allowed in non
+    sendable content."*
+
+    So it is a CloudPage / landing-page (non-sendable content) feature and
+    cannot be used inside a sendable email. Use `LookupOrderedRows` against the
+    target DE for ordered reads in an email, which does render in sendable
+    content.
+  testScript: |
+    %%[ SET @rs = ExecuteFilterOrderedRows("AMP_VERIFY_FILTER", 1, "Score desc") ]%%
+    <!-- In sendable email content this aborts the render with errorcode 10004
+         ("only allowed in non sendable content"). Use it on CloudPages only. -->
+
+- name: "HTTPRequestHeader"
+  url: "/engagement/ampscript/functions/httprequestheader/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-request-header.html"
+  tagline: "email/send context: rejected in sendable content — only valid where an inbound HTTP request exists (CloudPages/landing pages)"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "httprequestheader-not-valid-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents `HTTPRequestHeader` without noting a context
+    restriction. Rendered through the Email Preview API against a seeded
+    sendable row, an isolated `%%=HTTPRequestHeader("User-Agent")=%%` was
+    rejected with HTTP 400, errorcode 10004: *"HTTPRequestHeader Function is
+    not valid in content. This function is only allowed in content with an
+    HTTP context."*
+
+    So the function works only where an inbound HTTP request exists — CloudPages
+    and landing pages — and cannot be used inside a sendable email. This fits
+    its purpose, since request headers are a request-time value that does not
+    exist at send time.
+  testScript: |
+    %%=HTTPRequestHeader("User-Agent")=%%
+    <!-- In sendable email content this aborts the render with errorcode 10004
+         ("only allowed in content with an HTTP context"). CloudPages only. -->
+
+- name: "Redirect"
+  url: "/engagement/ampscript/functions/redirect/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-redirect.html"
+  tagline: "email/send context: rejected in sendable content — it emits an HTTP 302, which only exists in an HTTP-response (CloudPage/landing page) context"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "redirect-not-valid-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents `Redirect` as landing-page-only but the constraint is
+    not surfaced as a docs discrepancy. Rendered through the Email Preview API
+    against a seeded sendable row, an isolated
+    `%%[ Redirect("https://sfmc.guide/robots.txt") ]%%` was rejected with HTTP
+    400, errorcode 10005: *"Redirect Function is not valid in content. This
+    function is only allowed in in content with an HTTP context."*
+
+    `Redirect` emits an HTTP 302 whose `Location` is the supplied value; a
+    sendable email has no HTTP response to redirect, so it is a CloudPage /
+    landing-page (HTTP-context) feature only. Note `RedirectTo` is *not*
+    rejected in email content — it renders as a no-op there, since it emits no
+    redirect at all.
+  testScript: |
+    %%[ Redirect("https://sfmc.guide/robots.txt") ]%%
+    <!-- In sendable email content this aborts the render with errorcode 10005
+         ("only allowed in content with an HTTP context"). CloudPages only. -->
+
+- name: "InsertData"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-insert-data.html"
+  tagline: "email/send context: the *Data DE-write family (InsertData, UpdateData, UpsertData, DeleteData) is rejected in sendable email content — a send is a batch context. Use the *DE variants instead"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "insertdata-family-not-valid-in-batch-send-context"
+  body: |
+    **This finding originates in the email/send context.** The official
+    reference documents the `*Data` data-extension write family — `InsertData`,
+    `UpdateData`, `UpsertData`, `DeleteData` — without noting a context
+    restriction. Rendered through the Email Preview API against a seeded
+    sendable row, an isolated `InsertData("<de>", ...)` (and each of
+    `UpdateData`, `UpsertData`, `DeleteData`) was rejected with HTTP 400,
+    errorcode 10005: *"InsertData Function is not valid in content. This
+    function is only allowed in a non batch context."*
+
+    A send is a **batch** operation, so the entire `*Data` family cannot run
+    inside a sendable email — it is a CloudPage / landing-page (non-batch)
+    feature. The sibling `*DE` functions (`InsertDE`, `UpdateDE`, `UpsertDE`,
+    `DeleteDE`) are **accepted** in sendable email content and render without
+    error, so use those to write to a data extension from inside an email.
+  testScript: |
+    %%[ VAR @r SET @r = InsertData("AMP_VERIFY_SCRATCH", "Id", "X", "FirstName", "Y") ]%%
+    <!-- In sendable (batch) content this aborts with errorcode 10005
+         ("only allowed in a non batch context"). Use InsertDE in an email. -->
+
+- name: "GetPublishedSocialContent"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-social/mc-ampscript-reference-social-getpublishedsocialcontent.html"
+  tagline: "email/send context: explicitly rejected as social-sharing/landing-page-only — a hard context ban, unlike CloudPage where the same call reaches runtime"
+  category: "Social"
+  object: "Social"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "getpublishedsocialcontent-not-valid-in-sendable-email-content"
+  body: |
+    **This finding originates in the email/send context.** Rendered through the
+    Email Preview API against a seeded sendable row, an isolated
+    `GetPublishedSocialContent("SocialRegion")` was rejected with HTTP 400,
+    errorcode 10004: *"GetPublishedSocialContent Function is only allowed to be
+    called from social sharing pages or landing pages."*
+
+    This is a **hard context restriction** enforced by the send parser and is
+    stronger than the CloudPage behaviour: on a CloudPage the same call reaches
+    runtime and aborts only because no Classic Content social region resolves on
+    a modern tenant. In the email/send context it is not permitted at all — the
+    function is scoped to social sharing pages and landing pages.
+  testScript: |
+    %%[ VAR @c SET @c = GetPublishedSocialContent("SocialRegion") ]%%
+    <!-- In sendable email content this aborts with errorcode 10004
+         ("only allowed ... from social sharing pages or landing pages"). -->

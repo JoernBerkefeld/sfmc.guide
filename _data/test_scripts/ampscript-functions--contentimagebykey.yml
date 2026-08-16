@@ -8,12 +8,13 @@
 # calls share this request. Branch: ?b=safe. A branch that renders nothing
 # at all is the failure signal.
 #
-# The keys sfdcmarketingcloud-518005426 and copado-logo.png-518005426 are
-# pre-existing Content Builder image assets on the child QA business unit;
-# swap in keys that exist on your account. A missing primary key with NO
-# fallback aborts the page, so it is intentionally left out of the safe sweep.
+# The keys my-image-key and company-logo.png are illustrative placeholders
+# standing in for pre-existing Content Builder image assets on the child BU;
+# swap in keys that exist on your account. A
+# missing primary key with NO fallback aborts the page, so it is intentionally
+# left out of the safe sweep.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @found, @fallback
@@ -22,11 +23,11 @@ behaviour: |
     /* safe sweep: the found render and the fallback path are both accepted */
     IF @b == "safe" THEN
       /* found: a single key renders the stored image as an img tag */
-      SET @found = ContentImageByKey("sfdcmarketingcloud-518005426")
+      SET @found = ContentImageByKey("my-image-key")
       OutputLine(Concat("found=[", @found, "]"))
 
       /* fallback: missing primary key + valid fallback key renders the fallback img tag */
-      SET @fallback = ContentImageByKey("nosuch-key", "copado-logo.png-518005426")
+      SET @fallback = ContentImageByKey("nosuch-key", "company-logo.png")
       OutputLine(Concat("fallback=[", @fallback, "]"))
     ENDIF
   ]%%

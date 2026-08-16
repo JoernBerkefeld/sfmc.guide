@@ -12,7 +12,7 @@
 # string literal - a deploy tool that statically resolves ContentBlockByX
 # references will reject a literal path that does not exist on the account.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @sc, @miss, @lit, @name

@@ -78,6 +78,17 @@ The official reference states that a value which is not a function call makes th
 
 A debugging line written this way disappears without any signal that something went wrong. See [the differs-from-docs card](/engagement/differs-from-docs/#output-literal-renders-nothing).
 
+### Email/send context: not recognised in sendable email content
+
+`Output` is a CloudPage feature in practice. Rendered through the Email Preview
+API against a seeded sendable row, an isolated `%%=Output(Concat("O","K"))=%%`
+was rejected with HTTP 400, errorcode 19691: *"The function call uses an
+unrecognized function name. Function Name: Output"* — while
+[OutputLine](/engagement/ampscript/functions/outputline/), with the identical
+footer in the same run, rendered normally. So to write a value into an **email**
+use `OutputLine`; keep `Output` to CloudPages / landing pages. See [the
+differs-from-docs card](/engagement/differs-from-docs/#output-not-available-in-sendable-email-content).
+
 {% include test-script.html bundle="ampscript-functions--output" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
@@ -86,7 +97,7 @@ A debugging line written this way disappears without any signal that something w
 
 | Platform | Available |
 |---|---|
-| Marketing Cloud Engagement | Yes |
+| Marketing Cloud Engagement | Yes (CloudPages / landing pages; **not** in sendable email content — use `OutputLine` there) |
 | Marketing Cloud Next | Yes, from API 67.0 |
 
 ## See also

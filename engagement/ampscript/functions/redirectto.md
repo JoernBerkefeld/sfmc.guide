@@ -37,6 +37,30 @@ differs_from_docs: false
 
 Inside a tracked send this makes the click countable. On a CloudPage the `href` is simply the address you passed, ampersand and all — the response is still HTTP 200 and carries no `Location` header, so nothing about the page changes.
 
+## Dynamic trackable links
+
+When a link URL is assembled from variables, wrap the final address in `RedirectTo` so the click still counts. The temptation is to build the whole `<a>` tag by hand with `Concat` and print it with `v()` — but a link emitted that way is invisible to link tracking.
+
+```ampscript
+<!-- good: RedirectTo preserves click tracking -->
+%%[
+  SET @myParam = "bar"
+  SET @url = Concat("https://mydomain.com/somePath?foo=", @myParam)
+]%%
+<a href="%%=RedirectTo(@url)=%%">demo link</a>
+```
+
+```ampscript
+<!-- bad: hand-built anchor via Concat + v() is not tracked -->
+%%[
+  SET @myParam = "bar"
+  SET @url = Concat('<a href="', "https://mydomain.com/somePath?foo=", @myParam, '">demo link</a>')
+]%%
+%%=v(@url)=%%
+```
+
+Both render a working link, but only the first is counted as a click. When the URL carries parameters, URL-encode the values before building it (see [URLEncode](/engagement/ampscript/functions/urlencode/)) — an unencoded value can break the resulting link.
+
 ## Return value
 
 **`string`** — the link-tracking target for the supplied address during a tracked send; on a CloudPage the supplied value unchanged.

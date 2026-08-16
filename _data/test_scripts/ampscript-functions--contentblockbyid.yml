@@ -9,9 +9,9 @@
 # A branch that renders nothing at all is the failure signal.
 #
 # The id 1469165 / key ssjs-guide-test-block is a pre-existing fixture block
-# on the child QA business unit; swap in an id that exists on your account.
+# on the child business unit; swap in an id that exists on your account.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @sc, @miss, @lit

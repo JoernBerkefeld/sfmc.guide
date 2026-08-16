@@ -13,7 +13,7 @@ min_args: 1
 max_args: 1
 verification: verified
 test_scripts: complete
-differs_from_docs: false
+differs_from_docs: true
 ---
 
 {% include verification-status.html %}
@@ -87,11 +87,21 @@ Passing an empty value is the one input in this family that is not survivable: t
 
 {% include callout.html type="info" title="Fetch the live branch twice" content="The <code>?b=live</code> branch only demonstrates anything if you request it twice with two different <code>User-Agent</code> headers. Requesting it with no <code>User-Agent</code> header at all aborts that branch, which is the empty-value case rather than a fault in the script." %}
 
+### Email/send context: not valid in sendable content
+
+This function is a CloudPage / landing-page feature only. Rendered through the
+Email Preview API against a seeded sendable row, an isolated
+`%%=IsCHTMLBrowser("DoCoMo/2.0 N905i")=%%` was rejected with HTTP 400,
+errorcode 10004: *"IsCHTMLBrowser Function is not valid in content. This
+function is only allowed in non sendable content."* It cannot be used inside a
+sendable email — which fits its purpose, since a user-agent is a request-time
+value that does not exist at send time.
+
 ## Availability
 
 | Platform | Available |
 |---|---|
-| Marketing Cloud Engagement | Yes |
+| Marketing Cloud Engagement | Yes (non-sendable content only — CloudPages/landing pages, not emails) |
 | Marketing Cloud Next | No |
 
 ## See also

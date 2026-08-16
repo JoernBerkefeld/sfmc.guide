@@ -5,6 +5,8 @@ description: "Development environment, project setup, Data Extensions, and busin
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/general/
+platforms:
+  - engagement
 ---
 
 {% include callout.html type="note" title="Originally published" content="First published **2019-03-03** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/general/). Ported here for sfmc.guide." %}

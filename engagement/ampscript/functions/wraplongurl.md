@@ -35,7 +35,7 @@ differs_from_docs: true
 <a href="%%=v(@link)=%%">Read more</a>
 ```
 
-In an email send this yields a short platform link that forwards to the original address. On a CloudPage it does not: a URL built to 1048 characters came back at exactly 1048 characters, character for character the input. Test the shortening in a send, not on a page.
+In an email send this yields a short platform link that forwards to the original address. On a CloudPage it does not: a URL built to 1048 characters came back at exactly 1048 characters, character for character the input. An **email _preview_** (Email Preview API against a seeded sendable row) behaves the same as a CloudPage here — the long URL comes back unchanged, because a preview is not a send. Test the shortening in a real send, not on a page and not in a preview.
 
 ## Return value
 

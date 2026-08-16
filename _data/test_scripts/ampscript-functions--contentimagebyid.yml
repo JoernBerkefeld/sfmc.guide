@@ -9,11 +9,11 @@
 # at all is the failure signal.
 #
 # The ids 1133955 and 1201143 are pre-existing Content Builder image assets
-# on the child QA business unit; swap in ids that exist on your account. A
+# on the child business unit; swap in ids that exist on your account. A
 # missing primary id with NO fallback aborts the page, so it is intentionally
 # left out of the safe sweep.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @found, @fallback

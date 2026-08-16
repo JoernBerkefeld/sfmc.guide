@@ -12,7 +12,7 @@
 # exercises the no-match / default-content contract rather than a found
 # render. The default-content path is what proves the function is still live.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @sc, @miss, @lit

@@ -13,7 +13,7 @@ min_args: 1
 max_args: 1
 verification: verified
 test_scripts: complete
-differs_from_docs: false
+differs_from_docs: true
 ---
 
 {% include verification-status.html %}
@@ -84,7 +84,9 @@ So they are trivially distinguishable from outside. If you want a visitor moved 
 
 {% include callout.html type="warning" title="Fetch with redirect following disabled" text="Any HTTP client that follows redirects automatically will show you the target page at HTTP 200 and hide both the 302 and the Location header, which makes this function look like RedirectTo. Switch following off before drawing conclusions." %}
 
-Landing pages are the only context: the function has nothing to act on in an email, and that case was not exercised here.
+### Email/send context: rejected in sendable content
+
+Landing pages are the only context. Rendered through the Email Preview API against a seeded sendable row, an isolated `%%[ Redirect("https://sfmc.guide/robots.txt") ]%%` was rejected with HTTP 400, errorcode 10005: *"Redirect Function is not valid in content. This function is only allowed in in content with an HTTP context."* A sendable email has no HTTP response to redirect, so `Redirect` cannot be used there — use it only on CloudPages / landing pages. (By contrast, `RedirectTo` is *not* rejected in email content: it renders as a no-op, since it emits no redirect at all.)
 
 ## Availability
 

@@ -30,18 +30,18 @@ differs_from_docs: false
 ## Example
 
 ```ampscript
-%%=ContentImageByKey('sfdcmarketingcloud-518005426')=%%
+%%=ContentImageByKey('my-image-key')=%%
 ```
 
-Renders an HTML `img` tag for that asset — in this run the tag carried `title`, `alt`, `border="0"` and the proprietary `thid` attribute, with the asset's stored `src` URL.
+Swap `my-image-key` for the customer key of an image asset that exists on your account. It renders an HTML `img` tag for that asset — in this run the tag carried `title`, `alt`, `border="0"` and the proprietary `thid` attribute, with the asset's stored `src` URL.
 
 A defensive form supplies a fallback image that renders when the primary key is missing:
 
 ```ampscript
-%%=ContentImageByKey('nosuch-key', 'copado-logo.png-518005426')=%%
+%%=ContentImageByKey('nosuch-key', 'company-logo.png')=%%
 ```
 
-The primary key does not exist, so the tag for the fallback asset (`thid="1201143"`) is rendered instead.
+The primary key does not exist, so the tag for the fallback asset (again, use a key that exists on your account) is rendered instead.
 
 ## Return value
 

@@ -8,7 +8,7 @@
 # is accepted and shares one request. Branch on this page: ?b=safe.
 # A branch that renders nothing at all is the failure signal.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 behaviour: |
   %%[
     VAR @b, @tcaInline, @tcaPlain, @tcaUnknown, @tcaThree

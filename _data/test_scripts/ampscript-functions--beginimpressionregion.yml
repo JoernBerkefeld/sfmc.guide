@@ -10,7 +10,7 @@
 # A branch that renders nothing at all is the failure signal — that is the
 # expected result for ?b=begvar.
 #
-# Scope: proven on a plain CloudPage GET on the child QA business unit only.
+# Scope: proven on a plain CloudPage GET on the child business unit only.
 # The impression-tracking effect is a send-time behaviour a CloudPage cannot show.
 behaviour: |
   %%[

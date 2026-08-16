@@ -58,7 +58,7 @@
   returnType: "void"
   verified: true
   url: "/engagement/ampscript/functions/addobjectarrayitem/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -533,7 +533,7 @@
   returnType: "object"
   verified: true
   url: "/engagement/ampscript/functions/createobject/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -671,7 +671,7 @@
   returnType: "number"
   verified: true
   url: "/engagement/ampscript/functions/deletedata/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -826,7 +826,7 @@
   returnType: "rowset"
   verified: true
   url: "/engagement/ampscript/functions/executefilter/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -841,7 +841,7 @@
   returnType: "rowset"
   verified: true
   url: "/engagement/ampscript/functions/executefilterorderedrows/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -979,7 +979,7 @@
   syntax: "GetPublishedSocialContent(socialContentId)"
   returnType: "string"
   verified: false
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1180,7 +1180,7 @@
   returnType: "number"
   verified: true
   url: "/engagement/ampscript/functions/insertdata/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1214,7 +1214,7 @@
   returnType: "string"
   verified: true
   url: "/engagement/ampscript/functions/invokecreate/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1231,7 +1231,7 @@
   returnType: "string"
   verified: true
   url: "/engagement/ampscript/functions/invokedelete/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1248,7 +1248,7 @@
   returnType: "rowset"
   verified: true
   url: "/engagement/ampscript/functions/invokeexecute/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1265,7 +1265,7 @@
   returnType: "string"
   verified: true
   url: "/engagement/ampscript/functions/invokeperform/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1282,7 +1282,7 @@
   returnType: "rowset"
   verified: true
   url: "/engagement/ampscript/functions/invokeretrieve/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1299,7 +1299,7 @@
   returnType: "string"
   verified: true
   url: "/engagement/ampscript/functions/invokeupdate/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1316,7 +1316,7 @@
   returnType: "boolean"
   verified: true
   url: "/engagement/ampscript/functions/ischtmlbrowser/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1324,7 +1324,7 @@
     - name: "Platform.Function.IsCHTMLBrowser"
       url: "https://ssjs.guide/platform-functions/ischtmlbrowser/"
   mcnNotes: ""
-  description: "Tests a user agent string for a compact HTML (cHTML) feature-phone browser. Feature-phone agents such as i-mode and KDDI handsets are recognised; modern desktop and mobile agents are not."
+  description: "Tests a user agent string for a compact HTML (cHTML) feature-phone browser. Feature-phone agents such as i-mode and KDDI handsets are recognised; modern desktop and mobile agents are not. Only valid in non-sendable content (CloudPages / landing pages), not in sendable email."
   guideUrl: "https://ampscript.guide/ischtmlbrowser/"
 - name: "IsEmailAddress"
   slug: "isemailaddress"
@@ -1698,7 +1698,7 @@
 - name: "Output"
   slug: "output"
   category: "Utility"
-  syntax: "Output(content)"
+  syntax: "Output([content, ...])"
   returnType: "void"
   verified: true
   url: "/engagement/ampscript/functions/output/"
@@ -1713,7 +1713,7 @@
 - name: "OutputLine"
   slug: "outputline"
   category: "Utility"
-  syntax: "OutputLine(content)"
+  syntax: "OutputLine([content, ...])"
   returnType: "void"
   verified: true
   url: "/engagement/ampscript/functions/outputline/"
@@ -1811,7 +1811,7 @@
   returnType: "void"
   verified: true
   url: "/engagement/ampscript/functions/redirect/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -1995,7 +1995,7 @@
   returnType: "void"
   verified: true
   url: "/engagement/ampscript/functions/setobjectproperty/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -2228,7 +2228,7 @@
   returnType: "number"
   verified: true
   url: "/engagement/ampscript/functions/updatedata/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""
@@ -2322,7 +2322,7 @@
   returnType: "number"
   verified: true
   url: "/engagement/ampscript/functions/upsertdata/"
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
   mcn: ""
   handlebarsEquivalent: ""

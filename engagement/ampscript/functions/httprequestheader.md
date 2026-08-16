@@ -58,6 +58,10 @@ Referrer: %%=v(@ref)=%%
 
 **Custom headers are returned too, despite the documented restriction.** The official reference says only the standard RFC 7231 headers can be retrieved, but a request sent with a custom `X-Amp-Probe` header returned that value verbatim — the restriction is not enforced at read time. See [Differs from official docs](/engagement/differs-from-docs/#httprequestheader-custom-headers-returned).
 
+### Email/send context: rejected in sendable content
+
+This function reads an **inbound HTTP request**, which only exists on a CloudPage / landing page. Rendered through the Email Preview API against a seeded sendable row, an isolated `%%=HTTPRequestHeader("User-Agent")=%%` was rejected with HTTP 400, errorcode 10004: *"HTTPRequestHeader Function is not valid in content. This function is only allowed in content with an HTTP context."* So it cannot be used inside a sendable email — request headers are a request-time value that does not exist at send time. See [Differs from official docs](/engagement/differs-from-docs/#httprequestheader-not-valid-in-sendable-email-content).
+
 {% include test-script.html bundle="ampscript-functions--httprequestheader" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" text="A bare string literal passed to `OutputLine` renders an empty line. Wrap every marker and label in `Concat(...)` — for example `OutputLine(Concat(\"start\"))` — or the line silently vanishes." %}
