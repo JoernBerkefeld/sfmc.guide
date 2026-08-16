@@ -23,6 +23,19 @@
       url: /engagement/faq/
     - title: Einstein Recommendations
       url: /engagement/einstein/recommendation/
+      children:
+        - title: Collect Code
+          url: /engagement/einstein/recommendation/collect-code/
+        - title: Update Catalog
+          url: /engagement/einstein/recommendation/update-catalog/
+        - title: Predictive Intelligence (PI) Data Extensions
+          url: /engagement/einstein/recommendation/pi-data-extensions/
+        - title: Einstein Email Recommendations
+          url: /engagement/einstein/recommendation/einstein-email/
+        - title: Einstein Web Recommendations
+          url: /engagement/einstein/recommendation/einstein-web/
+        - title: Embedding Collect Code via Google Tag Manager (GTM)
+          url: /engagement/einstein/recommendation/gtm/
     - title: Encryption
       url: /engagement/encryption/
     - title: SSJS Function Index

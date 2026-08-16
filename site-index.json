@@ -189,6 +189,13 @@
     "description": "Builds the published URL of a CloudPages landing page. Runtime-proven on a live Marketing Cloud Engagement CloudPage — extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
   },
   {
+    "name": "Collect Code",
+    "url": "/engagement/einstein/recommendation/collect-code/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
     "name": "Concat",
     "url": "/engagement/ampscript/functions/concat/",
     "section": "AMPscript Function Reference",
@@ -343,8 +350,29 @@
     "description": "Returns everything after the first at sign of an email address. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
   },
   {
+    "name": "Einstein Email Recommendations",
+    "url": "/engagement/einstein/recommendation/einstein-email/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
     "name": "Einstein Recommendations",
     "url": "/engagement/einstein/recommendation/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
+    "name": "Einstein Web Recommendations",
+    "url": "/engagement/einstein/recommendation/einstein-web/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
+    "name": "Embedding Collect Code via Google Tag Manager (GTM)",
+    "url": "/engagement/einstein/recommendation/gtm/",
     "section": "Engagement",
     "type": "page",
     "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
@@ -805,6 +833,13 @@
     "description": "Writes the result of a nested function call into the rendered content, followed by a line break. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
   },
   {
+    "name": "Predictive Intelligence (PI) Data Extensions",
+    "url": "/engagement/einstein/recommendation/pi-data-extensions/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
+  },
+  {
     "name": "prettier-plugin-sfmc",
     "url": "/tools/prettier-plugin-sfmc/",
     "section": "Tools",
@@ -1118,6 +1153,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Removes leading and trailing whitespace from a value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that tabs, line breaks and the non-breaking space all count as whitespace."
+  },
+  {
+    "name": "Update Catalog",
+    "url": "/engagement/einstein/recommendation/update-catalog/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
   },
   {
     "name": "UpdateData",
