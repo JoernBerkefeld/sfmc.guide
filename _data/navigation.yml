@@ -133,8 +133,12 @@
           url: /engagement/ampscript/functions/urlencode/
         - title: "— Content functions —"
           url: /engagement/ampscript/functions/#all-functions
+        - title: BarcodeURL
+          url: /engagement/ampscript/functions/barcodeurl/
         - title: BeginImpressionRegion
           url: /engagement/ampscript/functions/beginimpressionregion/
+        - title: BuildOptionList
+          url: /engagement/ampscript/functions/buildoptionlist/
         - title: BuildRowsetFromJSON
           url: /engagement/ampscript/functions/buildrowsetfromjson/
         - title: BuildRowSetFromString
@@ -157,10 +161,88 @@
           url: /engagement/ampscript/functions/contentimagebykey/
         - title: EndImpressionRegion
           url: /engagement/ampscript/functions/endimpressionregion/
+        - title: TransformXML
+          url: /engagement/ampscript/functions/transformxml/
         - title: TreatAsContent
           url: /engagement/ampscript/functions/treatascontent/
         - title: TreatAsContentArea
           url: /engagement/ampscript/functions/treatascontentarea/
+        - title: "— Data Extension functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: ClaimRow
+          url: /engagement/ampscript/functions/claimrow/
+        - title: ClaimRowValue
+          url: /engagement/ampscript/functions/claimrowvalue/
+        - title: DataExtensionRowCount
+          url: /engagement/ampscript/functions/dataextensionrowcount/
+        - title: DeleteData
+          url: /engagement/ampscript/functions/deletedata/
+        - title: DeleteDE
+          url: /engagement/ampscript/functions/deletede/
+        - title: ExecuteFilter
+          url: /engagement/ampscript/functions/executefilter/
+        - title: ExecuteFilterOrderedRows
+          url: /engagement/ampscript/functions/executefilterorderedrows/
+        - title: Field
+          url: /engagement/ampscript/functions/field/
+        - title: InsertData
+          url: /engagement/ampscript/functions/insertdata/
+        - title: InsertDE
+          url: /engagement/ampscript/functions/insertde/
+        - title: Lookup
+          url: /engagement/ampscript/functions/lookup/
+        - title: LookupOrderedRows
+          url: /engagement/ampscript/functions/lookuporderedrows/
+        - title: LookupOrderedRowsCS
+          url: /engagement/ampscript/functions/lookuporderedrowscs/
+        - title: LookupRows
+          url: /engagement/ampscript/functions/lookuprows/
+        - title: LookupRowsCS
+          url: /engagement/ampscript/functions/lookuprowscs/
+        - title: Row
+          url: /engagement/ampscript/functions/row/
+        - title: RowCount
+          url: /engagement/ampscript/functions/rowcount/
+        - title: UpdateData
+          url: /engagement/ampscript/functions/updatedata/
+        - title: UpdateDE
+          url: /engagement/ampscript/functions/updatede/
+        - title: UpsertData
+          url: /engagement/ampscript/functions/upsertdata/
+        - title: UpsertDE
+          url: /engagement/ampscript/functions/upsertde/
+        - title: "— Marketing Cloud API functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: AddObjectArrayItem
+          url: /engagement/ampscript/functions/addobjectarrayitem/
+        - title: CreateObject
+          url: /engagement/ampscript/functions/createobject/
+        - title: InvokeCreate
+          url: /engagement/ampscript/functions/invokecreate/
+        - title: InvokeDelete
+          url: /engagement/ampscript/functions/invokedelete/
+        - title: InvokeExecute
+          url: /engagement/ampscript/functions/invokeexecute/
+        - title: InvokePerform
+          url: /engagement/ampscript/functions/invokeperform/
+        - title: InvokeRetrieve
+          url: /engagement/ampscript/functions/invokeretrieve/
+        - title: InvokeUpdate
+          url: /engagement/ampscript/functions/invokeupdate/
+        - title: SetObjectProperty
+          url: /engagement/ampscript/functions/setobjectproperty/
+        - title: "— HTTP functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: HTTPGet
+          url: /engagement/ampscript/functions/httpget/
+        - title: HTTPPost
+          url: /engagement/ampscript/functions/httppost/
+        - title: HTTPPost2
+          url: /engagement/ampscript/functions/httppost2/
+        - title: HTTPPostWithRetry
+          url: /engagement/ampscript/functions/httppostwithretry/
+        - title: HTTPRequestHeader
+          url: /engagement/ampscript/functions/httprequestheader/
         - title: "— Utility functions —"
           url: /engagement/ampscript/functions/#all-functions
         - title: AttributeValue
@@ -235,6 +317,12 @@
           url: /engagement/ampscript/functions/retrievesalesforceobjects/
         - title: UpdateSingleSalesforceObject
           url: /engagement/ampscript/functions/updatesinglesalesforceobject/
+        - title: "— Social functions —"
+          url: /engagement/ampscript/functions/#all-functions
+        - title: GetSocialPublishURL
+          url: /engagement/ampscript/functions/getsocialpublishurl/
+        - title: GetSocialPublishURLByName
+          url: /engagement/ampscript/functions/getsocialpublishurlbyname/
         - title: "— MobileConnect functions —"
           url: /engagement/ampscript/functions/#all-functions
         - title: UpsertContact

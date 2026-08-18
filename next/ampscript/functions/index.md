@@ -13,7 +13,7 @@ platforms:
 
 Marketing Cloud Next runs a **subset** of the AMPscript surface that Engagement offers. This page lists only the functions the catalog marks as available on Next, together with the Core API version they arrived in and the Handlebars helper that covers the same job.
 
-{% include callout.html type="note" title="Availability is catalogued, behaviour is proven on Engagement" content="The **API version** column comes from the language catalog that also powers the SFMC Language Service and the ESLint rules. The **Verified** badge, however, means a runtime sweep on a live *Engagement* CloudPage — those linked pages document Engagement behaviour and have not been re-run on Next. Treat them as a strong indication, not as proof for Next." %}
+{% include callout.html type="note" title="Availability is catalogued, behaviour is proven on Engagement" content="The **API version** column comes from the language catalog that also powers the SFMC Language Service and the ESLint rules. The **Verified** badge, however, means a runtime sweep on a live *Engagement* CloudPage and E-Mail — those linked pages document Engagement behaviour and have not been re-run on Next. Treat them as a strong indication, not as proof for Next." %}
 
 ## Supported functions
 
