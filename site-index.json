@@ -49,13 +49,6 @@
     "description": "The subset of AMPscript that Marketing Cloud Next supports — searchable and filterable, with the Core API version each function became available in and its Handlebars equivalent."
   },
   {
-    "name": "ampscript.io",
-    "url": "/tools/ampscript-io/",
-    "section": "Tools",
-    "type": "page",
-    "description": "AMPscript syntax validation and highlighting in the browser."
-  },
-  {
     "name": "AttributeValue",
     "url": "/engagement/ampscript/functions/attributevalue/",
     "section": "AMPscript Function Reference",
@@ -273,13 +266,6 @@
     "description": "Returns the total number of rows in a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
   },
   {
-    "name": "dataviews.io",
-    "url": "/tools/dataviews-io/",
-    "section": "Tools",
-    "type": "page",
-    "description": "Community reference for Engagement Data Views — schemas and relationships."
-  },
-  {
     "name": "DateAdd",
     "url": "/engagement/ampscript/functions/dateadd/",
     "section": "AMPscript Function Reference",
@@ -327,13 +313,6 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
-  },
-  {
-    "name": "Diagramforce",
-    "url": "/tools/diagramforce/",
-    "section": "Tools",
-    "type": "page",
-    "description": "Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more."
   },
   {
     "name": "Divide",
@@ -763,13 +742,6 @@
     "description": "Architect-oriented entry point for Marketing Cloud Next on sfmc.guide."
   },
   {
-    "name": "MCFS [AMPScript]",
-    "url": "/tools/mcfs-ampscript/",
-    "section": "Tools",
-    "type": "page",
-    "description": "VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets."
-  },
-  {
     "name": "MCP Server for SFMC",
     "url": "/tools/mcp-server-sfmc/",
     "section": "Tools",
@@ -966,13 +938,6 @@
     "description": "Bundle SSJS, AMPscript, and front-end sources into deployable CloudPages and emails."
   },
   {
-    "name": "SFMC Companion",
-    "url": "/tools/sfmc-companion/",
-    "section": "Tools",
-    "type": "page",
-    "description": "Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more)."
-  },
-  {
     "name": "SFMC Data Loader App",
     "url": "/tools/sfmc-dataloader-app/",
     "section": "Tools",
@@ -1076,13 +1041,6 @@
     "section": "Engagement",
     "type": "page",
     "description": "The Server-Side JavaScript function reference for Marketing Cloud Engagement lives on ssjs.guide — the A–Z index of Platform functions, the Core library, WSProxy, HTTP and the ECMAScript built-ins as the SFMC engine implements them."
-  },
-  {
-    "name": "SSJS Manager",
-    "url": "/tools/ssjs-manager/",
-    "section": "Tools",
-    "type": "page",
-    "description": "VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB)."
   },
   {
     "name": "StringToDate",

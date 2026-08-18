@@ -360,14 +360,12 @@
     - title: "— Community —"
       url: /tools/#community-and-ecosystem
     - title: dataviews.io
-      url: /tools/dataviews-io/
+      url: https://dataviews.io/
     - title: Diagramforce
-      url: /tools/diagramforce/
+      url: https://diagramforce.com/
     - title: SSJS Manager
-      url: /tools/ssjs-manager/
+      url: https://marketplace.visualstudio.com/items?itemName=FiB.ssjs-vsc
     - title: MCFS AMPscript
-      url: /tools/mcfs-ampscript/
+      url: https://marketplace.visualstudio.com/items?itemName=sergey-agadzhanov.AMPscript
     - title: SFMC Companion
-      url: /tools/sfmc-companion/
-    - title: ampscript.io
-      url: /tools/ampscript-io/
+      url: https://chromewebstore.google.com/detail/sfmc-companion/kllkonffdjfimimaellfmgnakhlbeicg

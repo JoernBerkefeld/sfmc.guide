@@ -186,7 +186,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
 Third-party tools that help Engagement teams. None of these are Marketing Cloud Next tools.
 
 <div class="tool-grid">
-<a class="tool-card" href="/tools/dataviews-io/">
+<a class="tool-card" href="https://dataviews.io/" target="_blank" rel="noopener">
   <div class="tool-card-title">dataviews.io</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
@@ -194,7 +194,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-desc">Community reference for Engagement Data Views — schemas and relationships.</div>
 
 </a>
-<a class="tool-card" href="/tools/diagramforce/">
+<a class="tool-card" href="https://diagramforce.com/" target="_blank" rel="noopener">
   <div class="tool-card-title">Diagramforce</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
@@ -203,7 +203,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-desc">Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more.</div>
 
 </a>
-<a class="tool-card" href="/tools/ssjs-manager/">
+<a class="tool-card" href="https://marketplace.visualstudio.com/items?itemName=FiB.ssjs-vsc" target="_blank" rel="noopener">
   <div class="tool-card-title">SSJS Manager</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
@@ -211,7 +211,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-desc">VS Code extension for SSJS/AMPscript development with Cloud Page preview and linting (FiB).</div>
 
 </a>
-<a class="tool-card" href="/tools/mcfs-ampscript/">
+<a class="tool-card" href="https://marketplace.visualstudio.com/items?itemName=sergey-agadzhanov.AMPscript" target="_blank" rel="noopener">
   <div class="tool-card-title">MCFS [AMPScript]</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
@@ -219,7 +219,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-desc">VS Code virtual filesystem into Engagement Content Builder with AMPscript highlighting and snippets.</div>
 
 </a>
-<a class="tool-card" href="/tools/sfmc-companion/">
+<a class="tool-card" href="https://chromewebstore.google.com/detail/sfmc-companion/kllkonffdjfimimaellfmgnakhlbeicg" target="_blank" rel="noopener">
   <div class="tool-card-title">SFMC Companion</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
@@ -227,7 +227,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-desc">Chrome extension that maps relationships between Engagement objects (Automations, Queries, DEs, and more).</div>
 
 </a>
-<a class="tool-card" href="/tools/ampscript-io/">
+<a class="tool-card" href="https://www.ampscript.io/" target="_blank" rel="noopener">
   <div class="tool-card-title">ampscript.io</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
