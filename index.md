@@ -3,6 +3,9 @@ layout: default
 title: "sfmc.guide — Marketing Cloud Engagement & Next"
 description: "Technical architecture guide for Salesforce Marketing Cloud Engagement and Marketing Cloud Next — patterns, tooling, and platform references."
 feedback: false
+platforms:
+  - engagement
+  - next
 ---
 
 <div class="home-hero">
