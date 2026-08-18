@@ -68,15 +68,29 @@
   color: $accent-primary;
 }
 
+// ── Brandy mascots on the platform toggle ─────────────────────────────────────
+// Visual-tuning knobs (change these to resize / reposition the figures):
+$brandy-size: 3.5rem; //             figure box (square)
+$brandy-outer-overlap: 0.35rem; //   how far a single figure pokes outside the pill border (single-active)
+$brandy-highfive-gap: 0.15rem; //    horizontal gap between the two figures' centres from the seam (both-active); smaller = palms overlap more
+$brandy-highfive-pad: 2.5rem; //    extra inner padding added to each button under .is-both to open the centre gap for the figures
+
 // Connected Engagement / Next toggles (same visual language as the old .brand-badge)
 .brand-platforms {
+  // Positioning context for the absolutely-placed Brandy figures.
+  position: relative;
   display: inline-flex;
   align-items: stretch;
   flex-shrink: 0;
   border-radius: $radius-sm;
   border: 1px solid rgba($accent-primary, 0.3);
-  overflow: hidden;
+  // NOTE: no `overflow: hidden` here — it would clip the Brandy figures. The
+  // joined-pill rounded corners are kept crisp by rounding the first/last pill
+  // backgrounds directly (see .brand-platform:first-of-type / :last-of-type).
   background-color: transparent;
+  // Horizontal breathing room so a single figure can sit just outside the pill
+  // border, and so both figures have space to meet at the centre seam.
+  margin: 0 ($brandy-size - $brandy-outer-overlap);
 }
 
 .brand-platform {
@@ -93,8 +107,18 @@
   border-right: 1px solid rgba($accent-primary, 0.3);
   transition: background-color $transition-fast, color $transition-fast;
 
-  &:last-child {
+  // Round the outer corners of the joined pill (replaces the removed
+  // `overflow: hidden` on .brand-platforms so pressed/hover backgrounds stay
+  // inside the rounded border).
+  &:first-of-type {
+    border-top-left-radius: $radius-sm;
+    border-bottom-left-radius: $radius-sm;
+  }
+
+  &:last-of-type {
     border-right: 0;
+    border-top-right-radius: $radius-sm;
+    border-bottom-right-radius: $radius-sm;
   }
 
   &:hover {
@@ -111,6 +135,133 @@
   &.is-pressed:hover {
     background-color: rgba($accent-primary, 0.22);
     color: $accent-light;
+  }
+}
+
+// Both-active: open a gap at the centre seam so the two Brandys can stand
+// between the buttons without covering the label text. Engagement gets extra
+// padding on its inner (right) edge, Next on its inner (left) edge.
+.brand-platforms.is-both {
+  .brand-platform:first-of-type {
+    padding-right: calc(0.5em + #{$brandy-highfive-pad});
+    transition: padding $transition-normal, background-color $transition-fast,
+      color $transition-fast;
+  }
+
+  .brand-platform:last-of-type {
+    padding-left: calc(0.5em + #{$brandy-highfive-pad});
+    transition: padding $transition-normal, background-color $transition-fast,
+      color $transition-fast;
+  }
+}
+
+// ── Brandy figures ────────────────────────────────────────────────────────────
+// Decorative mascots that appear beside the active platform pill. They are
+// absolutely positioned relative to .brand-platforms so they don't disturb the
+// flex row of pills, and sit just outside the pill border.
+// Asset paths are relative to the compiled stylesheet at assets/css/main.css →
+// ../brandy/brandy-*.png resolves to assets/brandy/brandy-*.png.
+.brandy {
+  position: absolute;
+  top: 50%;
+  width: $brandy-size;
+  height: $brandy-size;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  // Hidden by default; revealed per platform state below.
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.6);
+  transition: transform $transition-normal, opacity $transition-normal;
+}
+
+// Engagement Brandy sits on the LEFT, just outside the left edge of the pills.
+// In the raw art its raised palm points to the viewer's RIGHT, so single-active
+// (outward = left edge) flips it (scaleX(-1)); both-active (inward = seam on its
+// right) leaves it unflipped (scaleX(1)).
+.brandy--engagement {
+  right: calc(100% - #{$brandy-outer-overlap});
+  background-image: url("../brandy/brandy-engagement.png");
+}
+
+// Next Brandy sits on the RIGHT, just outside the right edge of the pills.
+// In the raw art its raised palm points to the viewer's LEFT, so single-active
+// (outward = right edge) flips it (scaleX(-1)); both-active (inward = seam on
+// its left) leaves it unflipped (scaleX(1)).
+.brandy--next {
+  left: calc(100% - #{$brandy-outer-overlap});
+  background-image: url("../brandy/brandy-next.png");
+}
+
+// Reveal a figure only when its platform pill is pressed.
+.brand-platforms.is-eng-pressed .brandy--engagement {
+  opacity: 1;
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.brand-platforms.is-next-pressed .brandy--next {
+  opacity: 1;
+  transform: translateY(-50%) scaleX(-1);
+}
+
+// Both active → move both figures to the CENTRE seam (between the two buttons)
+// and face each INWARD so the raised palms meet in a high-five. Each figure is
+// anchored to the seam (left: 50%) and offset by half its own width plus the gap
+// so the two open palms touch at the middle. Facing is derived from the raw art:
+//   • Engagement raw palm points RIGHT → single-active scaleX(-1) (outward/left);
+//     both-active scaleX(1) (inward = seam on its right), sits just LEFT of seam.
+//   • Next raw palm points LEFT → single-active scaleX(-1) (outward/right);
+//     both-active scaleX(1) (inward = seam on its left), sits just RIGHT of seam.
+.brand-platforms.is-both .brandy--engagement {
+  right: auto;
+  left: 65%;
+  transform: translateY(-50%) translateX(calc(-100% - #{$brandy-highfive-gap})) scaleX(1);
+  animation: brandy-highfive-left 600ms ease-out 1;
+}
+
+.brand-platforms.is-both .brandy--next {
+  left: 58%;
+  transform: translateY(-50%) translateX($brandy-highfive-gap) scaleX(1);
+  animation: brandy-highfive-right 600ms ease-out 1;
+}
+
+// Bounce keyframes: figures spring in from just outside their seam positions and
+// tap. End state matches the static .is-both transforms above.
+@keyframes brandy-highfive-left {
+  0% {
+    transform: translateY(-50%) translateX(calc(-100% - 0.6rem)) scaleX(1);
+  }
+  60% {
+    transform: translateY(-50%) translateX(calc(-100% + 0.1rem)) scaleX(1);
+  }
+  100% {
+    transform: translateY(-50%) translateX(calc(-100% - #{$brandy-highfive-gap})) scaleX(1);
+  }
+}
+
+@keyframes brandy-highfive-right {
+  0% {
+    transform: translateY(-50%) translateX(0.6rem) scaleX(1);
+  }
+  60% {
+    transform: translateY(-50%) translateX(-0.1rem) scaleX(1);
+  }
+  100% {
+    transform: translateY(-50%) translateX($brandy-highfive-gap) scaleX(1);
+  }
+}
+
+// Respect users who prefer reduced motion: no transitions, no bounce, figures
+// just appear/settle at their final position.
+@media (prefers-reduced-motion: reduce) {
+  .brandy {
+    transition: opacity $transition-normal;
+  }
+
+  .brand-platforms.is-both .brandy--engagement,
+  .brand-platforms.is-both .brandy--next {
+    animation: none;
   }
 }
 

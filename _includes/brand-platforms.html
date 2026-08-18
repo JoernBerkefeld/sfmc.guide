@@ -4,6 +4,17 @@
     1. page.platforms frontmatter when set (e.g. tools that support only one platform)
     2. else path: /engagement/ → Engagement, /next/ → Next, /tools/ → both
     3. else neither pressed (home, privacy, …)
+
+  Brandy mascots (decorative, aria-hidden):
+    assets/brandy/brandy-engagement.png — classic Brandy (panda, yellow hoodie),
+      upper body + head, arm raised with open palm, transparent bg. Original art
+      raises the palm toward the viewer's left; CSS mirrors it (scaleX(-1)) so the
+      palm points center-right when placed on the LEFT of the pills.
+    assets/brandy/brandy-next.png — Agentforce Brandy (sunglasses), upper body +
+      head, arm raised with open palm, transparent bg. Placed on the RIGHT of the
+      pills so its palm already points center-left toward the seam.
+    When both platforms are active the wrapper gets .is-both and both figures slide
+    toward the centre seam so the two open palms meet in a high-five (pure CSS).
 {% endcomment %}
 
 {% assign brand_engagement = false %}
@@ -24,7 +35,8 @@
   {% assign brand_next = true %}
 {% endif %}
 
-<div class="brand-platforms" role="group" aria-label="Platform focus">
+<div class="brand-platforms{% if brand_engagement %} is-eng-pressed{% endif %}{% if brand_next %} is-next-pressed{% endif %}{% if brand_engagement and brand_next %} is-both{% endif %}" role="group" aria-label="Platform focus">
+  <span class="brandy brandy--engagement" aria-hidden="true"></span>
   <a href="{{ '/engagement/' | relative_url }}"
      class="brand-platform{% if brand_engagement %} is-pressed{% endif %}"
      {% if brand_engagement %}aria-current="true"{% endif %}>
@@ -35,4 +47,5 @@
      {% if brand_next %}aria-current="true"{% endif %}>
     Next
   </a>
+  <span class="brandy brandy--next" aria-hidden="true"></span>
 </div>
