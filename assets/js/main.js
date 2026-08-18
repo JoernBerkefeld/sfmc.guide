@@ -78,6 +78,21 @@
     });
   });
 
+  // ── Sidebar function-category expand/collapse ──────────────────────────────
+  // Each "— Category —" in the function index is a collapsible group. Only the
+  // category of the current function page is open on load; the rest can be
+  // expanded on demand.
+
+  var catToggles = document.querySelectorAll('.sidebar-cat-toggle');
+  catToggles.forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var cat = btn.parentElement;
+      var open = cat.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
   // ── Copy code buttons ───────────────────────────────────────────────────────
 
   document.querySelectorAll('pre').forEach(function (pre) {

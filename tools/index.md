@@ -198,6 +198,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   <div class="tool-card-title">Diagramforce</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
+    <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">Free browser-based diagram editor for architecture, data models, BPMN, Flows, and more.</div>
 

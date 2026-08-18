@@ -347,19 +347,15 @@
       url: /tools/
     - title: Language Service article
       url: /tools/language-service-eslint-prettier/
-    - title: "— Own tools —"
+    - title: "— Highlights —"
       url: /tools/#own-tools
     - title: SFMC Language Service
       url: /tools/vscode-sfmc-language/
-    - title: eslint-plugin-sfmc
-      url: /tools/eslint-plugin-sfmc/
-    - title: prettier-plugin-sfmc
-      url: /tools/prettier-plugin-sfmc/
-    - title: mcp-server-sfmc
+    - title: MCP Server for SFMC Coding
       url: /tools/mcp-server-sfmc/
-    - title: mcdev
+    - title: SFMC DevTools
       url: /tools/mcdev/
-    - title: sf-plugin-mcnext
+    - title: SF Plugin for MCNext
       url: /tools/sf-plugin-mcnext/
     - title: "— Community —"
       url: /tools/#community-and-ecosystem

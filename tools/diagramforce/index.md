@@ -7,11 +7,12 @@ parent_url: /tools/
 permalink: /tools/diagramforce/
 platforms:
   - engagement
+  - next
 ---
 
 {% include callout.html type="note" title="Third-party" content="Not affiliated with Salesforce or sfmc.guide." %}
 
-Diagramforce runs in the browser (optionally with your own Google Drive). Useful for Engagement solution architecture sketches, data mapping, and Salesforce Flow diagrams.
+A fast, browser-based canvas for architecture, data models, Data Cloud mappings, process flows, org charts, Gantt charts, and UML sequence diagrams - no account, and nothing leaves your browser.
 
 ## Links
 

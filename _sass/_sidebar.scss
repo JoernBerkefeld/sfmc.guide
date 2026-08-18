@@ -88,12 +88,13 @@
   flex-shrink: 0;
   transition: transform $transition-fast;
   color: $text-muted;
+  transform: rotate(-90deg);
 }
 
 // Direct child only — a descendant selector would also rotate the chevron of a
 // nested parent item, which tracks its own open state.
 .sidebar-section.is-active > .sidebar-section-title .sidebar-chevron {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
 // ── Sidebar children ──────────────────────────────────────────────────────────
@@ -185,11 +186,67 @@
 // Chevron points down when collapsed, up when expanded — mirrors
 // .sidebar-section.is-active .sidebar-chevron for the top level.
 .sidebar-item--parent.is-expanded > .sidebar-link .sidebar-chevron {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
 .sidebar-group-label--nested {
   padding-left: $space-10;
+}
+
+// ── Collapsible function categories ──────────────────────────────────────────
+// Each "— Category —" marker in the function index becomes a collapsible group.
+// Open by default only when the current function page lives inside it.
+
+.sidebar-cat {
+  list-style: none;
+}
+
+.sidebar-cat-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  width: 100%;
+  padding: $space-3 $space-5 $space-1 $space-8;
+  margin-top: $space-2;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: $text-xs;
+  /* font-weight: 700; */
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  text-align: left;
+  cursor: pointer;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $text-secondary;
+  }
+
+  .sidebar-chevron {
+    transform: rotate(-90deg);
+  }
+  .sidebar-grandchildren & {
+    padding-left: 2.5rem;
+  }
+}
+
+.sidebar-cat.is-open > .sidebar-cat-toggle .sidebar-chevron {
+  transform: rotate(0deg);
+}
+
+.sidebar-cat-items {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.sidebar-cat.is-open > .sidebar-cat-items {
+  display: block;
 }
 
 // ── Mobile sidebar overlay ────────────────────────────────────────────────────
