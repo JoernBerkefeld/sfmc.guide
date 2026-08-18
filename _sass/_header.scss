@@ -190,7 +190,7 @@ $brandy-highfive-pad: 2.5rem; //    extra inner padding added to each button und
 // (outward = right edge) flips it (scaleX(-1)); both-active (inward = seam on
 // its left) leaves it unflipped (scaleX(1)).
 .brandy--next {
-  left: calc(100% - #{$brandy-outer-overlap});
+  left: 100%;
   background-image: url("../brandy/brandy-next.png");
 }
 
@@ -215,42 +215,66 @@ $brandy-highfive-pad: 2.5rem; //    extra inner padding added to each button und
 //     both-active scaleX(1) (inward = seam on its left), sits just RIGHT of seam.
 .brand-platforms.is-both .brandy--engagement {
   right: auto;
-  left: 65%;
-  transform: translateY(-50%) translateX(calc(-100% - #{$brandy-highfive-gap})) scaleX(1);
-  animation: brandy-highfive-left 600ms ease-out 1;
+  transform: translateY(-50%) translateX(5.9rem) scaleX(1);
+  animation: brandy-highfive-left 500ms ease-out 1;
 }
 
 .brand-platforms.is-both .brandy--next {
-  left: 58%;
-  transform: translateY(-50%) translateX($brandy-highfive-gap) scaleX(1);
-  animation: brandy-highfive-right 600ms ease-out 1;
+  transform: translateY(-50%) translateX(-5.9rem) scaleX(1);
+  animation: brandy-highfive-right 500ms ease-out 1;
 }
+
+.brand-platforms.is-eng-pressed:not(.is-both) .brandy--engagement {
+    transform: translateY(-50%) translateX(0) scaleX(-1);
+    animation: brandy-single-left 500ms ease-out 1;
+  }
+
+  .brand-platforms.is-next-pressed:not(.is-both) .brandy--next {
+    transform: translateY(-50%) translateX(0) scaleX(-1);
+    animation: brandy-single-right 500ms ease-out 1;
+  }
 
 // Bounce keyframes: figures spring in from just outside their seam positions and
 // tap. End state matches the static .is-both transforms above.
 @keyframes brandy-highfive-left {
   0% {
-    transform: translateY(-50%) translateX(calc(-100% - 0.6rem)) scaleX(1);
+    transform: translateY(-50%) translateX(0) scaleX(-1);
   }
-  60% {
-    transform: translateY(-50%) translateX(calc(-100% + 0.1rem)) scaleX(1);
+  50% {
+    transform: translateY(-50%) translateX(3rem) scaleX(0);
   }
   100% {
-    transform: translateY(-50%) translateX(calc(-100% - #{$brandy-highfive-gap})) scaleX(1);
+    transform: translateY(-50%) translateX(5.9rem) scaleX(1);
   }
 }
+@keyframes brandy-single-left {
+    0% {
+      transform: translateY(-50%) translateX(3rem) scaleX(0);
+    }
+    100% {
+      transform: translateY(-50%) translateX(0) scaleX(-1);
+    }
+  }
 
-@keyframes brandy-highfive-right {
-  0% {
-    transform: translateY(-50%) translateX(0.6rem) scaleX(1);
+  @keyframes brandy-highfive-right {
+    0% {
+      transform: translateY(-50%) translateX(0) scaleX(-1);
+    }
+    50% {
+      transform: translateY(-50%) translateX(-3rem) scaleX(0);
+    }
+    100% {
+      transform: translateY(-50%) translateX(-5.9rem) scaleX(1);
+    }
   }
-  60% {
-    transform: translateY(-50%) translateX(-0.1rem) scaleX(1);
+  @keyframes brandy-single-right {
+    0% {
+      transform: translateY(-50%) translateX(-3rem) scaleX(0);
+    }
+    100% {
+      transform: translateY(-50%) translateX(0) scaleX(-1);
+    }
   }
-  100% {
-    transform: translateY(-50%) translateX($brandy-highfive-gap) scaleX(1);
-  }
-}
 
 // Respect users who prefer reduced motion: no transitions, no bounce, figures
 // just appear/settle at their final position.
