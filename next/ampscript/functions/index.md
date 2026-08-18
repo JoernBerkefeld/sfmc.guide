@@ -5,6 +5,8 @@ description: "The subset of AMPscript that Marketing Cloud Next supports — sea
 parent: Next
 parent_url: /next/
 permalink: /next/ampscript/functions/
+redirect_from:
+  - /next/ampscript-handlebars/
 platforms:
   - next
 ---
