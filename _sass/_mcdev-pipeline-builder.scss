@@ -1,0 +1,842 @@
+// ── mcdev Pipeline Builder tool ─────────────────────────────────────────────
+// Styles for the client-side wizard at /tools/mcdev-pipeline-builder/.
+// All empty / error / read-only / banner states are designed here (not blank).
+
+@use "variables" as *;
+
+.mpb {
+  margin: $space-6 0;
+
+  // ── Callouts (scope + version requirement) ──
+  &-callout {
+    padding: $space-4 $space-5;
+    border-radius: $radius-md;
+    margin-bottom: $space-4;
+    font-size: $text-sm;
+    line-height: $leading-normal;
+
+    strong { display: block; margin-bottom: $space-1; }
+
+    &--scope {
+      border: 1px solid rgba($accent-primary, 0.35);
+      background: $accent-dim;
+      color: $text-secondary;
+    }
+
+    &--version {
+      border: 1px solid rgba($color-warning, 0.4);
+      background: rgba($color-warning, 0.08);
+      color: $color-warning;
+    }
+  }
+
+  &-privacy {
+    margin-bottom: $space-6;
+  }
+
+  // ── Persistent banners (storage disabled / quota / tab lock / external change) ──
+  &-banners:not(:empty) {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    margin-bottom: $space-4;
+  }
+
+  &-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    border-radius: $radius-md;
+    font-size: $text-sm;
+    border: 1px solid $border-default;
+    background: $bg-elevated;
+    color: $text-secondary;
+
+    &--warning {
+      border-color: rgba($color-warning, 0.4);
+      background: rgba($color-warning, 0.08);
+      color: $color-warning;
+    }
+
+    &--danger {
+      border-color: rgba($color-danger, 0.4);
+      background: rgba($color-danger, 0.08);
+      color: $color-danger;
+    }
+
+    .mpb-banner-actions {
+      margin-left: auto;
+      display: flex;
+      gap: $space-2;
+    }
+  }
+}
+
+// ── Wizard steps ────────────────────────────────────────────────────────────
+.mpb-step {
+  margin: $space-6 0;
+
+  h2 { margin-bottom: $space-4; }
+  h3 { margin: $space-5 0 $space-2; }
+}
+
+// ── Intake screen ───────────────────────────────────────────────────────────
+.mpb-intake-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  text-align: center;
+  padding: $space-8 $space-5;
+  border: 2px dashed $border-default;
+  border-radius: $radius-lg;
+  background: $bg-surface;
+  cursor: pointer;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  &:hover,
+  &:focus,
+  &.is-dragover {
+    border-color: $accent-primary;
+    background: $accent-dim;
+    outline: none;
+  }
+
+  p { margin: 0; }
+}
+
+.mpb-paste {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  label { font-weight: 600; font-size: $text-sm; }
+
+  textarea {
+    width: 100%;
+    font-family: $font-mono;
+    font-size: $text-sm;
+    padding: $space-3;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    resize: vertical;
+  }
+}
+
+// ── Saved-sessions list + storage gauge ──
+.mpb-saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-3;
+
+  &:empty::before {
+    content: "No saved sessions yet — load a config above to begin.";
+    display: block;
+    padding: $space-4;
+    color: $text-muted;
+    font-size: $text-sm;
+    font-style: italic;
+    border: 1px dashed $border-muted;
+    border-radius: $radius-md;
+  }
+}
+
+.mpb-saved-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  .mpb-saved-name {
+    font-weight: 600;
+    color: $text-primary;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: $text-base;
+    cursor: text;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mpb-saved-meta {
+    font-size: $text-xs;
+    color: $text-muted;
+  }
+
+  .mpb-saved-actions {
+    display: flex;
+    gap: $space-2;
+    margin-left: auto;
+  }
+}
+
+.mpb-storage-gauge {
+  font-size: $text-xs;
+  color: $text-muted;
+
+  .mpb-gauge-bar {
+    height: 6px;
+    border-radius: $radius-full;
+    background: $bg-overlay;
+    overflow: hidden;
+    margin-top: $space-1;
+  }
+
+  .mpb-gauge-fill {
+    height: 100%;
+    background: $accent-primary;
+    transition: width $transition-normal;
+  }
+}
+
+// ── Mode picker ─────────────────────────────────────────────────────────────
+.mpb-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  text-align: left;
+  padding: $space-5;
+  border: 1px solid $border-muted;
+  border-radius: $radius-lg;
+  background: $bg-surface;
+  cursor: pointer;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:hover,
+  &:focus,
+  &.is-selected {
+    border-color: $accent-primary;
+    box-shadow: $shadow-sm;
+    outline: none;
+  }
+
+  .mpb-mode-title { font-size: $text-lg; font-weight: 700; color: $text-primary; }
+  .mpb-mode-desc { font-size: $text-sm; color: $text-secondary; line-height: $leading-relaxed; }
+}
+
+// ── Stepper / wizard nav ────────────────────────────────────────────────────
+.mpb-stepper {
+  margin-bottom: $space-6;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid $border-muted;
+}
+
+.mpb-stepper-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Each stepper item is a pill. The inner `<button>` (clickable steps) is a transparent, unstyled
+// wrapper so the pill itself carries all visuals — that keeps clickable and inert items pixel-aligned.
+.mpb-stepper-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+  font-size: $text-xs;
+  font-weight: 600;
+  padding: 0.2em 0.7em;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  color: $text-muted; // future / not-yet-reachable steps are muted by default
+  background: $bg-elevated;
+
+  // Completed, gate-satisfied earlier steps: green colour-coding to signal "done".
+  &.is-done {
+    color: $color-success;
+    border-color: rgba($color-success, 0.5);
+    background: rgba($color-success, 0.08);
+  }
+
+  // The active step: strongest highlight. Wins over is-done when both could apply.
+  &.is-current {
+    color: #fff;
+    background: $accent-primary;
+    border-color: $accent-primary;
+  }
+
+  // Reachable navigation targets: pointer affordance + hover feedback via the inner button.
+  &.is-clickable {
+    padding: 0;
+
+    .mpb-stepper-btn {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35em;
+      padding: 0.2em 0.7em;
+      margin: 0;
+      border: none;
+      border-radius: $radius-full;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+
+      &:hover { text-decoration: underline; }
+      &:focus-visible { outline: 2px solid $accent-primary; outline-offset: 1px; }
+    }
+  }
+
+  // Inert (current or gated-off) steps: no pointer, no focus affordance.
+  &[aria-disabled="true"] {
+    cursor: default;
+  }
+}
+
+.mpb-wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-top: $space-6;
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────────
+.mpb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-sm;
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $accent-primary;
+    color: #fff;
+
+    &:hover:not(:disabled) { background: $text-link-hover; }
+  }
+
+  &--secondary {
+    background: $bg-elevated;
+    border-color: $border-default;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      border-color: $accent-primary;
+      color: $accent-primary;
+    }
+  }
+
+  &--danger {
+    background: transparent;
+    border-color: rgba($color-danger, 0.4);
+    color: $color-danger;
+
+    &:hover:not(:disabled) { background: rgba($color-danger, 0.08); }
+  }
+}
+
+// ── Generic wizard controls (rows, chips, fields) ───────────────────────────
+.mpb-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-4;
+
+  label { font-weight: 600; font-size: $text-sm; }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    padding: 0.45em 0.7em;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+}
+
+// The separator only ever holds 1–2 characters, so keep the input compact.
+.mpb-separator-input {
+  width: 4rem;
+  text-align: center;
+  font-family: $font-mono;
+}
+
+.mpb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.mpb-chip {
+  font-size: $text-xs;
+  font-weight: 600;
+  padding: 0.25em 0.7em;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  background: $bg-elevated;
+  color: $text-secondary;
+  cursor: pointer;
+
+  &:hover { border-color: $accent-primary; color: $accent-primary; }
+}
+
+.mpb-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mpb-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  &.is-dragover { border-color: $accent-primary; }
+
+  // Name-editing column: the inline input, optional DEV/source chip and per-row warning stack here.
+  .mpb-row-label {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2;
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 8rem;
+      padding: 0.45em 0.7em;
+      border: 1px solid $border-default;
+      border-radius: $radius-md;
+      background: $bg-surface;
+      color: $text-primary;
+      font-size: $text-sm;
+      font-family: $font-sans;
+    }
+
+    .mpb-warn { flex-basis: 100%; margin-top: 0; }
+  }
+
+  .mpb-row-actions { display: flex; gap: $space-1; margin-left: auto; }
+
+  &[draggable="true"] { cursor: grab; }
+}
+
+// Dedicated drag handle — the only draggable element in an env-order row, so the name input
+// stays editable (a draggable row can swallow the mousedown needed to focus the input).
+.mpb-drag-handle {
+  flex: none;
+  cursor: grab;
+  user-select: none;
+  color: $text-muted;
+  font-size: $text-base;
+  line-height: 1;
+  padding: 0 0.15em;
+
+  &:active { cursor: grabbing; }
+}
+
+.mpb-move-btn {
+  font-size: $text-sm;
+  line-height: 1;
+  padding: 0.25em 0.5em;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  background: $bg-elevated;
+  color: $text-secondary;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: $accent-primary; color: $accent-primary; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ── BU-assignment board (Jira-style: Unassigned pool + one column per environment) ──
+// A flex parent of two regions: the fixed left pool (Unassigned) and the right env grid. On narrow
+// screens the two regions stack (pool on top, env grid below); from the tablet breakpoint up they
+// sit side by side with the env grid taking the remaining width.
+.mpb-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-4;
+}
+
+// Left region: the Unassigned pool keeps its natural (tall) height and a stable minimum width.
+.mpb-board-pool {
+  flex: 1 1 100%;
+
+  @media (min-width: 768px) {
+    flex: 0 0 240px;
+  }
+}
+
+// Right region: a dense grid so short environment columns pack upward beside their neighbours
+// (masonry-like) instead of wrapping below the tall pool. `row dense` keeps left-to-right reading
+// order (DEV, SIT, QA, UAT, Prod) while filling gaps. Auto rows let each column take its own height.
+.mpb-board-envs {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-flow: row dense;
+  grid-auto-rows: min-content;
+  align-items: start;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    flex: 1 1 auto;
+  }
+}
+
+.mpb-board-col {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  // The Unassigned pool is visually distinct from the environment columns and fills its region.
+  &--pool {
+    width: 100%;
+    background: $bg-elevated;
+    border-style: dashed;
+  }
+}
+
+.mpb-board-col-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+}
+
+// The drop target: keep a minimum height so an empty column is still an obvious drop zone.
+.mpb-board-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  min-height: 2.5rem;
+  padding: $space-1;
+  border-radius: $radius-sm;
+
+  &:empty::before {
+    content: "Drop BUs here";
+    display: block;
+    padding: $space-3;
+    text-align: center;
+    color: $text-muted;
+    font-size: $text-xs;
+    font-style: italic;
+  }
+}
+
+.mpb-board-chip {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+  color: $text-primary;
+  font-size: $text-sm;
+  cursor: grab;
+
+  &:active { cursor: grabbing; }
+
+  .mpb-board-grip {
+    flex: none;
+    color: $text-muted;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .mpb-board-chip-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  // Compact keyboard/a11y reassignment picker — the drag-free alternative.
+  .mpb-board-move {
+    flex: none;
+    max-width: 8rem;
+    padding: 0.2em 0.4em;
+    border: 1px solid $border-default;
+    border-radius: $radius-sm;
+    background: $bg-surface;
+    color: $text-secondary;
+    font-size: $text-xs;
+    font-family: $font-sans;
+    cursor: pointer;
+  }
+}
+
+// SortableJS drag states.
+.mpb-board-chip.sortable-ghost {
+  opacity: 0.4;
+  border-style: dashed;
+  border-color: $accent-primary;
+}
+
+.mpb-board-chip.sortable-chosen {
+  border-color: $accent-primary;
+}
+
+.mpb-board-chip.sortable-drag {
+  box-shadow: $shadow-sm;
+  opacity: 0.9;
+}
+
+// ── Lineage board (one column per environment, connected by arrowed SVG links) ──
+// Unlike the BU-assignment board (a dense masonry grid), the lineage board spreads its environment
+// columns evenly across the full width with a flex row so the source→target flow reads left-to-right
+// and the connector arrows have a stable horizontal span. `position: relative` anchors the absolute
+// SVG overlay to the board's own box.
+.mpb-lineage-board {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: $space-5;
+  overflow-x: auto;
+}
+
+.mpb-lineage-col {
+  flex: 1 1 0;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.mpb-lineage-col-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+  color: $text-primary;
+}
+
+// One BU inside a column. Kept above the overlay (z-index) so the <select> stays clickable and the
+// arrows visibly terminate at the node's edge rather than covering it.
+.mpb-lineage-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+  // Draggable source for drag-to-connect; the grab affordance hints the gesture.
+  cursor: grab;
+
+  .mpb-lineage-node-name { font-weight: 600; word-break: break-word; }
+  .mpb-lineage-node-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
+
+  .mpb-lineage-select {
+    padding: 0.35em 0.5em;
+    border: 1px solid $border-default;
+    border-radius: $radius-sm;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-xs;
+    font-family: $font-sans;
+    // The <select> is an interactive control, not a drag handle.
+    cursor: pointer;
+  }
+
+  // Drag-to-connect affordances: the dragged node dims, a valid adjacent target highlights in the
+  // lineage accent, and an invalid target shows a not-allowed state.
+  &.is-dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  &.is-drop-target {
+    border-color: $color-lineage-accent;
+    box-shadow: 0 0 0 2px rgba($color-lineage-accent, 0.35);
+  }
+
+  &.is-drop-invalid {
+    cursor: not-allowed;
+    border-color: $color-danger;
+  }
+}
+
+// Decorative connector overlay: sits on top of the columns but never intercepts pointer events.
+.mpb-lineage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+// Warnings inline (internal-space suffix etc.)
+.mpb-warn {
+  font-size: $text-xs;
+  color: $color-warning;
+  margin-top: $space-1;
+}
+
+// ── Rule picker ─────────────────────────────────────────────────────────────
+.mpb-rules {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.mpb-rule {
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  padding: $space-3 $space-4;
+  background: $bg-surface;
+
+  .mpb-rule-head {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-3;
+  }
+
+  .mpb-rule-body { flex: 1; }
+  .mpb-rule-name { font-weight: 700; }
+  .mpb-rule-desc { font-size: $text-sm; color: $text-secondary; }
+
+  .mpb-rule-fix {
+    display: inline-block;
+    font-size: $text-xs;
+    font-weight: 600;
+    padding: 0.1em 0.5em;
+    border-radius: $radius-full;
+    margin-top: $space-1;
+    background: rgba($color-success, 0.1);
+    color: $color-success;
+
+    &.is-none { background: $bg-elevated; color: $text-muted; }
+  }
+
+  details {
+    margin-top: $space-3;
+    padding-top: $space-3;
+    border-top: 1px solid $border-muted;
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: $text-sm;
+      color: $accent-primary;
+    }
+
+    &[open] summary { margin-bottom: $space-3; }
+  }
+}
+
+// ── Output ──────────────────────────────────────────────────────────────────
+.mpb-output-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-output-card {
+  border: 1px solid $border-muted;
+  border-radius: $radius-lg;
+  padding: $space-4 $space-5;
+  background: $bg-surface;
+
+  h3 { margin-bottom: $space-3; }
+}
+
+.mpb-output-actions {
+  display: flex;
+  gap: $space-2;
+  margin-bottom: $space-3;
+}
+
+.mpb-code-fallback {
+  width: 100%;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  padding: $space-3;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+  color: $text-primary;
+  resize: vertical;
+}
+
+.mpb-diagram-cta {
+  margin-top: $space-6;
+  padding: $space-4 $space-5;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  p { margin: $space-2 0 0; }
+}
+
+.mpb-diagram-fallback { margin-top: $space-3; }
+
+// ── Errors (parse gate, download guard, step errors) ────────────────────────
+.mpb-error {
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  border: 1px solid rgba($color-danger, 0.4);
+  background: rgba($color-danger, 0.08);
+  color: $color-danger;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+
+  &[hidden] { display: none; }
+}

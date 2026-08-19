@@ -355,6 +355,8 @@
       url: /tools/mcp-server-sfmc/
     - title: SFMC DevTools
       url: /tools/mcdev/
+    - title: SFMC DevTools Pipeline Builder
+      url: /tools/mcdev-pipeline-builder/
     - title: SF Plugin for MCNext
       url: /tools/sf-plugin-mcnext/
     - title: "— Community —"

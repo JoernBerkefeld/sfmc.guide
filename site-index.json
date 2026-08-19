@@ -966,6 +966,13 @@
     "description": "Graphical VS Code interface for mcdev — retrieve and deploy without living in the terminal."
   },
   {
+    "name": "SFMC DevTools Pipeline Builder",
+    "url": "/tools/mcdev-pipeline-builder/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Client-side wizard that turns your .mcdevrc.json into a git-based mcdev deployment pipeline plus a matching .mcdev-validations.js — all in your browser."
+  },
+  {
     "name": "SFMC Extension Pack",
     "url": "/tools/vscode-sfmc-extension-pack/",
     "section": "Tools",

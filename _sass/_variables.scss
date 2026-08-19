@@ -26,6 +26,9 @@ $color-danger:     #b91c1c;
 $color-info:       #0369a1;
 $color-purple:     #7c3aed;
 $color-orange:     #c2410c;
+// Marketing accent used for the lineage connector arrows (mirrors LINEAGE_ARROW_COLOR in the
+// pipeline-builder JS) and the drag-to-connect drop-target highlight.
+$color-lineage-accent: #f49825;
 
 $syntax-keyword:   #b91c1c;
 $syntax-string:    #0369a1;
