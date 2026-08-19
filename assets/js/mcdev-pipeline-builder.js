@@ -50,10 +50,6 @@
         return {
             version: 1,
             multiCred: false,
-            // The chosen generation mode (`'full'` | `'validations'`), persisted so a reopened /
-            // deep-linked session restores `state.mode` instead of forcing the mode picker. Null on a
-            // fresh state and on older saves that predate mode persistence (backward compatible).
-            mode: null,
             envOrder: [],
             envBUs: {},
             lineage: {},
@@ -145,21 +141,9 @@
     let wizardStep = null;
 
     /**
-     * Soft-confirm latch for the `bu-assign` step. Leaving a BU unassigned is legitimate (a BU may
-     * simply not belong to any pipeline), so the "some BUs are unassigned" warning is a confirm-to-
-     * proceed gate, not a hard block. Once the user clicks "Continue anyway" this flips true so they
-     * are not re-prompted. It is reset to `false` inside `assignBUToEnvironment` (the single board
-     * chokepoint) so any assignment/unassignment invalidates a prior confirmation and the user is
-     * warned again about the NEW situation if they return to the step.
-     *
-     * @type {boolean}
-     */
-    let hasConfirmedUnassigned = false;
-
-    /**
-     * Suggested environment names offered as one-click chips on the env-order step and as the
-     * initial seed for that step. The user can accept, remove, reorder, or type custom names —
-     * nothing here is forced.
+     * Suggested environment names offered as one-click chips on the env-names step and as the
+     * initial seed for the env-order step. The user can accept, remove, reorder, or type custom
+     * names — nothing here is forced.
      */
     const SUGGESTED_ENVIRONMENTS = ['DEV', 'SIT', 'QA', 'UAT', 'Pre-Prod', 'Prod'];
 
@@ -179,6 +163,7 @@
      */
     const WIZARD_STEP_IDS = [
         'env-order',
+        'env-names',
         'bu-assign',
         'lineage',
         'suffixes',
@@ -204,6 +189,7 @@
      */
     const WIZARD_STEP_TITLES = {
         'env-order': 'Environments',
+        'env-names': 'Names',
         'bu-assign': 'Assign BUs',
         lineage: 'Lineage',
         suffixes: 'Suffixes',
@@ -325,25 +311,6 @@
         }
         setText(dom.stepError, '');
         dom.stepError.hidden = true;
-    }
-
-    /**
-     * Refresh the wizard navigation gate WITHOUT re-rendering the current step. Text inputs call
-     * this on every keystroke instead of a full `render()` (which would tear down and rebuild the
-     * step DOM, destroying the focused input and jumping the scroll to the top). Next is always
-     * clickable — its `canProceed` check runs in `goNext()` — so all this needs to do is clear a
-     * previously-shown step error once the edited step passes its gate again, so a stale "why Next
-     * is blocked" message disappears the moment the user fixes the problem.
-     *
-     * @returns {void}
-     */
-    function updateNavGate() {
-        if (!wizardStep) {
-            return;
-        }
-        if (canProceed(wizardStep).ok) {
-            clearStepError();
-        }
     }
 
     // ─────────────────────────── parse gate ───────────────────────────
@@ -516,52 +483,7 @@
             return emptyWizardState();
         }
         // Merge over a fresh empty state so any newer field the block predates keeps its default.
-        const restored = Object.assign(emptyWizardState(), block);
-        // Strict single-assignment invariant: a re-opened config that predates this model could hold
-        // the same buRef in two environments. Dedupe so each buRef survives only in the first env
-        // (by envOrder) that claims it, keeping the board's "exactly one env per BU" rule.
-        restored.envBUs = dedupeEnvironmentBUs(restored.envOrder, restored.envBUs);
-        return restored;
-    }
-
-    /**
-     * Enforce the single-assignment invariant on a restored `envBUs` map: walking environments in
-     * order, keep each buRef only in the first env that lists it and drop later duplicates. Envs not
-     * present in `environmentOrder` are preserved at the end (deduped against earlier claims).
-     *
-     * @param {string[]} environmentOrder the ordered environment names
-     * @param {object} environmentBUs the `{ [env]: buRef[] }` map from a restored block
-     * @returns {object} a fresh, deduped `envBUs` map
-     */
-    function dedupeEnvironmentBUs(environmentOrder, environmentBUs) {
-        const source = environmentBUs && typeof environmentBUs === 'object' ? environmentBUs : {};
-        const order = Array.isArray(environmentOrder) ? environmentOrder : [];
-        // Iterate declared envs first (in order), then any stray envs the order list omits.
-        const environments = [...order, ...Object.keys(source).filter((name) => !order.includes(name))];
-        const claimed = new Set();
-        const result = {};
-        for (const environment of environments) {
-            const list = Array.isArray(source[environment]) ? source[environment] : [];
-            // Keep only references not already claimed by an earlier env; claiming mutates `claimed`.
-            result[environment] = list.filter((reference) => claimBUReference(claimed, reference));
-        }
-        return result;
-    }
-
-    /**
-     * Claim a buRef for the first env that lists it: returns true (and records it) when unseen,
-     * false when a previous env already claimed it. Extracted so the dedupe filter stays flat.
-     *
-     * @param {Set<string>} claimed the set of already-claimed buRefs (mutated)
-     * @param {string} reference the buRef to test/claim
-     * @returns {boolean} true when this env may keep the reference
-     */
-    function claimBUReference(claimed, reference) {
-        if (claimed.has(reference)) {
-            return false;
-        }
-        claimed.add(reference);
-        return true;
+        return Object.assign(emptyWizardState(), block);
     }
 
     /**
@@ -734,7 +656,7 @@
 
     /**
      * Case-insensitive trimmed-name collision check across the ordered env names, excluding the row
-     * being edited. Used by both the env-order inline feedback and its `canProceed` gate.
+     * being edited. Used by both the env-names inline feedback and its `canProceed` gate.
      *
      * @param {string[]} names the trimmed env names in order
      * @param {number} index the row to test
@@ -758,55 +680,21 @@
     }
 
     /**
-     * The pooled buRefs not currently assigned to any environment — the "Unassigned" column's
-     * contents. Preserves `pooledBUReferences()` order so the pool stays stable as BUs are moved.
+     * Toggle a buRef for an environment, writing the updated array back into `envBUs` and
+     * re-rendering. Adding/removing a BU can change whether the lineage step is needed, so a full
+     * re-render (which recomputes `visibleSteps()`) is required.
      *
-     * @returns {string[]} the unassigned buRefs, in pooled order
-     */
-    function unassignedBUReferences() {
-        const assigned = new Set(environmentNames().flatMap((environment) => assignedBUReferences(environment)));
-        return pooledBUReferences().filter((reference) => !assigned.has(reference));
-    }
-
-    /**
-     * Whether Next on the `bu-assign` step should surface the soft "some BUs are still unassigned"
-     * confirmation instead of advancing. True only when we are on `bu-assign`, at least one pooled BU
-     * is unassigned, AND the user has not yet confirmed the current set (`hasConfirmedUnassigned`).
-     * This is the pure, testable core of the soft gate — it never touches the DOM and is
-     * bu-assign-only.
-     *
-     * @returns {boolean} true when the confirmation prompt must be shown before advancing
-     */
-    function shouldConfirmUnassigned() {
-        return wizardStep === 'bu-assign' && unassignedBUReferences().length > 0 && !hasConfirmedUnassigned;
-    }
-
-    /**
-     * Single-assignment invariant, enforced in ONE place: a buRef belongs to at most one
-     * environment. Assigning it to `targetEnv` first removes it from EVERY environment, then appends
-     * it to `targetEnv` (when non-null). `targetEnv === null` therefore un-assigns it back to the
-     * Unassigned pool. Writes a fresh `envBUs` (never mutates the stored arrays) and re-renders so
-     * downstream steps (lineage/suffixes/diagram) recompute. Both the drag-drop reconciliation and
-     * the keyboard `<select>` route through here so the invariant can never be bypassed.
-     *
-     * @param {string} buReference the buRef to (re)assign
-     * @param {(string|null)} targetEnvironment the destination env name, or null for Unassigned
+     * @param {string} environment the environment name
+     * @param {string} buReference the buRef to toggle
+     * @param {boolean} on true to assign, false to unassign
      * @returns {void}
      */
-    function assignBUToEnvironment(buReference, targetEnvironment) {
-        const nextEnvironmentBUs = {};
-        for (const environment of environmentNames()) {
-            nextEnvironmentBUs[environment] = assignedBUReferences(environment).filter(
-                (reference) => reference !== buReference
-            );
-        }
-        if (targetEnvironment !== null && Object.hasOwn(nextEnvironmentBUs, targetEnvironment)) {
-            nextEnvironmentBUs[targetEnvironment] = [...nextEnvironmentBUs[targetEnvironment], buReference];
-        }
-        state.wizardState.envBUs = nextEnvironmentBUs;
-        // Every board change invalidates a prior "leave BUs unassigned" confirmation: if the user
-        // goes back, moves BUs around, and returns, they must be warned again about the new set.
-        hasConfirmedUnassigned = false;
+    function toggleEnvironmentBU(environment, buReference, on) {
+        const current = assignedBUReferences(environment);
+        const next = on
+            ? (current.includes(buReference) ? current : [...current, buReference])
+            : current.filter((reference) => reference !== buReference);
+        state.wizardState.envBUs = { ...state.wizardState.envBUs, [environment]: next };
         render();
     }
 
@@ -878,6 +766,9 @@
             case 'env-order': {
                 return canProceedEnvironmentOrder();
             }
+            case 'env-names': {
+                return canProceedEnvironmentNames();
+            }
             case 'bu-assign': {
                 return canProceedBUAssign();
             }
@@ -902,8 +793,7 @@
     }
 
     /**
-     * `env-order` gate (naming + ordering are now the same step): at least two environments, and
-     * every name non-empty, pattern-valid, and unique after a case-insensitive trim.
+     * `env-order` gate: at least two environments, and no empty/whitespace-only rows.
      *
      * @returns {{ok: boolean, reason: string}} gate result
      */
@@ -912,7 +802,20 @@
         if (order.length < 2) {
             return { ok: false, reason: 'Add at least two environments (e.g. a source and a target).' };
         }
-        const names = order.map((name) => name.trim());
+        if (order.some((name) => !name.trim())) {
+            return { ok: false, reason: 'Remove or name the empty environment rows before continuing.' };
+        }
+        return { ok: true, reason: '' };
+    }
+
+    /**
+     * `env-names` gate: every name non-empty, pattern-valid, and unique after a case-insensitive
+     * trim.
+     *
+     * @returns {{ok: boolean, reason: string}} gate result
+     */
+    function canProceedEnvironmentNames() {
+        const names = environmentNames().map((name) => name.trim());
         if (names.some((name) => !name)) {
             return { ok: false, reason: 'Every environment needs a name.' };
         }
@@ -1049,36 +952,15 @@
      * @returns {void}
      */
     function goNext() {
+        const steps = clampWizardStep();
+        const ids = steps.map((step) => step.id);
+        const index = ids.indexOf(wizardStep);
         const gate = canProceed(wizardStep);
         if (!gate.ok) {
-            // Hard gate failed (e.g. an env has zero BUs) — genuinely cannot proceed, no confirm.
             showStepError(gate.reason);
             return;
         }
         clearStepError();
-        // Soft gate: on bu-assign, if some BUs are still unassigned and the user hasn't confirmed
-        // the current set, warn (confirm-to-proceed) instead of advancing. Leaving a BU unassigned
-        // is legitimate, so this is a soft gate the user can skip via "Continue anyway".
-        if (shouldConfirmUnassigned()) {
-            showUnassignedConfirmBanner();
-            return;
-        }
-        advanceWizardStep();
-    }
-
-    /**
-     * Advance to the next visible wizard step (or out to the output step past the last one). Split
-     * out of `goNext` so the soft-confirm "Continue anyway" action reuses the exact same advance
-     * path after latching the confirmation. Clears the unassigned-BUs banner so it cannot linger on
-     * the following step.
-     *
-     * @returns {void}
-     */
-    function advanceWizardStep() {
-        const steps = clampWizardStep();
-        const ids = steps.map((step) => step.id);
-        const index = ids.indexOf(wizardStep);
-        clearBanner('unassigned-bus');
         if (index !== -1 && index < ids.length - 1) {
             wizardStep = ids[index + 1];
             render();
@@ -1086,80 +968,6 @@
         }
         // Past the last visible step → move on to the output step.
         goToStep('output');
-    }
-
-    /**
-     * Build a preview of the unassigned buRefs for the warning message: names joined with commas,
-     * capped so a large pool stays readable (first few, then an ellipsis).
-     *
-     * @param {string[]} references the unassigned buRefs
-     * @returns {string} a readable, capped name list
-     */
-    function unassignedNamesPreview(references) {
-        const maxNames = 5;
-        if (references.length <= maxNames) {
-            return references.join(', ');
-        }
-        return references.slice(0, maxNames).join(', ') + ', \u{2026}';
-    }
-
-    /**
-     * Show the soft confirmation for the `bu-assign` step: a keyed warning banner naming how many
-     * (and which) BUs are unassigned, with a "Continue anyway" action that latches the confirmation
-     * and advances, plus a dismiss action that just clears the prompt so the user can go assign them.
-     * Uses the shared banner system so it is built with `makeElement`/`setText` (escaped, no raw
-     * HTML) and matches the other in-app banners.
-     *
-     * @returns {void}
-     */
-    function showUnassignedConfirmBanner() {
-        const references = unassignedBUReferences();
-        const message =
-            references.length +
-            ' business unit(s) are not assigned to any environment (' +
-            unassignedNamesPreview(references) +
-            '). They will NOT be part of the pipeline. Continue anyway?';
-        showBanner(
-            'unassigned-bus',
-            message,
-            [
-                { label: 'Continue anyway', onClick: confirmUnassignedContinue },
-                { label: 'Go back and assign', onClick: confirmUnassignedGoBack },
-            ],
-            'warning'
-        );
-    }
-
-    /**
-     * "Continue anyway" action of the unassigned-BUs confirm banner. Latches the confirmation for the
-     * current set, then resumes the originally-requested navigation: a stashed stepper jump goes to
-     * that exact target (now unblocked by the latch), otherwise a plain Next advances one step.
-     * Clearing the stash first keeps `jumpToStep` re-entrant. Extracted as a named seam so it can be
-     * exercised DOM-free (the banner buttons invoke it directly).
-     *
-     * @returns {void}
-     */
-    function confirmUnassignedContinue() {
-        hasConfirmedUnassigned = true;
-        const target = pendingJumpTarget;
-        pendingJumpTarget = null;
-        if (target) {
-            jumpToStep(target);
-        } else {
-            advanceWizardStep();
-        }
-    }
-
-    /**
-     * "Go back and assign" action of the unassigned-BUs confirm banner. Dismiss only — the user stays
-     * on bu-assign and Next remains usable — and drop any stashed jump target so a later Next/jump
-     * re-evaluates from scratch. Extracted as a named seam so it can be exercised DOM-free.
-     *
-     * @returns {void}
-     */
-    function confirmUnassignedGoBack() {
-        pendingJumpTarget = null;
-        clearBanner('unassigned-bus');
     }
 
     /**
@@ -1172,10 +980,6 @@
         const ids = steps.map((step) => step.id);
         const index = ids.indexOf(wizardStep);
         clearStepError();
-        // Leaving the step (backwards) drops any lingering unassigned-BUs confirmation, plus any
-        // stashed stepper-jump target (defense-in-depth: Back must never resume a forward jump).
-        clearBanner('unassigned-bus');
-        pendingJumpTarget = null;
         if (index > 0) {
             wizardStep = ids[index - 1];
             render();
@@ -1186,131 +990,8 @@
     }
 
     /**
-     * Classify each visible step relative to the active one for the stepper nav, reusing the SAME
-     * `canProceed` gate that Back/Next enforce (no bespoke logic). For a step at index `i` with the
-     * current step at index `c`:
-     *   - `current` — `i === c`.
-     *   - `done` — `i < c` AND `canProceed(step.id)` passes (a completed, satisfied earlier step).
-     *   - `clickable` — a navigation target the user may jump to:
-     *       • `i < c` → always (going back is always allowed, like the Back button);
-     *       • `i > c` → only if every step from `c` up to (but excluding) `i` passes its gate, i.e.
-     *         exactly as far forward as pressing Next repeatedly would reach;
-     *       • `i === c` → never (the current step is not a navigation target).
-     * When `softBlockForward` is set (the bu-assign unassigned-BUs soft gate holds), EVERY forward
-     * step is made non-clickable so the affordance matches what `jumpToStep` will actually allow —
-     * a forward jump there is blocked until the user confirms. Backward steps stay clickable.
-     * Pure and DOM-free so it is unit-testable in isolation.
-     *
-     * @param {{id: string, title: string}[]} steps the visible steps, in order
-     * @param {(string|null)} currentId the active step id
-     * @param {(stepId: string) => {ok: boolean, reason: string}} gate the per-step gate (canProceed)
-     * @param {boolean} [softBlockForward] true when the current step's soft gate blocks any forward jump
-     * @returns {{current: boolean, done: boolean, clickable: boolean}[]} per-step state, aligned to `steps`
-     */
-    function computeStepperStates(steps, currentId, gate, softBlockForward) {
-        const currentIndex = steps.findIndex((step) => step.id === currentId);
-        // How far forward the gates currently allow: walk from the current step, stopping at the first
-        // step whose gate fails. `forwardLimit` is the last index reachable by pressing Next.
-        let forwardLimit = currentIndex;
-        for (let index = currentIndex; index >= 0 && index < steps.length - 1; index++) {
-            if (!gate(steps[index].id).ok) {
-                break;
-            }
-            forwardLimit = index + 1;
-        }
-        return steps.map((step, index) => {
-            const isCurrent = index === currentIndex;
-            const isBefore = currentIndex !== -1 && index < currentIndex;
-            const isAfter = currentIndex !== -1 && index > currentIndex;
-            const done = isBefore && gate(step.id).ok;
-            // A forward step is reachable only within the gate limit AND not held back by the soft gate.
-            const isForwardClickable = isAfter && index <= forwardLimit && !softBlockForward;
-            const isClickable = isBefore || isForwardClickable;
-            return { current: isCurrent, done: done, clickable: isClickable };
-        });
-    }
-
-    /**
-     * A stepper-jump target stashed while the `bu-assign` soft-confirm banner is up, so the banner's
-     * "Continue anyway" action can resume navigation to the originally-clicked step (not just a
-     * single-step advance). Null when no jump is pending confirmation.
-     *
-     * @type {(string|null)}
-     */
-    let pendingJumpTarget = null;
-
-    /**
-     * Whether a forward stepper jump would cross/leave the `bu-assign` step while its soft-confirm
-     * gate still holds — i.e. the same "some BUs are still unassigned, confirm to proceed" gate that
-     * `goNext` enforces but `canProceed` does not. Used both to block the jump in `jumpToStep` and to
-     * hide the clickable affordance in `computeStepperStates`, so the two navigation paths stay in
-     * lock-step. Backward jumps are never blocked. Pure + DOM-free (drives off `shouldConfirmUnassigned`).
-     *
-     * @param {(string|null)} currentId the active step id
-     * @param {string} targetId the step the user wants to jump to
-     * @returns {boolean} true when the forward jump must first be confirmed on bu-assign
-     */
-    function isForwardJumpSoftBlocked(currentId, targetId) {
-        if (currentId !== 'bu-assign' || !shouldConfirmUnassigned()) {
-            return false;
-        }
-        const ids = clampWizardStep().map((step) => step.id);
-        const fromIndex = ids.indexOf(currentId);
-        const toIndex = ids.indexOf(targetId);
-        // Only forward jumps away from bu-assign are gated; backward (or same/unknown) never are.
-        return fromIndex !== -1 && toIndex > fromIndex;
-    }
-
-    /**
-     * Navigate to a visible wizard step from a stepper click. Going backward is always allowed;
-     * going forward re-runs the same `canProceed` gate Next enforces for every step between the
-     * current one and the target, surfacing the first blocking reason and refusing to jump if any
-     * gate fails (belt-and-suspenders — unreachable steps are not rendered clickable). Leaving
-     * `bu-assign` forward also honours the SAME soft "unassigned BUs" confirmation `goNext` enforces:
-     * the jump is stashed and the confirm banner shown instead of navigating; the banner's "Continue
-     * anyway" action resumes the stashed jump. On success it sets `wizardStep` and re-renders via the
-     * shared render path (which also syncs the hash).
-     *
-     * @param {string} targetId the step id to jump to
-     * @returns {void}
-     */
-    function jumpToStep(targetId) {
-        const steps = clampWizardStep();
-        const ids = steps.map((step) => step.id);
-        const fromIndex = ids.indexOf(wizardStep);
-        const toIndex = ids.indexOf(targetId);
-        if (toIndex === -1 || toIndex === fromIndex) {
-            return;
-        }
-        clearStepError();
-        // Forward jumps must clear every intermediate gate, exactly like pressing Next repeatedly.
-        if (toIndex > fromIndex) {
-            for (let index = fromIndex; index < toIndex; index++) {
-                const result = canProceed(ids[index]);
-                if (!result.ok) {
-                    showStepError(result.reason);
-                    return;
-                }
-            }
-            // Soft gate parity with goNext: a forward jump off bu-assign with unassigned BUs must
-            // confirm first. Stash the target so "Continue anyway" resumes THIS jump, not just a
-            // one-step advance.
-            if (isForwardJumpSoftBlocked(wizardStep, targetId)) {
-                pendingJumpTarget = targetId;
-                showUnassignedConfirmBanner();
-                return;
-            }
-        }
-        clearBanner('unassigned-bus');
-        wizardStep = targetId;
-        render();
-    }
-
-    /**
-     * Render the stepper progress nav (`#mpb-stepper`) as an ordered list of the visible steps:
-     * the current step is highlighted (`is-current` + `aria-current="step"`), completed earlier
-     * steps are colour-coded (`is-done`), and reachable steps are clickable navigation targets wired
-     * through the same gating as Back/Next (`jumpToStep`). Text/nodes only — no `innerHTML`.
+     * Render the stepper progress nav (`#mpb-stepper`) as a simple ordered list of the visible
+     * steps, highlighting the active one. Text/nodes only — no `innerHTML`.
      *
      * @param {{id: string, title: string}[]} steps the visible steps
      * @returns {void}
@@ -1320,70 +1001,25 @@
             return;
         }
         setText(dom.stepper, '');
-        // Mirror the jumpToStep soft gate: while bu-assign's unassigned-BUs confirmation is pending,
-        // no forward step is actually reachable, so none should render clickable.
-        const states = computeStepperStates(
-            steps,
-            wizardStep,
-            canProceed,
-            wizardStep === 'bu-assign' && shouldConfirmUnassigned()
-        );
         const list = makeElement('ol', { class: 'mpb-stepper-list' });
         for (const [index, step] of steps.entries()) {
-            list.append(stepperItem(step, index, states[index]));
+            const isCurrent = step.id === wizardStep;
+            const item = makeElement('li', {
+                class: isCurrent ? 'mpb-stepper-item is-current' : 'mpb-stepper-item',
+                attrs: isCurrent ? { 'aria-current': 'step' } : {},
+            });
+            item.append(
+                makeElement('span', { class: 'mpb-stepper-index', text: String(index + 1) }),
+                makeElement('span', { class: 'mpb-stepper-title', text: step.title })
+            );
+            list.append(item);
         }
         dom.stepper.append(list);
     }
 
     /**
-     * Build one stepper list item. A clickable (reachable) step renders as a real `<button>` with
-     * Enter/Space activation via native button semantics; a non-clickable step renders as inert text
-     * with `aria-disabled="true"` and no focus/pointer affordance. The current step is marked
-     * `aria-current="step"` and is never a navigation target.
-     *
-     * @param {{id: string, title: string}} step the step
-     * @param {number} index the step's zero-based position
-     * @param {{current: boolean, done: boolean, clickable: boolean}} stepState the classified state
-     * @returns {HTMLElement} the list item element
-     */
-    function stepperItem(step, index, stepState) {
-        const classes = ['mpb-stepper-item'];
-        if (stepState.current) {
-            classes.push('is-current');
-        }
-        if (stepState.done) {
-            classes.push('is-done');
-        }
-        if (stepState.clickable) {
-            classes.push('is-clickable');
-        }
-        const item = makeElement('li', {
-            class: classes.join(' '),
-            attrs: stepState.current ? { 'aria-current': 'step' } : {},
-        });
-        const indexSpan = makeElement('span', { class: 'mpb-stepper-index', text: String(index + 1) });
-        const titleSpan = makeElement('span', { class: 'mpb-stepper-title', text: step.title });
-        if (stepState.clickable) {
-            // A real <button> gives free Enter/Space activation, focusability and role semantics.
-            const button = makeElement('button', {
-                class: 'mpb-stepper-btn',
-                type: 'button',
-            });
-            button.append(indexSpan, titleSpan);
-            button.addEventListener('click', () => jumpToStep(step.id));
-            item.append(button);
-        } else {
-            // Non-clickable steps (current, or gated-off future steps) are inert, unfocusable text.
-            item.setAttribute('aria-disabled', 'true');
-            item.append(indexSpan, titleSpan);
-        }
-        return item;
-    }
-
-    /**
-     * Render the current wizard step's UI into `#mpb-step-host`. All six steps are implemented
-     * (env-order / bu-assign / lineage / suffixes / prod-confirm / rules). Environment naming and
-     * ordering are combined into the single `env-order` step.
+     * Render the current wizard step's UI into `#mpb-step-host`. All seven steps are implemented
+     * (env-order / env-names / bu-assign / lineage / suffixes / prod-confirm / rules).
      *
      * @param {string} stepId the active step id
      * @returns {void}
@@ -1392,11 +1028,6 @@
         if (!dom.stepHost) {
             return;
         }
-        // Any step render replaces the step host wholesale — drop the lineage overlay's resize
-        // listener/frame and the drag-to-connect handlers first so leaving lineage (or re-rendering
-        // it) never leaks a handler. The lineage renderer re-mounts both when it is the active step.
-        teardownLineageOverlay();
-        teardownLineageDnd();
         setText(dom.stepHost, '');
         const title = WIZARD_STEP_TITLES[stepId] || stepId;
         const panel = makeElement('div', {
@@ -1407,6 +1038,10 @@
         switch (stepId) {
             case 'env-order': {
                 renderEnvironmentOrderStep(panel);
+                break;
+            }
+            case 'env-names': {
+                renderEnvironmentNamesStep(panel);
                 break;
             }
             case 'bu-assign': {
@@ -1442,11 +1077,10 @@
     }
 
     /**
-     * `env-order` step (naming + ordering combined): quick-fill chips from `SUGGESTED_ENVIRONMENTS`,
-     * plus an ordered, reorderable list of environment rows. Each row carries an inline editable
-     * name input, drag-and-drop (via a dedicated drag handle) and keyboard-accessible up/down
-     * buttons (index 0 is the DEV/source env), plus add/remove. Seeds from `SUGGESTED_ENVIRONMENTS`
-     * when empty.
+     * `env-order` step: an ordered, reorderable list of environment rows with drag-and-drop and
+     * keyboard-accessible up/down buttons (index 0 is the DEV/source env), plus add/remove. Seeds
+     * from `SUGGESTED_ENVIRONMENTS` when empty. Name editing happens on the next step — here rows
+     * only reorder / add / remove.
      *
      * @param {HTMLElement} panel the step panel to mount into
      * @returns {void}
@@ -1460,57 +1094,15 @@
         panel.append(
             makeElement('p', {
                 class: 'text-muted',
-                text: 'Name each environment and order them from source to production. The first row is the DEV / source environment. Type a name inline, drag the handle to reorder, or use the up/down buttons.',
+                text: 'Order your environments from source to production. The first row is the DEV / source environment. Drag to reorder, or use the up/down buttons.',
             })
         );
 
-        // Quick-fill chips: append a suggested name as a new row (skipping ones already present).
-        const chips = makeElement('div', { class: 'mpb-chips', attrs: { 'aria-label': 'Suggested environment names' } });
-        for (const suggestion of SUGGESTED_ENVIRONMENTS) {
-            const chip = makeElement('button', {
-                type: 'button',
-                class: 'mpb-chip',
-                text: suggestion,
-            });
-            chip.addEventListener('click', () => {
-                const existing = environmentNames().map((existingName) => existingName.trim().toLowerCase());
-                if (!existing.includes(suggestion.toLowerCase())) {
-                    state.wizardState.envOrder = [...environmentNames(), suggestion];
-                    render();
-                }
-            });
-            chips.append(chip);
-        }
-        panel.append(chips);
-
-        // Keep a reference to every rendered row so typing a name refreshes the inline validation
-        // (which is cross-row for the duplicate check) IN PLACE — never rebuilding the inputs, which
-        // would blur the focused field and jump the scroll to the top.
-        const rows = [];
-
-        /**
-         * Repaint every row's inline validation in place from the current names. Called on each
-         * keystroke so a fixed name clears its warning and duplicate flags update across rows,
-         * without recreating any input.
-         *
-         * @returns {void}
-         */
-        function refreshEnvironmentWarnings() {
-            const currentTrimmed = environmentNames().map((environmentName) => environmentName.trim());
-            for (const row of rows) {
-                setEnvironmentRowWarning(row, currentTrimmed);
-            }
-        }
-
         const list = makeElement('ol', { class: 'mpb-list', attrs: { 'aria-label': 'Environment order' } });
         for (const [index, name] of order.entries()) {
-            const row = environmentOrderRow(name, index, order.length, refreshEnvironmentWarnings);
-            rows.push(row);
-            list.append(row.row);
+            list.append(environmentOrderRow(name, index, order.length));
         }
         panel.append(list);
-        // Initial validation paint now that every row exists (so cross-row duplicates resolve).
-        refreshEnvironmentWarnings();
 
         const addButton = makeElement('button', {
             type: 'button',
@@ -1520,79 +1112,32 @@
         addButton.addEventListener('click', () => {
             state.wizardState.envOrder = [...environmentNames(), ''];
             render();
-            // Nice-to-have: focus the freshly-added row's name input so the user can type right away.
-            const inputs = dom.stepHost
-                ? [...dom.stepHost.querySelectorAll('.mpb-env-name-input')]
-                : [];
-            const last = inputs.at(-1);
-            if (last) {
-                last.focus();
-            }
         });
         panel.append(addButton);
     }
 
     /**
-     * Build one environment row for the env-order list: an inline editable name input with inline
-     * validation feedback, a dedicated drag handle, and up/down/remove buttons. Only the handle is
-     * `draggable` so the name input stays fully editable (a `draggable` row swallows the mousedown
-     * needed to focus/select inside the input on some browsers).
+     * Build one draggable environment row for the env-order list.
      *
      * @param {string} name the environment name (may be empty for a freshly-added row)
      * @param {number} index the row index in `envOrder`
      * @param {number} total the number of rows (for disabling edge buttons)
-     * @param {() => void} refreshWarnings repaint every row's inline validation in place after an edit
-     * @returns {{row: HTMLElement, index: number, warnings: HTMLElement}} the row element plus the
-     *   handles needed for in-place validation refreshes
+     * @returns {HTMLElement} the row element
      */
-    function environmentOrderRow(name, index, total, refreshWarnings) {
+    function environmentOrderRow(name, index, total) {
         const row = makeElement('li', {
             class: 'mpb-row',
+            draggable: true,
             attrs: { 'data-index': String(index) },
         });
 
-        // Dedicated drag handle — the only draggable element, so the name input remains editable.
-        const handle = makeElement('span', {
-            class: 'mpb-drag-handle',
-            draggable: true,
-            text: '⠿',
-            attrs: { 'aria-hidden': 'true', title: 'Drag to reorder' },
+        const label = makeElement('span', {
+            class: 'mpb-row-label',
+            text: name || '(unnamed — set on the next step)',
         });
-
-        const label = makeElement('div', { class: 'mpb-row-label' });
-        const inputId = 'mpb-env-name-' + index;
-        const input = makeElement('input', {
-            type: 'text',
-            value: name,
-            id: inputId,
-            class: 'mpb-env-name-input',
-            attrs: {
-                autocomplete: 'off',
-                spellcheck: 'false',
-                'aria-label': 'Environment ' + (index + 1) + ' name',
-                placeholder: 'Environment ' + (index + 1),
-            },
-        });
-        input.addEventListener('input', () => {
-            const next = environmentNames();
-            // Store exactly as typed (no space→underscore conversion); trimming is validation-only.
-            next[index] = input.value;
-            state.wizardState.envOrder = next;
-            // Refresh only the inline validation (cross-row duplicates included), the nav gate and
-            // the debounced autosave — never a full render that would blur this input.
-            refreshWarnings();
-            updateNavGate();
-            scheduleAutosave();
-        });
-        label.append(input);
         if (index === 0) {
             label.append(makeElement('span', { class: 'mpb-chip', text: 'DEV / source' }));
         }
-
-        // Dedicated warnings slot so the inline validation can be wiped + repainted in place (from
-        // `setEnvironmentRowWarning`) without touching the input.
-        const warnings = makeElement('div', { class: 'mpb-env-name-warnings' });
-        label.append(warnings);
 
         const actions = makeElement('div', { class: 'mpb-row-actions' });
         const upButton = makeElement('button', {
@@ -1624,53 +1169,26 @@
             render();
         });
         actions.append(upButton, downButton, removeButton);
-        row.append(handle, label, actions);
+        row.append(label, actions);
 
-        wireEnvironmentRowDnD(row, handle, index);
-        return { row: row, index: index, warnings: warnings };
+        wireEnvironmentRowDnD(row, index);
+        return row;
     }
 
     /**
-     * Paint a single env-order row's inline validation into its warnings slot, mirroring the merged
-     * env-order `canProceed` gate (required / pattern / uniqueness). Wipes the slot first so it can
-     * be called repeatedly in place without recreating the input.
+     * Wire drag-and-drop reordering for a single env-order row. On drop, the dragged index is read
+     * from the drag payload and the list is reordered via `moveEnvironment`.
      *
-     * @param {{index: number, warnings: HTMLElement}} row the row handle
-     * @param {string[]} trimmedNames all trimmed names (for the cross-row uniqueness check)
-     * @returns {void}
-     */
-    function setEnvironmentRowWarning(row, trimmedNames) {
-        setText(row.warnings, '');
-        const trimmedValue = (trimmedNames[row.index] || '').trim();
-        let message = '';
-        if (!trimmedValue) {
-            message = 'Name required.';
-        } else if (!ENVIRONMENT_NAME_PATTERN.test(trimmedValue)) {
-            message = 'Only letters, digits, spaces, hyphens and underscores are allowed.';
-        } else if (isDuplicateName(trimmedNames, row.index)) {
-            message = 'Duplicate name — each environment must be unique.';
-        }
-        if (message) {
-            row.warnings.append(makeElement('p', { class: 'mpb-warn', text: message }));
-        }
-    }
-
-    /**
-     * Wire drag-and-drop reordering for a single env-order row. Only the drag `handle` starts a
-     * drag (so the row's name input stays editable); the whole `row` remains a valid drop target.
-     * On drop, the dragged index is read from the drag payload and the list is reordered via
-     * `moveEnvironment`.
-     *
-     * @param {HTMLElement} row the row element (drop target)
-     * @param {HTMLElement} handle the drag handle (drag source)
+     * @param {HTMLElement} row the row element
      * @param {number} index the row's index
      * @returns {void}
      */
-    function wireEnvironmentRowDnD(row, handle, index) {
-        handle.addEventListener('dragstart', (event) => {
+    function wireEnvironmentRowDnD(row, index) {
+        row.addEventListener('dragstart', (event) => {
             if (!event.dataTransfer) {
-                return;
+            	return;
             }
+
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', String(index));
         });
@@ -1693,63 +1211,107 @@
     }
 
     /**
-     * The DOM `data-env` value used for the Unassigned board column. A real environment can never be
-     * named this (env names are pattern-validated and this carries a leading space), so it can never
-     * collide with a user environment. Mapped to the `null` target of `assignBUToEnvironment`.
-     */
-    const UNASSIGNED_COLUMN = ' unassigned';
-
-    /**
-     * The SortableJS group name shared by every board column so chips can be dragged between them.
-     */
-    const BU_BOARD_GROUP = 'mpb-bus';
-
-    /**
-     * Live SortableJS instances for the current board render, destroyed before every re-render so a
-     * discarded step host (which `renderWizardStep` replaces wholesale) never leaves dangling
-     * handlers or leaked instances behind.
+     * `env-names` step: quick-fill chips from `SUGGESTED_ENVIRONMENTS`, a text input per row with
+     * live pattern/uniqueness feedback, writing trimmed names back into `envOrder`. No
+     * space→underscore rewrite — the name is stored exactly as typed (trimmed only on validation).
      *
-     * @type {Array<{destroy: function(): void}>}
-     */
-    let buBoardSortables = [];
-
-    /**
-     * Tear down any Sortable instances left from a previous board render.
-     *
+     * @param {HTMLElement} panel the step panel to mount into
      * @returns {void}
      */
-    function destroyBUBoardSortables() {
-        for (const instance of buBoardSortables) {
-            try {
-                instance.destroy();
-            } catch {
-                // A destroy() on an already-detached list can throw; the instance is being discarded
-                // anyway, so swallow it rather than surface a non-actionable error.
-            }
+    function renderEnvironmentNamesStep(panel) {
+        panel.append(
+            makeElement('p', {
+                class: 'text-muted',
+                text: 'Name each environment. Names must be unique and may use letters, digits, spaces, hyphens and underscores.',
+            })
+        );
+
+        // Quick-fill chips: append a suggested name as a new row (skipping ones already present).
+        const chips = makeElement('div', { class: 'mpb-chips', attrs: { 'aria-label': 'Suggested environment names' } });
+        for (const suggestion of SUGGESTED_ENVIRONMENTS) {
+            const chip = makeElement('button', {
+                type: 'button',
+                class: 'mpb-chip',
+                text: suggestion,
+            });
+            chip.addEventListener('click', () => {
+                const existing = environmentNames().map((existingName) => existingName.trim().toLowerCase());
+                if (!existing.includes(suggestion.toLowerCase())) {
+                    state.wizardState.envOrder = [...environmentNames(), suggestion];
+                    render();
+                }
+            });
+            chips.append(chip);
         }
-        buBoardSortables = [];
+        panel.append(chips);
+
+        const order = environmentNames();
+        const trimmed = order.map((name) => name.trim());
+        const list = makeElement('div', { class: 'mpb-list' });
+        for (const [index, name] of order.entries()) {
+            list.append(environmentNameRow(name, index, trimmed));
+        }
+        panel.append(list);
     }
 
     /**
-     * `bu-assign` step — a Jira-style board. Each BU belongs to exactly one environment: an
-     * "Unassigned" column holds every not-yet-placed buRef and there is one column per environment.
-     * Dragging a chip into an environment assigns it there (and removes it from wherever it was);
-     * dragging back to Unassigned un-assigns it. buRefs read `<cred>/<BU>` when multiCred, bare
-     * otherwise. Drag-drop (SortableJS) and a compact per-chip `<select>` (keyboard/a11y parity)
-     * both route writes through `assignBUToEnvironment`, so the single-assignment invariant lives in
-     * one place.
+     * Build one env-name editing row with inline validation feedback.
+     *
+     * @param {string} name the current (untrimmed) name
+     * @param {number} index the row index in `envOrder`
+     * @param {string[]} trimmedNames all trimmed names (for uniqueness feedback)
+     * @returns {HTMLElement} the field element
+     */
+    function environmentNameRow(name, index, trimmedNames) {
+        const field = makeElement('div', { class: 'mpb-field' });
+        const inputId = 'mpb-env-name-' + index;
+        field.append(
+            makeElement('label', { text: 'Environment ' + (index + 1), attrs: { for: inputId } })
+        );
+        const input = makeElement('input', {
+            type: 'text',
+            value: name,
+            id: inputId,
+            attrs: { autocomplete: 'off', spellcheck: 'false' },
+        });
+        input.addEventListener('input', () => {
+            const next = environmentNames();
+            // Store exactly as typed (no space→underscore conversion); trimming is validation-only.
+            next[index] = input.value;
+            state.wizardState.envOrder = next;
+            render();
+        });
+        field.append(input);
+
+        const trimmedValue = name.trim();
+        let message = '';
+        if (!trimmedValue) {
+            message = 'Name required.';
+        } else if (!ENVIRONMENT_NAME_PATTERN.test(trimmedValue)) {
+            message = 'Only letters, digits, spaces, hyphens and underscores are allowed.';
+        } else if (isDuplicateName(trimmedNames, index)) {
+            message = 'Duplicate name — each environment must be unique.';
+        }
+        if (message) {
+            field.append(makeElement('p', { class: 'mpb-warn', text: message }));
+        }
+        return field;
+    }
+
+    /**
+     * `bu-assign` step: for each environment (in order) list every pooled buRef as a checkbox; the
+     * user assigns ≥1 BU per env. buRefs are `<cred>/<BU>` when multiCred, bare otherwise. Toggling
+     * writes arrays back into `envBUs`.
      *
      * @param {HTMLElement} panel the step panel to mount into
      * @returns {void}
      */
     function renderBUAssignStep(panel) {
-        // Any instances from the previous render belong to a now-discarded DOM tree — drop them.
-        destroyBUBoardSortables();
         const references = pooledBUReferences();
         panel.append(
             makeElement('p', {
                 class: 'text-muted',
-                text: 'Each business unit belongs to exactly one environment. Drag a BU from Unassigned into an environment (or use its dropdown); an environment holding more than one BU becomes a branching pipeline.',
+                text: 'Assign at least one business unit to each environment. An environment with more than one BU becomes a branching pipeline.',
             })
         );
         if (references.length === 0) {
@@ -1759,195 +1321,40 @@
             return;
         }
 
-        const hasSortable = Boolean(global.Sortable);
-        if (!hasSortable) {
-            // Offline / blocked CDN: SortableJS is absent, so drag-and-drop is unavailable. The
-            // per-chip dropdown still assigns every BU, so the wizard stays fully usable.
-            panel.append(
-                makeElement('p', {
-                    class: 'mpb-warn',
-                    text: 'Drag-and-drop is unavailable (the SortableJS library did not load). Use each BU’s dropdown to assign it instead.',
-                })
-            );
-        }
-
-        // Split the board into a fixed left pool (Unassigned) and a right grid of environment
-        // columns. The grid packs short columns upward independently of the tall pool, so QA/UAT/Prod
-        // fill the space beside DEV/SIT instead of wrapping below Unassigned. SortableJS still finds
-        // every `.mpb-board-list` (and their `data-env`) via `board.querySelectorAll`, regardless of
-        // this extra nesting, so the shared drag group and DOM reconciliation are unaffected.
-        const board = makeElement('div', { class: 'mpb-board' });
-        const pool = makeElement('div', { class: 'mpb-board-pool' });
-        pool.append(buBoardColumn(UNASSIGNED_COLUMN, 'Unassigned', unassignedBUReferences(), hasSortable));
-        board.append(pool);
-        const environmentRegion = makeElement('div', { class: 'mpb-board-envs' });
+        const grid = makeElement('div', { class: 'mpb-assign-grid' });
         for (const environment of environmentNames()) {
-            environmentRegion.append(
-                buBoardColumn(environment, environment || '(unnamed environment)', assignedBUReferences(environment), hasSortable)
-            );
+            grid.append(buAssignColumn(environment, references));
         }
-        board.append(environmentRegion);
-        panel.append(board);
-
-        if (hasSortable) {
-            wireBoardSortables(board);
-        }
+        panel.append(grid);
     }
 
     /**
-     * Build one board column (Unassigned or a single environment) with its draggable BU chips and,
-     * for environments, an empty-state warning.
+     * Build the BU-assignment column for one environment.
      *
-     * @param {string} columnKey the `data-env` key (`UNASSIGNED_COLUMN` or an env name)
-     * @param {string} title the visible column heading
-     * @param {string[]} references the buRefs currently in this column
-     * @param {boolean} hasSortable whether SortableJS is available (drives the drag affordance)
+     * @param {string} environment the environment name
+     * @param {string[]} references the pooled buRefs
      * @returns {HTMLElement} the column element
      */
-    function buBoardColumn(columnKey, title, references, hasSortable) {
-        const isUnassigned = columnKey === UNASSIGNED_COLUMN;
-        const column = makeElement('div', {
-            class: isUnassigned ? 'mpb-board-col mpb-board-col--pool' : 'mpb-board-col',
-        });
-        column.append(makeElement('h4', { class: 'mpb-board-col-title', text: title }));
-        const list = makeElement('div', {
-            class: 'mpb-board-list',
-            attrs: { 'data-env': columnKey },
-        });
+    function buAssignColumn(environment, references) {
+        const column = makeElement('div', { class: 'mpb-assign-col' });
+        column.append(makeElement('h4', { text: environment || '(unnamed environment)' }));
+        const assigned = new Set(assignedBUReferences(environment));
         for (const reference of references) {
-            list.append(buBoardChip(reference, columnKey, hasSortable));
+            const label = makeElement('label', { class: 'mpb-field' });
+            const checkbox = makeElement('input', {
+                type: 'checkbox',
+                checked: assigned.has(reference),
+            });
+            checkbox.addEventListener('change', () => {
+                toggleEnvironmentBU(environment, reference, checkbox.checked);
+            });
+            label.append(checkbox, makeElement('span', { text: ' ' + reference }));
+            column.append(label);
         }
-        column.append(list);
-        if (!isUnassigned && references.length === 0) {
+        if (assigned.size === 0) {
             column.append(makeElement('p', { class: 'mpb-warn', text: 'Assign at least one BU.' }));
         }
         return column;
-    }
-
-    /**
-     * Build a single BU chip: the draggable buRef text plus a compact `<select>` that reassigns it
-     * to any environment or back to Unassigned without dragging (keyboard/a11y parity). The chip's
-     * `data-bu` lets the drop reconciliation read DOM order back into state.
-     *
-     * @param {string} reference the buRef this chip represents
-     * @param {string} columnKey the column the chip currently lives in
-     * @param {boolean} hasSortable whether SortableJS is available (drives the drag affordance)
-     * @returns {HTMLElement} the chip element
-     */
-    function buBoardChip(reference, columnKey, hasSortable) {
-        const chip = makeElement('div', {
-            class: 'mpb-board-chip',
-            attrs: { 'data-bu': reference },
-        });
-        if (hasSortable) {
-            // A dedicated grip communicates the chip is draggable (Sortable drags the whole chip).
-            chip.append(makeElement('span', { class: 'mpb-board-grip', text: '⠿', attrs: { 'aria-hidden': 'true' } }));
-        }
-        chip.append(makeElement('span', { class: 'mpb-board-chip-name', text: reference }));
-
-        // Keyboard/a11y alternative to dragging: a compact env picker routed through the same invariant.
-        const selectId = 'mpb-bu-move-' + reference.replaceAll(/[^a-zA-Z0-9]+/g, '-');
-        const select = makeElement('select', {
-            class: 'mpb-board-move',
-            id: selectId,
-            attrs: { 'aria-label': 'Assign ' + reference + ' to environment' },
-        });
-        select.append(
-            makeElement('option', {
-                value: UNASSIGNED_COLUMN,
-                text: 'Unassigned',
-                selected: columnKey === UNASSIGNED_COLUMN,
-            })
-        );
-        for (const environment of environmentNames()) {
-            select.append(
-                makeElement('option', {
-                    value: environment,
-                    text: environment || '(unnamed environment)',
-                    selected: environment === columnKey,
-                })
-            );
-        }
-        select.addEventListener('change', () => {
-            assignBUToEnvironment(reference, select.value === UNASSIGNED_COLUMN ? null : select.value);
-        });
-        chip.append(select);
-        return chip;
-    }
-
-    /**
-     * Initialise a shared SortableJS group across all board lists so chips move between columns, and
-     * reconcile `wizardState.envBUs` from the resulting DOM after every drop. SortableJS mutates the
-     * DOM directly; we read the post-drop order back into state (via `reconcileBoardFromDOM`) and
-     * then re-render from state — so the DOM is never the source of truth and no render loop forms
-     * (the reconcile runs on `onEnd` only, and `render()` rebuilds the board fresh). Instances are
-     * tracked for teardown on the next render.
-     *
-     * @param {HTMLElement} board the board container holding the `.mpb-board-list` columns
-     * @returns {void}
-     */
-    function wireBoardSortables(board) {
-        const lists = board.querySelectorAll('.mpb-board-list');
-        for (const list of lists) {
-            const instance = global.Sortable.create(list, {
-                group: BU_BOARD_GROUP,
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
-                // Only reconcile once the drop settles; reading DOM order per column and writing it
-                // back through the invariant keeps state authoritative and triggers a clean re-render.
-                onEnd: () => reconcileBoardFromDOM(board),
-            });
-            buBoardSortables.push(instance);
-        }
-    }
-
-    /**
-     * Read the post-drop chip order out of every board column and rebuild `wizardState.envBUs` from
-     * it, enforcing the single-assignment invariant (a buRef kept only in the first column that
-     * lists it). The Unassigned column contributes no assignments. Re-renders so downstream steps
-     * recompute. Runs only after a Sortable drop, never during a render, so it cannot loop.
-     *
-     * @param {HTMLElement} board the board container
-     * @returns {void}
-     */
-    function reconcileBoardFromDOM(board) {
-        const nextEnvironmentBUs = {};
-        for (const environment of environmentNames()) {
-            nextEnvironmentBUs[environment] = [];
-        }
-        const claimed = new Set();
-        const lists = board.querySelectorAll('.mpb-board-list');
-        for (const list of lists) {
-            const columnKey = list.dataset.env;
-            // The pool column contributes no assignments; only real env columns collect their chips.
-            if (columnKey !== UNASSIGNED_COLUMN && Object.hasOwn(nextEnvironmentBUs, columnKey)) {
-                nextEnvironmentBUs[columnKey] = collectColumnBUReferences(list, claimed);
-            }
-        }
-        state.wizardState.envBUs = nextEnvironmentBUs;
-        render();
-    }
-
-    /**
-     * Read the buRefs from one board column's chips in DOM order, keeping only those not already
-     * claimed by an earlier column (single-assignment invariant). Extracted so the reconcile stays a
-     * flat single loop.
-     *
-     * @param {HTMLElement} list the `.mpb-board-list` element
-     * @param {Set<string>} claimed the set of already-claimed buRefs (mutated)
-     * @returns {string[]} the buRefs this column keeps, in DOM order
-     */
-    function collectColumnBUReferences(list, claimed) {
-        const references = [];
-        for (const chip of list.querySelectorAll('.mpb-board-chip')) {
-            const reference = chip.dataset.bu;
-            if (claimBUReference(claimed, reference)) {
-                references.push(reference);
-            }
-        }
-        return references;
     }
 
     /**
@@ -1960,15 +1367,13 @@
      * @returns {void}
      */
     function renderLineageStep(panel) {
-        // Note: renderWizardStep() already tore down any prior lineage overlay before this call, so a
-        // fresh overlay is mounted below without leaking the previous render's resize listener/frame.
         // Seed defaults for any unlinked child before rendering the selectors.
         autoDeriveLineage();
         const rows = lineageLinkRows();
         panel.append(
             makeElement('p', {
                 class: 'text-muted',
-                text: 'Link each environment BU to the upstream BU it deploys from. Sensible defaults are filled in — adjust the branching ones as needed. Arrows show which upstream BU each one deploys from.',
+                text: 'Link each environment BU to the upstream BU it deploys from. Sensible defaults are filled in — adjust the branching ones as needed.',
             })
         );
         if (rows.length === 0) {
@@ -1978,539 +1383,53 @@
             return;
         }
 
-        // One column per environment (in env order); the lowest/source env has no upstream, so its
-        // BUs are shown as read-only source nodes and every later env lists its child BUs with an
-        // upstream-BU <select>. Columns spread evenly across the width (flex, no masonry wrap).
-        const board = makeElement('div', { class: 'mpb-lineage-board' });
-        const order = environmentNames();
-        for (const [environmentIndex, environment] of order.entries()) {
-            board.append(lineageColumn(environment, environmentIndex));
+        const list = makeElement('div', { class: 'mpb-list' });
+        for (const [index, linkRow] of rows.entries()) {
+            list.append(lineageRow(linkRow, index));
         }
-        // The SVG overlay draws the child→parent connector arrows on top of the columns. It is
-        // decorative (the <select>s carry the real state), so it is marked aria-hidden.
-        const overlay = makeSvg('svg', { class: 'mpb-lineage-overlay', 'aria-hidden': 'true' });
-        board.append(overlay);
-        panel.append(board);
-        // Anchor the overlay + schedule the first draw once the columns have a real layout, and keep
-        // the arrows in sync with window resizes until the step is left (teardownLineageOverlay).
-        mountLineageOverlay(board, overlay);
-        // Enable drag-to-connect (native HTML5 DnD) on top of the <select> keyboard fallback.
-        mountLineageDnd(board);
+        panel.append(list);
     }
 
     /**
-     * Build one environment column for the lineage board: a titled column listing that environment's
-     * BUs. The source (first) environment has no upstream, so its BUs are plain nodes; every later
-     * environment gives each BU an upstream-BU `<select>`. Each BU node carries a stable id so the
-     * SVG overlay can anchor connector arrows to it.
+     * Build one lineage link row: a labelled parent-BU `<select>` for a single child buRef.
      *
-     * @param {string} environment the environment name
-     * @param {number} environmentIndex the environment's index in env order (0 = source)
-     * @returns {HTMLElement} the column element
+     * @param {{childRef: string, environment: string, parentOptions: string[]}} linkRow the link row
+     * @param {number} index the row index (for a stable field id)
+     * @returns {HTMLElement} the field element
      */
-    function lineageColumn(environment, environmentIndex) {
-        const column = makeElement('div', { class: 'mpb-lineage-col' });
-        column.append(
-            makeElement('p', {
-                class: 'mpb-lineage-col-title',
-                text: environment || '(unnamed environment)',
+    function lineageRow(linkRow, index) {
+        const field = makeElement('div', { class: 'mpb-field' });
+        const selectId = 'mpb-lineage-' + index;
+        field.append(
+            makeElement('label', {
+                text: linkRow.environment + ' · ' + linkRow.childRef + ' deploys from',
+                attrs: { for: selectId },
             })
         );
-        const parentOptions =
-            environmentIndex > 0 ? assignedBUReferences(environmentNames()[environmentIndex - 1]) : [];
-        for (const reference of assignedBUReferences(environment)) {
-            column.append(lineageNode(environmentIndex, reference, parentOptions));
-        }
-        return column;
-    }
-
-    /**
-     * Build one BU node inside a lineage column: the BU name, plus (for non-source environments) an
-     * upstream-BU `<select>` that writes the child→parent lineage. The node id is stable across
-     * renders so the SVG overlay can look up its bounding box.
-     *
-     * @param {number} environmentIndex the environment's index in env order
-     * @param {string} reference the BU reference
-     * @param {string[]} parentOptions the upstream env's BU references (empty for the source env)
-     * @returns {HTMLElement} the node element
-     */
-    function lineageNode(environmentIndex, reference, parentOptions) {
-        const node = makeElement('div', {
-            class: 'mpb-lineage-node',
-            // draggable + data-env-index drive the native drag-to-connect handlers (mountLineageDnd):
-            // dragging a lower-env node onto the adjacent higher-env node creates the lineage link.
-            draggable: true,
-            attrs: {
-                id: lineageNodeId(reference),
-                'data-bu': reference,
-                'data-env-index': String(environmentIndex),
-            },
-        });
-        node.append(makeElement('span', { class: 'mpb-lineage-node-name', text: reference }));
-        // The source env has no upstream to choose — its BUs are pure connector targets/sources.
-        if (environmentIndex === 0) {
-            return node;
-        }
-        const current = (state.wizardState.lineage || {})[reference] || '';
-        const selectId = 'mpb-lineage-sel-' + environmentIndex + '-' + reference;
-        const label = makeElement('label', {
-            class: 'mpb-lineage-node-label',
-            text: 'deploys from',
-            attrs: { for: selectId },
-        });
-        const select = makeElement('select', { id: selectId, class: 'mpb-lineage-select' });
+        const current = (state.wizardState.lineage || {})[linkRow.childRef] || '';
+        const select = makeElement('select', { id: selectId });
         select.append(makeElement('option', { value: '', text: '— choose upstream BU —' }));
-        for (const option of parentOptions) {
+        for (const option of linkRow.parentOptions) {
             select.append(
-                makeElement('option', { value: option, text: option, selected: option === current })
+                makeElement('option', {
+                    value: option,
+                    text: option,
+                    selected: option === current,
+                })
             );
         }
         select.addEventListener('change', () => {
             const lineage = { ...state.wizardState.lineage };
             if (select.value) {
-                lineage[reference] = select.value;
+                lineage[linkRow.childRef] = select.value;
             } else {
-                delete lineage[reference];
+                delete lineage[linkRow.childRef];
             }
             state.wizardState.lineage = lineage;
             render();
         });
-        node.append(label, select);
-        return node;
-    }
-
-    /**
-     * Stable DOM id for a lineage BU node, so the SVG overlay can resolve a child/parent buRef to its
-     * on-screen box. A buRef is unique per board (single-assignment invariant), so the ref alone is a
-     * safe key. Non-id-safe characters (`/` from multiCred refs, spaces) are encoded to keep the id
-     * valid for a `#<id>` CSS selector.
-     *
-     * @param {string} reference the BU reference
-     * @returns {string} the element id
-     */
-    function lineageNodeId(reference) {
-        return 'mpb-lin-node-' + reference.replaceAll(/[^a-zA-Z0-9_-]/g, '_');
-    }
-
-    /**
-     * Whether a drag-to-connect gesture is a valid lineage link. Lineage only ever links an env to
-     * the env immediately upstream (env index +1), and the drag direction is lower→higher env, so a
-     * drop is valid only when the target column is exactly one to the right of the dragged node's
-     * column. Rightward-onto-lower, onto-self, and skip-a-column drops are all rejected.
-     *
-     * @param {number} fromEnvironmentIndex the dragged (parent/source) node's env index
-     * @param {number} toEnvironmentIndex the drop-target (child) node's env index
-     * @returns {boolean} true only when `toEnvironmentIndex === fromEnvironmentIndex + 1`
-     */
-    function isValidLineageDrag(fromEnvironmentIndex, toEnvironmentIndex) {
-        return (
-            Number.isSafeInteger(fromEnvironmentIndex) &&
-            Number.isSafeInteger(toEnvironmentIndex) &&
-            toEnvironmentIndex === fromEnvironmentIndex + 1
-        );
-    }
-
-    /**
-     * Apply a lineage mapping (`child deploys from parent`) in place: update
-     * `state.wizardState.lineage`, sync the child's upstream `<select>` value, redraw the connector
-     * arrows, refresh the nav gate, and schedule an autosave — without a full re-render, so a drag
-     * never blurs focus or rebuilds the board. Mirrors the in-place update pattern used by the
-     * text-input handlers.
-     *
-     * @param {string} childReference the child BU reference (higher/target env)
-     * @param {string} parentReference the parent BU reference (lower/source env)
-     * @param {HTMLElement} board the lineage board container (to locate the child's select)
-     * @returns {void}
-     */
-    function setLineageMapping(childReference, parentReference, board) {
-        const lineage = { ...state.wizardState.lineage , [childReference]: parentReference,};
-        state.wizardState.lineage = lineage;
-        // Keep the keyboard/a11y <select> in sync with the drag-created mapping.
-        const childNode = board.querySelector('#' + lineageNodeId(childReference));
-        const select = childNode ? childNode.querySelector('.mpb-lineage-select') : null;
-        if (select) {
-            select.value = parentReference;
-        }
-        drawLineageArrows();
-        updateNavGate();
-        scheduleAutosave();
-    }
-
-    /**
-     * The SVG XML namespace, needed because SVG elements must be created with `createElementNS`
-     * (a plain `createElement('svg')` yields an inert HTML-namespaced element that never renders).
-     *
-     * @type {string}
-     */
-    const SVG_NS = 'http://www.w3.org/2000/svg';
-
-    /**
-     * Create an SVG element in the SVG namespace and apply attributes. The connector overlay is
-     * decorative geometry only (no user data), so plain attribute strings are safe here.
-     *
-     * @param {string} tag the SVG tag name (`svg` / `marker` / `path` / `line`)
-     * @param {{[attribute: string]: (string|number)}} [attributes] attribute name → value map
-     * @returns {SVGElement} the created element
-     */
-    function makeSvg(tag, attributes) {
-        const element = document_.createElementNS(SVG_NS, tag);
-        const entries = Object.entries(attributes || {});
-        for (const [name, value] of entries) {
-            element.setAttribute(name, String(value));
-        }
-        return element;
-    }
-
-    /**
-     * Module-scoped handle for the active lineage connector overlay: the board + svg it draws into,
-     * the bound resize listener, and any pending animation frame. Non-null only while the lineage
-     * step is mounted so `teardownLineageOverlay` can remove the listener and cancel the frame.
-     *
-     * @type {({board: HTMLElement, svg: SVGElement, onResize: () => void, frame: (number|null)}|null)}
-     */
-    let lineageOverlay = null;
-
-    /**
-     * The connector arrow colour — the Marketing accent already used for the diagramforce preview,
-     * kept subtle. Mirrors `DIAGRAM_ACCENT` so the lineage arrows and the exported diagram share a
-     * palette without coupling the two features.
-     *
-     * @type {string}
-     */
-    const LINEAGE_ARROW_COLOR = '#F49825';
-
-    /**
-     * Mount the lineage connector overlay: size the SVG to the board, draw the initial arrows, and
-     * keep them aligned on window resize (rAF-debounced). Redraws on `<select>` change happen for
-     * free because a change re-renders the whole step, which re-mounts the overlay. The listener is
-     * removed by `teardownLineageOverlay` when the step is left, so nothing leaks.
-     *
-     * @param {HTMLElement} board the lineage board container
-     * @param {SVGElement} svg the overlay svg element
-     * @returns {void}
-     */
-    function mountLineageOverlay(board, svg) {
-        // Guard hosts without a real layout engine (the Node test stub) — nothing to draw there.
-        if (typeof board.getBoundingClientRect !== 'function' || !global.requestAnimationFrame) {
-            return;
-        }
-        const onResize = () => {
-            if (lineageOverlay && lineageOverlay.frame !== null) {
-                return;
-            }
-            if (lineageOverlay) {
-                lineageOverlay.frame = global.requestAnimationFrame(() => {
-                    if (!lineageOverlay) {
-                    	return;
-                    }
-
-                    lineageOverlay.frame = null;
-                    drawLineageArrows();
-                });
-            }
-        };
-        lineageOverlay = { board: board, svg: svg, onResize: onResize, frame: null };
-        if (global.addEventListener) {
-            global.addEventListener('resize', onResize);
-        }
-        // Draw on the next frame so the columns have their final laid-out sizes.
-        lineageOverlay.frame = global.requestAnimationFrame(() => {
-            if (!lineageOverlay) {
-            	return;
-            }
-
-            lineageOverlay.frame = null;
-            drawLineageArrows();
-        });
-    }
-
-    /**
-     * Draw one arrowed connector per child→parent lineage link over the current board: from the
-     * parent (upstream) BU node to the child BU node, with the arrowhead pointing at the child. All
-     * geometry is derived from live `getBoundingClientRect` deltas against the board's own rect, so
-     * the lines stay correct across column reflow. Rebuilt from scratch each call (cheap, and avoids
-     * stale segments).
-     *
-     * @returns {void}
-     */
-    function drawLineageArrows() {
-        if (!lineageOverlay) {
-            return;
-        }
-        const { board, svg } = lineageOverlay;
-        const boardRect = board.getBoundingClientRect();
-        // Size the SVG viewport to the board so its coordinate system matches the board's pixels.
-        svg.setAttribute('width', String(boardRect.width));
-        svg.setAttribute('height', String(boardRect.height));
-        svg.setAttribute('viewBox', '0 0 ' + boardRect.width + ' ' + boardRect.height);
-        // Reset content, then (re)add the shared arrowhead marker def.
-        setText(svg, '');
-        svg.append(buildArrowMarkerDefs());
-        const lineage = state.wizardState.lineage || {};
-        const links = Object.entries(lineage);
-        for (const [childReference, parentReference] of links) {
-            // ids are sanitised by lineageNodeId, so `#<id>` is always a valid selector; scope the
-            // lookup to the board so a stale same-id node elsewhere can never be matched.
-            const childNode = board.querySelector('#' + lineageNodeId(childReference));
-            const parentNode = board.querySelector('#' + lineageNodeId(parentReference));
-            if (childNode && parentNode) {
-                svg.append(buildArrowPath(boardRect, parentNode, childNode));
-            }
-        }
-    }
-
-    /**
-     * Build the `<defs>` holding the single reusable arrowhead `<marker>`, pointing right and tinted
-     * with the lineage accent colour.
-     *
-     * @returns {SVGElement} the defs element
-     */
-    function buildArrowMarkerDefs() {
-        const defs = makeSvg('defs');
-        const marker = makeSvg('marker', {
-            id: 'mpb-lineage-arrowhead',
-            markerWidth: 8,
-            markerHeight: 8,
-            refX: 7,
-            refY: 4,
-            orient: 'auto',
-            markerUnits: 'userSpaceOnUse',
-        });
-        marker.append(makeSvg('path', { d: 'M0,0 L8,4 L0,8 Z', fill: LINEAGE_ARROW_COLOR }));
-        defs.append(marker);
-        return defs;
-    }
-
-    /**
-     * Build one smooth cubic-Bézier connector from a parent node's right edge to a child node's left
-     * edge, both expressed in board-local coordinates, ending in the shared arrowhead marker (so the
-     * arrow points at the child). The control points are offset horizontally by ~45% of the span so
-     * the curve leaves the source and arrives at the target horizontally — a gentle S-curve that
-     * reads left-to-right (and still enters/exits toward the neighbour when columns stack). No
-     * mid-line decoration is drawn.
-     *
-     * @param {DOMRect} boardRect the board's bounding rect (the coordinate origin)
-     * @param {HTMLElement} parentNode the upstream BU node (curve start)
-     * @param {HTMLElement} childNode the child BU node (arrow target)
-     * @returns {SVGElement} the path element
-     */
-    function buildArrowPath(boardRect, parentNode, childNode) {
-        const parentRect = parentNode.getBoundingClientRect();
-        const childRect = childNode.getBoundingClientRect();
-        // Start at the parent's right-middle, end at the child's left-middle, relative to the board.
-        const x1 = parentRect.right - boardRect.left;
-        const y1 = parentRect.top + parentRect.height / 2 - boardRect.top;
-        const x2 = childRect.left - boardRect.left;
-        const y2 = childRect.top + childRect.height / 2 - boardRect.top;
-        // Horizontal control-point offset: 45% of the horizontal span keeps the curve tangent to the
-        // horizontal at both ends. Clamped to a small minimum so a near-zero span (stacked columns)
-        // still bows out instead of collapsing to a straight segment.
-        const dx = x2 - x1;
-        const handle = Math.max(Math.abs(dx) * 0.45, 24);
-        const cx1 = x1 + handle;
-        const cx2 = x2 - handle;
-        const d = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + y1 + ', ' + cx2 + ' ' + y2 + ', ' + x2 + ' ' + y2;
-        return makeSvg('path', {
-            d: d,
-            fill: 'none',
-            stroke: LINEAGE_ARROW_COLOR,
-            'stroke-width': 1.8,
-            'stroke-linecap': 'round',
-            'marker-end': 'url(#mpb-lineage-arrowhead)',
-        });
-    }
-
-    /**
-     * Tear down the lineage connector overlay: remove the resize listener and cancel any pending
-     * animation frame. Called whenever the lineage step re-renders or is left, mirroring the board
-     * sortable teardown so a discarded step host never leaves a dangling handler behind.
-     *
-     * @returns {void}
-     */
-    function teardownLineageOverlay() {
-        if (!lineageOverlay) {
-            return;
-        }
-        if (global.removeEventListener) {
-            global.removeEventListener('resize', lineageOverlay.onResize);
-        }
-        if (lineageOverlay.frame !== null && global.cancelAnimationFrame) {
-            global.cancelAnimationFrame(lineageOverlay.frame);
-        }
-        lineageOverlay = null;
-    }
-
-    /**
-     * Module-scoped handle for the active lineage drag-to-connect wiring: the board it is bound to
-     * and the delegated listeners registered on it, so `teardownLineageDnd` can remove them when the
-     * step is left. Non-null only while the lineage step is mounted.
-     *
-     * @type {({board: HTMLElement, listeners: {type: string, handler: (event: DragEvent) => void}[]}|null)}
-     */
-    let lineageDnd = null;
-
-    /**
-     * The lineage node currently being dragged (its parent/source BU reference + env index), or null
-     * when no drag is in progress. Set on `dragstart`, cleared on `dragend`.
-     *
-     * @type {({reference: string, environmentIndex: number}|null)}
-     */
-    let lineageDragSource = null;
-
-    /**
-     * Resolve the `.mpb-lineage-node` element for a drag event target, or null when the event did not
-     * originate on a BU node (e.g. dragging over the board gap or the decorative overlay).
-     *
-     * @param {EventTarget|null} target the event target
-     * @returns {HTMLElement|null} the closest lineage node element, or null
-     */
-    function lineageNodeFromTarget(target) {
-        if (!target || typeof target.closest !== 'function') {
-            return null;
-        }
-        return target.closest('.mpb-lineage-node');
-    }
-
-    /**
-     * `dragstart` handler for a lineage node: record the dragged node's BU reference + env index as
-     * the drag source (it is the parent/source of the mapping) and flag it visually.
-     *
-     * @param {DragEvent} event the drag event
-     * @returns {void}
-     */
-    function onLineageDragStart(event) {
-        const node = lineageNodeFromTarget(event.target);
-        if (!node) {
-            return;
-        }
-        lineageDragSource = {
-            reference: node.dataset.bu,
-            environmentIndex: Number(node.dataset.envIndex),
-        };
-        node.classList.add('is-dragging');
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'link';
-            // A payload is required for Firefox to start the drag; the real state lives in
-            // lineageDragSource.
-            event.dataTransfer.setData('text/plain', lineageDragSource.reference);
-        }
-    }
-
-    /**
-     * `dragover` handler: highlight the hovered node as a valid drop target (and mark it a drop zone
-     * via preventDefault) only when it is exactly one column to the right of the drag source;
-     * otherwise show the invalid state.
-     *
-     * @param {DragEvent} event the drag event
-     * @returns {void}
-     */
-    function onLineageDragOver(event) {
-        const node = lineageNodeFromTarget(event.target);
-        if (!node || !lineageDragSource) {
-            return;
-        }
-        const targetIndex = Number(node.dataset.envIndex);
-        const isValid = isValidLineageDrag(lineageDragSource.environmentIndex, targetIndex);
-        // preventDefault on a valid target is what makes it a drop zone.
-        if (isValid) {
-            event.preventDefault();
-            if (event.dataTransfer) {
-                event.dataTransfer.dropEffect = 'link';
-            }
-            node.classList.add('is-drop-target');
-        } else {
-            node.classList.add('is-drop-invalid');
-        }
-    }
-
-    /**
-     * `dragleave` handler: clear the drop-target/invalid highlight as the pointer exits a node.
-     *
-     * @param {DragEvent} event the drag event
-     * @returns {void}
-     */
-    function onLineageDragLeave(event) {
-        const node = lineageNodeFromTarget(event.target);
-        if (node) {
-            node.classList.remove('is-drop-target', 'is-drop-invalid');
-        }
-    }
-
-    /**
-     * Enable drag-to-connect on the lineage board using native HTML5 drag-and-drop. Dragging a BU
-     * node (lower env) onto the BU node directly one column to the right (higher env) creates the
-     * mapping `lineage[child] = parent`. Native DnD is used instead of SortableJS because the gesture
-     * targets a *specific* node to form a pair (SortableJS is list-reorder oriented). All listeners
-     * are delegated on the board and tracked for teardown. The `<select>` keeps working for keyboard
-     * users and stays in sync via `setLineageMapping`. The `drop`/`dragend` handlers close over the
-     * board (to resolve nodes and clear stale highlights); the source/over/leave handlers are
-     * module-scoped as they only touch module state.
-     *
-     * @param {HTMLElement} board the lineage board container
-     * @returns {void}
-     */
-    function mountLineageDnd(board) {
-        // Guard hosts without DOM drag support (the Node test stub): the pure logic is unit-tested via
-        // isValidLineageDrag / setLineageMapping, so skipping the wiring here is safe.
-        if (typeof board.addEventListener !== 'function') {
-            return;
-        }
-        const onDrop = (event) => {
-            const node = lineageNodeFromTarget(event.target);
-            node?.classList.remove('is-drop-target', 'is-drop-invalid');
-            if (!node || !lineageDragSource) {
-                return;
-            }
-            const targetIndex = Number(node.dataset.envIndex);
-            if (!isValidLineageDrag(lineageDragSource.environmentIndex, targetIndex)) {
-                return;
-            }
-            event.preventDefault();
-            // Dragged node = parent/source (lower env); drop target = child (higher env).
-            const childReference = node.dataset.bu;
-            setLineageMapping(childReference, lineageDragSource.reference, board);
-        };
-        const onDragEnd = () => {
-            if (lineageDragSource) {
-                const previous = board.querySelector(
-                    '#' + lineageNodeId(lineageDragSource.reference)
-                );
-                previous?.classList.remove('is-dragging');
-            }
-            for (const node of board.querySelectorAll('.mpb-lineage-node')) {
-                node.classList.remove('is-drop-target', 'is-drop-invalid');
-            }
-            lineageDragSource = null;
-        };
-        const listeners = [
-            { type: 'dragstart', handler: onLineageDragStart },
-            { type: 'dragover', handler: onLineageDragOver },
-            { type: 'dragleave', handler: onLineageDragLeave },
-            { type: 'drop', handler: onDrop },
-            { type: 'dragend', handler: onDragEnd },
-        ];
-        for (const { type, handler } of listeners) {
-            board.addEventListener(type, handler);
-        }
-        lineageDnd = { board: board, listeners: listeners };
-    }
-
-    /**
-     * Tear down the lineage drag-to-connect wiring: remove every delegated listener from the board
-     * and clear the in-progress drag source. Called alongside the overlay teardown so a discarded
-     * step host never leaves dangling drag handlers behind.
-     *
-     * @returns {void}
-     */
-    function teardownLineageDnd() {
-        if (!lineageDnd) {
-            return;
-        }
-        for (const { type, handler } of lineageDnd.listeners) {
-            lineageDnd.board.removeEventListener(type, handler);
-        }
-        lineageDnd = null;
-        lineageDragSource = null;
+        field.append(select);
+        return field;
     }
 
     // ─────────────────────────── suffixes step ───────────────────────────
@@ -2601,98 +1520,39 @@
                 text: 'Give each business unit a distinct key suffix. The separator is enforced in front of every suffix. Multi-BU environments are auto-numbered — override them as you like (e.g. _UATN / _UATS).',
             })
         );
+        panel.append(separatorField());
 
         const references = childBUReferences();
         if (references.length === 0) {
-            panel.append(separatorField(() => {}));
             panel.append(
                 makeElement('p', { class: 'text-muted', text: 'Assign BUs to environments first.' })
             );
             return;
         }
 
-        // Keep a reference to every rendered row so text-input edits can refresh the inline warnings
-        // (and the shown separator prefix) IN PLACE — never rebuilding the inputs, which would blur
-        // the focused field and jump the scroll to the top.
-        const rows = [];
-
-        /**
-         * Recompute and repaint every row's inline warnings in place. Duplicate detection is
-         * cross-row, so editing one suffix can change another row's flag — hence all rows refresh
-         * together. The input elements themselves are left untouched.
-         *
-         * @returns {void}
-         */
-        function refreshSuffixWarnings() {
-            const separator = state.wizardState.separator || '_';
-            // Duplicate index over the current stored values.
-            const counts = new Map();
-            for (const reference of childBUReferences()) {
-                const value = suffixOf(reference);
-                counts.set(value, (counts.get(value) || 0) + 1);
-            }
-            for (const row of rows) {
-                setText(row.warnings, '');
-                const stored = suffixOf(row.reference);
-                const storedBody = stored.startsWith(separator)
-                    ? stored.slice(separator.length)
-                    : stored;
-                // Internal-space warning reflects the RAW typed body (not the trimmed stored copy).
-                if (/\s/.test(row.input.value.trim())) {
-                    row.warnings.append(
-                        makeElement('p', {
-                            class: 'mpb-warn',
-                            text: 'Avoid spaces inside a suffix — they can break mcdev CLI commands later.',
-                        })
-                    );
-                }
-                if (storedBody.trim() && counts.get(stored) > 1) {
-                    row.warnings.append(
-                        makeElement('p', {
-                            class: 'mpb-warn',
-                            text: 'Duplicate suffix — each child BU needs a distinct suffix.',
-                        })
-                    );
-                }
-            }
+        // A quick duplicate index so each row can flag a collision with another child BU.
+        const counts = new Map();
+        for (const reference of references) {
+            const value = suffixOf(reference);
+            counts.set(value, (counts.get(value) || 0) + 1);
         }
-
-        // The separator input re-bases suffixes in state, updates each row's shown prefix span, then
-        // refreshes warnings + the nav gate + autosave — all in place (no full render / blur).
-        panel.append(
-            separatorField(() => {
-                const separator = state.wizardState.separator || '_';
-                for (const row of rows) {
-                    setText(row.sep, separator);
-                }
-                refreshSuffixWarnings();
-                updateNavGate();
-                scheduleAutosave();
-            })
-        );
 
         const list = makeElement('div', { class: 'mpb-list' });
         for (const environment of environmentNames()) {
             for (const reference of assignedBUReferences(environment)) {
-                const row = suffixRow(environment, reference, refreshSuffixWarnings);
-                rows.push(row);
-                list.append(row.field);
+                list.append(suffixRow(environment, reference, counts));
             }
         }
         panel.append(list);
-        // Initial warning paint now that every row exists (so cross-row duplicates resolve).
-        refreshSuffixWarnings();
     }
 
     /**
-     * The shared separator input. Changing it re-bases every stored suffix onto the new separator
-     * (so stored values stay `<sep><body>`) and then invokes `onInput` so the caller can refresh the
-     * dependent UI in place instead of re-rendering the whole step.
+     * The shared separator input. Changing it re-seeds unset suffixes and keeps existing suffixes'
+     * leading separator in sync so stored values stay `<sep><body>`.
      *
-     * @param {() => void} onInput callback fired after each keystroke updates the state
      * @returns {HTMLElement} the separator field
      */
-    function separatorField(onInput) {
+    function separatorField() {
         const field = makeElement('div', { class: 'mpb-field' });
         field.append(makeElement('label', { text: 'Separator', attrs: { for: 'mpb-separator' } }));
         const input = makeElement('input', {
@@ -2714,7 +1574,7 @@
             }
             state.wizardState.separator = next;
             state.wizardState.suffixes = suffixes;
-            onInput();
+            render();
         });
         field.append(input);
         return field;
@@ -2722,16 +1582,14 @@
 
     /**
      * Build one suffix editing row for a single child buRef, with the separator shown as a fixed
-     * prefix, an editable body, and inline internal-space / duplicate warnings. Typing updates only
-     * state + the inline warnings (via `refreshWarnings`) so the focused input is never rebuilt.
+     * prefix, an editable body, and inline internal-space / duplicate warnings.
      *
      * @param {string} environment the owning environment (for context labelling)
      * @param {string} reference the child buRef
-     * @param {() => void} refreshWarnings repaint every row's warnings in place after a state edit
-     * @returns {{field: HTMLElement, input: HTMLInputElement, sep: HTMLElement, warnings: HTMLElement, reference: string}}
-     *   the row element plus the handles needed for in-place refreshes
+     * @param {Map<string, number>} counts stored-suffix → occurrence count (for duplicate flags)
+     * @returns {HTMLElement} the field element
      */
-    function suffixRow(environment, reference, refreshWarnings) {
+    function suffixRow(environment, reference, counts) {
         const separator = state.wizardState.separator || '_';
         const field = makeElement('div', { class: 'mpb-field' });
         const inputId = 'mpb-suffix-' + suffixSlug(environment) + '-' + suffixSlug(reference);
@@ -2741,8 +1599,7 @@
         field.append(makeElement('label', { text: labelText, attrs: { for: inputId } }));
 
         const group = makeElement('div', { class: 'mpb-suffix-input' });
-        const separatorSpan = makeElement('span', { class: 'mpb-suffix-sep', text: separator });
-        group.append(separatorSpan);
+        group.append(makeElement('span', { class: 'mpb-suffix-sep', text: separator }));
         const stored = suffixOf(reference);
         const body = stored.startsWith(separator) ? stored.slice(separator.length) : stored;
         const input = makeElement('input', {
@@ -2752,28 +1609,33 @@
             attrs: { autocomplete: 'off', spellcheck: 'false' },
         });
         input.addEventListener('input', () => {
-            // Store the leading/trailing-trimmed body (internal spaces are only warned about). The
-            // visible input value is left as typed so the caret is never fought mid-typing.
-            const activeSeparator = state.wizardState.separator || '_';
+            // Trim leading/trailing whitespace before storing (internal spaces are only warned about).
             const trimmedBody = input.value.trim();
-            state.wizardState.suffixes = {
-                ...state.wizardState.suffixes,
-                [reference]: activeSeparator + trimmedBody,
-            };
-            // Refresh only the inline warnings (cross-row duplicates included), the nav gate and the
-            // debounced autosave — never a full render that would blur this input.
-            refreshWarnings();
-            updateNavGate();
-            scheduleAutosave();
+            const suffixes = { ...state.wizardState.suffixes , [reference]: separator + trimmedBody,};
+            state.wizardState.suffixes = suffixes;
+            render();
         });
         group.append(input);
         field.append(group);
 
-        // Dedicated warnings slot so it can be wiped + repainted in place without touching the input.
-        const warnings = makeElement('div', { class: 'mpb-suffix-warnings' });
-        field.append(warnings);
-
-        return { field: field, input: input, sep: separatorSpan, warnings: warnings, reference: reference };
+        const trimmedBody = body.trim();
+        if (/\s/.test(trimmedBody)) {
+            field.append(
+                makeElement('p', {
+                    class: 'mpb-warn',
+                    text: 'Avoid spaces inside a suffix — they can break mcdev CLI commands later.',
+                })
+            );
+        }
+        if (trimmedBody && counts.get(stored) > 1) {
+            field.append(
+                makeElement('p', {
+                    class: 'mpb-warn',
+                    text: 'Duplicate suffix — each child BU needs a distinct suffix.',
+                })
+            );
+        }
+        return field;
     }
 
     // ─────────────────────────── prod-confirm step ───────────────────────────
@@ -3377,18 +2239,11 @@
      */
     function selectMode(mode) {
         state.mode = mode;
-        // Persist the mode inside the wizardState save blob so reopen / deep-link restores it (Fix 1).
-        state.wizardState.mode = mode;
         // Validations-only mode has no env-ordering step, but its suffix + production steps iterate
         // the assigned BUs. Pool every BU into one synthetic environment so those steps (and the
         // derived buSuffixMap / prodMap / devBU) have real data to work with.
         if (mode === 'validations') {
             seedValidationsPool();
-        } else {
-            // Full-pipeline mode must never carry the synthetic validations pool env. A config saved
-            // in validations mode persists envOrder === ['All BUs']; re-opening it and then picking
-            // full mode would otherwise leak that label as the DEV/source environment name. Strip it.
-            stripValidationsPoolEnvironment();
         }
         // The visible steps (and therefore the first one) differ per mode: the full pipeline starts
         // at the environments step; validations-only jumps straight to the suffix table.
@@ -3415,29 +2270,6 @@
         const pooled = pooledBUReferences();
         state.wizardState.envOrder = [VALIDATIONS_POOL_ENV];
         state.wizardState.envBUs = { [VALIDATIONS_POOL_ENV]: pooled };
-    }
-
-    /**
-     * Mode-aware guard: remove the synthetic `VALIDATIONS_POOL_ENV` ("All BUs") from the wizard
-     * state so it can never surface as a real environment in full-pipeline mode. This is the one
-     * place that reconciles a config round-tripped from validations mode (its persisted `envOrder`
-     * is `['All BUs']`) or a mid-session mode switch — not a cosmetic filter in the render layer.
-     * When stripping empties `envOrder`, re-seed the suggested defaults so the env-order step shows
-     * real environment names instead of a blank first row.
-     *
-     * @returns {void}
-     */
-    function stripValidationsPoolEnvironment() {
-        const order = environmentNames();
-        if (!order.includes(VALIDATIONS_POOL_ENV)) {
-            return;
-        }
-        const cleaned = order.filter((environment) => environment !== VALIDATIONS_POOL_ENV);
-        const nextBUs = { ...state.wizardState.envBUs };
-        delete nextBUs[VALIDATIONS_POOL_ENV];
-        // Re-seed a sensible default order when removal left nothing, so no blank first row shows.
-        state.wizardState.envOrder = cleaned.length > 0 ? cleaned : [...SUGGESTED_ENVIRONMENTS];
-        state.wizardState.envBUs = nextBUs;
     }
 
     // ─────────────────────────── render dispatcher ───────────────────────────
@@ -3471,221 +2303,6 @@
     function goToStep(step) {
         state.step = step;
         render();
-    }
-
-    // ─────────────────────────── hash deep-linking / reload-restore ───────────────────────────
-
-    /**
-     * The last hash string the tool itself wrote to `location.hash`. Used by `onHashChange` to
-     * distinguish our own `history.replaceState` writes (which must be ignored) from a genuine user
-     * edit / back-forward navigation (which must trigger a restore). Starts null so the very first
-     * hashchange after load — if any — is still honoured.
-     *
-     * @type {(string|null)}
-     */
-    let lastHashWritten = null;
-
-    /**
-     * The top-level views that carry an active session id in the hash. Intake has no session yet, so
-     * it never gets an `&s=` segment.
-     *
-     * @type {ReadonlySet<string>}
-     */
-    const HASH_SESSION_VIEWS = new Set(['mode', 'wizard', 'output']);
-
-    /**
-     * The top-level views the tool recognises in a hash. Anything else parses to the intake default.
-     *
-     * @type {ReadonlySet<string>}
-     */
-    const HASH_KNOWN_VIEWS = new Set(['intake', 'mode', 'wizard', 'output']);
-
-    /**
-     * Parse a `location.hash` string into a plain `{view, step, sessionId}` descriptor. The tool owns
-     * this compact format: `#view=<intake|mode|wizard|output>`, plus `&step=<wizardStepId>` for the
-     * wizard view and `&s=<sessionId>` when a saved session is open. Unknown params are ignored and a
-     * malformed / empty hash yields the intake default so callers never have to guard against throws.
-     *
-     * @param {string} hash the raw hash (with or without the leading `#`)
-     * @returns {{view: string, step: (string|null), sessionId: (string|null)}} the parsed descriptor
-     */
-    function parseHash(hash) {
-        const result = { view: 'intake', step: null, sessionId: null };
-        if (typeof hash !== 'string') {
-            return result;
-        }
-        // Strip a single leading '#', then read the `key=value` pairs. URLSearchParams handles the
-        // decoding and tolerates duplicate/empty/extra params without throwing.
-        const raw = hash.charAt(0) === '#' ? hash.slice(1) : hash;
-        if (raw === '') {
-            return result;
-        }
-        let parameters;
-        try {
-            parameters = new global.URLSearchParams(raw);
-        } catch {
-            return result;
-        }
-        const view = parameters.get('view');
-        if (view && HASH_KNOWN_VIEWS.has(view)) {
-            result.view = view;
-        }
-        const step = parameters.get('step');
-        if (step) {
-            result.step = step;
-        }
-        const sessionId = parameters.get('s');
-        if (sessionId) {
-            result.sessionId = sessionId;
-        }
-        return result;
-    }
-
-    /**
-     * Build the canonical hash string for the current UI location from the source-of-truth state
-     * (`state.step` / `wizardStep` / `persistence.currentId`). Intake collapses to `#view=intake`
-     * with no session; the wizard adds the active sub-step; mode/wizard/output add the open session
-     * id when one is set. This is the inverse of `parseHash` for the meaningful fields.
-     *
-     * @returns {string} the hash string, always starting with `#`
-     */
-    function hashFromLocation() {
-        const view = state.step || 'intake';
-        const parts = ['view=' + view];
-        if (view === 'wizard' && wizardStep) {
-            parts.push('step=' + global.encodeURIComponent(wizardStep));
-        }
-        if (HASH_SESSION_VIEWS.has(view) && persistence.currentId) {
-            parts.push('s=' + global.encodeURIComponent(persistence.currentId));
-        }
-        return '#' + parts.join('&');
-    }
-
-    /**
-     * Mirror the current state into `location.hash` so a reload / share reproduces this exact step.
-     * Called at the end of every `render()`, which also fires on input events — so it must be cheap
-     * and idempotent: it only writes when the computed hash differs from what's already there, and it
-     * uses `history.replaceState` so repeated renders never spam the history stack. The written value
-     * is remembered in `lastHashWritten` so the `hashchange` listener can ignore our own writes.
-     *
-     * @returns {void}
-     */
-    function syncHashToState() {
-        if (!global.location || !global.history) {
-            return;
-        }
-        const next = hashFromLocation();
-        // Only write when something actually changed — avoids redundant hashchange events / loops.
-        if (global.location.hash === next) {
-            lastHashWritten = next;
-            return;
-        }
-        lastHashWritten = next;
-        try {
-            // replaceState keeps the address bar in sync without pushing a history entry per render.
-            global.history.replaceState(null, '', next);
-        } catch {
-            // Fall back to a direct assignment if replaceState is unavailable (older/edge hosts).
-            global.location.hash = next;
-        }
-    }
-
-    /**
-     * Drive the UI from a parsed hash descriptor. Shared by the on-load restore and the `hashchange`
-     * listener. Resolution order:
-     *   1. A session id present in the hash and existing in storage → reopen it, then honour the
-     *      requested view/step (overriding reopenSave's default `mode` landing).
-     *   2. A session id present but NOT in this browser (cross-device share) → land on intake with a
-     *      keyed `deeplink` banner; never crash or invent data.
-     *   3. No session id (or `view === 'intake'`) → land on intake, exactly as the default boot.
-     * A `wizard` view clamps to a valid sub-step for the restored session rather than erroring.
-     *
-     * @param {{view: string, step: (string|null), sessionId: (string|null)}} parsed the descriptor
-     * @returns {void}
-     */
-    function applyHashDescriptor(parsed) {
-        // No session referenced, or an explicit intake link → behave exactly like the default boot.
-        if (!parsed.sessionId || parsed.view === 'intake') {
-            goToStep('intake');
-            return;
-        }
-        // The hash names a session that isn't in this browser (e.g. a link shared from another device).
-        // Don't crash and don't fabricate data — land on intake with a small, keyed explanation.
-        if (!readSaveBlob(parsed.sessionId)) {
-            goToStep('intake');
-            showBanner(
-                'deeplink',
-                'This shared link points at a saved session that isn\u{2019}t stored in this browser. ' +
-                    'Import the matching .mcdevrc.json to continue.',
-                [],
-                'warning'
-            );
-            return;
-        }
-        // The session exists locally: load it (this sets persistence.currentId + config + wizardState),
-        // then override reopenSave's default `mode` landing with the view/step the hash asked for.
-        clearBanner('deeplink');
-        // reopenSave loads config + wizardState, acquires the lock, and restores the persisted mode
-        // (Fix 1): a save made in wizard mode lands back on the wizard, older mode-less saves on the
-        // `mode` picker. A deep link to `wizard`/`output` needs a mode to compute the visible
-        // sub-steps, so the branches below only override the landing when a mode was restored.
-        reopenSave(parsed.sessionId);
-        if (parsed.view === 'wizard' && state.mode) {
-            // Set the requested sub-step, then clamp it to the restored session's visible steps so a
-            // step that no longer applies (e.g. lineage skipped) falls back to the nearest valid one.
-            wizardStep = parsed.step;
-            clampWizardStep();
-            goToStep('wizard');
-            return;
-        }
-        if (parsed.view === 'output' && state.mode) {
-            goToStep('output');
-            return;
-        }
-        // view === 'mode', or a deeper view without a resolved mode → reopenSave already landed on mode.
-    }
-
-    /**
-     * On-load restore entry point, called from `init()` before the default `goToStep('intake')`.
-     * Returns whether it handled navigation, so the caller can fall through to the intake default when
-     * there is nothing to restore. Never throws — a malformed hash parses to the intake default.
-     *
-     * We rely solely on the hash for reload-restore (no separate persisted "last active" pointer):
-     * since `syncHashToState()` writes the hash on every navigation, a plain reload always carries the
-     * step in the URL, making an extra pointer redundant. See the report / code comments for the call.
-     *
-     * @returns {boolean} true when a session/deep-link was restored, false to use the intake default
-     */
-    function restoreFromHash() {
-        if (!global.location) {
-            return false;
-        }
-        const parsed = parseHash(global.location.hash);
-        if (!parsed.sessionId || parsed.view === 'intake') {
-            return false;
-        }
-        applyHashDescriptor(parsed);
-        return true;
-    }
-
-    /**
-     * `hashchange` handler: re-runs the restore logic so pasting a new `#view=…` into the address bar
-     * (or using back/forward) navigates there. Ignores the hash values the tool itself just wrote via
-     * `syncHashToState` to avoid a write→hashchange→write feedback loop.
-     *
-     * @returns {void}
-     */
-    function onHashChange() {
-        if (!global.location) {
-            return;
-        }
-        const current = global.location.hash || '';
-        // Ignore our own replaceState writes — only genuine user/back-forward edits should navigate.
-        if (current === lastHashWritten) {
-            return;
-        }
-        lastHashWritten = current;
-        applyHashDescriptor(parseHash(current));
     }
 
     // ─────────────────────────── Chunk 2c: output step ───────────────────────────
@@ -4456,8 +3073,8 @@
                 const steps = clampWizardStep();
                 renderStepper(steps);
                 if (wizardStep) {
-                    // renderWizardStep now renders all six steps for real (env-order / bu-assign /
-                    // lineage / suffixes / prod-confirm / rules).
+                    // renderWizardStep now renders all seven steps for real (env-order / env-names /
+                    // bu-assign / lineage / suffixes / prod-confirm / rules).
                     renderWizardStep(wizardStep);
                 }
                 clearStepError();
@@ -4484,10 +3101,6 @@
         if (state.step && state.step !== 'intake' && state.config) {
             scheduleAutosave();
         }
-        // Mirror the current step into location.hash so a reload / shared link reproduces it. Cheap +
-        // idempotent (only writes on a real change, via replaceState), so calling it from render() —
-        // which also fires on input events — is safe.
-        syncHashToState();
     }
 
     // ─────────────────────────── Chunk 3b: localStorage persistence ───────────────────────────
@@ -5020,22 +3633,8 @@
         persistence.currentId = id;
         state.config = blob.config;
         state.wizardState = Object.assign(emptyWizardState(), blob.wizardState);
-        // Restore the persisted mode so a deep link / reload lands on the wizard (or output) rather
-        // than the mode picker (Fix 1). Older saves have no persisted mode → null keeps the original
-        // mode-picker landing (backward compatible). `applyHashDescriptor`'s `state.mode` guard then
-        // correctly navigates a `#view=wizard&step=…` deep link to the requested step.
-        state.mode =
-            state.wizardState.mode === 'full' || state.wizardState.mode === 'validations'
-                ? state.wizardState.mode
-                : null;
+        state.mode = null;
         acquireLock(id);
-        // With a restored mode, land on the wizard step it implies; otherwise keep the mode picker.
-        if (state.mode) {
-            const steps = clampWizardStep();
-            wizardStep = steps.length > 0 ? steps[0].id : null;
-            goToStep('wizard');
-            return;
-        }
         goToStep('mode');
     }
 
@@ -5602,17 +4201,7 @@
         cacheDom();
         wireEvents();
         initPersistence();
-        // React to manual address-bar edits + back/forward. onHashChange ignores our own writes.
-        if (global.addEventListener) {
-            global.addEventListener('hashchange', onHashChange);
-        }
-        // Reload-restore + deep-link: if the hash names a saved session in this browser, reopen it and
-        // jump to the requested view/step; otherwise fall through to the default intake landing. We
-        // rely on the hash alone (no separate persisted "last active" pointer) because
-        // syncHashToState() writes the step on every navigation, so a plain reload always carries it.
-        if (!restoreFromHash()) {
-            goToStep('intake');
-        }
+        goToStep('intake');
     }
 
     // Shared helpers exposed for Chunk 2b / 2c / 3 (which render wizard steps and outputs).
@@ -5623,52 +4212,9 @@
         jsonPretty: jsonPretty,
         goToStep: goToStep,
         visibleSteps: visibleSteps,
-        // Hash deep-linking / reload-restore test hooks (pure string helpers + the restore driver).
-        parseHash: parseHash,
-        hashFromLocation: hashFromLocation,
-        applyHashDescriptor: applyHashDescriptor,
-        restoreFromHash: restoreFromHash,
-        // Persistence runtime + tiny setters so tests drive the module-scoped `wizardStep` /
-        // `persistence.currentId` through a defined seam instead of reaching into internals.
-        persistence: persistence,
-        setWizardStep: function (id) {
-            wizardStep = id;
-        },
-        setCurrentId: function (id) {
-            persistence.currentId = id;
-        },
         renderWizardStep: renderWizardStep,
-        // Nav-gate seam: the in-place text-input handlers (suffix / separator / env-name) update
-        // state then call `canProceed(wizardStep)` via `updateNavGate` instead of re-rendering, so
-        // tests assert the gate reacts correctly to a simulated keystroke edit.
-        canProceed: canProceed,
         goNext: goNext,
         goBack: goBack,
-        // Test hook for the stepper reachability logic (Fix 4): classify each visible step as
-        // current/done/clickable given the current step id + a gate function. Pure + DOM-free.
-        computeStepperStates: computeStepperStates,
-        // Test hooks for the stepper forward-jump soft gate (Fix 4 must-fix): the pure predicate that
-        // says a forward jump off bu-assign is blocked until the unassigned-BUs confirmation, and the
-        // jump itself so the block/resume behaviour can be asserted without a rendered stepper.
-        isForwardJumpSoftBlocked: isForwardJumpSoftBlocked,
-        jumpToStep: jumpToStep,
-        // Test hooks for the unassigned-BUs banner actions + the pending-jump stash: the banner
-        // buttons invoke these exact functions, so a DOM-free test can drive the "Go back and assign"
-        // (stash-clear) and "Continue anyway" (resume) paths the null-DOM stub can't click, and read
-        // the stash via the getter to assert it was cleared.
-        confirmUnassignedContinue: confirmUnassignedContinue,
-        confirmUnassignedGoBack: confirmUnassignedGoBack,
-        getPendingJumpTarget: function () {
-            return pendingJumpTarget;
-        },
-        // Test hook for the persisted-mode round-trip (Fix 1): selectMode writes state.wizardState.mode
-        // so a save blob carries it, and reopenSave restores state.mode from it.
-        selectMode: selectMode,
-        // Test hooks for lineage drag-to-connect (Refinement B): the pure validity predicate (only an
-        // adjacent left→right drop is legal) and the in-place mapping setter (child deploys from
-        // parent), so the drop direction can be asserted without a DOM drag.
-        isValidLineageDrag: isValidLineageDrag,
-        setLineageMapping: setLineageMapping,
         deriveValidationsState: deriveValidationsState,
         renderOutput: renderOutput,
         renderSavedList: renderSavedList,
@@ -5681,23 +4227,6 @@
         // synthetic pooled environment + default suffixes without needing a rendered DOM.
         seedValidationsPool: seedValidationsPool,
         seedSuffixes: seedSuffixes,
-        // Test hook for the full-mode guard: strips the synthetic "All BUs" pool env from envOrder so
-        // it can never leak into a full-pipeline wizard (e.g. after re-opening a validations config).
-        stripValidationsPoolEnvironment: stripValidationsPoolEnvironment,
-        // Test hooks for the strict single-assignment BU board: the invariant helper, the Unassigned
-        // derivation, the pooled list, and the round-trip dedupe run through wizardStateFromConfig.
-        assignBUToEnvironment: assignBUToEnvironment,
-        unassignedBUReferences: unassignedBUReferences,
-        pooledBUReferences: pooledBUReferences,
-        wizardStateFromConfig: wizardStateFromConfig,
-        // Test hooks for the bu-assign soft-confirm gate: the pure decision helper, the hard gate it
-        // layers on top of, and a tiny setter so tests can simulate the "Continue anyway" latch
-        // without a rendered banner DOM.
-        shouldConfirmUnassigned: shouldConfirmUnassigned,
-        canProceedBUAssign: canProceedBUAssign,
-        setUnassignedConfirmed: function (value) {
-            hasConfirmedUnassigned = value;
-        },
     };
 
     if (document_.readyState === 'loading') {

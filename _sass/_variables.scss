@@ -68,6 +68,8 @@ $leading-normal: 1.6;
 $leading-relaxed:1.75;
 
 $header-height:  3.5rem;
+// Builder-mode sticky sub-header height, reused for its own box and the extra content top-offset.
+$builder-header-height: 3rem;
 $sidebar-width:  17rem;
 $content-max:    52rem;
 $toc-width:      14rem;
@@ -87,6 +89,9 @@ $transition-normal: 250ms ease;
 $transition-slow:   400ms ease;
 
 $z-sidebar:  100;
+// Builder-mode sticky sub-header: sits between the sidebar and the global site header so it stays
+// under the fixed .site-header while covering builder content as it scrolls.
+$z-builder-header: 150;
 $z-header:   200;
 $z-overlay:  300;
 $z-modal:    400;

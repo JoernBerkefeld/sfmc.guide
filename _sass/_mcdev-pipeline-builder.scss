@@ -260,8 +260,6 @@
   list-style: none;
 }
 
-// Each stepper item is a pill. The inner `<button>` (clickable steps) is a transparent, unstyled
-// wrapper so the pill itself carries all visuals — that keeps clickable and inert items pixel-aligned.
 .mpb-stepper-item {
   display: inline-flex;
   align-items: baseline;
@@ -271,48 +269,18 @@
   padding: 0.2em 0.7em;
   border-radius: $radius-full;
   border: 1px solid $border-default;
-  color: $text-muted; // future / not-yet-reachable steps are muted by default
+  color: $text-muted;
   background: $bg-elevated;
 
-  // Completed, gate-satisfied earlier steps: green colour-coding to signal "done".
-  &.is-done {
-    color: $color-success;
-    border-color: rgba($color-success, 0.5);
-    background: rgba($color-success, 0.08);
-  }
-
-  // The active step: strongest highlight. Wins over is-done when both could apply.
   &.is-current {
     color: #fff;
     background: $accent-primary;
     border-color: $accent-primary;
   }
 
-  // Reachable navigation targets: pointer affordance + hover feedback via the inner button.
-  &.is-clickable {
-    padding: 0;
-
-    .mpb-stepper-btn {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 0.35em;
-      padding: 0.2em 0.7em;
-      margin: 0;
-      border: none;
-      border-radius: $radius-full;
-      background: transparent;
-      color: inherit;
-      font: inherit;
-      cursor: pointer;
-
-      &:hover { text-decoration: underline; }
-      &:focus-visible { outline: 2px solid $accent-primary; outline-offset: 1px; }
-    }
-  }
-
-  // Inert (current or gated-off) steps: no pointer, no focus affordance.
-  &[aria-disabled="true"] {
-    cursor: default;
+  &.is-done {
+    color: $accent-primary;
+    border-color: rgba($accent-primary, 0.5);
   }
 }
 
@@ -437,47 +405,10 @@
 
   &.is-dragover { border-color: $accent-primary; }
 
-  // Name-editing column: the inline input, optional DEV/source chip and per-row warning stack here.
-  .mpb-row-label {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $space-2;
-
-    input[type="text"] {
-      flex: 1;
-      min-width: 8rem;
-      padding: 0.45em 0.7em;
-      border: 1px solid $border-default;
-      border-radius: $radius-md;
-      background: $bg-surface;
-      color: $text-primary;
-      font-size: $text-sm;
-      font-family: $font-sans;
-    }
-
-    .mpb-warn { flex-basis: 100%; margin-top: 0; }
-  }
-
+  .mpb-row-label { flex: 1; min-width: 0; font-weight: 600; }
   .mpb-row-actions { display: flex; gap: $space-1; margin-left: auto; }
 
   &[draggable="true"] { cursor: grab; }
-}
-
-// Dedicated drag handle — the only draggable element in an env-order row, so the name input
-// stays editable (a draggable row can swallow the mousedown needed to focus the input).
-.mpb-drag-handle {
-  flex: none;
-  cursor: grab;
-  user-select: none;
-  color: $text-muted;
-  font-size: $text-base;
-  line-height: 1;
-  padding: 0 0.15em;
-
-  &:active { cursor: grabbing; }
 }
 
 .mpb-move-btn {
@@ -494,229 +425,20 @@
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
-// ── BU-assignment board (Jira-style: Unassigned pool + one column per environment) ──
-// A flex parent of two regions: the fixed left pool (Unassigned) and the right env grid. On narrow
-// screens the two regions stack (pool on top, env grid below); from the tablet breakpoint up they
-// sit side by side with the env grid taking the remaining width.
-.mpb-board {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: $space-4;
-}
-
-// Left region: the Unassigned pool keeps its natural (tall) height and a stable minimum width.
-.mpb-board-pool {
-  flex: 1 1 100%;
-
-  @media (min-width: 768px) {
-    flex: 0 0 240px;
-  }
-}
-
-// Right region: a dense grid so short environment columns pack upward beside their neighbours
-// (masonry-like) instead of wrapping below the tall pool. `row dense` keeps left-to-right reading
-// order (DEV, SIT, QA, UAT, Prod) while filling gaps. Auto rows let each column take its own height.
-.mpb-board-envs {
-  flex: 1 1 100%;
+// Assignment pool / env columns
+.mpb-assign-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-auto-flow: row dense;
-  grid-auto-rows: min-content;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: $space-4;
-
-  @media (min-width: 768px) {
-    flex: 1 1 auto;
-  }
 }
 
-.mpb-board-col {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
+.mpb-assign-col {
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
   padding: $space-3;
-  border: 1px solid $border-muted;
-  border-radius: $radius-md;
   background: $bg-surface;
 
-  // The Unassigned pool is visually distinct from the environment columns and fills its region.
-  &--pool {
-    width: 100%;
-    background: $bg-elevated;
-    border-style: dashed;
-  }
-}
-
-.mpb-board-col-title {
-  font-size: $text-sm;
-  font-weight: 700;
-  margin: 0;
-}
-
-// The drop target: keep a minimum height so an empty column is still an obvious drop zone.
-.mpb-board-list {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-  min-height: 2.5rem;
-  padding: $space-1;
-  border-radius: $radius-sm;
-
-  &:empty::before {
-    content: "Drop BUs here";
-    display: block;
-    padding: $space-3;
-    text-align: center;
-    color: $text-muted;
-    font-size: $text-xs;
-    font-style: italic;
-  }
-}
-
-.mpb-board-chip {
-  display: flex;
-  align-items: center;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  border: 1px solid $border-default;
-  border-radius: $radius-md;
-  background: $bg-elevated;
-  color: $text-primary;
-  font-size: $text-sm;
-  cursor: grab;
-
-  &:active { cursor: grabbing; }
-
-  .mpb-board-grip {
-    flex: none;
-    color: $text-muted;
-    line-height: 1;
-    user-select: none;
-  }
-
-  .mpb-board-chip-name {
-    flex: 1;
-    min-width: 0;
-    font-weight: 600;
-    word-break: break-word;
-  }
-
-  // Compact keyboard/a11y reassignment picker — the drag-free alternative.
-  .mpb-board-move {
-    flex: none;
-    max-width: 8rem;
-    padding: 0.2em 0.4em;
-    border: 1px solid $border-default;
-    border-radius: $radius-sm;
-    background: $bg-surface;
-    color: $text-secondary;
-    font-size: $text-xs;
-    font-family: $font-sans;
-    cursor: pointer;
-  }
-}
-
-// SortableJS drag states.
-.mpb-board-chip.sortable-ghost {
-  opacity: 0.4;
-  border-style: dashed;
-  border-color: $accent-primary;
-}
-
-.mpb-board-chip.sortable-chosen {
-  border-color: $accent-primary;
-}
-
-.mpb-board-chip.sortable-drag {
-  box-shadow: $shadow-sm;
-  opacity: 0.9;
-}
-
-// ── Lineage board (one column per environment, connected by arrowed SVG links) ──
-// Unlike the BU-assignment board (a dense masonry grid), the lineage board spreads its environment
-// columns evenly across the full width with a flex row so the source→target flow reads left-to-right
-// and the connector arrows have a stable horizontal span. `position: relative` anchors the absolute
-// SVG overlay to the board's own box.
-.mpb-lineage-board {
-  position: relative;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: $space-5;
-  overflow-x: auto;
-}
-
-.mpb-lineage-col {
-  flex: 1 1 0;
-  min-width: 160px;
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
-}
-
-.mpb-lineage-col-title {
-  font-size: $text-sm;
-  font-weight: 700;
-  margin: 0;
-  color: $text-primary;
-}
-
-// One BU inside a column. Kept above the overlay (z-index) so the <select> stays clickable and the
-// arrows visibly terminate at the node's edge rather than covering it.
-.mpb-lineage-node {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: $space-1;
-  padding: $space-2 $space-3;
-  border: 1px solid $border-muted;
-  border-radius: $radius-md;
-  background: $bg-surface;
-  // Draggable source for drag-to-connect; the grab affordance hints the gesture.
-  cursor: grab;
-
-  .mpb-lineage-node-name { font-weight: 600; word-break: break-word; }
-  .mpb-lineage-node-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
-
-  .mpb-lineage-select {
-    padding: 0.35em 0.5em;
-    border: 1px solid $border-default;
-    border-radius: $radius-sm;
-    background: $bg-surface;
-    color: $text-primary;
-    font-size: $text-xs;
-    font-family: $font-sans;
-    // The <select> is an interactive control, not a drag handle.
-    cursor: pointer;
-  }
-
-  // Drag-to-connect affordances: the dragged node dims, a valid adjacent target highlights in the
-  // lineage accent, and an invalid target shows a not-allowed state.
-  &.is-dragging {
-    opacity: 0.5;
-    cursor: grabbing;
-  }
-
-  &.is-drop-target {
-    border-color: $color-lineage-accent;
-    box-shadow: 0 0 0 2px rgba($color-lineage-accent, 0.35);
-  }
-
-  &.is-drop-invalid {
-    cursor: not-allowed;
-    border-color: $color-danger;
-  }
-}
-
-// Decorative connector overlay: sits on top of the columns but never intercepts pointer events.
-.mpb-lineage-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: visible;
+  h4 { font-size: $text-sm; margin-bottom: $space-2; }
 }
 
 // Warnings inline (internal-space suffix etc.)

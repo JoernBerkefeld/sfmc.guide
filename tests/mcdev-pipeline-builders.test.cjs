@@ -265,6 +265,29 @@ Object.defineProperty(globalThis, 'document', {
 require('../assets/js/mcdev-pipeline-builder.js');
 const controller = globalThis.mpbController;
 
+/**
+ * Build a minimal fake DOM node modelling just the `parentNode` / `firstChild` / `childNodes` /
+ * `prepend` contract that `syncBuilderHeaderMount` relies on, so the header-relocation move can be
+ * asserted without a real DOM. `prepend(child)` detaches the child from any old parent and inserts
+ * it as the first child (keeping `firstChild` / `parentNode` in sync), mirroring the browser.
+ *
+ * @returns {object} a fake node
+ */
+function makeFakeNode() {
+  const node = { childNodes: [], parentNode: null, firstChild: null };
+  node.prepend = (child) => {
+    if (child.parentNode) {
+      const siblings = child.parentNode.childNodes;
+      siblings.splice(siblings.indexOf(child), 1);
+      child.parentNode.firstChild = siblings[0] || null;
+    }
+    node.childNodes.unshift(child);
+    node.firstChild = child;
+    child.parentNode = node;
+  };
+  return node;
+}
+
 test('validations-only mode collects each BU’s suffix into a populated buSuffixMap', () => {
   // Drive the same path selectMode('validations') takes: seed the pooled synthetic environment from
   // the config, seed default suffixes, then derive the validationsState the output step would build.
@@ -1252,6 +1275,80 @@ test('goBack: a Back navigation also clears a pending stepper-jump stash (defens
   );
 });
 
+// ── controller: builder-mode full-screen layout toggle (screen-space feature) ──
+
+test('isBuilderMode: intake (and an unset step) is not builder mode; every later view is', () => {
+  // Intake is the homepage-like landing → constrained layout, nav + header visible.
+  assert.equal(controller.isBuilderMode('intake'), false, 'intake is not builder mode');
+  assert.equal(controller.isBuilderMode(null), false, 'an unset step is not builder mode');
+  // Everything past intake is the full-screen builder.
+  assert.equal(controller.isBuilderMode('mode'), true, 'mode is builder mode');
+  assert.equal(controller.isBuilderMode('wizard'), true, 'wizard is builder mode');
+  assert.equal(controller.isBuilderMode('output'), true, 'output is builder mode');
+});
+
+test('goToStep reflects builder mode onto the root class (added past intake, removed on intake)', () => {
+  // The controller captured global.document at load; attach a minimal classList to its
+  // documentElement so syncBuilderModeClass (guarded, no-op otherwise) can drive a real toggle.
+  const classes = new Set();
+  const originalDocumentElement = globalThis.document.documentElement;
+  globalThis.document.documentElement = {
+    classList: {
+      toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+    },
+  };
+  try {
+    // Deeplink/restore into wizard routes through goToStep → builder mode is on.
+    controller.goToStep('wizard');
+    assert.ok(classes.has('mpb-builder-mode'), 'wizard turns builder mode on');
+
+    // Returning to intake must fully reverse it.
+    controller.goToStep('intake');
+    assert.equal(classes.has('mpb-builder-mode'), false, 'intake turns builder mode off');
+
+    // Any other later view re-enables it.
+    controller.goToStep('output');
+    assert.ok(classes.has('mpb-builder-mode'), 'output turns builder mode back on');
+  } finally {
+    globalThis.document.documentElement = originalDocumentElement;
+  }
+});
+
+test('syncBuilderHeaderMount: the sticky header is hoisted to .layout-content in builder mode and parked back in #mpb-app on intake', () => {
+  const layoutContent = makeFakeNode();
+  const appHome = makeFakeNode(); // stands in for #mpb-app (the header's authored home)
+  const header = makeFakeNode();
+  // The header starts life inside its authored home, as in index.md.
+  appHome.prepend(header);
+
+  const restoreStep = controller.state.step;
+  controller.setBuilderHeaderDom(header, layoutContent, appHome);
+  try {
+    // Builder mode → hoisted to be the first child of the tall .layout-content.
+    controller.state.step = 'wizard';
+    controller.syncBuilderHeaderMount();
+    assert.equal(header.parentNode, layoutContent, 'header hoisted into .layout-content');
+    assert.equal(
+      layoutContent.firstChild,
+      header,
+      'header is the FIRST child (pins under site-header)',
+    );
+
+    // Idempotent: a second call in the same mode does not move or duplicate it.
+    controller.syncBuilderHeaderMount();
+    assert.equal(layoutContent.childNodes.length, 1, 'no duplicate hoist');
+
+    // Intake → parked back at the top of #mpb-app, leaving .layout-content clean.
+    controller.state.step = 'intake';
+    controller.syncBuilderHeaderMount();
+    assert.equal(header.parentNode, appHome, 'header returned to its #mpb-app home on intake');
+    assert.equal(layoutContent.childNodes.length, 0, '.layout-content no longer holds the header');
+  } finally {
+    controller.setBuilderHeaderDom(null, null, null);
+    controller.state.step = restoreStep;
+  }
+});
+
 test('computeStepperStates: forward steps are not clickable while the bu-assign soft gate holds', () => {
   const steps = [
     { id: 'bu-assign', title: 'Assign BUs' },
@@ -1271,4 +1368,115 @@ test('computeStepperStates: forward steps are not clickable while the bu-assign 
   const allowed = controller.computeStepperStates(steps, 'bu-assign', gateAllOk, false);
   assert.equal(allowed[1].clickable, true, 'lineage clickable once the soft gate clears');
   assert.equal(allowed[2].clickable, true, 'suffixes clickable once the soft gate clears');
+});
+
+// ── controller: builder control-bar (sticky sub-header) pure helpers ──────────
+
+test('currentConfigDisplayName: the stored blob name wins; otherwise it falls back to the derived name', () => {
+  const config = { credentials: { 'Parent BU': { eid: 123 } } };
+
+  // A save is open with an authoritative name → that name is shown verbatim.
+  assert.equal(
+    controller.currentConfigDisplayName({ name: 'My pipeline v2' }, config),
+    'My pipeline v2',
+    'the persisted blob name is authoritative',
+  );
+
+  // A whitespace-only or missing blob name is ignored → derive from the config credentials.
+  assert.equal(
+    controller.currentConfigDisplayName({ name: ' '.repeat(3) }, config),
+    'Parent BU (123)',
+    'a blank stored name falls back to the derived name',
+  );
+  assert.equal(
+    controller.currentConfigDisplayName(null, config),
+    'Parent BU (123)',
+    'no open save falls back to the derived name',
+  );
+
+  // No credentials at all → the derived default.
+  assert.equal(
+    controller.currentConfigDisplayName(null, { credentials: {} }),
+    'Untitled pipeline',
+    'an empty config derives the untitled default',
+  );
+});
+
+test('isConfigDownloadAvailable: only full mode with a complete wizard (no blockers) can emit .mcdevrc.json', () => {
+  // Full mode + nothing blocking → the config download is offered.
+  assert.equal(
+    controller.isConfigDownloadAvailable('full', []),
+    true,
+    'full mode with no blockers can download the config',
+  );
+
+  // Any outstanding blocker (incomplete wizard) disables it, mirroring the output-step guard.
+  assert.equal(
+    controller.isConfigDownloadAvailable('full', ['Assign BUs: at least one BU per environment']),
+    false,
+    'an incomplete wizard cannot emit a config file',
+  );
+
+  // Validations-only mode never emits a config file, even when complete.
+  assert.equal(
+    controller.isConfigDownloadAvailable('validations', []),
+    false,
+    'validations-only mode never offers the config download',
+  );
+});
+
+test('cloneSave: creating a "New version" returns the clone id and (via reopen) makes it the active config', () => {
+  const restore = installMemoryLocalStorage();
+  try {
+    controller.persistence.available = null;
+
+    // Seed a saved config and make it the active session (as if opened in the builder).
+    const originalId = 'clone-source';
+    localStorage.setItem(
+      'mcdevpipe::save::' + originalId,
+      JSON.stringify({
+        id: originalId,
+        name: 'Deploy pipeline',
+        version: 1,
+        timestamp: Date.now(),
+        config: sampleConfig,
+        wizardState: {
+          version: 1,
+          multiCred: false,
+          mode: 'full',
+          envOrder: ['DEV', 'QA'],
+          envBUs: { DEV: ['DEV'], QA: ['EUN_QA'] },
+          lineage: {},
+          separator: '_',
+          suffixes: {},
+          prodBUs: [],
+          selectedRules: [],
+          prefixBlacklist: {},
+          retention: {},
+          sharedDEs: false,
+        },
+      }),
+    );
+    controller.setCurrentId(originalId);
+
+    // The header's "New version" flow: clone, then open the returned clone id.
+    const cloneId = controller.cloneSave(originalId);
+    assert.ok(cloneId, 'cloneSave returns the new clone id');
+    assert.notEqual(cloneId, originalId, 'the clone gets a fresh id');
+    controller.reopenSave(cloneId);
+
+    // The active session switches to the clone, and its name is the next free " vN".
+    assert.equal(
+      controller.persistence.currentId,
+      cloneId,
+      'the clone becomes the active config after reopening it',
+    );
+    const cloneBlob = JSON.parse(localStorage.getItem('mcdevpipe::save::' + cloneId));
+    const activeName = controller.currentConfigDisplayName(cloneBlob, controller.state.config);
+    assert.equal(activeName, 'Deploy pipeline v2', 'the active config shows the new " v2" name');
+  } finally {
+    stopControllerTimers();
+    restore();
+    controller.persistence.available = null;
+  }
 });

@@ -152,14 +152,6 @@ platforms:
 
 </div>
 
-<!-- SortableJS (UMD, attaches window.Sortable) powers the drag-and-drop BU-assignment board.
-     Pinned to 1.15.7 with a Subresource-Integrity hash verified against cdnjs's published SRI.
-     External CDN URL — NOT run through cache_bust. Loaded (defer) before the controller so
-     window.Sortable is present when the board renders; the controller degrades gracefully to a
-     dropdown-only board if this fails to load. -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.7/Sortable.min.js"
-        integrity="sha512-ri8dokds012Oxz+iFzMs4KNJXVc+h7J1zq6unM1NTtzBLj4jD1R5BWiK6QycK0TdSdkt7zYcIcv6sUPhmYkbdQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-config-builder.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-validations-builder.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-builder.js' | relative_url | cache_bust }}" defer></script>
