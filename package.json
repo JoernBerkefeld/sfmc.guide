@@ -14,16 +14,30 @@
     "generate:lexer-data": "node scripts/generate-rouge-lexer-data.mjs",
     "generate:all": "npm run generate:function-index && npm run generate:handlebars-index && npm run generate:site-index && npm run generate:lexer-data",
     "check:bom": "node scripts/check-bom.mjs",
+    "test": "node --test \"tests/**/*.test.cjs\"",
+    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\"",
+    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsdoc": "^63.3.3",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-unicorn": "^73.0.0",
+    "globals": "^17.11.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "prettier": "^3.6.2"
   },
   "lint-staged": {
     "scripts/**/*.{mjs,cjs,js}": [
+      "prettier --write"
+    ],
+    "assets/js/mcdev-pipeline-*.js": [
+      "eslint --fix",
       "prettier --write"
     ]
   }

@@ -7,8 +7,8 @@
 <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
 
 <!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | relative_url }}">
+<link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url | cache_bust }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | relative_url | cache_bust }}">
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.webmanifest">
@@ -26,11 +26,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- Main CSS -->
-<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url | cache_bust }}">
 
 <!-- Lunr search index -->
 <script>
   var siteBaseUrl = "{{ site.baseurl }}";
+  // Content-hashed URL for the search index, so JS never fetches a stale copy.
+  var siteIndexUrl = "{{ '/site-index.json' | relative_url | cache_bust }}";
 </script>
 
 {% seo %}

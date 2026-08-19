@@ -17,7 +17,7 @@
 
   {% include footer.html %}
 
-  <script src="{{ '/assets/js/search.js' | relative_url }}" defer></script>
-  <script src="{{ '/assets/js/main.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/search.js' | relative_url | cache_bust }}" defer></script>
+  <script src="{{ '/assets/js/main.js' | relative_url | cache_bust }}" defer></script>
 </body>
 </html>

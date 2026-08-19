@@ -22,8 +22,8 @@
 </script>
 
 <!-- CookieConsent v3 (Orest Bida) — GDPR opt-in banner, self-hosted (no third-party requests) -->
-<link rel="stylesheet" href="{{ '/assets/vendor/cookieconsent/cookieconsent.css' | relative_url }}">
-<script src="{{ '/assets/vendor/cookieconsent/cookieconsent.umd.js' | relative_url }}"></script>
+<link rel="stylesheet" href="{{ '/assets/vendor/cookieconsent/cookieconsent.css' | relative_url | cache_bust }}">
+<script src="{{ '/assets/vendor/cookieconsent/cookieconsent.umd.js' | relative_url | cache_bust }}"></script>
 <script>
   (function () {
     // Translate CookieConsent's analytics category into a Consent Mode update.

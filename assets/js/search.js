@@ -42,7 +42,12 @@
       if (onReady) onReady();
       return;
     }
-    var url = (typeof siteBaseUrl !== 'undefined' ? siteBaseUrl : '') + '/site-index.json';
+    // Prefer the content-hashed URL injected by the template (cache-busted);
+    // fall back to the plain path for older cached HTML.
+    var url =
+      typeof siteIndexUrl !== 'undefined'
+        ? siteIndexUrl
+        : (typeof siteBaseUrl !== 'undefined' ? siteBaseUrl : '') + '/site-index.json';
     console.log('[search] fetching', url);
     fetch(url)
       .then(function (r) {

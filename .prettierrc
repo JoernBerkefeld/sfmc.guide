@@ -2,5 +2,13 @@
   "tabWidth": 2,
   "printWidth": 100,
   "singleQuote": true,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "assets/js/mcdev-pipeline-*.js",
+      "options": {
+        "tabWidth": 4
+      }
+    }
+  ]
 }
