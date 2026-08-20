@@ -115,6 +115,12 @@
         modeFull: null,
         modeValidations: null,
         stepHost: null,
+        // ── sticky builder sub-header (hoisted into .layout-content in builder mode) ──
+        builderHeader: null, // the #mpb-builder-header element
+        builderHeaderHome: null, // its authored parent (#mpb-app), to park it back on intake
+        layoutContent: null, // the .layout-content scroll container it pins inside
+        builderHeaderName: null, // #mpb-builder-header-name slot (config name + rename)
+        builderHeaderActions: null, // #mpb-builder-header-actions slot (Open/New/Upload/Download)
         // ── wizard shell (Chunk 2) ──
         stepper: null,
         back: null,
@@ -1847,8 +1853,10 @@
 
         // Keyboard/a11y alternative to dragging: a compact env picker routed through the same invariant.
         const selectId = 'mpb-bu-move-' + reference.replaceAll(/[^a-zA-Z0-9]+/g, '-');
+        // The drag board is the primary affordance; this <select> is the keyboard/SR alternative,
+        // kept in the DOM (Tab-focusable + SR-operable) but visually hidden via the 1px-clip pattern.
         const select = makeElement('select', {
-            class: 'mpb-board-move',
+            class: 'mpb-board-move visually-hidden',
             id: selectId,
             attrs: { 'aria-label': 'Assign ' + reference + ' to environment' },
         });
@@ -3463,6 +3471,73 @@
     }
 
     /**
+     * Whether the tool is in "builder mode" — i.e. the user has left the intake landing. Builder
+     * mode drives the full-width layout (nav/intro hidden) and reveals the sticky builder sub-header.
+     *
+     * @returns {boolean} true for every step except intake
+     */
+    function isBuilderMode() {
+        return state.step !== 'intake';
+    }
+
+    /**
+     * Toggle the `mpb-builder-mode` class on the root element so the builder-mode SCSS (full-width
+     * layout, hidden nav/intro, revealed sticky header) applies, and (re)mount the header into the
+     * scroll container. No-ops safely under the headless document stub, where `documentElement` is
+     * undefined.
+     *
+     * @returns {void}
+     */
+    function syncBuilderModeClass() {
+        const root = document_ && document_.documentElement;
+        if (root && root.classList) {
+            root.classList.toggle('mpb-builder-mode', isBuilderMode());
+        }
+        syncBuilderHeaderMount();
+    }
+
+    /**
+     * Move the sticky builder sub-header so `position:sticky` can pin it. In builder mode it must be
+     * the FIRST CHILD of the tall `.layout-content` scroll container; on intake it is parked back
+     * under its authored home (`#mpb-app`). Idempotent — skips the move when the header is already in
+     * the right place — and a no-op when the header/containers are absent (headless stub).
+     *
+     * @returns {void}
+     */
+    function syncBuilderHeaderMount() {
+        const header = dom.builderHeader;
+        if (!header) {
+            return;
+        }
+        if (isBuilderMode()) {
+            const container = dom.layoutContent;
+            // Only hoist when there is a container and the header is not already its first child
+            // (idempotent — prevents needless DOM churn on every navigation/render).
+            if (container && container.firstChild !== header) {
+                container.prepend(header);
+            }
+        } else if (dom.builderHeaderHome && header.parentNode !== dom.builderHeaderHome) {
+            // Back on intake: return the header to its authored home so the DOM matches the markup.
+            dom.builderHeaderHome.prepend(header);
+        }
+    }
+
+    /**
+     * Test seam: inject the header + its containers so the mount logic can be exercised headlessly
+     * (the null-`querySelector` stub never populates these in `cacheDom`).
+     *
+     * @param {(Node|null)} header the `#mpb-builder-header` element
+     * @param {(Node|null)} layoutContent the `.layout-content` scroll container
+     * @param {(Node|null)} home the authored home parent (`#mpb-app`)
+     * @returns {void}
+     */
+    function setBuilderHeaderDom(header, layoutContent, home) {
+        dom.builderHeader = header;
+        dom.layoutContent = layoutContent;
+        dom.builderHeaderHome = home;
+    }
+
+    /**
      * Advance to a step and re-render.
      *
      * @param {string} step the target step id
@@ -3470,6 +3545,8 @@
      */
     function goToStep(step) {
         state.step = step;
+        // Reflect builder-mode (full-width layout + sticky header mount) before the render paints.
+        syncBuilderModeClass();
         render();
     }
 
@@ -4432,6 +4509,357 @@
         }
     }
 
+    // ─────────────────────────── sticky builder sub-header hydration ───────────────────────────
+
+    /**
+     * Whether the `.mcdevrc.json` config download is available. Only offered in full mode with a
+     * complete pipeline — mirrors the output step's config-card guard exactly.
+     *
+     * @param {string} mode the active generation mode (`'full'` | `'validations'`)
+     * @param {string[]} blockers the unfinished-step reasons from `outputBlockers()`
+     * @returns {boolean} true when the `.mcdevrc.json` may be downloaded
+     */
+    function isConfigDownloadAvailable(mode, blockers) {
+        return mode !== 'validations' && blockers.length === 0;
+    }
+
+    /**
+     * The display name of the config currently being edited: the active save's stored name, falling
+     * back to a name derived from the config, then a generic label. Never throws when no save is open.
+     *
+     * @returns {string} the config display name
+     */
+    function currentConfigDisplayName() {
+        const blob = persistence.currentId ? readSaveBlob(persistence.currentId) : null;
+        if (blob && blob.name) {
+            return blob.name;
+        }
+        return deriveConfigName(state.config);
+    }
+
+    /**
+     * The single currently-open builder dropdown panel (Open or Download share this slot — only one
+     * may be open at a time) plus the document listeners wired while it is open, so they can be torn
+     * down before every header rebuild (listeners never accumulate).
+     *
+     * @type {{button: Element, panel: Element, onDocClick: (event: Event) => void, onKeydown: (event: KeyboardEvent) => void}|null}
+     */
+    let openBuilderPanel = null;
+
+    /**
+     * Close the open builder dropdown (if any): hide the panel, sync `aria-expanded`, and remove the
+     * document listeners. Safe to call when nothing is open.
+     *
+     * @returns {void}
+     */
+    function closeBuilderOpenPanel() {
+        if (!openBuilderPanel) {
+            return;
+        }
+        const { button, panel, onDocClick, onKeydown } = openBuilderPanel;
+        panel.hidden = true;
+        button.setAttribute('aria-expanded', 'false');
+        // Capture-phase for the click, matching how it was added, so removal actually detaches it.
+        document_.removeEventListener('click', onDocClick, true);
+        document_.removeEventListener('keydown', onKeydown, true);
+        openBuilderPanel = null;
+    }
+
+    /**
+     * Open a builder dropdown panel: reveal it, sync `aria-expanded`, focus the first enabled menu
+     * item, and wire click-outside (capture phase, so the button's own bubble handler can toggle
+     * closed without an immediate reopen) + Escape-to-close (refocusing the button). Only one panel
+     * is ever open — any previously-open one is closed first.
+     *
+     * @param {Element} button the toggle button
+     * @param {Element} panel the panel element to reveal
+     * @returns {void}
+     */
+    function openBuilderOpenPanel(button, panel) {
+        closeBuilderOpenPanel();
+        panel.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        const onDocumentClick = (event) => {
+            // A click anywhere outside this dropdown wrapper closes it. Clicks on the button itself
+            // are handled by its own (bubble-phase) toggle so we don't reopen what it just closed.
+            if (!panel.contains(event.target) && !button.contains(event.target)) {
+                closeBuilderOpenPanel();
+            }
+        };
+        const onKeydown = (event) => {
+            if (event.key !== 'Escape') {
+            	return;
+            }
+
+            closeBuilderOpenPanel();
+            button.focus();
+        };
+        document_.addEventListener('click', onDocumentClick, {capture: true});
+        document_.addEventListener('keydown', onKeydown, {capture: true});
+        openBuilderPanel = { button: button, panel: panel, onDocClick: onDocumentClick, onKeydown: onKeydown };
+        const first = panel.querySelector('[role="menuitem"]:not([disabled])');
+        if (first) {
+            first.focus();
+        }
+    }
+
+    /**
+     * Build a dropdown wrapper (toggle button + downward panel) sharing the single-open machinery.
+     * The panel is populated by `fillPanel`. The button toggles open/closed on click.
+     *
+     * @param {string} label the toggle button label (a ` ▾` caret is appended)
+     * @param {boolean} leftAligned whether the panel is left-aligned (Open) vs. right (Download)
+     * @param {(panel: HTMLElement) => void} fillPanel populates the panel with menu items
+     * @returns {HTMLElement} the dropdown wrapper element
+     */
+    function buildBuilderDropdown(label, leftAligned, fillPanel) {
+        const wrapper = makeElement('div', { class: 'mpb-builder-open' });
+        const button = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: label + ' \u{25BE}',
+            attrs: { 'aria-haspopup': 'menu', 'aria-expanded': 'false' },
+        });
+        const panelClass = leftAligned
+            ? 'mpb-builder-open-panel mpb-builder-open-panel--left'
+            : 'mpb-builder-open-panel';
+        const panel = makeElement('div', { class: panelClass, attrs: { role: 'menu' } });
+        panel.hidden = true;
+        fillPanel(panel);
+        button.addEventListener('click', () => {
+            // Toggle: if this exact panel is already open, close it; otherwise open it.
+            if (openBuilderPanel && openBuilderPanel.panel === panel) {
+                closeBuilderOpenPanel();
+            } else {
+                openBuilderOpenPanel(button, panel);
+            }
+        });
+        wrapper.append(button, panel);
+        return wrapper;
+    }
+
+    /**
+     * Build the "Open ▾" dropdown: every other saved config (excluding the one currently open),
+     * each row reopening its session. Shows an empty-state note when there is nothing else to open.
+     *
+     * @returns {HTMLElement} the Open dropdown wrapper
+     */
+    function buildBuilderOpenDropdown() {
+        return buildBuilderDropdown('Open', true, (panel) => {
+            const others = listSaves().filter((save) => save.id !== persistence.currentId);
+            if (others.length === 0) {
+                panel.append(
+                    makeElement('div', {
+                        class: 'mpb-builder-open-empty',
+                        text: 'No other saved configs.',
+                    })
+                );
+                return;
+            }
+            for (const save of others) {
+                const row = makeElement('button', {
+                    type: 'button',
+                    class: 'mpb-builder-open-row',
+                    attrs: { role: 'menuitem' },
+                });
+                row.append(makeElement('span', { class: 'mpb-builder-open-row-name', text: save.name }));
+                row.append(
+                    makeElement('span', {
+                        class: 'mpb-builder-open-row-meta',
+                        text: formatTimestamp(save.timestamp),
+                    })
+                );
+                row.addEventListener('click', () => {
+                    closeBuilderOpenPanel();
+                    reopenSave(save.id);
+                });
+                panel.append(row);
+            }
+        });
+    }
+
+    /**
+     * Build the "Download ▾" dropdown: the `.mcdevrc.json` item (full mode + complete pipeline only,
+     * disabled with a tooltip otherwise) and the always-present `.mcdev-validations.js` item. Reuses
+     * the output step's exact build + download plumbing — no duplicated build logic.
+     *
+     * @returns {HTMLElement} the Download dropdown wrapper
+     */
+    function buildBuilderDownloadDropdown() {
+        return buildBuilderDropdown('Download', false, (panel) => {
+            const blockers = outputBlockers();
+            const isConfigOk = isConfigDownloadAvailable(state.mode, blockers);
+            // `.mcdevrc.json` — omitted entirely in validations mode; disabled when incomplete.
+            if (state.mode !== 'validations') {
+                const configItem = makeElement('button', {
+                    type: 'button',
+                    class: 'mpb-builder-open-row',
+                    text: 'Download .mcdevrc.json',
+                    attrs: { role: 'menuitem' },
+                });
+                if (isConfigOk) {
+                    configItem.addEventListener('click', () => {
+                        closeBuilderOpenPanel();
+                        const configObject = global.mpbConfigBuilder.buildConfig(state.wizardState, state.config);
+                        downloadText('.mcdevrc.json', jsonPretty(configObject), 'application/json');
+                    });
+                } else {
+                    configItem.disabled = true;
+                    configItem.setAttribute('title', 'Finish the wizard before downloading the config.');
+                }
+                panel.append(configItem);
+            }
+            // `.mcdev-validations.js` — always available.
+            const validationsItem = makeElement('button', {
+                type: 'button',
+                class: 'mpb-builder-open-row',
+                text: 'Download .mcdev-validations.js',
+                attrs: { role: 'menuitem' },
+            });
+            validationsItem.addEventListener('click', () => {
+                closeBuilderOpenPanel();
+                const validationsSource = global.mpbValidationsBuilder.buildValidations(deriveValidationsState());
+                downloadText('.mcdev-validations.js', validationsSource, 'text/javascript');
+            });
+            panel.append(validationsItem);
+        });
+    }
+
+    /**
+     * Fill the header name slot with the config display name plus an inline "Rename" affordance that
+     * swaps in an `<input>` + Save/Cancel. Commit trims, ignores empty, persists via `renameSave`,
+     * then re-renders the header and the intake saved-list. Enter commits, Escape cancels.
+     *
+     * @returns {void}
+     */
+    function renderBuilderHeaderName() {
+        const slot = dom.builderHeaderName;
+        slot.replaceChildren();
+        slot.append(
+            makeElement('span', { class: 'mpb-builder-header-name-label', text: currentConfigDisplayName() })
+        );
+        // Rename is only meaningful when a save is actually open.
+        if (!persistence.currentId) {
+            return;
+        }
+        const renameButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: 'Rename',
+        });
+        renameButton.addEventListener('click', () => startBuilderHeaderRename());
+        slot.append(renameButton);
+    }
+
+    /**
+     * Swap the header name label for an inline rename input + Save/Cancel. Commit persists a trimmed,
+     * non-empty name and re-renders the header + intake saved-list; Cancel/Escape restores the label.
+     *
+     * @returns {void}
+     */
+    function startBuilderHeaderRename() {
+        const slot = dom.builderHeaderName;
+        const id = persistence.currentId;
+        if (!slot || !id) {
+            return;
+        }
+        slot.replaceChildren();
+        const input = makeElement('input', {
+            type: 'text',
+            class: 'mpb-builder-header-rename-input',
+            value: currentConfigDisplayName(),
+            attrs: { 'aria-label': 'New name for this config' },
+        });
+        const saveButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: 'Save',
+        });
+        const cancelButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: 'Cancel',
+        });
+        const commit = () => {
+            const next = input.value.trim();
+            if (next) {
+                renameSave(id, next);
+            }
+            renderBuilderHeader();
+            renderSavedList();
+        };
+        saveButton.addEventListener('click', commit);
+        cancelButton.addEventListener('click', () => renderBuilderHeader());
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                commit();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                renderBuilderHeader();
+            }
+        });
+        slot.append(input, saveButton, cancelButton);
+        input.focus();
+        input.select();
+    }
+
+    /**
+     * Fill the header actions slot with the four builder actions, in order: Open ▾, New version,
+     * Upload new, Download ▾.
+     *
+     * @returns {void}
+     */
+    function renderBuilderHeaderActions() {
+        const slot = dom.builderHeaderActions;
+        slot.replaceChildren();
+
+        // Open ▾ — reopen any other saved config.
+        slot.append(buildBuilderOpenDropdown());
+
+        // New version — clone the current config AND switch the active session to the clone.
+        const newVersion = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: 'New version',
+        });
+        newVersion.addEventListener('click', () => {
+            const cloneId = cloneSave(persistence.currentId);
+            if (cloneId) {
+                reopenSave(cloneId);
+            }
+        });
+        slot.append(newVersion);
+
+        // Upload new — return to intake to load a different config.
+        const uploadNew = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--ghost',
+            text: 'Upload new',
+        });
+        uploadNew.addEventListener('click', () => goToStep('intake'));
+        slot.append(uploadNew);
+
+        // Download ▾ — the config + validations files (same guards as the output step).
+        slot.append(buildBuilderDownloadDropdown());
+    }
+
+    /**
+     * Hydrate the sticky builder sub-header: (re)fill the name + actions slots. Called at the end of
+     * every render and after rename/clone. Tears down any open dropdown first so its document
+     * listeners never accumulate across rebuilds. Early-returns under the headless stub (no slots).
+     *
+     * @returns {void}
+     */
+    function renderBuilderHeader() {
+        closeBuilderOpenPanel();
+        if (!dom.builderHeaderName || !dom.builderHeaderActions) {
+            return;
+        }
+        renderBuilderHeaderName();
+        renderBuilderHeaderActions();
+    }
+
     /**
      * Central render dispatcher. Switches on `state.step`. Intake + mode are fully implemented;
      * the wizard branch renders the stepper + a per-step placeholder (Chunk 2a); the output branch
@@ -4484,6 +4912,9 @@
         if (state.step && state.step !== 'intake' && state.config) {
             scheduleAutosave();
         }
+        // Hydrate the sticky builder sub-header (name + actions) to reflect the latest state. A no-op
+        // under the headless stub (slots are null).
+        renderBuilderHeader();
         // Mirror the current step into location.hash so a reload / shared link reproduces it. Cheap +
         // idempotent (only writes on a real change, via replaceState), so calling it from render() —
         // which also fires on input events — is safe.
@@ -5360,12 +5791,12 @@
      * Deep-clone a saved config under a fresh id with the next free ` vN` name suffix.
      *
      * @param {string} id the source save id
-     * @returns {void}
+     * @returns {(string|null)} the new clone's id, or null when the source is missing
      */
     function cloneSave(id) {
         const blob = readSaveBlob(id);
         if (!blob) {
-            return;
+            return null;
         }
         const cloneId = newId();
         const clonedBlob = global.structuredClone(blob);
@@ -5378,6 +5809,7 @@
             showQuotaBanner();
         }
         renderSavedList();
+        return cloneId;
     }
 
     /**
@@ -5480,6 +5912,13 @@
         dom.modeFull = document_.querySelector('#mpb-mode-full');
         dom.modeValidations = document_.querySelector('#mpb-mode-validations');
         dom.stepHost = document_.querySelector('#mpb-step-host');
+        // ── sticky builder sub-header (Chunk header) ──
+        dom.builderHeader = document_.querySelector('#mpb-builder-header');
+        // Remember the authored home parent so intake can park the header back where it started.
+        dom.builderHeaderHome = dom.builderHeader ? dom.builderHeader.parentNode : null;
+        dom.layoutContent = document_.querySelector('.layout-content');
+        dom.builderHeaderName = document_.querySelector('#mpb-builder-header-name');
+        dom.builderHeaderActions = document_.querySelector('#mpb-builder-header-actions');
         // ── wizard shell (Chunk 2) ──
         dom.stepper = document_.querySelector('#mpb-stepper');
         dom.back = document_.querySelector('#mpb-back');
@@ -5623,6 +6062,16 @@
         jsonPretty: jsonPretty,
         goToStep: goToStep,
         visibleSteps: visibleSteps,
+        // Sticky builder-header test hooks: the pure guard/name helpers, the mode-class + header-mount
+        // sync, the clone helper (now returning the new id), and a DOM seam so the mount/park logic can
+        // be exercised under the null-querySelector document stub.
+        isBuilderMode: isBuilderMode,
+        syncBuilderModeClass: syncBuilderModeClass,
+        syncBuilderHeaderMount: syncBuilderHeaderMount,
+        setBuilderHeaderDom: setBuilderHeaderDom,
+        isConfigDownloadAvailable: isConfigDownloadAvailable,
+        currentConfigDisplayName: currentConfigDisplayName,
+        cloneSave: cloneSave,
         // Hash deep-linking / reload-restore test hooks (pure string helpers + the restore driver).
         parseHash: parseHash,
         hashFromLocation: hashFromLocation,

@@ -11,6 +11,26 @@ platforms:
 
 <div class="mpb" id="mpb-app" aria-live="polite">
 
+<!-- ══ Sticky builder sub-header (hidden on intake; hoisted into .layout-content in builder mode) ══
+     The controller (`syncBuilderHeaderMount`) moves this node to be the first child of the tall
+     `.layout-content` scroll container so `position:sticky` can pin it flush under the fixed
+     site-header; on intake it is parked back here. Name + action slots are hydrated by
+     `renderBuilderHeader`. -->
+<div class="mpb-builder-header" id="mpb-builder-header">
+  <div class="mpb-builder-header-identity">
+    <svg class="mpb-builder-header-logo" viewBox="0 0 24 24" width="24" height="24"
+         aria-hidden="true" focusable="false">
+      <path d="M4 7h9M4 12h13M4 17h7" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round"/>
+      <path d="m16 15 4 3-4 3" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="mpb-builder-header-title">SFMC DevTools Pipeline Builder</span>
+  </div>
+  <span id="mpb-builder-header-name" class="mpb-builder-header-name"></span>
+  <div id="mpb-builder-header-actions" class="mpb-builder-header-actions"></div>
+</div>
+
 <div class="mpb-callout mpb-callout--scope" role="note">
   <strong>For SFMC DevTools (<code>mcdev</code>) pipelines only.</strong>
   This builder generates git-based deployment configuration

@@ -868,6 +868,32 @@ function installMemoryLocalStorage() {
   };
 }
 
+/**
+ * Minimal fake DOM node for the builder-header mount test: tracks its children and supports
+ * `firstChild` + a `prepend` that re-parents the child (matching the real controller's mount logic)
+ * so hoist/park behaviour is observable under the headless stub.
+ */
+class FakeNode {
+  constructor() {
+    this.children = [];
+  }
+
+  get firstChild() {
+    return this.children.at(0) || null;
+  }
+
+  prepend(child) {
+    if (child.parentNode) {
+      const index = child.parentNode.children.indexOf(child);
+      if (index !== -1) {
+        child.parentNode.children.splice(index, 1);
+      }
+    }
+    this.children.unshift(child);
+    child.parentNode = this;
+  }
+}
+
 test('persisted mode round-trips: a wizard-mode save reopens into the wizard (not the mode picker)', () => {
   const restore = installMemoryLocalStorage();
   try {
@@ -1271,4 +1297,157 @@ test('computeStepperStates: forward steps are not clickable while the bu-assign 
   const allowed = controller.computeStepperStates(steps, 'bu-assign', gateAllOk, false);
   assert.equal(allowed[1].clickable, true, 'lineage clickable once the soft gate clears');
   assert.equal(allowed[2].clickable, true, 'suffixes clickable once the soft gate clears');
+});
+
+// ─── sticky builder sub-header ──────────────────────────────────────────────
+
+test('isConfigDownloadAvailable: config download only in full mode with a complete pipeline', () => {
+  // Full mode + no blockers → the config file may be downloaded.
+  assert.equal(controller.isConfigDownloadAvailable('full', []), true);
+  // Full mode but an unfinished step → not available.
+  assert.equal(
+    controller.isConfigDownloadAvailable('full', ['Suffixes: two BUs share a suffix']),
+    false,
+  );
+  // Validations-only mode never emits a config, even when complete.
+  assert.equal(controller.isConfigDownloadAvailable('validations', []), false);
+});
+
+test('currentConfigDisplayName returns the active save’s stored name', () => {
+  const restore = installMemoryLocalStorage();
+  try {
+    controller.persistence.available = null;
+    const id = 'hdr-name';
+    localStorage.setItem(
+      'mcdevpipe::save::' + id,
+      JSON.stringify({
+        id: id,
+        name: 'My Pipeline',
+        version: 1,
+        timestamp: Date.now(),
+        config: sampleConfig,
+        wizardState: sampleWizardState(),
+      }),
+    );
+    controller.setCurrentId(id);
+    assert.equal(controller.currentConfigDisplayName(), 'My Pipeline');
+  } finally {
+    stopControllerTimers();
+    controller.setCurrentId(null);
+    restore();
+    controller.persistence.available = null;
+  }
+});
+
+test('cloneSave returns the new id; the header New-version flow switches the active session to the v2 clone', () => {
+  const restore = installMemoryLocalStorage();
+  try {
+    controller.persistence.available = null;
+    // Seed a mode-bearing save so reopenSave lands cleanly (needs a persisted mode + wizardState).
+    const id = 'hdr-clone';
+    const wizardState = Object.assign(sampleWizardState(), { mode: 'full' });
+    localStorage.setItem(
+      'mcdevpipe::save::' + id,
+      JSON.stringify({
+        id: id,
+        name: 'Base config',
+        version: 1,
+        timestamp: Date.now(),
+        config: sampleConfig,
+        wizardState: wizardState,
+      }),
+    );
+    controller.setCurrentId(id);
+
+    // The exact header "New version" flow: clone, then reopen the clone.
+    const cloneId = controller.cloneSave(id);
+    assert.equal(typeof cloneId, 'string', 'cloneSave returns the new clone id');
+    assert.notEqual(cloneId, id, 'the clone gets a fresh id');
+
+    controller.reopenSave(cloneId);
+    assert.equal(
+      controller.persistence.currentId,
+      cloneId,
+      'the active session moves to the clone',
+    );
+    assert.equal(controller.currentConfigDisplayName(), 'Base config v2', 'the clone is named v2');
+
+    // cloneSave on a missing source returns null (never throws).
+    assert.equal(controller.cloneSave('no-such-id'), null);
+  } finally {
+    stopControllerTimers();
+    controller.setCurrentId(null);
+    restore();
+    controller.persistence.available = null;
+  }
+});
+
+test('syncBuilderModeClass toggles the root class from state.step (isBuilderMode)', () => {
+  // Attach a fake root with a classList to the document stub so the toggle is observable headlessly.
+  const classes = new Set();
+  const fakeRoot = {
+    classList: {
+      toggle(name, on) {
+        if (on) {
+          classes.add(name);
+        } else {
+          classes.delete(name);
+        }
+      },
+    },
+  };
+  const previousRoot = globalThis.document.documentElement;
+  globalThis.document.documentElement = fakeRoot;
+  const previousStep = controller.state.step;
+  try {
+    // On intake → not builder mode → class removed.
+    controller.state.step = 'intake';
+    assert.equal(controller.isBuilderMode(), false);
+    controller.syncBuilderModeClass();
+    assert.equal(classes.has('mpb-builder-mode'), false, 'intake clears the builder-mode class');
+
+    // Any other step → builder mode → class added.
+    controller.state.step = 'wizard';
+    assert.equal(controller.isBuilderMode(), true);
+    controller.syncBuilderModeClass();
+    assert.equal(
+      classes.has('mpb-builder-mode'),
+      true,
+      'leaving intake sets the builder-mode class',
+    );
+  } finally {
+    globalThis.document.documentElement = previousRoot;
+    controller.state.step = previousStep;
+  }
+});
+
+test('syncBuilderHeaderMount hoists the header into .layout-content in builder mode and parks it on intake', () => {
+  const header = { parentNode: null };
+  const home = new FakeNode();
+  const layoutContent = new FakeNode();
+  // Authored start: the header lives under its home (#mpb-app).
+  home.prepend(header);
+  controller.setBuilderHeaderDom(header, layoutContent, home);
+  const previousStep = controller.state.step;
+  try {
+    // Builder mode → hoisted to be the first child of .layout-content.
+    controller.state.step = 'wizard';
+    controller.syncBuilderHeaderMount();
+    assert.equal(layoutContent.firstChild, header, 'header hoisted into .layout-content');
+    assert.equal(header.parentNode, layoutContent);
+
+    // Idempotent: a second call must not churn the DOM (still first child, still there once).
+    controller.syncBuilderHeaderMount();
+    assert.equal(layoutContent.children.length, 1, 'hoist is idempotent');
+    assert.equal(layoutContent.firstChild, header);
+
+    // Back on intake → parked back under its authored home.
+    controller.state.step = 'intake';
+    controller.syncBuilderHeaderMount();
+    assert.equal(home.firstChild, header, 'header parked back into #mpb-app on intake');
+    assert.equal(header.parentNode, home);
+  } finally {
+    controller.setBuilderHeaderDom(null, null, null);
+    controller.state.step = previousStep;
+  }
 });

@@ -602,18 +602,19 @@
     word-break: break-word;
   }
 
-  // Compact keyboard/a11y reassignment picker — the drag-free alternative.
+  // Keyboard/a11y reassignment picker — the drag-free alternative. Visually hidden (the drag board
+  // is the primary affordance) but kept Tab-focusable + SR-operable via the 1px-clip pattern. The
+  // rule lives here (descendant specificity) so it reliably wins over any base `.mpb-board-move`.
   .mpb-board-move {
-    flex: none;
-    max-width: 8rem;
-    padding: 0.2em 0.4em;
-    border: 1px solid $border-default;
-    border-radius: $radius-sm;
-    background: $bg-surface;
-    color: $text-secondary;
-    font-size: $text-xs;
-    font-family: $font-sans;
-    cursor: pointer;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }
 
@@ -840,3 +841,207 @@
 
   &[hidden] { display: none; }
 }
+
+// ── Visually-hidden (screen-reader-only) ────────────────────────────────────
+// The 1px-clip pattern: kept in the accessibility tree + Tab order + SR-operable, but not rendered.
+// Used for the keyboard/SR BU-reassign <select> that mirrors the drag board.
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Builder mode — everything below is scoped under `html.mpb-builder-mode`, so intake and every other
+// page are untouched, and returning to intake fully reverses the layout.
+// ════════════════════════════════════════════════════════════════════════════
+html.mpb-builder-mode {
+  // Slide the left nav off-canvas (reusing the mobile off-canvas mechanism) and drop its overlay.
+  .sidebar { transform: translateX(-100%); }
+  .sidebar-overlay { display: none; }
+
+  // Hide the page breadcrumb/title and the tool's intro callouts so the builder owns the viewport.
+  .page-header,
+  .mpb-callout--scope,
+  .mpb-callout--version,
+  .mpb-privacy { display: none; }
+
+  // Full-width: cancel the content max-width + the desktop nav gutter, and the tool's top margin.
+  .layout-content {
+    max-width: none;
+
+    @media (min-width: 1024px) {
+      margin-left: 0;
+    }
+  }
+  .page-content {
+    max-width: none;
+    margin: 0;
+  }
+  #mpb-app.mpb { margin-top: 0; }
+
+  // Reveal + pin the sticky builder sub-header. It is hoisted (by the controller) to be a direct
+  // child of `.layout-content`; the negative top margin here (−$space-8) cancels that container's
+  // 32px `padding-top`, so the bar's resting top === its pinned `top` === $header-height (56px),
+  // flush under the fixed site-header in BOTH scroll states.
+  .layout-content > .mpb-builder-header {
+    display: flex;
+    position: sticky;
+    top: $header-height;
+    z-index: $z-builder-header;
+    margin-top: -$space-8;
+    margin-bottom: $space-6;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $space-3;
+    min-height: $builder-header-height;
+    padding: $space-2 $space-4;
+    background: $bg-surface;
+    border-bottom: 1px solid $border-default;
+  }
+}
+
+// ── Builder sub-header (base + internals) ───────────────────────────────────
+// Base: hidden until builder mode reveals it (the scoped rule above sets `display:flex`).
+.mpb-builder-header {
+  display: none;
+}
+
+.mpb-builder-header-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+}
+
+.mpb-builder-header-logo {
+  flex: none;
+  color: $accent-primary;
+}
+
+.mpb-builder-header-title {
+  font-weight: 700;
+  font-size: $text-sm;
+  white-space: nowrap;
+}
+
+.mpb-builder-header-name {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mpb-builder-header-name-label {
+  font-weight: 600;
+  font-size: $text-sm;
+  color: $text-secondary;
+  word-break: break-word;
+}
+
+.mpb-builder-header-rename-input {
+  padding: 0.25em 0.5em;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  background: $bg-surface;
+  color: $text-primary;
+  font-size: $text-sm;
+  font-family: $font-sans;
+}
+
+.mpb-builder-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-2;
+
+  // Header buttons are compact.
+  .mpb-btn {
+    padding: 0.35em 0.7em;
+    font-size: $text-xs;
+  }
+}
+
+// Ghost button variant for the header (subtle until hovered).
+.mpb-btn--ghost {
+  background: transparent;
+  border-color: $border-default;
+  color: $text-secondary;
+
+  &:hover:not(:disabled) {
+    border-color: $accent-primary;
+    color: $accent-primary;
+  }
+}
+
+// ── Builder dropdowns (Open / Download) ─────────────────────────────────────
+.mpb-builder-open {
+  position: relative;
+}
+
+.mpb-builder-open-panel {
+  position: absolute;
+  top: calc(100% + #{$space-1});
+  right: 0;
+  z-index: $z-builder-header + 1;
+  min-width: 16rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  padding: $space-1;
+  background: $bg-surface;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+
+  &[hidden] { display: none; }
+
+  // Open is the left-most action, so its panel is left-aligned instead of the default right.
+  &--left {
+    right: auto;
+    left: 0;
+  }
+}
+
+.mpb-builder-open-empty {
+  padding: $space-2 $space-3;
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+.mpb-builder-open-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1em;
+  width: 100%;
+  padding: $space-2 $space-3;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-primary;
+  font-family: $font-sans;
+  font-size: $text-sm;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: $bg-elevated;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.mpb-builder-open-row-name { font-weight: 600; }
+.mpb-builder-open-row-meta { font-size: $text-xs; color: $text-muted; }

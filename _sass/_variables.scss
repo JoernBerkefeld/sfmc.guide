@@ -87,7 +87,12 @@ $transition-normal: 250ms ease;
 $transition-slow:   400ms ease;
 
 $z-sidebar:  100;
+// The builder sub-header pins BELOW the fixed site-header (200) so it slides under it, never over it.
+$z-builder-header: 150;
 $z-header:   200;
 $z-overlay:  300;
 $z-modal:    400;
 $z-tooltip:  500;
+
+// Resting/min height of the sticky builder sub-header bar.
+$builder-header-height: 3rem;
