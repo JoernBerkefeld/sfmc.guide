@@ -1449,16 +1449,16 @@
 
     /**
      * `env-order` step (naming + ordering combined): quick-fill chips from `SUGGESTED_ENVIRONMENTS`,
-     * plus an ordered, reorderable list of environment rows. Each row carries an inline editable
-     * name input, drag-and-drop (via a dedicated drag handle) and keyboard-accessible up/down
-     * buttons (index 0 is the DEV/source env), plus add/remove. Seeds from `SUGGESTED_ENVIRONMENTS`
-     * when empty.
+     * plus an ordered, reorderable horizontal board of environment columns (one column per env,
+     * mirroring the lineage board). Each column carries an inline editable name input, drag-and-drop
+     * (via a dedicated drag handle) and keyboard-accessible left/right buttons (index 0 is the
+     * DEV/source env), plus add/remove. Seeds from `SUGGESTED_ENVIRONMENTS` when empty.
      *
      * @param {HTMLElement} panel the step panel to mount into
      * @returns {void}
      */
     function renderEnvironmentOrderStep(panel) {
-        // Seed a sensible default order on first visit so the list is never empty.
+        // Seed a sensible default order on first visit so the board is never empty.
         if (environmentNames().length === 0) {
             state.wizardState.envOrder = [...SUGGESTED_ENVIRONMENTS];
         }
@@ -1466,7 +1466,7 @@
         panel.append(
             makeElement('p', {
                 class: 'text-muted',
-                text: 'Name each environment and order them from source to production. The first row is the DEV / source environment. Type a name inline, drag the handle to reorder, or use the up/down buttons.',
+                text: 'Name each environment and order them from source to production. The first column is the DEV / source environment. Type a name inline, drag the handle to reorder, or use the left/right buttons.',
             })
         );
 
@@ -1489,14 +1489,14 @@
         }
         panel.append(chips);
 
-        // Keep a reference to every rendered row so typing a name refreshes the inline validation
-        // (which is cross-row for the duplicate check) IN PLACE — never rebuilding the inputs, which
-        // would blur the focused field and jump the scroll to the top.
+        // Keep a reference to every rendered column so typing a name refreshes the inline validation
+        // (which is cross-column for the duplicate check) IN PLACE — never rebuilding the inputs,
+        // which would blur the focused field and jump the scroll to the top.
         const rows = [];
 
         /**
-         * Repaint every row's inline validation in place from the current names. Called on each
-         * keystroke so a fixed name clears its warning and duplicate flags update across rows,
+         * Repaint every column's inline validation in place from the current names. Called on each
+         * keystroke so a fixed name clears its warning and duplicate flags update across columns,
          * without recreating any input.
          *
          * @returns {void}
@@ -1508,14 +1508,17 @@
             }
         }
 
-        const list = makeElement('ol', { class: 'mpb-list', attrs: { 'aria-label': 'Environment order' } });
+        const board = makeElement('div', {
+            class: 'mpb-env-order-board',
+            attrs: { 'aria-label': 'Environment order' },
+        });
         for (const [index, name] of order.entries()) {
             const row = environmentOrderRow(name, index, order.length, refreshEnvironmentWarnings);
             rows.push(row);
-            list.append(row.row);
+            board.append(row.row);
         }
-        panel.append(list);
-        // Initial validation paint now that every row exists (so cross-row duplicates resolve).
+        panel.append(board);
+        // Initial validation paint now that every column exists (so cross-column duplicates resolve).
         refreshEnvironmentWarnings();
 
         const addButton = makeElement('button', {
@@ -1539,21 +1542,23 @@
     }
 
     /**
-     * Build one environment row for the env-order list: an inline editable name input with inline
-     * validation feedback, a dedicated drag handle, and up/down/remove buttons. Only the handle is
-     * `draggable` so the name input stays fully editable (a `draggable` row swallows the mousedown
-     * needed to focus/select inside the input on some browsers).
+     * Build one environment column for the env-order board: a header line (drag handle + left/right
+     * reorder + remove buttons), the optional DEV/source chip, an inline editable name input with
+     * inline validation feedback. Only the handle is `draggable` so the name input stays fully
+     * editable (a `draggable` column swallows the mousedown needed to focus/select inside the input
+     * on some browsers). Returns the same `{ row, index, warnings }` shape the caller relies on for
+     * in-place validation refreshes.
      *
-     * @param {string} name the environment name (may be empty for a freshly-added row)
-     * @param {number} index the row index in `envOrder`
-     * @param {number} total the number of rows (for disabling edge buttons)
-     * @param {() => void} refreshWarnings repaint every row's inline validation in place after an edit
-     * @returns {{row: HTMLElement, index: number, warnings: HTMLElement}} the row element plus the
+     * @param {string} name the environment name (may be empty for a freshly-added column)
+     * @param {number} index the column index in `envOrder`
+     * @param {number} total the number of columns (for disabling edge buttons)
+     * @param {() => void} refreshWarnings repaint every column's inline validation in place after an edit
+     * @returns {{row: HTMLElement, index: number, warnings: HTMLElement}} the column element plus the
      *   handles needed for in-place validation refreshes
      */
     function environmentOrderRow(name, index, total, refreshWarnings) {
-        const row = makeElement('li', {
-            class: 'mpb-row',
+        const column = makeElement('div', {
+            class: 'mpb-env-order-col',
             attrs: { 'data-index': String(index) },
         });
 
@@ -1565,7 +1570,45 @@
             attrs: { 'aria-hidden': 'true', title: 'Drag to reorder' },
         });
 
-        const label = makeElement('div', { class: 'mpb-row-label' });
+        // Header line: drag handle on the left, reorder/remove buttons on the right.
+        const header = makeElement('div', { class: 'mpb-env-order-col-header' });
+        const actions = makeElement('div', { class: 'mpb-row-actions' });
+        const leftButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-move-btn',
+            text: '←',
+            disabled: index === 0,
+            attrs: { 'aria-label': 'Move ' + (name || 'environment') + ' left' },
+        });
+        leftButton.addEventListener('click', () => moveEnvironment(index, index - 1));
+        const rightButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-move-btn',
+            text: '→',
+            disabled: index === total - 1,
+            attrs: { 'aria-label': 'Move ' + (name || 'environment') + ' right' },
+        });
+        rightButton.addEventListener('click', () => moveEnvironment(index, index + 1));
+        const removeButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-move-btn',
+            text: '✕',
+            attrs: { 'aria-label': 'Remove ' + (name || 'environment') },
+        });
+        removeButton.addEventListener('click', () => {
+            const next = environmentNames();
+            next.splice(index, 1);
+            state.wizardState.envOrder = next;
+            render();
+        });
+        actions.append(leftButton, rightButton, removeButton);
+        header.append(handle, actions);
+        column.append(header);
+
+        if (index === 0) {
+            column.append(makeElement('span', { class: 'mpb-chip', text: 'DEV / source' }));
+        }
+
         const inputId = 'mpb-env-name-' + index;
         const input = makeElement('input', {
             type: 'text',
@@ -1584,64 +1627,29 @@
             // Store exactly as typed (no space→underscore conversion); trimming is validation-only.
             next[index] = input.value;
             state.wizardState.envOrder = next;
-            // Refresh only the inline validation (cross-row duplicates included), the nav gate and
+            // Refresh only the inline validation (cross-column duplicates included), the nav gate and
             // the debounced autosave — never a full render that would blur this input.
             refreshWarnings();
             updateNavGate();
             scheduleAutosave();
         });
-        label.append(input);
-        if (index === 0) {
-            label.append(makeElement('span', { class: 'mpb-chip', text: 'DEV / source' }));
-        }
+        column.append(input);
 
         // Dedicated warnings slot so the inline validation can be wiped + repainted in place (from
         // `setEnvironmentRowWarning`) without touching the input.
         const warnings = makeElement('div', { class: 'mpb-env-name-warnings' });
-        label.append(warnings);
+        column.append(warnings);
 
-        const actions = makeElement('div', { class: 'mpb-row-actions' });
-        const upButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-move-btn',
-            text: '↑',
-            disabled: index === 0,
-            attrs: { 'aria-label': 'Move ' + (name || 'environment') + ' up' },
-        });
-        upButton.addEventListener('click', () => moveEnvironment(index, index - 1));
-        const downButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-move-btn',
-            text: '↓',
-            disabled: index === total - 1,
-            attrs: { 'aria-label': 'Move ' + (name || 'environment') + ' down' },
-        });
-        downButton.addEventListener('click', () => moveEnvironment(index, index + 1));
-        const removeButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-move-btn',
-            text: '✕',
-            attrs: { 'aria-label': 'Remove ' + (name || 'environment') },
-        });
-        removeButton.addEventListener('click', () => {
-            const next = environmentNames();
-            next.splice(index, 1);
-            state.wizardState.envOrder = next;
-            render();
-        });
-        actions.append(upButton, downButton, removeButton);
-        row.append(handle, label, actions);
-
-        wireEnvironmentRowDnD(row, handle, index);
-        return { row: row, index: index, warnings: warnings };
+        wireEnvironmentRowDnD(column, handle, index);
+        return { row: column, index: index, warnings: warnings };
     }
 
     /**
-     * Paint a single env-order row's inline validation into its warnings slot, mirroring the merged
-     * env-order `canProceed` gate (required / pattern / uniqueness). Wipes the slot first so it can
-     * be called repeatedly in place without recreating the input.
+     * Paint a single env-order column's inline validation into its warnings slot, mirroring the
+     * merged env-order `canProceed` gate (required / pattern / uniqueness). Wipes the slot first so
+     * it can be called repeatedly in place without recreating the input.
      *
-     * @param {{index: number, warnings: HTMLElement}} row the row handle
+     * @param {{index: number, warnings: HTMLElement}} row the column handle
      * @param {string[]} trimmedNames all trimmed names (for the cross-row uniqueness check)
      * @returns {void}
      */
@@ -1662,14 +1670,14 @@
     }
 
     /**
-     * Wire drag-and-drop reordering for a single env-order row. Only the drag `handle` starts a
-     * drag (so the row's name input stays editable); the whole `row` remains a valid drop target.
-     * On drop, the dragged index is read from the drag payload and the list is reordered via
-     * `moveEnvironment`.
+     * Wire drag-and-drop reordering for a single env-order column. Only the drag `handle` starts a
+     * drag (so the column's name input stays editable); the whole `row` (column element) remains a
+     * valid drop target. On drop, the dragged index is read from the drag payload and the order is
+     * reordered via `moveEnvironment`.
      *
-     * @param {HTMLElement} row the row element (drop target)
+     * @param {HTMLElement} row the column element (drop target)
      * @param {HTMLElement} handle the drag handle (drag source)
-     * @param {number} index the row's index
+     * @param {number} index the column's index
      * @returns {void}
      */
     function wireEnvironmentRowDnD(row, handle, index) {

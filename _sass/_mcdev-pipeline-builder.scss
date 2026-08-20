@@ -398,6 +398,40 @@
   font-family: $font-mono;
 }
 
+// The per-BU suffix control reads as ONE rounded field like the Step 1 env-name box:
+// the read-only separator prefix and the editable body share a single bordered container.
+.mpb-suffix-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  // Highlight the whole composite when the inner input is focused.
+  &:focus-within { border-color: $accent-primary; }
+
+  // Read-only prefix (e.g. "_"): muted, monospaced, small left padding.
+  .mpb-suffix-sep {
+    padding-left: 0.7em;
+    color: $text-muted;
+    font-family: $font-mono;
+    font-size: $text-sm;
+  }
+
+  // Editable body: borderless/transparent so it blends into the shared box.
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45em 0.7em;
+    border: 0;
+    background: transparent;
+    outline: 0;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+}
+
 .mpb-chips {
   display: flex;
   flex-wrap: wrap;
@@ -426,9 +460,23 @@
   margin: 0;
 }
 
-.mpb-row {
+// ── Environment-order board (one column per environment, mirroring the lineage board) ──
+// Naming + ordering combined: a horizontal row of environment columns spread evenly across the
+// width. Unlike the lineage board it wraps (many envs flow onto a second line rather than
+// scrolling), consistent with the bu-assign columns.
+.mpb-env-order-board {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-5;
+}
+
+.mpb-env-order-col {
+  flex: 1 1 0;
+  min-width: 160px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
   gap: $space-3;
   padding: $space-3 $space-4;
   border: 1px solid $border-muted;
@@ -437,37 +485,32 @@
 
   &.is-dragover { border-color: $accent-primary; }
 
-  // Name-editing column: the inline input, optional DEV/source chip and per-row warning stack here.
-  .mpb-row-label {
-    flex: 1;
-    min-width: 0;
+  // Header line: the drag handle on the left, the reorder/remove buttons pushed to the right.
+  .mpb-env-order-col-header {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: $space-2;
-
-    input[type="text"] {
-      flex: 1;
-      min-width: 8rem;
-      padding: 0.45em 0.7em;
-      border: 1px solid $border-default;
-      border-radius: $radius-md;
-      background: $bg-surface;
-      color: $text-primary;
-      font-size: $text-sm;
-      font-family: $font-sans;
-    }
-
-    .mpb-warn { flex-basis: 100%; margin-top: 0; }
   }
 
   .mpb-row-actions { display: flex; gap: $space-1; margin-left: auto; }
 
-  &[draggable="true"] { cursor: grab; }
+  // Inline name input keeps the rounded-box look it had in the previous row layout.
+  .mpb-env-name-input {
+    min-width: 0;
+    padding: 0.45em 0.7em;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+
+  .mpb-env-name-warnings .mpb-warn { margin-top: 0; }
 }
 
-// Dedicated drag handle — the only draggable element in an env-order row, so the name input
-// stays editable (a draggable row can swallow the mousedown needed to focus the input).
+// Dedicated drag handle — the only draggable element in an env-order column, so the name input
+// stays editable (a draggable column can swallow the mousedown needed to focus the input).
 .mpb-drag-handle {
   flex: none;
   cursor: grab;
