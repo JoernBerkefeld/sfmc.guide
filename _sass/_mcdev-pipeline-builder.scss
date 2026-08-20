@@ -422,7 +422,7 @@
   input[type="text"] {
     flex: 1;
     min-width: 0;
-    padding: 0.45em 0.7em;
+    padding: 0.45em 0.7em 0.45em 0;
     border: 0;
     background: transparent;
     outline: 0;
@@ -435,7 +435,13 @@
 .mpb-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: $space-2;
+}
+
+.mpb-chips-label {
+  color: $text-muted;
+  font-size: $text-sm;
 }
 
 .mpb-chip {
@@ -449,6 +455,47 @@
   cursor: pointer;
 
   &:hover { border-color: $accent-primary; color: $accent-primary; }
+}
+
+// Removable value pill for the forbidden-prefix editor — mirrors the bu-assign node aesthetic
+// (surface background, muted border, rounded) with an inline borderless × remove control.
+.mpb-prefix-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 0.2em 0.3em 0.2em 0.7em;
+  border: 1px solid $border-muted;
+  border-radius: $radius-full;
+  background: $bg-surface;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.mpb-prefix-chip-text {
+  font-family: $font-mono;
+}
+
+.mpb-prefix-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $text-muted;
+  font-size: 1.05em;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+  }
 }
 
 .mpb-list {

@@ -550,6 +550,21 @@ test('buildValidations always emits buSuffixMap + keySuffix', () => {
   assert.ok(source.includes('keySuffix'));
 });
 
+test('keySuffix rule scopes to assets only (shared DEs live on the suffix-less parent BU)', () => {
+  const source = buildValidations({
+    buSuffixMap: { DEV: '_DEV' },
+    separator: '_',
+  });
+  assert.ok(
+    source.includes("definition.type !== 'asset'"),
+    'keySuffix must only enforce the suffix on assets',
+  );
+  assert.ok(
+    !source.includes('shared_dataextension'),
+    'keySuffix must no longer reference shared data extensions',
+  );
+});
+
 test('buildValidations output parses as JavaScript', () => {
   const source = buildValidations(sampleValidationsState());
   // strip the ESM `export ` so we can compile with the classic-script parser

@@ -2007,6 +2007,7 @@
 
         // Quick-fill chips: append a suggested name as a new row (skipping ones already present).
         const chips = makeElement('div', { class: 'mpb-chips', attrs: { 'aria-label': 'Suggested environment names' } });
+        chips.append(makeElement('span', { class: 'mpb-chips-label', text: 'Insert default environments: ' }));
         for (const suggestion of SUGGESTED_ENVIRONMENTS) {
             const chip = makeElement('button', {
                 type: 'button',
@@ -2145,10 +2146,6 @@
         actions.append(leftButton, rightButton, removeButton);
         header.append(handle, actions);
         column.append(header);
-
-        if (index === 0) {
-            column.append(makeElement('span', { class: 'mpb-chip', text: 'DEV / source' }));
-        }
 
         // ── env-name field (labelled, mirroring the lineage "deploys from" label styling). ──
         const inputId = 'mpb-env-name-' + index;
@@ -3765,7 +3762,7 @@
         {
             id: 'keySuffix',
             name: 'BU key suffix',
-            description: 'Requires every asset and data-extension key to carry its business-unit suffix.',
+            description: 'Requires every asset key to carry its business-unit suffix.',
             autoFix: false,
             alwaysOn: true,
         },
@@ -4041,12 +4038,12 @@
             chips.append(makeElement('span', { class: 'text-muted', text: 'No forbidden prefixes.' }));
         }
         for (const prefix of prefixes) {
-            const chip = makeElement('span', { class: 'mpb-chip' });
-            chip.append(makeElement('span', { text: prefix }));
+            const chip = makeElement('span', { class: 'mpb-prefix-chip' });
+            chip.append(makeElement('span', { class: 'mpb-prefix-chip-text', text: prefix }));
             const remove = makeElement('button', {
                 type: 'button',
-                class: 'mpb-chip-remove',
-                text: '✕',
+                class: 'mpb-prefix-chip-remove',
+                text: '×',
                 attrs: { 'aria-label': 'Remove prefix ' + prefix },
             });
             remove.addEventListener('click', () => {
