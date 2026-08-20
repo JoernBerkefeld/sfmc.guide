@@ -1737,6 +1737,53 @@
     }
 
     /**
+     * Shared column layout used by the `bu-assign`, `suffixes`, and `prod-confirm` steps so they all
+     * present the same horizontal environment-columns visual as the lineage step: a flex row of
+     * one column per environment (in env order), each column titled with the environment name and
+     * listing that environment's assigned BUs as nodes. The caller supplies `perNode`, which builds
+     * the per-node control (the slot lineage fills with its "deploys from" `<select>`); it may return
+     * `null` to leave the node control-less. Returns the board element so the caller can also mount
+     * content above it (e.g. an unassigned strip or a separator control).
+     *
+     * @param {{perNode: (environment: string, reference: string, environmentIndex: number) => (Node|null)}} options
+     *   `perNode` builds the control appended into each BU node
+     * @returns {HTMLElement} the `.mpb-env-board` element (a titled column per environment)
+     */
+    function renderEnvironmentColumns(options) {
+        const board = makeElement('div', { class: 'mpb-env-board' });
+        const order = environmentNames();
+        // In validations-only mode the single environment is the synthetic pool (VALIDATIONS_POOL_ENV,
+        // "All BUs"); showing that as a column title would leak the internal container name, so the
+        // title is suppressed there (the step still lists every pooled BU as a node).
+        const shouldShowTitles = state.mode !== 'validations';
+        for (const [environmentIndex, environment] of order.entries()) {
+            const column = makeElement('div', { class: 'mpb-env-col' });
+            if (shouldShowTitles) {
+                column.append(
+                    makeElement('p', {
+                        class: 'mpb-env-col-title',
+                        text: environment || '(unnamed environment)',
+                    })
+                );
+            }
+            for (const reference of assignedBUReferences(environment)) {
+                const node = makeElement('div', {
+                    class: 'mpb-env-node',
+                    attrs: { 'data-bu': reference },
+                });
+                node.append(makeElement('span', { class: 'mpb-env-node-name', text: reference }));
+                const control = options.perNode(environment, reference, environmentIndex);
+                if (control) {
+                    node.append(control);
+                }
+                column.append(node);
+            }
+            board.append(column);
+        }
+        return board;
+    }
+
+    /**
      * `bu-assign` step — a Jira-style board. Each BU belongs to exactly one environment: an
      * "Unassigned" column holds every not-yet-placed buRef and there is one column per environment.
      * Dragging a chip into an environment assigns it there (and removes it from wherever it was);
@@ -1777,16 +1824,23 @@
             );
         }
 
-        // Split the board into a fixed left pool (Unassigned) and a right grid of environment
-        // columns. The grid packs short columns upward independently of the tall pool, so QA/UAT/Prod
-        // fill the space beside DEV/SIT instead of wrapping below Unassigned. SortableJS still finds
-        // every `.mpb-board-list` (and their `data-env`) via `board.querySelectorAll`, regardless of
-        // this extra nesting, so the shared drag group and DOM reconciliation are unaffected.
+        // Match the lineage step's visual: the Unassigned pool is a full-width horizontal strip ABOVE
+        // one column per environment (spread across the width). SortableJS still finds every
+        // `.mpb-board-list` (and their `data-env`) via `board.querySelectorAll`, regardless of this
+        // nesting, so the shared drag group and DOM reconciliation are unaffected — only the layout
+        // differs from the previous left-pool/right-grid arrangement.
         const board = makeElement('div', { class: 'mpb-board' });
-        const pool = makeElement('div', { class: 'mpb-board-pool' });
-        pool.append(buBoardColumn(UNASSIGNED_COLUMN, 'Unassigned', unassignedBUReferences(), hasSortable));
-        board.append(pool);
-        const environmentRegion = makeElement('div', { class: 'mpb-board-envs' });
+
+        // Unassigned pool: a full-browser-width row whose chips flow horizontally (not a same-height
+        // left column). It reuses the same `.mpb-board-list[data-env]` drop target so drag works.
+        const unassignedRow = makeElement('div', { class: 'mpb-unassigned-row' });
+        unassignedRow.append(
+            buBoardColumn(UNASSIGNED_COLUMN, 'Unassigned', unassignedBUReferences(), hasSortable)
+        );
+        board.append(unassignedRow);
+
+        // Assigned BUs: one column per environment, spread horizontally like the lineage board.
+        const environmentRegion = makeElement('div', { class: 'mpb-env-board' });
         for (const environment of environmentNames()) {
             environmentRegion.append(
                 buBoardColumn(environment, environment || '(unnamed environment)', assignedBUReferences(environment), hasSortable)
@@ -1812,12 +1866,15 @@
      */
     function buBoardColumn(columnKey, title, references, hasSortable) {
         const isUnassigned = columnKey === UNASSIGNED_COLUMN;
+        // Assigned-env columns adopt the shared `.mpb-env-col` look (horizontal spread); the
+        // Unassigned pool is a distinct full-width strip whose chips flow horizontally.
         const column = makeElement('div', {
-            class: isUnassigned ? 'mpb-board-col mpb-board-col--pool' : 'mpb-board-col',
+            class: isUnassigned ? 'mpb-board-col mpb-board-col--pool' : 'mpb-board-col mpb-env-col',
         });
         column.append(makeElement('h4', { class: 'mpb-board-col-title', text: title }));
         const list = makeElement('div', {
-            class: 'mpb-board-list',
+            // The pool's list flows chips left-to-right across the full width; env lists stack.
+            class: isUnassigned ? 'mpb-board-list mpb-board-list--pool' : 'mpb-board-list',
             attrs: { 'data-env': columnKey },
         });
         for (const reference of references) {
@@ -2665,9 +2722,12 @@
             }
         }
 
-        // The separator input re-bases suffixes in state, updates each row's shown prefix span, then
-        // refreshes warnings + the nav gate + autosave — all in place (no full render / blur).
-        panel.append(
+        // The central separator input sits ABOVE the environment columns (a single control spanning
+        // the column row), matching the lineage visual. It re-bases suffixes in state, updates each
+        // row's shown prefix span, then refreshes warnings + the nav gate + autosave — all in place
+        // (no full render / blur).
+        const separatorRow = makeElement('div', { class: 'mpb-separator-row' });
+        separatorRow.append(
             separatorField(() => {
                 const separator = state.wizardState.separator || '_';
                 for (const row of rows) {
@@ -2678,16 +2738,19 @@
                 scheduleAutosave();
             })
         );
+        panel.append(separatorRow);
 
-        const list = makeElement('div', { class: 'mpb-list' });
-        for (const environment of environmentNames()) {
-            for (const reference of assignedBUReferences(environment)) {
+        // One column per environment (lineage visual); each BU node carries its suffix input in the
+        // per-node control slot. The row handles are captured as nodes are built so the in-place
+        // update path (no full re-render) keeps working.
+        const board = renderEnvironmentColumns({
+            perNode: (environment, reference) => {
                 const row = suffixRow(environment, reference, refreshSuffixWarnings);
                 rows.push(row);
-                list.append(row.field);
-            }
-        }
-        panel.append(list);
+                return row.control;
+            },
+        });
+        panel.append(board);
         // Initial warning paint now that every row exists (so cross-row duplicates resolve).
         refreshSuffixWarnings();
     }
@@ -2736,17 +2799,22 @@
      * @param {string} environment the owning environment (for context labelling)
      * @param {string} reference the child buRef
      * @param {() => void} refreshWarnings repaint every row's warnings in place after a state edit
-     * @returns {{field: HTMLElement, input: HTMLInputElement, sep: HTMLElement, warnings: HTMLElement, reference: string}}
-     *   the row element plus the handles needed for in-place refreshes
+     * @returns {{control: HTMLElement, input: HTMLInputElement, sep: HTMLElement, warnings: HTMLElement, reference: string}}
+     *   the per-node control (label + suffix input + warnings) plus the handles needed for in-place refreshes
      */
     function suffixRow(environment, reference, refreshWarnings) {
         const separator = state.wizardState.separator || '_';
-        const field = makeElement('div', { class: 'mpb-field' });
+        // The BU name is already shown by the column node; this control adds the "suffix" label +
+        // input + warnings into the per-node slot (where lineage places its "deploys from" select).
+        const control = makeElement('div', { class: 'mpb-env-node-control' });
         const inputId = 'mpb-suffix-' + suffixSlug(environment) + '-' + suffixSlug(reference);
-        // In validations-only mode the environment is a synthetic pool ("All BUs"), so the label is
-        // just the BU name; in full-pipeline mode it is prefixed with the (real) environment.
-        const labelText = state.mode === 'validations' ? reference : environment + ' · ' + reference;
-        field.append(makeElement('label', { text: labelText, attrs: { for: inputId } }));
+        control.append(
+            makeElement('label', {
+                class: 'mpb-env-node-label',
+                text: 'suffix',
+                attrs: { for: inputId },
+            })
+        );
 
         const group = makeElement('div', { class: 'mpb-suffix-input' });
         const separatorSpan = makeElement('span', { class: 'mpb-suffix-sep', text: separator });
@@ -2775,13 +2843,13 @@
             scheduleAutosave();
         });
         group.append(input);
-        field.append(group);
+        control.append(group);
 
         // Dedicated warnings slot so it can be wiped + repainted in place without touching the input.
         const warnings = makeElement('div', { class: 'mpb-suffix-warnings' });
-        field.append(warnings);
+        control.append(warnings);
 
-        return { field: field, input: input, sep: separatorSpan, warnings: warnings, reference: reference };
+        return { control: control, input: input, sep: separatorSpan, warnings: warnings, reference: reference };
     }
 
     // ─────────────────────────── prod-confirm step ───────────────────────────
@@ -2829,10 +2897,59 @@
             return;
         }
 
+        // One column per environment (lineage visual). Each column header carries a "select all"
+        // checkbox; each BU node carries its own "Production?" checkbox in the per-node control slot.
         const productionBUs = new Set(state.wizardState.prodBUs || []);
-        const list = makeElement('div', { class: 'mpb-list' });
+        const board = makeElement('div', { class: 'mpb-env-board' });
+        for (const environment of environmentNames()) {
+            board.append(productionColumn(environment, productionBUs));
+        }
+        panel.append(board);
+    }
+
+    /**
+     * Build one production-confirm environment column: a header with a "select all" checkbox that
+     * reflects/controls every BU in the environment, and one BU node per assigned buRef with its own
+     * "Production?" checkbox. The header box is `checked` when ALL the env's BUs are production,
+     * `indeterminate` when only some are, and unchecked when none are.
+     *
+     * @param {string} environment the environment name
+     * @param {Set<string>} productionBUs the confirmed-production buRef set for this render
+     * @returns {HTMLElement} the column element
+     */
+    function productionColumn(environment, productionBUs) {
+        const references = assignedBUReferences(environment);
+        const column = makeElement('div', { class: 'mpb-env-col' });
+
+        const allProduction = isEnvironmentAllProduction(environment, state.wizardState);
+        const someProduction = references.some((reference) => productionBUs.has(reference));
+        const header = makeElement('label', { class: 'mpb-env-col-title mpb-env-col-select-all' });
+        const ariaScope = state.mode === 'validations' ? 'BUs' : environment || 'BUs';
+        const selectAll = makeElement('input', {
+            type: 'checkbox',
+            checked: allProduction,
+            // Some-but-not-all selected → show the tri-state box (set as a DOM property).
+            indeterminate: someProduction && !allProduction,
+            attrs: { 'aria-label': 'Mark all ' + ariaScope + ' business units production' },
+        });
+        selectAll.addEventListener('change', () => {
+            // Checking select-all marks every BU in the env production; unchecking clears them all.
+            setEnvironmentProduction(environment, selectAll.checked);
+        });
+        // Validations-only mode uses the synthetic pool env ("All BUs"); label the select-all
+        // generically there rather than leaking that internal container name.
+        const headerLabel =
+            state.mode === 'validations' ? 'All production' : environment || '(unnamed environment)';
+        header.append(selectAll, makeElement('span', { text: headerLabel }));
+        column.append(header);
+
         for (const reference of references) {
-            const label = makeElement('label', { class: 'mpb-field' });
+            const node = makeElement('div', {
+                class: 'mpb-env-node',
+                attrs: { 'data-bu': reference },
+            });
+            node.append(makeElement('span', { class: 'mpb-env-node-name', text: reference }));
+            const control = makeElement('label', { class: 'mpb-env-node-control mpb-prod-toggle' });
             const checkbox = makeElement('input', {
                 type: 'checkbox',
                 checked: productionBUs.has(reference),
@@ -2840,10 +2957,56 @@
             checkbox.addEventListener('change', () => {
                 toggleProductionBU(reference, checkbox.checked);
             });
-            label.append(checkbox, makeElement('span', { text: ' ' + reference }));
-            list.append(label);
+            control.append(checkbox, makeElement('span', { text: 'Production?' }));
+            node.append(control);
+            column.append(node);
         }
-        panel.append(list);
+        return column;
+    }
+
+    /**
+     * Whether every BU assigned to an environment is confirmed production. A pure predicate over the
+     * wizard state: true only when the environment has at least one BU and all of them are in
+     * `prodBUs`. Drives the column "select all" checkbox's `checked` state and its toggle direction.
+     *
+     * @param {string} environment the environment name
+     * @param {object} wizardState the wizard state (`envBUs` + `prodBUs`)
+     * @returns {boolean} true when the env has BUs and all are production
+     */
+    function isEnvironmentAllProduction(environment, wizardState) {
+        const bus = (wizardState.envBUs || {})[environment];
+        const references = Array.isArray(bus) ? bus : [];
+        if (references.length === 0) {
+            return false;
+        }
+        const productionBUs = new Set(Array.isArray(wizardState.prodBUs) ? wizardState.prodBUs : []);
+        return references.every((reference) => productionBUs.has(reference));
+    }
+
+    /**
+     * Bulk toggle every BU in an environment in/out of the confirmed production set, then re-render.
+     * `on === true` adds all the env's BUs (without duplicating already-present ones); `on === false`
+     * removes them all. Routes through the same `wizardState.prodBUs` store the per-BU checkbox uses,
+     * so the column checkbox and the individual boxes stay consistent on the next render.
+     *
+     * @param {string} environment the environment whose BUs to (un)mark production
+     * @param {boolean} on true to mark all production, false to clear all
+     * @returns {void}
+     */
+    function setEnvironmentProduction(environment, on) {
+        const references = assignedBUReferences(environment);
+        const current = Array.isArray(state.wizardState.prodBUs) ? state.wizardState.prodBUs : [];
+        if (on) {
+            const merged = new Set(current);
+            for (const reference of references) {
+                merged.add(reference);
+            }
+            state.wizardState.prodBUs = [...merged];
+        } else {
+            const remove = new Set(references);
+            state.wizardState.prodBUs = current.filter((reference) => !remove.has(reference));
+        }
+        render();
     }
 
     /**
@@ -6147,6 +6310,14 @@
         setUnassignedConfirmed: function (value) {
             hasConfirmedUnassigned = value;
         },
+        // Test hooks for the shared lineage-style column layout + the prod-confirm select-all logic:
+        // the column builder is exercised indirectly, while the pure production predicate/toggle are
+        // asserted directly (env all-production reflection + bulk (un)mark) without a rendered DOM.
+        renderEnvironmentColumns: renderEnvironmentColumns,
+        isEnvironmentAllProduction: isEnvironmentAllProduction,
+        setEnvironmentProduction: setEnvironmentProduction,
+        toggleProductionBU: toggleProductionBU,
+        seedProductionBUs: seedProductionBUs,
     };
 
     if (document_.readyState === 'loading') {

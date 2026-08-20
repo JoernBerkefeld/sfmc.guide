@@ -1451,3 +1451,150 @@ test('syncBuilderHeaderMount hoists the header into .layout-content in builder m
     controller.state.step = previousStep;
   }
 });
+
+// ─── prod-confirm: per-environment "select all" production column logic ───
+//
+// The prod-confirm step now renders one column per environment (lineage visual) with a column
+// "select all" checkbox. `isEnvironmentAllProduction` is the pure predicate driving that box's
+// checked state; `setEnvironmentProduction` is its bulk toggle. Both operate on wizardState.prodBUs,
+// the same store the per-BU checkboxes use, so the column box and the individual boxes stay in sync.
+
+/**
+ * Seed a two-env full-pipeline wizard state with a multi-BU environment, so the prod-confirm
+ * column select-all helpers resolve against real assigned BUs.
+ *
+ * @returns {void}
+ */
+function seedProductionConfirmState() {
+  controller.state.config = sampleConfig;
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'Prod'],
+    envBUs: { DEV: ['DEV'], Prod: ['Randstad_EUN', 'Randstad_EUS'] },
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+}
+
+test('isEnvironmentAllProduction reflects the all/some/none states of an env’s BUs', () => {
+  seedProductionConfirmState();
+  const wizardState = controller.state.wizardState;
+  // None of Prod's BUs are production yet → not all-production.
+  assert.equal(isEnvironmentAllProduction('Prod'), false, 'none selected → false');
+  // Only one of two → still not all-production.
+  wizardState.prodBUs = ['Randstad_EUN'];
+  assert.equal(isEnvironmentAllProduction('Prod'), false, 'some-but-not-all → false');
+  // Both selected → all-production.
+  wizardState.prodBUs = ['Randstad_EUN', 'Randstad_EUS'];
+  assert.equal(isEnvironmentAllProduction('Prod'), true, 'all selected → true');
+  // A single-BU env: selecting its only BU makes it all-production.
+  wizardState.prodBUs = ['DEV'];
+  assert.equal(
+    isEnvironmentAllProduction('DEV'),
+    true,
+    'single-BU env all-production when its BU is selected',
+  );
+  // An env with no assigned BUs is never "all production" (there is nothing to confirm).
+  wizardState.envBUs.Empty = [];
+  assert.equal(isEnvironmentAllProduction('Empty'), false, 'empty env is never all-production');
+
+  /**
+   * Shorthand for the predicate against the live wizard state.
+   *
+   * @param {string} environment env name
+   * @returns {boolean} whether every BU in the env is production
+   */
+  function isEnvironmentAllProduction(environment) {
+    return controller.isEnvironmentAllProduction(environment, controller.state.wizardState);
+  }
+});
+
+test('setEnvironmentProduction bulk-marks then clears every BU in an env (column select-all toggle)', () => {
+  seedProductionConfirmState();
+  const wizardState = controller.state.wizardState;
+  // Select-all when unchecked → every BU in Prod becomes production (order-independent).
+  controller.setEnvironmentProduction('Prod', true);
+  assert.deepEqual(
+    wizardState.prodBUs.toSorted((a, b) => a.localeCompare(b)),
+    ['Randstad_EUN', 'Randstad_EUS'],
+    'checking select-all marks all env BUs production',
+  );
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', wizardState),
+    true,
+    'the column box now reads all-production',
+  );
+  // Select-all when checked → every BU in Prod is cleared.
+  controller.setEnvironmentProduction('Prod', false);
+  assert.deepEqual(wizardState.prodBUs, [], 'unchecking select-all clears all env BUs');
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', wizardState),
+    false,
+    'the column box now reads not-all-production',
+  );
+});
+
+test('setEnvironmentProduction leaves other environments’ production selections untouched', () => {
+  seedProductionConfirmState();
+  const wizardState = controller.state.wizardState;
+  // DEV pre-selected as production; toggling Prod must not disturb it.
+  wizardState.prodBUs = ['DEV'];
+  controller.setEnvironmentProduction('Prod', true);
+  assert.ok(wizardState.prodBUs.includes('DEV'), 'DEV stays production while Prod is bulk-marked');
+  assert.ok(wizardState.prodBUs.includes('Randstad_EUN'));
+  assert.ok(wizardState.prodBUs.includes('Randstad_EUS'));
+  // Clearing Prod must not remove DEV.
+  controller.setEnvironmentProduction('Prod', false);
+  assert.deepEqual(wizardState.prodBUs, ['DEV'], 'clearing Prod leaves DEV production');
+});
+
+test('checking the last unchecked BU makes the env all-production (column box auto-checks)', () => {
+  seedProductionConfirmState();
+  const wizardState = controller.state.wizardState;
+  // Toggle the two Prod BUs on individually (the per-BU checkbox path).
+  controller.toggleProductionBU('Randstad_EUN', true);
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', wizardState),
+    false,
+    'one of two on → column box not yet all-checked',
+  );
+  controller.toggleProductionBU('Randstad_EUS', true);
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', wizardState),
+    true,
+    'checking the last BU flips the column box to all-checked',
+  );
+  // Unchecking any one BU un-checks the column box again.
+  controller.toggleProductionBU('Randstad_EUN', false);
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', wizardState),
+    false,
+    'unchecking any BU un-checks the column box',
+  );
+});
+
+test('seedProductionBUs still auto-selects the LAST environment’s BUs by default', () => {
+  seedProductionConfirmState();
+  // No prior prodBUs → the last env (Prod) is auto-selected.
+  controller.state.wizardState.prodBUs = [];
+  controller.seedProductionBUs();
+  assert.deepEqual(
+    controller.state.wizardState.prodBUs.toSorted((a, b) => a.localeCompare(b)),
+    ['Randstad_EUN', 'Randstad_EUS'],
+    'the last environment’s BUs are the default production set',
+  );
+  // The default therefore reports the last env as all-production.
+  assert.equal(
+    controller.isEnvironmentAllProduction('Prod', controller.state.wizardState),
+    true,
+    'the default selection makes the last env’s column box all-checked',
+  );
+});
