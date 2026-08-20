@@ -56,6 +56,11 @@
             mode: null,
             envOrder: [],
             envBUs: {},
+            // Git branch per environment, keyed by env DISPLAY name (same key space as envOrder).
+            // Auto-filled from the env name (autoBranchFromEnvName) while the field is empty; once the
+            // user types a value it is treated as manual and never overwritten. Feeds the config
+            // builder's per-hop branch key (falling back to branchKey() when an entry is absent).
+            envBranches: {},
             lineage: {},
             separator: '_',
             suffixes: {},
@@ -99,6 +104,15 @@
         config: null,
         step: null,
     };
+
+    /**
+     * Warnings from the most recent heuristic reconstruction of a vanilla (no-`mpb_pipeline`)
+     * config, stashed by `wizardStateFromConfig` and surfaced as an intake banner by `acceptConfig`.
+     * Empty when the last accepted config was a tool-generated round-trip (nothing was guessed).
+     *
+     * @type {string[]}
+     */
+    let lastReconstructionWarnings = [];
 
     // ── Cached DOM refs (grabbed from the ids defined in tools/mcdev-pipeline-builder/index.md). ──
     const dom = {
@@ -489,9 +503,43 @@
         // blank wizard. Falls back to a fresh state (with a banner) on version mismatch / bad shape.
         state.wizardState = wizardStateFromConfig(config);
         state.wizardState.multiCred = credNames.length > 1;
+        // Surface the heuristic-reconstruction banner when a vanilla config was inferred (never for a
+        // clean tool-generated round-trip, which stashes no warnings).
+        surfaceReconstructionBanner();
         // Persist immediately so every accepted config is resumable, and take its editing lock.
         createSaveForConfig(config);
         goToStep('mode');
+    }
+
+    /**
+     * Show (or clear) the heuristic-reconstruction banner from `lastReconstructionWarnings`. When a
+     * vanilla config was reverse-parsed, a warning banner tells the user the pipeline was inferred and
+     * should be reviewed; the first few warnings are appended (escaped via `makeElement`/`setText`).
+     * A clean round-trip leaves the banner cleared.
+     *
+     * @returns {void}
+     */
+    function surfaceReconstructionBanner() {
+        clearBanner('reconstructed');
+        const warnings = lastReconstructionWarnings || [];
+        if (warnings.length === 0) {
+            return;
+        }
+        // Lead with the summary, then a few SPECIFIC notes. The generic "no builder metadata …"
+        // summary warning is dropped from the detail so the banner headline is not repeated verbatim.
+        const detail = warnings
+            .filter((warning) => !warning.includes('had no builder metadata'))
+            .slice(0, 4)
+            .join(' ');
+        const suffix = detail ? ' ' + detail : '';
+        showBanner(
+            'reconstructed',
+            'No builder metadata was found in this .mcdevrc.json, so the pipeline was reconstructed ' +
+                'heuristically. Please review every step before regenerating.' +
+                suffix,
+            [],
+            'warning'
+        );
     }
 
     /**
@@ -503,13 +551,26 @@
      * input a fresh `emptyWizardState()` is returned; when a block was present but unusable a
      * non-crashing "couldn't restore" banner is surfaced. Never throws on bad input.
      *
+     * When NO `mpb_pipeline` block is present (a hand-authored / vanilla config, or a pipeline built
+     * by other means) the state is instead reconstructed heuristically from `credentials` / `markets`
+     * / `marketList` / `branchSourceTargetMapping` via `inferWizardStateFromVanilla`. Any inference
+     * warnings are stashed in `lastReconstructionWarnings` for `acceptConfig` to surface as a banner.
+     *
      * @param {object} config the accepted `.mcdevrc.json`
      * @returns {WizardState} the seeded (or fresh) wizard state
      */
     function wizardStateFromConfig(config) {
         clearBanner('restore');
+        lastReconstructionWarnings = [];
         const block = config && config.options && config.options.deployment && config.options.deployment.mpb_pipeline;
         if (!block || typeof block !== 'object') {
+            // Vanilla config: ambitiously reconstruct the wizard state from the raw pipeline shape.
+            const inferred = inferWizardStateFromVanilla(config);
+            if (inferred && inferred.state && inferred.state.envOrder.some((environment) => (inferred.state.envBUs[environment] || []).length > 0)) {
+                lastReconstructionWarnings = inferred.warnings;
+                return inferred.state;
+            }
+            // Nothing usable could be inferred — behave as before (blank wizard, no banner).
             return emptyWizardState();
         }
         // Required fields the config builder always persists; a block missing any of these (or with a
@@ -528,6 +589,463 @@
         // (by envOrder) that claims it, keeping the board's "exactly one env per BU" rule.
         restored.envBUs = dedupeEnvironmentBUs(restored.envOrder, restored.envBUs);
         return restored;
+    }
+
+    // ─────────────────────────── vanilla-config reverse inference (WS4) ───────────────────────────
+
+    /**
+     * Known short environment tokens whose canonical display name is simply the upper-cased branch
+     * key (so `sit` → `SIT`, `uat` → `UAT`). Any other branch is Title-cased instead.
+     */
+    const KNOWN_ENV_TOKENS = new Set(['dev', 'sit', 'qa', 'uat', 'prod', 'stg', 'staging', 'test', 'int']);
+
+    /**
+     * The `_ParentBU_` sentinel BU name mcdev uses for shared-DE / parent pipelines. Its presence in
+     * any marketList marks the config as using a shared-DE parent pattern, and it is never an
+     * assignable pipeline BU itself.
+     */
+    const PARENT_BU = '_ParentBU_';
+
+    /**
+     * Derive an environment DISPLAY name from a git-branch key: known short tokens (dev/sit/qa/uat/
+     * prod/…) upper-case, everything else Title-cases each dash-separated word. Pure.
+     *
+     * @param {string} branch the branch key (e.g. `sit`, `pre-prod`)
+     * @returns {string} the display name (e.g. `SIT`, `Pre Prod`)
+     */
+    function environmentNameFromBranch(branch) {
+        const key = String(branch || '').trim();
+        if (key === '') {
+            return '';
+        }
+        if (KNOWN_ENV_TOKENS.has(key.toLowerCase())) {
+            return key.toUpperCase();
+        }
+        return key
+            .split(/[-_\s]+/)
+            .filter((word) => word.length > 0)
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
+
+    /**
+     * The bare BU name of a marketList `<cred>/<BU>: market` entry key. `_ParentBU_` and any
+     * `filter`/`description` meta keys are NOT BU entries and are handled by the caller.
+     *
+     * @param {string} entryKey a marketList entry key
+     * @returns {string} the bare BU name (segment after the last `/`, or the whole key)
+     */
+    function bareBUFromEntryKey(entryKey) {
+        const slash = String(entryKey).lastIndexOf('/');
+        return slash === -1 ? String(entryKey) : String(entryKey).slice(slash + 1);
+    }
+
+    /**
+     * Read the assignable BU entries of a single marketList: `{ <buRef>: marketNameOrList }` pairs,
+     * skipping the reserved `filter`/`description` meta keys and the `_ParentBU_` sentinel. Each
+     * returned entry keeps the raw ref key and its bare BU name; a market value that is an array
+     * (one BU → many markets) keeps the first market for suffix lookup.
+     *
+     * @param {object} marketList a single marketList object
+     * @returns {{ref: string, bu: string, market: string, hasParent: boolean}[]} parsed BU entries
+     */
+    function parseMarketListBUs(marketList) {
+        const result = [];
+        if (!marketList || typeof marketList !== 'object') {
+            return result;
+        }
+        for (const [key, value] of Object.entries(marketList)) {
+            if (key === 'filter' || key === 'description') {
+                continue;
+            }
+            const bu = bareBUFromEntryKey(key);
+            const market = Array.isArray(value) ? value[0] : value;
+            result.push({
+                ref: key,
+                bu: bu,
+                market: typeof market === 'string' ? market : '',
+                hasParent: bu === PARENT_BU,
+            });
+        }
+        return result;
+    }
+
+    /**
+     * Heuristically reconstruct a wizard state from a vanilla `.mcdevrc.json` that carries NO
+     * `options.deployment.mpb_pipeline` block (hand-authored, or a pipeline built by other means).
+     * Never throws: every step falls back to a safe default and records a human-readable warning
+     * instead of failing, so a partially-inferred state still lands the user mid-wizard.
+     *
+     * Heuristics:
+     *  1. BUs & credentials from `credentials.*.businessUnits` (multiCred when >1 credential;
+     *     `<cred>/<BU>` refs when multiCred else bare). `_ParentBU_` is excluded from the pool.
+     *  2. `separator` defaults to `_`; each BU's suffix is read from `markets[<its market>].suffix`.
+     *  3. Pipeline hops from `branchSourceTargetMapping`: each `{ srcMl: tgtMl }` pair links the
+     *     single source-BU as the upstream of every target-BU → `lineage[targetBU] = sourceBU`.
+     *     `_ParentBU_`/filter-only parent pairs are skipped for lineage but flip `sharedDEs` on.
+     *  4. `envOrder`/`envBUs` reconstructed from the hop graph: a BU's env is the branch under which
+     *     it first appears as a target; root BUs (never a target) form the first (source) env. Envs
+     *     are ordered by walking the lineage DAG from roots to leaves.
+     *  5. `prodBUs` default to the leaf environment's BUs.
+     *  6. `sharedDEs` true when any `_ParentBU_` marketList / parent pipeline pattern exists.
+     *  7. Anything ambiguous/missing → safe default + a warning string.
+     *
+     * @param {object} config the accepted vanilla `.mcdevrc.json`
+     * @returns {{state: WizardState, warnings: string[]}} the inferred state and any warnings
+     */
+    function inferWizardStateFromVanilla(config) {
+        const warnings = [];
+        const state_ = emptyWizardState();
+        const config_ = config && typeof config === 'object' ? config : {};
+
+        // ── Step 1: credentials + BU pool. ──
+        const credentials = config_.credentials && typeof config_.credentials === 'object' ? config_.credentials : {};
+        const credNames = Object.keys(credentials);
+        const isMultiCred = credNames.length > 1;
+        state_.multiCred = isMultiCred;
+        // Map bare BU name → its ref (bare or <cred>/<BU>) and detect the _ParentBU_ sentinel.
+        const buReferenceByName = new Map();
+        let hasParentBU = false;
+        for (const credName of credNames) {
+            if (collectCredentialBUs(credentials[credName], credName, isMultiCred, buReferenceByName)) {
+                hasParentBU = true;
+            }
+        }
+        if (buReferenceByName.size === 0) {
+            warnings.push('No business units were found under any credential, so the pipeline could not be reconstructed.');
+            state_.sharedDEs = hasParentBU;
+            return { state: state_, warnings: warnings };
+        }
+
+        // ── Step 6 (early): shared-DE detection also picks up parent marketLists below. ──
+        state_.sharedDEs = hasParentBU;
+
+        // ── Step 3: lineage from branchSourceTargetMapping + marketList. ──
+        const marketLists = config_.marketList && typeof config_.marketList === 'object' ? config_.marketList : {};
+        const deployment = config_.options && config_.options.deployment && typeof config_.options.deployment === 'object' ? config_.options.deployment : {};
+        const branchMapping = deployment.branchSourceTargetMapping && typeof deployment.branchSourceTargetMapping === 'object' ? deployment.branchSourceTargetMapping : {};
+
+        const lineage = {};
+        // buName → the branch under which it first appears as a TARGET (its environment key).
+        const targetBranchOfBU = new Map();
+        // Every buName referenced anywhere in a real (non-parent) hop, so we can pick a suffix market.
+        const buMarketByName = new Map();
+
+        const hopContext = {
+            marketLists: marketLists,
+            buReferenceByName: buReferenceByName,
+            lineage: lineage,
+            targetBranchOfBU: targetBranchOfBU,
+            buMarketByName: buMarketByName,
+            warnings: warnings,
+        };
+        for (const [branch, branchValue] of Object.entries(branchMapping)) {
+            const pairs = branchValue && typeof branchValue === 'object' ? branchValue : {};
+            for (const [sourceMlName, targetMlName] of Object.entries(pairs)) {
+                if (processHopPair(branch, sourceMlName, targetMlName, hopContext)) {
+                    // The hop was a parent / shared-DE pair — flip the flag without child lineage.
+                    state_.sharedDEs = true;
+                }
+            }
+        }
+
+        // ── Step 4: reconstruct envOrder + envBUs from the hop graph. ──
+        const grouping = groupBUsIntoEnvironments(buReferenceByName, targetBranchOfBU, lineage, warnings);
+        state_.envOrder = grouping.envOrder;
+        state_.envBUs = grouping.envBUs;
+        state_.envBranches = grouping.envBranches;
+        // Translate the bare-BU lineage into the ref space the rest of the wizard uses.
+        state_.lineage = {};
+        for (const [childBU, parentBU] of Object.entries(lineage)) {
+            const childReference = buReferenceByName.get(childBU);
+            const parentReference = buReferenceByName.get(parentBU);
+            if (childReference && parentReference) {
+                state_.lineage[childReference] = parentReference;
+            }
+        }
+
+        // ── Step 2: separator + suffixes from markets. ──
+        state_.separator = '_';
+        const markets = config_.markets && typeof config_.markets === 'object' ? config_.markets : {};
+        state_.suffixes = {};
+        for (const [buName, reference] of buReferenceByName) {
+            const suffix = suffixForBU(buName, reference, buMarketByName, markets);
+            if (suffix) {
+                state_.suffixes[reference] = suffix;
+            } else {
+                warnings.push('No suffix could be found for business unit "' + buName + '"; you will need to set it.');
+            }
+        }
+
+        // ── Step 5: prodBUs default to the leaf (last) environment's BUs. ──
+        const lastEnvironment = state_.envOrder.at(-1);
+        state_.prodBUs = lastEnvironment ? [...(state_.envBUs[lastEnvironment] || [])] : [];
+
+        if (state_.sharedDEs) {
+            warnings.push('A shared-DE (parent BU) pipeline was detected and enabled; review the shared-DE step.');
+        }
+        warnings.push('This config had no builder metadata, so the pipeline was reconstructed heuristically — please review every step before regenerating.');
+
+        return { state: state_, warnings: warnings };
+    }
+
+    /**
+     * Collect one credential's business units into the shared ref map (first credential wins a
+     * name clash in the bare-ref space). The `_ParentBU_` sentinel is not an assignable BU; its
+     * presence is reported via the return value. Pure (mutates the passed map only).
+     *
+     * @param {object} cred the credential object (`{ businessUnits: {...} }`)
+     * @param {string} credName the credential name (used as the ref prefix when multiCred)
+     * @param {boolean} isMultiCred true when refs must be `<cred>/<BU>` qualified
+     * @param {Map<string, string>} buReferenceByName BU name → ref accumulator (mutated)
+     * @returns {boolean} true when this credential exposes a `_ParentBU_` sentinel
+     */
+    function collectCredentialBUs(cred, credName, isMultiCred, buReferenceByName) {
+        const businessUnits = cred && typeof cred === 'object' && cred.businessUnits && typeof cred.businessUnits === 'object' ? cred.businessUnits : {};
+        let hasParent = false;
+        for (const buName of Object.keys(businessUnits)) {
+            if (buName === PARENT_BU) {
+                hasParent = true;
+            } else if (!buReferenceByName.has(buName)) {
+                buReferenceByName.set(buName, isMultiCred ? credName + '/' + buName : buName);
+            }
+        }
+        return hasParent;
+    }
+
+    /**
+     * Process one `sourceMl → targetMl` deployment hop: skip tool-generated (`mpb_`) pairs, detect
+     * shared-DE parent pairs, and otherwise write the child lineage + target-branch grouping. Pure
+     * (mutates the accumulator maps in `context`).
+     *
+     * @param {string} branch the branch key this pair is nested under (≈ target env)
+     * @param {string} sourceMlName the source marketList name
+     * @param {string|string[]} targetMlName the target marketList name
+     * @param {{marketLists: object, buReferenceByName: Map<string, string>, lineage: object, targetBranchOfBU: Map<string, string>, buMarketByName: Map<string, string>, warnings: string[]}} context shared accumulators
+     * @returns {boolean} true when the pair was a shared-DE / `_ParentBU_` parent pair
+     */
+    function processHopPair(branch, sourceMlName, targetMlName, context) {
+        // Skip tool-generated (mpb_) pairs entirely — they are not the vanilla pipeline.
+        if (sourceMlName.indexOf('mpb_') === 0 || (typeof targetMlName === 'string' && targetMlName.indexOf('mpb_') === 0)) {
+            return false;
+        }
+        const sourceEntries = parseMarketListBUs(context.marketLists[sourceMlName]);
+        const targetEntries = parseMarketListBUs(typeof targetMlName === 'string' ? context.marketLists[targetMlName] : undefined);
+        if (sourceEntries.some((entry) => entry.hasParent) || targetEntries.some((entry) => entry.hasParent)) {
+            // Parent / shared-DE hop: never contributes child lineage, but proves sharedDEs.
+            return true;
+        }
+        const realSources = sourceEntries.filter((entry) => context.buReferenceByName.has(entry.bu));
+        const realTargets = targetEntries.filter((entry) => context.buReferenceByName.has(entry.bu));
+        if (realSources.length === 0 || realTargets.length === 0) {
+            return false;
+        }
+        if (realSources.length > 1) {
+            context.warnings.push('Source pipeline "' + sourceMlName + '" lists more than one business unit; only "' + realSources[0].bu + '" was used as the upstream.');
+        }
+        const sourceBU = realSources[0].bu;
+        recordBUMarket(context.buMarketByName, sourceBU, realSources[0].market);
+        for (const targetEntry of realTargets) {
+            recordBUMarket(context.buMarketByName, targetEntry.bu, targetEntry.market);
+            context.lineage[targetEntry.bu] = sourceBU;
+            if (!context.targetBranchOfBU.has(targetEntry.bu)) {
+                context.targetBranchOfBU.set(targetEntry.bu, branch);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Record the first non-empty market name seen for a BU, used later for suffix lookup. Pure
+     * (mutates the passed map only).
+     *
+     * @param {Map<string, string>} buMarketByName BU name → market name accumulator
+     * @param {string} buName the bare BU name
+     * @param {string} market the market name from a marketList entry
+     * @returns {void}
+     */
+    function recordBUMarket(buMarketByName, buName, market) {
+        if (market && !buMarketByName.has(buName)) {
+            buMarketByName.set(buName, market);
+        }
+    }
+
+    /**
+     * Resolve a BU's suffix from the `markets` map: prefer the market the BU maps to in a pipeline
+     * marketList, then a market named exactly after the BU, then a market named after the bare BU.
+     * Returns an empty string when none carry a `suffix`. Pure.
+     *
+     * @param {string} buName the bare BU name
+     * @param {string} reference the BU ref (bare or `<cred>/<BU>`)
+     * @param {Map<string, string>} buMarketByName BU name → market name from pipeline marketLists
+     * @param {object} markets the config `markets` map
+     * @returns {string} the suffix (including its leading separator) or `''`
+     */
+    function suffixForBU(buName, reference, buMarketByName, markets) {
+        const candidates = [buMarketByName.get(buName), buName, bareBUFromEntryKey(reference)];
+        for (const candidate of candidates) {
+            const market = candidate && Object.hasOwn(markets, candidate) ? markets[candidate] : undefined;
+            if (market && typeof market.suffix === 'string' && market.suffix !== '') {
+                return market.suffix;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Group BUs into ordered environments from the hop graph. A BU's environment is the branch under
+     * which it first appears as a target (via `targetBranchOfBU`); BUs that are never a target are
+     * roots and form the first (source) environment. Environments are ordered by walking the lineage
+     * DAG from roots to leaves (a target env always follows its source env). Never throws; falls back
+     * to a single "All BUs" environment (with a warning) when the graph yields nothing usable.
+     *
+     * @param {Map<string, string>} buReferenceByName BU name → ref map (the full assignable pool)
+     * @param {Map<string, string>} targetBranchOfBU BU name → the branch it is a target under
+     * @param {{[childBU: string]: string}} lineage bare-BU child → parent map
+     * @param {string[]} warnings accumulator for human-readable fallback notes
+     * @returns {{envOrder: string[], envBUs: object, envBranches: object}} grouped environments
+     */
+    function groupBUsIntoEnvironments(buReferenceByName, targetBranchOfBU, lineage, warnings) {
+        // Branch key → env display name; roots share a synthesized source env.
+        const branchOrder = orderBranchesByLineage(targetBranchOfBU, lineage);
+        const allBUNames = buReferenceByName.keys().toArray();
+        const rootBUs = allBUNames.filter((bu) => !targetBranchOfBU.has(bu));
+        const environmentBUs = {};
+        const environmentBranches = {};
+        const environmentOrder = [];
+
+        // Source (root) environment first, when any BU is never a target.
+        if (rootBUs.length > 0) {
+            const sourceName = sourceEnvironmentName(branchOrder, warnings);
+            environmentOrder.push(sourceName);
+            environmentBUs[sourceName] = rootBUs.map((bu) => buReferenceByName.get(bu));
+        }
+
+        // One environment per branch, in DAG order (empty branches are skipped, not `continue`d).
+        for (const branch of branchOrder) {
+            const busInBranch = allBUNames
+                .filter((bu) => targetBranchOfBU.get(bu) === branch)
+                .map((bu) => buReferenceByName.get(bu))
+                .filter(Boolean);
+            if (busInBranch.length > 0) {
+                const displayName = uniqueEnvironmentName(environmentNameFromBranch(branch) || branch, environmentBUs);
+                environmentOrder.push(displayName);
+                environmentBUs[displayName] = busInBranch;
+                environmentBranches[displayName] = branch;
+            }
+        }
+
+        if (environmentOrder.length === 0) {
+            // No hops at all: land every BU in one environment so the user can still edit.
+            warnings.push('No deployment hops were found, so all business units were placed in a single environment.');
+            const soleName = 'DEV';
+            environmentOrder.push(soleName);
+            environmentBUs[soleName] = buReferenceByName.values().toArray();
+        }
+        return { envOrder: environmentOrder, envBUs: environmentBUs, envBranches: environmentBranches };
+    }
+
+    /**
+     * Order the target branches so that a branch whose BUs deploy FROM another branch's BUs comes
+     * after it. Uses the lineage parent of each branch's BUs to find its upstream branch, then walks
+     * roots-first. Cyclic/broken links fall back to the branch-key insertion order (with a warning).
+     * Pure.
+     *
+     * @param {Map<string, string>} targetBranchOfBU BU name → branch it targets
+     * @param {{[childBU: string]: string}} lineage bare-BU child → parent map
+     * @returns {string[]} branches in source→leaf order
+     */
+    function orderBranchesByLineage(targetBranchOfBU, lineage) {
+        const branches = [...new Set(targetBranchOfBU.values())];
+        // Upstream branch of a branch = the target-branch of the lineage parent of any of its BUs
+        // (undefined when the parent is a root BU → that branch depends only on the source env).
+        const upstreamOf = new Map();
+        for (const branch of branches) {
+            upstreamOf.set(branch, upstreamBranchOf(branch, targetBranchOfBU, lineage));
+        }
+        // Topological-ish walk: repeatedly emit branches whose upstream is already emitted (or root).
+        const ordered = [];
+        const emitted = new Set();
+        let guard = branches.length + 1;
+        while (ordered.length < branches.length && guard-- > 0) {
+            const ready = branches.filter((branch) => {
+                const upstream = upstreamOf.get(branch);
+                return !emitted.has(branch) && (!upstream || emitted.has(upstream));
+            });
+            for (const branch of ready) {
+                ordered.push(branch);
+                emitted.add(branch);
+            }
+        }
+        // Any left over (cycle) get appended in insertion order.
+        for (const branch of branches) {
+            if (!emitted.has(branch)) {
+                ordered.push(branch);
+            }
+        }
+        return ordered;
+    }
+
+    /**
+     * Find the upstream branch of a target branch: the branch that the lineage parent of any of the
+     * branch's BUs is itself a target under. Returns undefined when every parent is a root BU (so the
+     * branch depends only on the synthesized source env). Pure.
+     *
+     * @param {string} branch the branch to resolve the upstream of
+     * @param {Map<string, string>} targetBranchOfBU BU name → branch it targets
+     * @param {{[childBU: string]: string}} lineage bare-BU child → parent map
+     * @returns {(string|undefined)} the upstream branch key, or undefined
+     */
+    function upstreamBranchOf(branch, targetBranchOfBU, lineage) {
+        for (const [bu, brnch] of targetBranchOfBU) {
+            if (brnch !== branch) {
+                continue;
+            }
+            const parent = lineage[bu];
+            if (parent && targetBranchOfBU.has(parent)) {
+                return targetBranchOfBU.get(parent);
+            }
+        }
+        return;
+    }
+
+    /**
+     * Name the synthesized source (root) environment. When the first branch's derived name implies a
+     * conventional order we still use a stable `DEV` label unless that collides; a warning notes the
+     * name was assumed since a vanilla config has no explicit source-env label. Pure.
+     *
+     * @param {string[]} branchOrder the ordered target branches (for collision context)
+     * @param {string[]} warnings accumulator
+     * @returns {string} the source environment display name
+     */
+    function sourceEnvironmentName(branchOrder, warnings) {
+        warnings.push('The source (first) environment has no branch of its own, so it was named "DEV" — rename it if needed.');
+        // Avoid colliding with a branch that also maps to "DEV".
+        const taken = new Set(branchOrder.map((branch) => environmentNameFromBranch(branch)));
+        if (!taken.has('DEV')) {
+            return 'DEV';
+        }
+        return uniqueEnvironmentName('Source', {});
+    }
+
+    /**
+     * Return a display name unique among the already-claimed environment names, appending ` 2`, ` 3`,
+     * … on collision. Pure.
+     *
+     * @param {string} name the desired display name
+     * @param {object} environmentBUs the environments claimed so far (keys are taken names)
+     * @returns {string} a name not present in `environmentBUs`
+     */
+    function uniqueEnvironmentName(name, environmentBUs) {
+        const base = name || 'Env';
+        if (!Object.hasOwn(environmentBUs, base)) {
+            return base;
+        }
+        let index = 2;
+        while (Object.hasOwn(environmentBUs, base + ' ' + index)) {
+            index++;
+        }
+        return base + ' ' + index;
     }
 
     /**
@@ -749,6 +1267,23 @@
     function isDuplicateName(names, index) {
         const lower = names[index].toLowerCase();
         return names.some((other, otherIndex) => otherIndex !== index && other.toLowerCase() === lower);
+    }
+
+    /**
+     * Slugify an environment display name into its default git branch: trim, lower-case, and collapse
+     * every run of non-`[a-z0-9]` characters (spaces included) to a single dash, with leading/trailing
+     * dashes stripped. Mirrors the config builder's `branchKey()` so the auto-filled UI value and the
+     * generator's fallback agree. Pure.
+     *
+     * @param {string} name the environment display name
+     * @returns {string} the auto-generated git branch slug (empty when the name has no usable chars)
+     */
+    function autoBranchFromEnvironmentName(name) {
+        return String(name)
+            .trim()
+            .toLowerCase()
+            .replaceAll(/[^a-z0-9]+/g, '-')
+            .replaceAll(/^-+|-+$/g, '');
     }
 
     /**
@@ -1597,8 +2132,14 @@
         });
         removeButton.addEventListener('click', () => {
             const next = environmentNames();
-            next.splice(index, 1);
+            const [removed] = next.splice(index, 1);
             state.wizardState.envOrder = next;
+            // Drop the removed env's git-branch entry (keyed by display name) so it doesn't linger.
+            if (removed && state.wizardState.envBranches && Object.hasOwn(state.wizardState.envBranches, removed)) {
+                const branches = { ...state.wizardState.envBranches };
+                delete branches[removed];
+                state.wizardState.envBranches = branches;
+            }
             render();
         });
         actions.append(leftButton, rightButton, removeButton);
@@ -1609,7 +2150,13 @@
             column.append(makeElement('span', { class: 'mpb-chip', text: 'DEV / source' }));
         }
 
+        // ── env-name field (labelled, mirroring the lineage "deploys from" label styling). ──
         const inputId = 'mpb-env-name-' + index;
+        const nameLabel = makeElement('label', {
+            class: 'mpb-env-order-label',
+            text: 'env name',
+            attrs: { for: inputId },
+        });
         const input = makeElement('input', {
             type: 'text',
             value: name,
@@ -1622,23 +2169,107 @@
                 placeholder: 'Environment ' + (index + 1),
             },
         });
+
+        // ── git-branch field (labelled), bound to envBranches[env] and auto-filled from the name. ──
+        const branchId = 'mpb-env-branch-' + index;
+        const branchLabel = makeElement('label', {
+            class: 'mpb-env-order-label',
+            text: 'git branch',
+            attrs: { for: branchId },
+        });
+        const branchValue = (state.wizardState.envBranches || {})[name] || '';
+        const branchInput = makeElement('input', {
+            type: 'text',
+            value: branchValue,
+            id: branchId,
+            class: 'mpb-env-branch-input',
+            attrs: {
+                autocomplete: 'off',
+                spellcheck: 'false',
+                'aria-label': 'Environment ' + (index + 1) + ' git branch',
+                placeholder: 'git branch',
+            },
+        });
+
+        // Track the name this row is currently keyed under so a rename can migrate the envBranches
+        // entry to the new key (envBranches is keyed by DISPLAY name, same key space as envOrder).
+        let boundName = name;
+
         input.addEventListener('input', () => {
             const next = environmentNames();
             // Store exactly as typed (no space→underscore conversion); trimming is validation-only.
             next[index] = input.value;
             state.wizardState.envOrder = next;
+            // Migrate this env's git branch to the new display-name key so the binding follows the
+            // rename. While the branch field is still empty, keep auto-filling it from the new name.
+            const branches = { ...state.wizardState.envBranches };
+            const existing = branches[boundName];
+            if (boundName !== input.value) {
+                delete branches[boundName];
+            }
+            if (existing) {
+                branches[input.value] = existing;
+            } else {
+                // Empty branch → live-track the auto slug so it mirrors the name as the user types.
+                const auto = autoBranchFromEnvironmentName(input.value);
+                if (auto) {
+                    branches[input.value] = auto;
+                    branchInput.value = auto;
+                } else {
+                    delete branches[input.value];
+                    branchInput.value = '';
+                }
+            }
+            state.wizardState.envBranches = branches;
+            boundName = input.value;
             // Refresh only the inline validation (cross-column duplicates included), the nav gate and
             // the debounced autosave — never a full render that would blur this input.
             refreshWarnings();
             updateNavGate();
             scheduleAutosave();
         });
-        column.append(input);
+        input.addEventListener('blur', () => {
+            // On leaving the name field, (re-)generate the branch only when it is currently empty, so
+            // a cleared branch auto-fills again but a user-typed value is never overwritten.
+            const branches = { ...state.wizardState.envBranches };
+            const currentBranch = branches[boundName];
+            if (!currentBranch) {
+                const auto = autoBranchFromEnvironmentName(boundName);
+                if (auto) {
+                    branches[boundName] = auto;
+                    branchInput.value = auto;
+                    state.wizardState.envBranches = branches;
+                    setEnvironmentBranchWarning(branchWarnings, auto);
+                    scheduleAutosave();
+                }
+            }
+        });
+
+        branchInput.addEventListener('input', () => {
+            // A typed value makes the branch manual — store exactly as typed (validation-only trim).
+            const branches = { ...state.wizardState.envBranches };
+            const value = branchInput.value;
+            if (value.trim()) {
+                branches[boundName] = value;
+            } else {
+                delete branches[boundName];
+            }
+            state.wizardState.envBranches = branches;
+            setEnvironmentBranchWarning(branchWarnings, value);
+            scheduleAutosave();
+        });
+
+        column.append(nameLabel, input);
 
         // Dedicated warnings slot so the inline validation can be wiped + repainted in place (from
         // `setEnvironmentRowWarning`) without touching the input.
         const warnings = makeElement('div', { class: 'mpb-env-name-warnings' });
         column.append(warnings);
+
+        column.append(branchLabel, branchInput);
+        const branchWarnings = makeElement('div', { class: 'mpb-env-branch-warnings' });
+        column.append(branchWarnings);
+        setEnvironmentBranchWarning(branchWarnings, branchValue);
 
         wireEnvironmentRowDnD(column, handle, index);
         return { row: column, index: index, warnings: warnings };
@@ -1666,6 +2297,35 @@
         }
         if (message) {
             row.warnings.append(makeElement('p', { class: 'mpb-warn', text: message }));
+        }
+    }
+
+    /**
+     * Git-branch names allowing the common characters: letters, digits, and `-_./`. Anything outside
+     * this set (spaces, `~^:?*[]\` etc.) triggers a warn-only hint — consistent with the tool's other
+     * warn-not-block conventions, since mcdev never rejects the config on branch spelling.
+     */
+    const GIT_BRANCH_PATTERN = /^[\w\-./]+$/;
+
+    /**
+     * Paint (or clear) a git-branch input's warn-only hint into its slot. Empty is fine (it will
+     * auto-fill); a value with spaces or characters outside the typical git-branch set gets a hint
+     * but never blocks. Wipes the slot first so it can be repainted in place.
+     *
+     * @param {HTMLElement} slot the branch-warnings slot element
+     * @param {string} value the current branch value
+     * @returns {void}
+     */
+    function setEnvironmentBranchWarning(slot, value) {
+        setText(slot, '');
+        const trimmed = (value || '').trim();
+        if (trimmed && !GIT_BRANCH_PATTERN.test(trimmed)) {
+            slot.append(
+                makeElement('p', {
+                    class: 'mpb-warn',
+                    text: 'Unusual git branch characters — letters, digits and - _ . / are typical.',
+                })
+            );
         }
     }
 
@@ -2675,6 +3335,12 @@
             })
         );
 
+        // Shared-DE question (full-pipeline mode only): drives whether the config builder emits an
+        // extra parent-BU (source==target) pipeline per hop that carries shared data extensions.
+        if (state.mode !== 'validations') {
+            panel.append(sharedDEsToggle());
+        }
+
         const references = childBUReferences();
         if (references.length === 0) {
             panel.append(separatorField(() => {}));
@@ -2761,6 +3427,38 @@
         panel.append(board);
         // Initial warning paint now that every row exists (so cross-row duplicates resolve).
         refreshSuffixWarnings();
+    }
+
+    /**
+     * The "Do you use shared data extensions?" question for the suffixes step (full-pipeline mode).
+     * A single yes/no checkbox bound to `state.wizardState.sharedDEs` plus a short explainer. Toggling
+     * it persists the answer (autosave) and re-checks the nav gate in place — no full re-render. When
+     * on, the config builder emits a parent-BU (`_ParentBU_`) source==target pipeline per hop that
+     * isolates each upstream env's shared-DE metadata.
+     *
+     * @returns {HTMLElement} the toggle field (label + checkbox + explainer)
+     */
+    function sharedDEsToggle() {
+        const field = makeElement('div', { class: 'mpb-field mpb-shared-des' });
+        const label = makeElement('label', { class: 'mpb-check-row' });
+        const checkbox = makeElement('input', {
+            type: 'checkbox',
+            checked: !!state.wizardState.sharedDEs,
+        });
+        checkbox.addEventListener('change', () => {
+            state.wizardState.sharedDEs = checkbox.checked;
+            updateNavGate();
+            scheduleAutosave();
+        });
+        label.append(checkbox, makeElement('span', { text: 'Do you use shared data extensions?' }));
+        field.append(label);
+        field.append(
+            makeElement('p', {
+                class: 'text-muted',
+                text: 'Turn this on if a parent business unit owns data extensions that every child BU inherits. The generated config then adds a parent-BU deployment pipeline per environment hop so those shared DEs are promoted alongside the child metadata.',
+            })
+        );
+        return field;
     }
 
     /**
@@ -3057,11 +3755,20 @@
     const openMiniWizards = new Set();
 
     /**
-     * Catalogue of user-selectable validation rules for the rule picker. `keySuffix` is always
-     * emitted by the builder and is therefore not offered here. `miniWizard` marks the two rules
-     * whose `<details>` sub-config is built in Chunk 3. Descriptions are original one-liners.
+     * Catalogue of validation rules for the rule picker. `keySuffix` is always emitted by the
+     * builder, so it is modelled here with `alwaysOn: true` and rendered as a checked+disabled row
+     * (users see it is included but cannot toggle it); it is never written to `selectedRules`.
+     * `miniWizard` marks the two rules whose `<details>` sub-config is built in Chunk 3.
+     * Descriptions are original one-liners.
      */
     const RULE_CATALOG = [
+        {
+            id: 'keySuffix',
+            name: 'BU key suffix',
+            description: 'Requires every asset and data-extension key to carry its business-unit suffix.',
+            autoFix: false,
+            alwaysOn: true,
+        },
         {
             id: 'noGuidKeys',
             name: 'No GUID keys',
@@ -3099,12 +3806,6 @@
             autoFix: true,
         },
         {
-            id: 'payloadParameterDEsNoPrimaryKey',
-            name: 'No PK on payload DEs',
-            description: 'Flags "_PayloadParameters" data extensions that carry a primary key.',
-            autoFix: true,
-        },
-        {
             id: 'noMidDependentCode',
             name: 'No hard-coded MIDs',
             description: 'Flags asset code that hard-codes a business-unit MID instead of a market variable.',
@@ -3125,6 +3826,14 @@
             miniWizard: true,
         },
     ];
+
+    /**
+     * Ids of rules the builder always emits (so they are shown as checked+disabled and never stored
+     * in `selectedRules`). Derived from the `alwaysOn` catalog flag so the two stay in sync.
+     *
+     * @type {Set<string>}
+     */
+    const ALWAYS_ON_RULES = new Set(RULE_CATALOG.filter((rule) => rule.alwaysOn).map((rule) => rule.id));
 
     /**
      * `rules` step: a checkbox rule picker feeding the derived `validationsState.selectedRules`.
@@ -3152,26 +3861,40 @@
     }
 
     /**
-     * Build one rule-picker row: a checkbox with the rule name, description and an auto-fix badge.
-     * Mini-wizard rules also mount a Chunk-3 placeholder for their `<details>` sub-config.
+     * Build one rule-picker row: a checkbox to the LEFT of the rule name (a horizontal
+     * `.mpb-rule-head` label, not the stacked `.mpb-field`), plus a description and an auto-fix
+     * badge. `alwaysOn` rules render checked+disabled with an "always on" badge and never touch
+     * `selectedRules`. Mini-wizard rules also mount a `<details>` sub-config while selected.
      *
-     * @param {{id: string, name: string, description: string, autoFix: boolean, miniWizard?: boolean}} rule the rule
+     * @param {{id: string, name: string, description: string, autoFix: boolean, miniWizard?: boolean, alwaysOn?: boolean}} rule the rule
      * @param {boolean} isSelected whether the rule is currently selected
      * @returns {HTMLElement} the row element
      */
     function ruleRow(rule, isSelected) {
         const row = makeElement('div', { class: 'mpb-rule' });
-        const label = makeElement('label', { class: 'mpb-field' });
-        const checkbox = makeElement('input', { type: 'checkbox', checked: isSelected });
-        checkbox.addEventListener('change', () => {
-            toggleRule(rule.id, checkbox.checked);
+        // The head is a horizontal label so the checkbox sits to the LEFT of the title (the generic
+        // `.mpb-field` stacks its children in a column, which would put the checkbox above the name).
+        const label = makeElement('label', { class: 'mpb-rule-head' });
+        const checkbox = makeElement('input', {
+            type: 'checkbox',
+            checked: rule.alwaysOn ? true : isSelected,
         });
-        const heading = makeElement('span', { class: 'mpb-rule-head' });
-        heading.append(makeElement('span', { class: 'mpb-rule-name', text: rule.name }));
-        if (rule.autoFix) {
-            heading.append(makeElement('span', { class: 'mpb-chip', text: 'auto-fix' }));
+        if (rule.alwaysOn) {
+            // Always-on rules (e.g. keySuffix) are emitted unconditionally by the builder, so the
+            // checkbox is checked + disabled and never wired to `selectedRules`.
+            checkbox.disabled = true;
+        } else {
+            checkbox.addEventListener('change', () => {
+                toggleRule(rule.id, checkbox.checked);
+            });
         }
-        label.append(checkbox, heading);
+        label.append(checkbox, makeElement('span', { class: 'mpb-rule-name', text: rule.name }));
+        if (rule.alwaysOn) {
+            label.append(makeElement('span', { class: 'mpb-chip mpb-chip--always', text: 'always on' }));
+        }
+        if (rule.autoFix) {
+            label.append(makeElement('span', { class: 'mpb-chip', text: 'auto-fix' }));
+        }
         row.append(label);
         row.append(makeElement('p', { class: 'mpb-rule-desc text-muted', text: rule.description }));
 
@@ -3408,8 +4131,9 @@
      * @returns {void}
      */
     function renderRetentionPolicy(body) {
-        renderRetentionAppliesTo(body);
+        // Config first (the retention policy the user is defining), then the applies-to BU scope.
         renderRetentionInputs(body);
+        renderRetentionAppliesTo(body);
     }
 
     /**
@@ -3438,9 +4162,10 @@
             return;
         }
         const productionBUs = new Set(state.wizardState.prodBUs || []);
-        const list = makeElement('div', { class: 'mpb-list' });
+        // Wrapping equal-width flex list: BUs flow into multiple columns when space allows.
+        const list = makeElement('div', { class: 'mpb-bu-flex' });
         for (const reference of references) {
-            const label = makeElement('label', { class: 'mpb-field' });
+            const label = makeElement('label', { class: 'mpb-check-row mpb-bu-flex-item' });
             const checkbox = makeElement('input', {
                 type: 'checkbox',
                 checked: productionBUs.has(reference),
@@ -3482,12 +4207,15 @@
         typeField.append(typeSelect);
         body.append(typeField);
 
-        // Length + unit only apply when a real retention period is used.
+        // Length + unit only apply when a real retention period is used. They share one row: a
+        // compact (100px) length input with the unit `<select>` inline beside it.
         if (policy.c__retentionPolicy !== 'none') {
-            const lengthField = makeElement('div', { class: 'mpb-field' });
-            lengthField.append(makeElement('label', { text: 'Length' }));
+            const periodField = makeElement('div', { class: 'mpb-field' });
+            periodField.append(makeElement('label', { text: 'Retention period' }));
+            const periodRow = makeElement('div', { class: 'mpb-inline-row' });
             const lengthInput = makeElement('input', {
                 type: 'number',
+                class: 'mpb-length-input',
                 value: String(policy.DataRetentionPeriodLength),
                 attrs: { min: '1', step: '1', 'aria-label': 'Retention period length' },
             });
@@ -3497,12 +4225,7 @@
                     DataRetentionPeriodLength: Number.isNaN(parsed) || parsed < 1 ? 1 : parsed,
                 });
             });
-            lengthField.append(lengthInput);
-            body.append(lengthField);
-
-            const unitField = makeElement('div', { class: 'mpb-field' });
-            unitField.append(makeElement('label', { text: 'Unit' }));
-            const unitSelect = makeElement('select');
+            const unitSelect = makeElement('select', { attrs: { 'aria-label': 'Retention period unit' } });
             for (const unit of RETENTION_UNIT_OPTIONS) {
                 const element = makeElement('option', { value: unit, text: unit });
                 if (unit === policy.c__dataRetentionPeriodUnitOfMeasure) {
@@ -3513,12 +4236,13 @@
             unitSelect.addEventListener('change', () => {
                 updateRetention({ c__dataRetentionPeriodUnitOfMeasure: unitSelect.value });
             });
-            unitField.append(unitSelect);
-            body.append(unitField);
+            periodRow.append(lengthInput, unitSelect);
+            periodField.append(periodRow);
+            body.append(periodField);
         }
 
-        // Reset-on-import.
-        const resetLabel = makeElement('label', { class: 'mpb-field' });
+        // Reset-on-import: a horizontal row so the checkbox sits to the LEFT of its label.
+        const resetLabel = makeElement('label', { class: 'mpb-check-row' });
         const resetCheckbox = makeElement('input', {
             type: 'checkbox',
             checked: !!policy.ResetRetentionPeriodOnImport,
@@ -3538,6 +4262,10 @@
      * @returns {void}
      */
     function toggleRule(ruleId, on) {
+        // Always-on rules are emitted by the builder regardless of selection; never store them.
+        if (ALWAYS_ON_RULES.has(ruleId)) {
+            return;
+        }
         const current = Array.isArray(state.wizardState.selectedRules) ? state.wizardState.selectedRules : [];
         const next = on
             ? (current.includes(ruleId) ? current : [...current, ruleId])
@@ -4860,6 +5588,13 @@
         return buildBuilderDropdown('Download', false, (panel) => {
             const blockers = outputBlockers();
             const isConfigOk = isConfigDownloadAvailable(state.mode, blockers);
+            // Chromium strips a leading dot from the `download` filename; warn the user to re-add it.
+            panel.append(
+                makeElement('p', {
+                    class: 'mpb-dl-hint',
+                    text: 'Some browsers save these without the leading dot — re-add it after downloading.',
+                })
+            );
             // `.mcdevrc.json` — omitted entirely in validations mode; disabled when incomplete.
             if (state.mode !== 'validations') {
                 const configItem = makeElement('button', {
@@ -6258,6 +6993,11 @@
             persistence.currentId = id;
         },
         renderWizardStep: renderWizardStep,
+        // Rule-catalogue test hooks (Chunk 3): the picker catalogue and the derived always-on set,
+        // so tests can assert the removed rule is gone and keySuffix is modelled as always-on.
+        RULE_CATALOG: RULE_CATALOG,
+        ALWAYS_ON_RULES: ALWAYS_ON_RULES,
+        toggleRule: toggleRule,
         // Nav-gate seam: the in-place text-input handlers (suffix / separator / env-name) update
         // state then call `canProceed(wizardStep)` via `updateNavGate` instead of re-rendering, so
         // tests assert the gate reacts correctly to a simulated keystroke edit.
@@ -6310,6 +7050,12 @@
         unassignedBUReferences: unassignedBUReferences,
         pooledBUReferences: pooledBUReferences,
         wizardStateFromConfig: wizardStateFromConfig,
+        // Test hook for WS4 (vanilla reverse-inference): the pure reconstructor that turns a config
+        // with no mpb_pipeline block into { state, warnings } for the wizard + reconstruction banner.
+        inferWizardStateFromVanilla: inferWizardStateFromVanilla,
+        // Test hook for WS3 (env → git-branch mapping): the pure slug helper that auto-fills a git
+        // branch from an env display name (also the config builder's fallback shape).
+        autoBranchFromEnvName: autoBranchFromEnvironmentName,
         // Test hooks for the bu-assign soft-confirm gate: the pure decision helper, the hard gate it
         // layers on top of, and a tiny setter so tests can simulate the "Continue anyway" latch
         // without a rendered banner DOM.

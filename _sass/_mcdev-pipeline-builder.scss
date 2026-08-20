@@ -494,8 +494,12 @@
 
   .mpb-row-actions { display: flex; gap: $space-1; margin-left: auto; }
 
-  // Inline name input keeps the rounded-box look it had in the previous row layout.
-  .mpb-env-name-input {
+  // Small input labels (env name / git branch), mirroring the lineage "deploys from" label look.
+  .mpb-env-order-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
+
+  // Inline name + git-branch inputs keep the rounded-box look the name input had before.
+  .mpb-env-name-input,
+  .mpb-env-branch-input {
     min-width: 0;
     padding: 0.45em 0.7em;
     border: 1px solid $border-default;
@@ -506,7 +510,8 @@
     font-family: $font-sans;
   }
 
-  .mpb-env-name-warnings .mpb-warn { margin-top: 0; }
+  .mpb-env-name-warnings .mpb-warn,
+  .mpb-env-branch-warnings .mpb-warn { margin-top: 0; }
 }
 
 // Dedicated drag handle — the only draggable element in an env-order column, so the name input
@@ -845,15 +850,34 @@
   padding: $space-3 $space-4;
   background: $bg-surface;
 
+  // Row head: the checkbox sits to the LEFT of the title (center-aligned), with any badges after.
   .mpb-rule-head {
     display: flex;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: $space-3;
+    cursor: pointer;
+
+    input[type="checkbox"] { flex: none; margin: 0; }
   }
 
   .mpb-rule-body { flex: 1; }
   .mpb-rule-name { font-weight: 700; }
-  .mpb-rule-desc { font-size: $text-sm; color: $text-secondary; }
+  .mpb-rule-desc {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin: $space-1 0 0;
+  }
+
+  // "always on" badge on a required rule (e.g. keySuffix): muted, non-interactive.
+  .mpb-chip--always {
+    cursor: default;
+    border-color: $border-muted;
+    background: $bg-elevated;
+    color: $text-muted;
+
+    &:hover { border-color: $border-muted; color: $text-muted; }
+  }
 
   .mpb-rule-fix {
     display: inline-block;
@@ -884,6 +908,57 @@
   }
 }
 
+// ── Rule mini-wizards (`<details>` sub-config for miniWizard rules) ──────────
+// `.mpb-mini` is the `<details>` element (its chrome is styled by `.mpb-rule details` above);
+// `.mpb-mini-body` is the stacked form area, `.mpb-mini-label` a section heading inside it.
+.mpb-mini-body {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.mpb-mini-label {
+  font-weight: 700;
+  font-size: $text-sm;
+  margin: 0;
+}
+
+// A horizontal input group (retention length + inline unit): the length input is capped at 100px
+// so the unit `<select>` reads as inline rather than each field spanning the full width.
+.mpb-inline-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+
+  .mpb-length-input { max-width: 100px; }
+}
+
+// Checkbox-left rows (reset-on-import, per-BU applies-to): checkbox to the LEFT of the label text.
+.mpb-check-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $space-2;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: $text-sm;
+
+  input[type="checkbox"] { flex: none; margin: 0; }
+}
+
+// Applies-to BU list: wrapping equal-width items that flow into multiple columns when space allows.
+.mpb-bu-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2 $space-4;
+}
+
+.mpb-bu-flex-item {
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
 // ── Output ──────────────────────────────────────────────────────────────────
 .mpb-output-grid {
   display: grid;
@@ -908,6 +983,16 @@
   display: flex;
   gap: $space-2;
   margin-bottom: $space-3;
+}
+
+// Muted hint below the download buttons (also reused in the header Download dropdown):
+// warns that some browsers strip the leading dot from the saved filename.
+.mpb-dl-hint {
+  margin: 0 0 $space-3;
+  font-size: $text-xs;
+  color: $text-muted;
+
+  code { font-size: inherit; }
 }
 
 .mpb-code-fallback {

@@ -132,6 +132,7 @@ platforms:
           Copy
         </button>
       </div>
+      <p class="mpb-dl-hint">Some browsers save this without the leading dot — rename it to <code>.mcdevrc.json</code> if needed.</p>
       <textarea id="mpb-config-fallback" class="mpb-code-fallback" rows="10" readonly
                 aria-label="Generated .mcdevrc.json"></textarea>
     </div>
@@ -146,6 +147,7 @@ platforms:
           Copy
         </button>
       </div>
+      <p class="mpb-dl-hint">Some browsers save this without the leading dot — rename it to <code>.mcdev-validations.js</code> if needed.</p>
       <textarea id="mpb-validations-fallback" class="mpb-code-fallback" rows="10" readonly
                 aria-label="Generated .mcdev-validations.js"></textarea>
     </div>

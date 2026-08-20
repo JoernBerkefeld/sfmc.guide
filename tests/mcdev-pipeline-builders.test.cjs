@@ -45,7 +45,18 @@ function sampleWizardState() {
       UAT: ['EUN_UAT', 'EUS_UAT'],
       Prod: ['Randstad_EUN', 'Randstad_EUS'],
     },
-    lineage: {},
+    // Real per-hop lineage mirroring the gold config's structure: each target BU points at the
+    // upstream (source) BU it deploys from. Single-BU hops (DEV->SIT, SIT->QA) stay single-source;
+    // QA->UAT and UAT->Prod are multi-BU-source hops (EUN/EUS split into two pipelines each).
+    lineage: {
+      SIT: 'DEV',
+      EUN_QA: 'SIT',
+      EUS_QA: 'SIT',
+      EUN_UAT: 'EUN_QA',
+      EUS_UAT: 'EUS_QA',
+      Randstad_EUN: 'EUN_UAT',
+      Randstad_EUS: 'EUS_UAT',
+    },
     separator: '_',
     suffixes: {
       DEV: '_DEV',
@@ -79,17 +90,22 @@ test('buildConfig emits mpb_ markets for every env-BU', () => {
   // multi-BU env -> mpb_<env>_<bu>
   assert.ok(marketNames.includes('mpb_QA_EUN_QA'));
   assert.ok(marketNames.includes('mpb_QA_EUS_QA'));
-  // every generated market carries the mpb_managed marker + a real suffix
+  // every generated market carries ONLY a real suffix (no mpb_managed/env/bu/parent markers)
   const generated = marketNames.filter((n) => n.startsWith('mpb_'));
   for (const name of generated) {
-    assert.equal(out.markets[name].mpb_managed, true);
     assert.equal(typeof out.markets[name].suffix, 'string');
+    assert.deepEqual(
+      Object.keys(out.markets[name]),
+      ['suffix'],
+      `${name} must contain only a suffix key`,
+    );
   }
 });
 
 test('buildConfig builds source/target marketLists per hop', () => {
   const out = buildConfig(sampleWizardState(), sampleConfig);
   const mls = Object.keys(out.marketList);
+  // Single-BU-source hop (DEV -> SIT) keeps the short back-compat names.
   assert.ok(mls.includes('mpb_deployment-sit-source'));
   assert.ok(mls.includes('mpb_deployment-sit-target'));
   // a source marketList has exactly one BU:market combo (+ optional filter);
@@ -100,6 +116,51 @@ test('buildConfig builds source/target marketLists per hop', () => {
   assert.equal(source['ssjs/DEV'], 'mpb_DEV');
   // the target marketList carries the SIT BU
   assert.equal(out.marketList['mpb_deployment-sit-target']['ssjs/SIT'], 'mpb_SIT');
+
+  // Every generated source marketList maps EXACTLY ONE non-filter BU (mcdev requirement).
+  for (const name of mls) {
+    if (!(name.startsWith('mpb_deployment-') && name.endsWith('-source'))) {
+      continue;
+    }
+    const keys = Object.keys(out.marketList[name]).filter((k) => k !== 'filter');
+    assert.equal(keys.length, 1, `${name} must map exactly one BU`);
+  }
+
+  // Multi-BU-SOURCE hop (QA -> UAT): EUN_QA and EUS_QA are two distinct upstream BUs, so the hop
+  // splits into two per-source pipelines, each named with the <sourceBuSlug> infix and 1 BU each.
+  const uatSourceNames = mls.filter(
+    (n) => n.startsWith('mpb_deployment-uat-') && n.endsWith('-source') && !n.includes('-parent-'),
+  );
+  assert.deepEqual(
+    uatSourceNames.toSorted((a, b) => a.localeCompare(b)),
+    ['mpb_deployment-uat-EUN_QA-source', 'mpb_deployment-uat-EUS_QA-source'],
+    'a multi-source hop emits one <sourceBuSlug>-source marketList per upstream BU',
+  );
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-source'], {
+    'ssjs/EUN_QA': 'mpb_QA_EUN_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-source'], {
+    'ssjs/EUS_QA': 'mpb_QA_EUS_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-target'], {
+    'ssjs/EUN_UAT': 'mpb_UAT_EUN_UAT',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-target'], {
+    'ssjs/EUS_UAT': 'mpb_UAT_EUS_UAT',
+  });
+});
+
+test('buildConfig groups a multi-target-single-source hop into one source + multi-BU target', () => {
+  // SIT -> QA: a single upstream BU (SIT) fans out to two QA BUs. One source marketList (1 BU),
+  // one target marketList (2 BUs), short back-compat names because the source env is single-BU.
+  const out = buildConfig(sampleWizardState(), sampleConfig);
+  assert.deepEqual(out.marketList['mpb_deployment-qa-source'], { 'ssjs/SIT': 'mpb_SIT' });
+  assert.deepEqual(out.marketList['mpb_deployment-qa-target'], {
+    'ssjs/EUN_QA': 'mpb_QA_EUN_QA',
+    'ssjs/EUS_QA': 'mpb_QA_EUS_QA',
+  });
+  const branchMap = out.options.deployment.branchSourceTargetMapping;
+  assert.equal(branchMap.qa['mpb_deployment-qa-source'], 'mpb_deployment-qa-target');
 });
 
 test('buildConfig parent pipeline uses a stringLike include filter with [_] separators', () => {
@@ -107,22 +168,217 @@ test('buildConfig parent pipeline uses a stringLike include filter with [_] sepa
   const parentSource = out.marketList['mpb_deployment-sit-parent-source'];
   assert.ok(parentSource, 'parent-source marketList exists when sharedDEs is on');
   const patterns = parentSource.filter.include.key['*'];
-  assert.ok(Array.isArray(patterns));
-  // upstream env is DEV (suffix _DEV) -> separator underscore rendered literal [_]
-  assert.ok(patterns.some((p) => p.includes('[_]DEV')));
-  // _ParentBU_ self-reference present
-  assert.ok(Object.keys(parentSource).some((k) => k.endsWith('/_ParentBU_')));
+  // The DEV→SIT hop bands on the UPSTREAM env NAME token (DEV), matching the gold config's
+  // `%[_]<UP>[_]%` (contained) + `%[_]<UP>` (trailing) include shape with a literal `[_]` separator.
+  assert.deepEqual(
+    patterns,
+    ['%[_]DEV[_]%', '%[_]DEV'],
+    'the include band isolates the upstream env token (contained + trailing) with [_] escaping',
+  );
+  // The include alone is self-isolating (`%[_]DEV` never matches a `_SIT` key), so — like the gold
+  // config — no lower-env exclude band is emitted.
+  assert.equal(parentSource.filter.exclude, undefined, 'no redundant lower-env exclude band');
+  // _ParentBU_ self-reference present, pointing at the upstream env's parent market.
+  const parentKey = Object.keys(parentSource).find((k) => k.endsWith('/_ParentBU_'));
+  assert.ok(parentKey, 'parent-source keys on <cred>/_ParentBU_');
+  assert.equal(
+    parentSource[parentKey],
+    'mpb_DEV_parent',
+    'parent-source points at the upstream parent market',
+  );
 });
 
-test('buildConfig branchSourceTargetMapping + targetBranchBuMapping wired', () => {
+test('buildConfig parent bands follow each hop (QA→UAT hop bands on the QA upstream token)', () => {
+  const out = buildConfig(sampleWizardState(), sampleConfig);
+  // The QA→UAT hop nests its parent pair under the `uat` branch and bands on QA (the upstream env).
+  const parentSource = out.marketList['mpb_deployment-uat-parent-source'];
+  assert.ok(parentSource, 'a parent-source exists for the uat hop');
+  assert.deepEqual(
+    parentSource.filter.include.key['*'],
+    ['%[_]QA[_]%', '%[_]QA'],
+    'the uat hop bands on the QA upstream token, not DEV/SIT',
+  );
+  const parentTarget = out.marketList['mpb_deployment-uat-parent-target'];
+  assert.deepEqual(
+    Object.keys(parentTarget)
+      .filter((k) => k.endsWith('/_ParentBU_'))
+      .map((k) => parentTarget[k]),
+    ['mpb_UAT_parent'],
+    'parent-target points at the downstream env parent market',
+  );
+});
+
+test('buildConfig emits a { suffix }-only parent market per env when sharedDEs is on', () => {
+  const out = buildConfig(sampleWizardState(), sampleConfig);
+  // Every env with BUs gets a mpb_<env>_parent market carrying only a suffix (WS0 shape).
+  for (const environment of ['DEV', 'SIT', 'QA', 'UAT', 'Prod']) {
+    const parentMarket = out.markets['mpb_' + environment + '_parent'];
+    assert.ok(parentMarket, `mpb_${environment}_parent market exists`);
+    assert.deepEqual(
+      Object.keys(parentMarket),
+      ['suffix'],
+      `mpb_${environment}_parent carries only a suffix`,
+    );
+  }
+});
+
+test('buildConfig nests each parent pair under the same target branch as its child pairs', () => {
   const out = buildConfig(sampleWizardState(), sampleConfig);
   const branchMap = out.options.deployment.branchSourceTargetMapping;
+  // DEV→SIT parent pair sits under `sit` alongside the child pair.
+  assert.equal(
+    branchMap.sit['mpb_deployment-sit-parent-source'],
+    'mpb_deployment-sit-parent-target',
+    'the parent pair nests under the same branch as the hop it belongs to',
+  );
+  // QA→UAT parent pair sits under `uat`.
+  assert.equal(
+    branchMap.uat['mpb_deployment-uat-parent-source'],
+    'mpb_deployment-uat-parent-target',
+    'the uat hop parent pair nests under the uat branch',
+  );
+});
+
+test('buildConfig emits NO parent marketLists or markets when sharedDEs is off', () => {
+  const state = sampleWizardState();
+  state.sharedDEs = false;
+  const out = buildConfig(state, sampleConfig);
+  const parentMlNames = Object.keys(out.marketList).filter((n) => n.includes('-parent-'));
+  assert.deepEqual(parentMlNames, [], 'no parent marketLists when sharedDEs is off');
+  const parentMarketNames = Object.keys(out.markets).filter((n) => n.endsWith('_parent'));
+  assert.deepEqual(parentMarketNames, [], 'no parent markets when sharedDEs is off');
+  // No parent pair is nested under any branch either.
+  const branchMap = out.options.deployment.branchSourceTargetMapping;
+  const parentPairs = Object.values(branchMap)
+    .flatMap((pairs) => Object.keys(pairs))
+    .filter((n) => n.includes('-parent-'));
+  assert.deepEqual(parentPairs, [], 'no parent pairs mapped when sharedDEs is off');
+});
+
+test('buildConfig sharedDEs:true survives a strip → inferWizardStateFromVanilla round-trip (WS4)', () => {
+  const out = buildConfig(sampleWizardState(), sampleConfig);
+  // Strip the persisted builder block so inference must reconstruct sharedDEs from the raw shape.
+  delete out.options.deployment.mpb_pipeline;
+  const { state } = controller.inferWizardStateFromVanilla(out);
+  assert.equal(
+    state.sharedDEs,
+    true,
+    'the _ParentBU_ convention lets WS4 re-detect sharedDEs from a WS5-built config',
+  );
+});
+
+test('buildConfig branchSourceTargetMapping nests every source->target pair (no targetBranchBuMapping)', () => {
+  const out = buildConfig(sampleWizardState(), sampleConfig);
+  const deployment = out.options.deployment;
+  const branchMap = deployment.branchSourceTargetMapping;
+  // Single-BU hop nests one pair under its branch.
   assert.equal(branchMap.sit['mpb_deployment-sit-source'], 'mpb_deployment-sit-target');
-  const hops = out.options.deployment.targetBranchBuMapping;
-  assert.equal(hops.length, 4); // 5 envs -> 4 hops
-  // branch keys are derived from the env display names (DEV -> "dev", UAT -> "uat")
-  assert.equal(hops[0].dev, 'ssjs/DEV');
-  assert.deepEqual(hops[2].uat, ['ssjs/EUN_UAT', 'ssjs/EUS_UAT']);
+  // Multi-BU-source hop (QA -> UAT) nests one pair PER upstream BU under the same target branch
+  // (excluding the shared-DE parent pair, which is a separate single pair).
+  const uatPairs = Object.entries(branchMap.uat).filter(
+    ([source]) => source.startsWith('mpb_deployment-uat-') && !source.includes('-parent-'),
+  );
+  assert.equal(
+    uatPairs.length,
+    2,
+    'a two-source hop nests two source->target pairs under its branch',
+  );
+  assert.equal(
+    branchMap.uat['mpb_deployment-uat-EUN_QA-source'],
+    'mpb_deployment-uat-EUN_QA-target',
+  );
+  assert.equal(
+    branchMap.uat['mpb_deployment-uat-EUS_QA-source'],
+    'mpb_deployment-uat-EUS_QA-target',
+  );
+  // targetBranchBuMapping is no longer generated by the tool (superseded by mpb_pipeline): any value
+  // present is the user's own, left byte-for-byte unchanged rather than tool-overwritten.
+  assert.deepEqual(
+    deployment.targetBranchBuMapping,
+    sampleConfig.options.deployment.targetBranchBuMapping,
+    'the tool must not generate or overwrite the user-authored targetBranchBuMapping',
+  );
+});
+
+test('buildConfig nests a hop under the user-supplied envBranches branch (WS3)', () => {
+  const state = sampleWizardState();
+  // A custom branch for the Prod env: the UAT->Prod hop must nest under `production`, not `prod`.
+  state.envBranches = { Prod: 'production' };
+  const out = buildConfig(state, sampleConfig);
+  const branchMap = out.options.deployment.branchSourceTargetMapping;
+  assert.ok(branchMap.production, 'the hop is keyed under the custom branch');
+  assert.equal(
+    branchMap.production['mpb_deployment-production-EUN_UAT-source'],
+    'mpb_deployment-production-EUN_UAT-target',
+    'the pipeline pair nests under the custom branch',
+  );
+  // The user-authored `prod` branch survives untouched, but the tool must not add any mpb_ pipeline
+  // pair under the derived `prod` slug when envBranches supplies `production` instead.
+  const productionMpbPairs = Object.keys(branchMap.prod || {}).filter((source) =>
+    source.startsWith('mpb_'),
+  );
+  assert.deepEqual(
+    productionMpbPairs,
+    [],
+    'no mpb_ pair is nested under the derived branchKey() slug',
+  );
+});
+
+test('buildConfig falls back to branchKey() when envBranches lacks the target env (WS3)', () => {
+  const state = sampleWizardState();
+  // No envBranches at all → every hop keeps its derived branchKey() slug (backward compatible).
+  delete state.envBranches;
+  const out = buildConfig(state, sampleConfig);
+  const branchMap = out.options.deployment.branchSourceTargetMapping;
+  assert.equal(branchMap.sit['mpb_deployment-sit-source'], 'mpb_deployment-sit-target');
+  assert.ok(branchMap.uat, 'a target env without an envBranches entry falls back to branchKey()');
+});
+
+test('buildConfig persists envBranches in the mpb_pipeline block and round-trips it (WS3)', () => {
+  const state = sampleWizardState();
+  state.envBranches = { Prod: 'production', DEV: 'develop' };
+  const out = buildConfig(state, sampleConfig);
+  const block = out.options.deployment.mpb_pipeline;
+  assert.deepEqual(block.envBranches, { Prod: 'production', DEV: 'develop' });
+  // wizardStateFromConfig restores the persisted branch map from the block.
+  const restored = controller.wizardStateFromConfig(out);
+  assert.deepEqual(restored.envBranches, { Prod: 'production', DEV: 'develop' });
+});
+
+test('buildConfig with empty/partial lineage still emits valid single-BU sources (fallback)', () => {
+  const state = sampleWizardState();
+  // Wipe the lineage entirely: the fallback must still produce one 1-BU source marketList per group.
+  state.lineage = {};
+  const out = buildConfig(state, sampleConfig);
+  for (const [name, entry] of Object.entries(out.marketList)) {
+    if (!(name.startsWith('mpb_deployment-') && name.endsWith('-source'))) {
+      continue;
+    }
+    const keys = Object.keys(entry).filter((k) => k !== 'filter');
+    assert.equal(keys.length, 1, `${name} must map exactly one BU even without lineage`);
+  }
+  // Single-BU source envs (DEV, SIT) absorb their whole hop under the short name.
+  assert.deepEqual(out.marketList['mpb_deployment-sit-source'], { 'ssjs/DEV': 'mpb_DEV' });
+  assert.deepEqual(out.marketList['mpb_deployment-qa-source'], { 'ssjs/SIT': 'mpb_SIT' });
+  // Multi-BU source hop (QA -> UAT) pairs by index when lineage is absent → two 1-BU sources.
+  const uatSourceNames = Object.keys(out.marketList).filter(
+    (n) => n.startsWith('mpb_deployment-uat-') && n.endsWith('-source') && !n.includes('-parent-'),
+  );
+  assert.equal(uatSourceNames.length, 2, 'index fallback still splits a multi-BU source hop');
+  // Content check: the index fallback pairs QA→UAT source→target 1:1 in BU order (EUN_QA→EUN_UAT,
+  // EUS_QA→EUS_UAT), not just the right COUNT. Guards a silent mis-pairing regression in the fallback.
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-source'], {
+    'ssjs/EUN_QA': 'mpb_QA_EUN_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-target'], {
+    'ssjs/EUN_UAT': 'mpb_UAT_EUN_UAT',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-source'], {
+    'ssjs/EUS_QA': 'mpb_QA_EUS_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-target'], {
+    'ssjs/EUS_UAT': 'mpb_UAT_EUS_UAT',
+  });
 });
 
 test('buildConfig persists the mpb_pipeline wizard-state block', () => {
@@ -145,6 +401,109 @@ test('buildConfig does not mutate the caller config', () => {
   const before = JSON.stringify(sampleConfig);
   buildConfig(sampleWizardState(), sampleConfig);
   assert.equal(JSON.stringify(sampleConfig), before);
+});
+
+test('buildConfig keeps BOTH pipelines when two source BUs slug-collide (no silent drop)', () => {
+  // `EUN-QA` and `EUN_QA` are DISTINCT BUs that both slug() to `EUN_QA`. Before the fix they produced
+  // the same mpb_deployment-uat-EUN_QA-source/-target names, so the second group OVERWROTE the first
+  // in marketList AND branchMap — one whole source→target pipeline (and its target BU) vanished.
+  const config = { credentials: { ssjs: {} } };
+  const state = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['QA', 'UAT'],
+    // Two upstream BUs differing only by punctuation → identical slug.
+    envBUs: { QA: ['EUN-QA', 'EUN_QA'], UAT: ['EUN_UAT', 'EUS_UAT'] },
+    // Distinct downstream target per source via explicit lineage.
+    lineage: { EUN_UAT: 'EUN-QA', EUS_UAT: 'EUN_QA' },
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    sharedDEs: false,
+  };
+  const out = buildConfig(state, config);
+
+  // BOTH source→target pairs must exist: the colliding sibling is disambiguated with a `-<n>` infix.
+  const sourceNames = Object.keys(out.marketList)
+    .filter((n) => n.startsWith('mpb_deployment-uat-') && n.endsWith('-source'))
+    .toSorted((a, b) => a.localeCompare(b));
+  assert.deepEqual(
+    sourceNames,
+    ['mpb_deployment-uat-EUN_QA-2-source', 'mpb_deployment-uat-EUN_QA-source'],
+    'a slug collision disambiguates the second pair rather than overwriting the first',
+  );
+
+  // Each source marketList still maps EXACTLY ONE BU, and the two are the two DISTINCT source BUs.
+  const sourceBUReferences = [];
+  for (const name of sourceNames) {
+    const keys = Object.keys(out.marketList[name]).filter((k) => k !== 'filter');
+    assert.equal(keys.length, 1, `${name} must map exactly one BU`);
+    sourceBUReferences.push(keys[0]);
+  }
+  assert.equal(sourceBUReferences.length, 2, 'exactly two 1-BU source marketLists');
+  assert.ok(sourceBUReferences.includes('ssjs/EUN-QA'), 'the EUN-QA source BU survives');
+  assert.ok(sourceBUReferences.includes('ssjs/EUN_QA'), 'the EUN_QA source BU survives');
+
+  // Both pairs are nested in the branch map (nothing was clobbered there either).
+  const branchMap = out.options.deployment.branchSourceTargetMapping.uat;
+  assert.equal(branchMap['mpb_deployment-uat-EUN_QA-source'], 'mpb_deployment-uat-EUN_QA-target');
+  assert.equal(
+    branchMap['mpb_deployment-uat-EUN_QA-2-source'],
+    'mpb_deployment-uat-EUN_QA-2-target',
+  );
+
+  // NO target BU was dropped: the two targets (EUN_UAT, EUS_UAT) are each covered exactly once.
+  const coveredTargets = sourceNames
+    .flatMap((name) => Object.keys(out.marketList[branchMap[name]]))
+    .filter((k) => k !== 'filter')
+    .toSorted((a, b) => a.localeCompare(b));
+  assert.deepEqual(
+    coveredTargets,
+    ['ssjs/EUN_UAT', 'ssjs/EUS_UAT'],
+    'every target BU is still covered — none was silently dropped',
+  );
+
+  // The disambiguated market name in the source marketList VALUE agrees with a real markets KEY.
+  assert.deepEqual(out.markets['mpb_QA_EUN_QA_2'], { suffix: '_QA' });
+  assert.equal(
+    out.marketList['mpb_deployment-uat-EUN_QA-2-source']['ssjs/EUN_QA'],
+    'mpb_QA_EUN_QA_2',
+    'the source marketList value references the disambiguated market key (internally consistent)',
+  );
+
+  // Idempotency holds with collisions present: a second pass is byte-identical.
+  assert.deepEqual(buildConfig(state, out), out, 'collision disambiguation stays idempotent');
+});
+
+test('buildConfig on the gold config splits QA→UAT into 3 single-BU sources (canonical fixture)', () => {
+  // Load the real gold vanilla config and run its persisted wizard state straight through buildConfig.
+  // This locks the highest-priority requirement — one 1-BU source marketList per upstream QA BU —
+  // against the canonical fixture, including the exact generated name for the regional source.
+  const gold = JSON.parse(fs.readFileSync(GOLD_PATH, 'utf8'));
+  const state = gold.options.deployment.mpb_pipeline;
+  const out = buildConfig(state, gold);
+
+  const uatSourceNames = Object.keys(out.marketList)
+    .filter(
+      (n) =>
+        n.startsWith('mpb_deployment-uat-') && n.endsWith('-source') && !n.includes('-parent-'),
+    )
+    .toSorted((a, b) => a.localeCompare(b));
+  // QA holds three BUs (EUN_QA, EUS_QA, QA_Regional) → three per-source pipelines.
+  assert.deepEqual(uatSourceNames, [
+    'mpb_deployment-uat-EUN_QA-source',
+    'mpb_deployment-uat-EUS_QA-source',
+    'mpb_deployment-uat-QA_Regional-source',
+  ]);
+  // Each source marketList maps exactly one BU (mcdev createDeltaPkg requirement).
+  for (const name of uatSourceNames) {
+    const keys = Object.keys(out.marketList[name]).filter((k) => k !== 'filter');
+    assert.equal(keys.length, 1, `${name} must map exactly one BU`);
+  }
+  // The exact regional source name resolves to the single QA_Regional BU.
+  assert.deepEqual(out.marketList['mpb_deployment-uat-QA_Regional-source'], {
+    'R1/QA_Regional': 'mpb_QA_QA_Regional',
+  });
 });
 
 /**
@@ -265,6 +624,20 @@ Object.defineProperty(globalThis, 'document', {
 require('../assets/js/mcdev-pipeline-builder.js');
 const controller = globalThis.mpbController;
 
+// ─── controller: env → git-branch slug helper (WS3) ───
+
+test('autoBranchFromEnvName lower-cases, trims and dashes spaces/odd chars', () => {
+  const auto = controller.autoBranchFromEnvName;
+  assert.equal(auto('Prod'), 'prod');
+  assert.equal(auto('  UAT  '), 'uat', 'leading/trailing whitespace is trimmed');
+  assert.equal(auto('Pre Prod'), 'pre-prod', 'a space becomes a single dash');
+  assert.equal(auto('QA / EUN'), 'qa-eun', 'runs of non-alnum collapse to one dash');
+  assert.equal(auto('__Dev__'), 'dev', 'leading/trailing dashes are stripped');
+  assert.equal(auto(''), '', 'an empty name yields an empty slug');
+  // Mirrors the config builder's branchKey() so the auto-filled UI value and the fallback agree.
+  assert.equal(auto('Pre Prod'), 'pre-prod');
+});
+
 test('validations-only mode collects each BU’s suffix into a populated buSuffixMap', () => {
   // Drive the same path selectMode('validations') takes: seed the pooled synthetic environment from
   // the config, seed default suffixes, then derive the validationsState the output step would build.
@@ -303,6 +676,47 @@ test('validations-only mode collects each BU’s suffix into a populated buSuffi
   }
   // devBU resolves to a real pooled BU (the first one), not an empty string.
   assert.ok(derived.devBU.length > 0, 'devBU must resolve from the pooled BUs');
+});
+
+// ─── controller: rule catalogue (Chunk 3 — removed rule + keySuffix always-on) ───
+
+test('RULE_CATALOG no longer offers payloadParameterDEsNoPrimaryKey', () => {
+  const ids = controller.RULE_CATALOG.map((rule) => rule.id);
+  assert.ok(
+    !ids.includes('payloadParameterDEsNoPrimaryKey'),
+    'removed rule must be gone from the catalogue',
+  );
+});
+
+test('RULE_CATALOG models keySuffix as an always-on rule', () => {
+  const keySuffix = controller.RULE_CATALOG.find((rule) => rule.id === 'keySuffix');
+  assert.ok(keySuffix, 'keySuffix must appear in the catalogue');
+  assert.equal(keySuffix.alwaysOn, true, 'keySuffix must carry the alwaysOn flag');
+  // The derived always-on set is the single source of truth the toggle guard reads.
+  assert.ok(controller.ALWAYS_ON_RULES.has('keySuffix'), 'ALWAYS_ON_RULES must include keySuffix');
+});
+
+test('toggleRule ignores always-on rules (keySuffix never enters selectedRules)', () => {
+  // Keep render() on the null-DOM-safe intake branch when the guard returns early.
+  controller.state.step = 'intake';
+  controller.state.wizardState = { selectedRules: [] };
+  controller.toggleRule('keySuffix', true);
+  assert.deepEqual(
+    controller.state.wizardState.selectedRules,
+    [],
+    'keySuffix must not be stored as a selected rule',
+  );
+});
+
+test('keySuffix is emitted exactly once even when also present in selectedRules', () => {
+  // Defensive: even if a legacy save carried keySuffix, the builder must not double-emit it.
+  const source = buildValidations({
+    buSuffixMap: { DEV: '_DEV' },
+    separator: '_',
+    selectedRules: ['keySuffix', 'noGuidKeys'],
+  });
+  const occurrences = (source.match(/"keySuffix":/g) || []).length;
+  assert.equal(occurrences, 1, 'keySuffix rule body must be emitted exactly once');
 });
 
 // ─── controller: in-place nav gate reacts to simulated text-input edits (focus/scroll fix) ───
@@ -1597,4 +2011,175 @@ test('seedProductionBUs still auto-selects the LAST environment’s BUs by defau
     true,
     'the default selection makes the last env’s column box all-checked',
   );
+});
+
+// ─── controller: WS4 vanilla reverse-inference (inferWizardStateFromVanilla) ───
+
+// A real gold-standard vanilla config with a full hand-built multi-BU pipeline and NO mpb_pipeline
+// block. We load it once and strip the tool block so inference works from the raw pipeline shape.
+const GOLD_PATH = path.join(__dirname, '..', '..', 'tmp-date-ns', 'mcdevrc.json');
+
+/**
+ * The gold vanilla config with its `mpb_pipeline` block removed (deep-cloned per call so a test can
+ * mutate its copy freely).
+ *
+ * @returns {object} the stripped gold config
+ */
+function strippedGoldConfig() {
+  const gold = JSON.parse(fs.readFileSync(GOLD_PATH, 'utf8'));
+  delete gold.options.deployment.mpb_pipeline;
+  return gold;
+}
+
+test('inferWizardStateFromVanilla reconstructs the gold multi-BU pipeline', () => {
+  const { state, warnings } = controller.inferWizardStateFromVanilla(strippedGoldConfig());
+
+  // ── BU set: every credential BU except the _ParentBU_ sentinel is present exactly once. ──
+  const allBUs = Object.values(state.envBUs)
+    .flat()
+    .toSorted((a, b) => a.localeCompare(b));
+  const expectedBUs = [
+    'DEV',
+    'DEV_Regional',
+    'SIT',
+    'SIT_Regional',
+    'EUN_QA',
+    'EUS_QA',
+    'QA_Regional',
+    'EUN_UAT',
+    'EUS_UAT',
+    'UAT_Regional',
+    'Randstad_EUN',
+    'Randstad_EUS',
+    'TempoTeam_EUN',
+    'NL_RS',
+    'NL_TT',
+    'EMEA_RS',
+    'EMEA_TT',
+  ].toSorted((a, b) => a.localeCompare(b));
+  assert.deepEqual(allBUs, expectedBUs, 'all assignable BUs are grouped, _ParentBU_ excluded');
+  assert.ok(!allBUs.includes('_ParentBU_'), '_ParentBU_ is never an assignable BU');
+
+  // ── envOrder length + roots→leaves order (DEV first, PROD last). ──
+  assert.equal(state.envOrder.length, 5, 'five environments were reconstructed');
+  assert.equal(state.envOrder[0], 'DEV', 'the root (source) env is first');
+  assert.equal(state.envOrder.at(-1), 'PROD', 'the leaf env is last');
+  // DEV before SIT before QA before UAT before PROD.
+  const orderIndex = (name) => state.envOrder.indexOf(name);
+  assert.ok(orderIndex('DEV') < orderIndex('SIT'), 'DEV precedes SIT');
+  assert.ok(orderIndex('SIT') < orderIndex('QA'), 'SIT precedes QA');
+  assert.ok(orderIndex('QA') < orderIndex('UAT'), 'QA precedes UAT');
+  assert.ok(orderIndex('UAT') < orderIndex('PROD'), 'UAT precedes PROD');
+
+  // ── at least the DEV→SIT edge and a multi-BU hop edge are present in the lineage. ──
+  assert.equal(state.lineage.SIT, 'DEV', 'DEV→SIT single-BU lineage edge present');
+  assert.equal(
+    state.lineage.EUN_QA,
+    'SIT',
+    'SIT→EUN_QA (multi-BU target hop) lineage edge present',
+  );
+  assert.equal(
+    state.lineage.EUS_QA,
+    'SIT',
+    'SIT→EUS_QA (multi-BU target hop) lineage edge present',
+  );
+
+  // ── separator, sharedDEs, envBranches. ──
+  assert.equal(state.separator, '_', 'separator defaults to underscore');
+  assert.equal(state.sharedDEs, true, 'the _ParentBU_ marketLists flip sharedDEs on');
+  assert.deepEqual(
+    state.envBranches,
+    { SIT: 'sit', QA: 'qa', UAT: 'uat', PROD: 'prod' },
+    'envBranches map each target env display name back to its source branch key',
+  );
+
+  // ── suffixes populated from the markets map. ──
+  assert.equal(state.suffixes.DEV, '_DEV', 'DEV suffix read from markets.DEV.suffix');
+  assert.equal(state.suffixes.SIT, '_SIT', 'SIT suffix read from markets.SIT.suffix');
+
+  // ── warnings: never empty (heuristic reconstruction always advises review). ──
+  assert.ok(warnings.length > 0, 'reconstruction always emits at least one review warning');
+});
+
+test('inferWizardStateFromVanilla → buildConfig round-trip yields valid single-BU sources', () => {
+  const stripped = strippedGoldConfig();
+  const { state } = controller.inferWizardStateFromVanilla(stripped);
+  let out;
+  assert.doesNotThrow(() => {
+    out = buildConfig(state, stripped);
+  }, 'building a config from the inferred state must not throw');
+  // Every generated source marketList maps exactly one BU (mcdev createDeltaPkg requirement).
+  for (const [name, entry] of Object.entries(out.marketList)) {
+    if (!(name.startsWith('mpb_deployment-') && name.endsWith('-source'))) {
+      continue;
+    }
+    const keys = Object.keys(entry).filter((k) => k !== 'filter' && k !== 'description');
+    assert.equal(keys.length, 1, `${name} must map exactly one BU`);
+  }
+  // Re-inference of the freshly built (now mpb_pipeline-bearing) config restores the same envOrder,
+  // proving the round-trip is stable through the persisted block.
+  const restored = controller.wizardStateFromConfig(out);
+  assert.deepEqual(
+    restored.envOrder,
+    state.envOrder,
+    're-opening the built config restores envOrder',
+  );
+});
+
+test('selectedRules / prefixBlacklist / retention survive a buildConfig → wizardStateFromConfig round-trip', () => {
+  const state = sampleWizardState();
+  state.selectedRules = ['keySuffix', 'noGuidKeys'];
+  state.prefixBlacklist = { 'R1/SIT': ['TEMP_', 'WIP_'] };
+  state.retention = {
+    c__retentionPolicy: 'allRecordsAndDataextension',
+    DataRetentionPeriodLength: 6,
+    c__dataRetentionPeriodUnitOfMeasure: 'Weeks',
+    ResetRetentionPeriodOnImport: true,
+  };
+  const out = buildConfig(state, sampleConfig);
+  const block = out.options.deployment.mpb_pipeline;
+  assert.deepEqual(block.selectedRules, ['keySuffix', 'noGuidKeys'], 'selectedRules persisted');
+  assert.deepEqual(
+    block.prefixBlacklist,
+    { 'R1/SIT': ['TEMP_', 'WIP_'] },
+    'prefixBlacklist persisted',
+  );
+  assert.deepEqual(block.retention, state.retention, 'retention persisted');
+  const restored = controller.wizardStateFromConfig(out);
+  assert.deepEqual(restored.selectedRules, ['keySuffix', 'noGuidKeys'], 'selectedRules restored');
+  assert.deepEqual(
+    restored.prefixBlacklist,
+    { 'R1/SIT': ['TEMP_', 'WIP_'] },
+    'prefixBlacklist restored',
+  );
+  assert.deepEqual(restored.retention, state.retention, 'retention restored');
+});
+
+test('inferWizardStateFromVanilla degrades gracefully: credentials but no marketLists', () => {
+  const minimal = {
+    credentials: {
+      MyCred: { businessUnits: { DEV: 111, PROD: 222 } },
+    },
+  };
+  let result;
+  assert.doesNotThrow(() => {
+    result = controller.inferWizardStateFromVanilla(minimal);
+  }, 'a config with no pipeline must never throw');
+  const { state, warnings } = result;
+  // Usable state: both BUs land somewhere the user can edit.
+  const allBUs = Object.values(state.envBUs)
+    .flat()
+    .toSorted((a, b) => a.localeCompare(b));
+  assert.deepEqual(allBUs, ['DEV', 'PROD'], 'both BUs are present in the fallback state');
+  assert.ok(state.envOrder.length >= 1, 'at least one environment is produced');
+  // With no marketLists every BU is a "root", so they land in the synthesized source env; the run
+  // still emits a review warning (never silent) even though it never throws.
+  assert.ok(warnings.length > 0, 'a fallback review warning is surfaced');
+});
+
+test('wizardStateFromConfig infers a vanilla config (no mpb_pipeline block)', () => {
+  // The whole intake path: a vanilla config yields an inferred (non-empty) wizard state, not blank.
+  const state = controller.wizardStateFromConfig(strippedGoldConfig());
+  assert.ok(state.envOrder.length > 1, 'a vanilla config produces a real multi-env wizard state');
+  assert.equal(state.lineage.SIT, 'DEV', 'the inferred lineage reaches the wizard state');
 });

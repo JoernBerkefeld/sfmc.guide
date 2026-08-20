@@ -3,6 +3,18 @@ if [[ $SKIP_HOOKS -gt 0 ]]; then
   exit 0
 fi
 
+# ── Free the local Jekyll port (must stay first + synchronous) ────────────────
+# A local `jekyll serve` watcher would re-touch files while the generators below
+# write them, racing the commit. Kill only the process listening on THIS site's
+# fixed port (4002) so a co-running sibling site's server survives. Runs in the
+# FOREGROUND (no `&`) so sh blocks until the kill fully completes, then a short
+# sleep lets the just-terminated server release the port and file handles before
+# lint-staged touches files. Non-fatal: if nothing is listening the PowerShell
+# pipeline is a no-op and the commit proceeds.
+echo "[PRE-COMMIT] Ensuring no local Jekyll server holds port 4002 (waiting for kill to complete)..."
+powershell.exe -NoProfile -Command "Get-NetTCPConnection -LocalPort 4002 -State Listen -ErrorAction SilentlyContinue | Select-Object -Expand OwningProcess -Unique | ForEach-Object { Stop-Process -Id \$_ -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
+sleep 1 || true
+
 # ── Format staged sources ─────────────────────────────────────────────────────
 # Runs first so lint-staged's stash/restore of unstaged work never overlaps with
 # the files the generators below write. Scoped to scripts/ only: Prettier

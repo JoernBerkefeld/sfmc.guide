@@ -8,6 +8,9 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky || true",
+    "serve": "bundle exec jekyll serve --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\" --port 4002 --host 127.0.0.1 --no-watch",
+    "serve:live": "bundle exec jekyll serve --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\" --port 4002 --host 127.0.0.1 --livereload",
+    "build": "bundle exec jekyll build --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\"",
     "generate:function-index": "node scripts/generate-ampscript-function-index.mjs",
     "generate:handlebars-index": "node scripts/generate-handlebars-helper-index.mjs",
     "generate:site-index": "node scripts/generate-site-index.mjs",
