@@ -432,6 +432,13 @@
   }
 }
 
+// Forbidden-prefix editor reuses the suffix-input box for the input+Add-button layout, but it has
+// no leading separator — so restore the input's left padding (the suffix variant zeroes it to sit
+// flush against the "_" separator).
+.mpb-prefix-input input[type="text"] {
+  padding: 0.45em 0.7em;
+}
+
 .mpb-chips {
   display: flex;
   flex-wrap: wrap;
@@ -505,6 +512,33 @@
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+// ── Forbidden-prefix editor board (one card per child BU) ──
+// Cards wrap and stack flexibly in both directions rather than forming full-width rows,
+// mirroring the bu-assign board's node card aesthetic.
+.mpb-prefix-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-4;
+}
+
+// One BU card: title (BU ref) + its prefix chips + the add-prefix control, mirroring
+// the `.mpb-env-node` / `.mpb-env-order-col` card look (surface, muted border, rounded).
+.mpb-prefix-card {
+  flex: 1 1 260px;
+  min-width: 240px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  .mpb-prefix-card-name { font-weight: 600; word-break: break-word; }
 }
 
 // ── Environment-order board (one column per environment, mirroring the lineage board) ──
@@ -1100,8 +1134,22 @@
 // ════════════════════════════════════════════════════════════════════════════
 html.mpb-builder-mode {
   // Slide the left nav off-canvas (reusing the mobile off-canvas mechanism) and drop its overlay.
-  .sidebar { transform: translateX(-100%); }
+  // The burger toggle still opens it: `.is-open` slides it back in at ALL widths and lifts it above
+  // the content (the base overlay stacking + shadow are only wired inside the <1024px media query).
+  .sidebar {
+    transform: translateX(-100%);
+
+    &.is-open {
+      transform: translateX(0);
+      z-index: $z-overlay;
+      box-shadow: $shadow-lg;
+    }
+  }
   .sidebar-overlay { display: none; }
+
+  // The nav is off-canvas at ALL widths in builder mode, so the burger toggle must stay visible on
+  // desktop too (the base rule only shows it below 1024px) — it is the only way back to the nav.
+  .mobile-menu-toggle { display: flex; }
 
   // Hide the page breadcrumb/title and the tool's intro callouts so the builder owns the viewport.
   .page-header,

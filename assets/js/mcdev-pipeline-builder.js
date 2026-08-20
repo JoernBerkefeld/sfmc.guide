@@ -4014,11 +4014,11 @@
             );
             return;
         }
-        const list = makeElement('div', { class: 'mpb-list' });
+        const board = makeElement('div', { class: 'mpb-prefix-board' });
         for (const reference of references) {
-            list.append(prefixBURow(reference));
+            board.append(prefixBURow(reference));
         }
-        body.append(list);
+        body.append(board);
     }
 
     /**
@@ -4029,8 +4029,8 @@
      * @returns {HTMLElement} the BU block element
      */
     function prefixBURow(reference) {
-        const field = makeElement('div', { class: 'mpb-field' });
-        field.append(makeElement('label', { text: reference }));
+        const field = makeElement('div', { class: 'mpb-prefix-card' });
+        field.append(makeElement('label', { class: 'mpb-prefix-card-name', text: reference }));
 
         const prefixes = prefixesFor(reference);
         const chips = makeElement('div', { class: 'mpb-chips' });
@@ -4061,7 +4061,7 @@
             hidden: true,
         });
 
-        const entry = makeElement('div', { class: 'mpb-suffix-input' });
+        const entry = makeElement('div', { class: 'mpb-suffix-input mpb-prefix-input' });
         const input = makeElement('input', {
             type: 'text',
             value: '',
