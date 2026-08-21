@@ -374,9 +374,20 @@
             const length = typeof r.DataRetentionPeriodLength === 'number' ? r.DataRetentionPeriodLength : 3;
             const unit = r.c__dataRetentionPeriodUnitOfMeasure || 'Months';
             const isReset = !!r.ResetRetentionPeriodOnImport;
+            // Rule-local BU scope (bare BU name -> true), independent of the pipeline production set.
+            const appliesToMap = prettyInline(r.appliesToMap || {});
+            // DE-type scope: which data-extension types the policy is enforced on. `'sendable'`
+            // (default) keeps the historical `!item.IsSendable` skip; `'nonSendable'` inverts it;
+            // `'both'` drops the IsSendable clause entirely. The clause is spliced into passed()'s
+            // guard; an empty string means no trailing `|| …` is appended (avoids a dangling `||`).
+            const deTypeScope = r.deTypeScope === 'nonSendable' || r.deTypeScope === 'both' ? r.deTypeScope : 'sendable';
+            const deTypeClause =
+                deTypeScope === 'both' ? '' : deTypeScope === 'nonSendable' ? ' || item.IsSendable' : ' || !item.IsSendable';
             return blockRaw(
                 'sendableDeRetention',
                 lines(
+                    '/** @type {Object.<string, boolean>} BUs this policy applies to */',
+                    'appliesTo: ' + appliesToMap + ',',
                     'expected: {',
                     '    c__retentionPolicy: ' + jsonLit(type) + ',',
                     '    DataRetentionPeriodLength: ' + jsonLit(length) + ',',
@@ -384,7 +395,7 @@
                     '    ResetRetentionPeriodOnImport: ' + jsonLit(isReset) + ',',
                     '},',
                     'get failedMsg() {',
-                    "    return `Sendable DE retention policy is incorrect. Expected ${this.expected.DataRetentionPeriodLength} ${this.expected.c__dataRetentionPeriodUnitOfMeasure} for ${this.expected.c__retentionPolicy} with reset-on-import ${this.expected.ResetRetentionPeriodOnImport ? 'on' : 'off'}.`;",
+                    "    return `DE retention policy is incorrect. Expected ${this.expected.DataRetentionPeriodLength} ${this.expected.c__dataRetentionPeriodUnitOfMeasure} for ${this.expected.c__retentionPolicy} with reset-on-import ${this.expected.ResetRetentionPeriodOnImport ? 'on' : 'off'}.`;",
                     '},',
                     '/** @type {validationRuleFix} */',
                     'fix: function () {',
@@ -399,7 +410,7 @@
                     '},',
                     '/** @type {validationRuleTest} */',
                     'passed: function () {',
-                    "    if (!isProd || definition.type !== 'dataExtension' || !item.IsSendable) {",
+                    "    if (!this.appliesTo[bu] || definition.type !== 'dataExtension'" + deTypeClause + ') {',
                     '        return true;',
                     '    }',
                     '    return (',
@@ -428,9 +439,11 @@
     const FILTER_TEXT_WHITELIST = ['passed_test', 'test_invite'];
 
     /**
-    Rules that require the module-scope prodBUorNotMap.
+    Rules that require the module-scope prodBUorNotMap. Empty for now — sendableDeRetention scopes
+    itself via its own rule-local `appliesTo` map — but the mechanism stays for any future
+    production-scoped rule.
      */
-    const PROD_SCOPED_RULES = new Set(['sendableDeRetention']);
+    const PROD_SCOPED_RULES = new Set();
 
     /**
      * Indent a multi-line body by a number of 4-space levels.

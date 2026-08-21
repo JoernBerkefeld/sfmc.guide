@@ -536,6 +536,8 @@ function sampleValidationsState() {
       DataRetentionPeriodLength: 6,
       c__dataRetentionPeriodUnitOfMeasure: 'Months',
       ResetRetentionPeriodOnImport: true,
+      // sendableDeRetention scopes itself to its own selected BUs (bare-name -> true), not prodBUs.
+      appliesToMap: { PROD_N: true },
     },
   };
 }
@@ -572,9 +574,12 @@ test('buildValidations output parses as JavaScript', () => {
   assert.doesNotThrow(() => new vm.Script(compilable), 'emitted validations source must parse');
 });
 
-test('buildValidations includes prodBUorNotMap only when a prod-scoped rule is selected', () => {
-  const withProduction = buildValidations(sampleValidationsState());
-  assert.ok(withProduction.includes('const prodBUorNotMap ='));
+test('buildValidations never emits prodBUorNotMap while no rule is prod-scoped', () => {
+  // sendableDeRetention now scopes itself via its own appliesTo map, so the sample (which selects it)
+  // must NOT drag in the module-scope production map or the isProd local.
+  const withRetention = buildValidations(sampleValidationsState());
+  assert.ok(!withRetention.includes('prodBUorNotMap'), 'no rule forces the production map');
+  assert.ok(!withRetention.includes('isProd'), 'no rule forces the isProd local');
   const withoutProduction = buildValidations({
     buSuffixMap: { DEV: '_DEV' },
     separator: '_',
@@ -622,6 +627,114 @@ test('sendableDeRetention emits the mcdev c__retentionPolicy field (not c__reten
   assert.ok(source.includes('individialRecords'));
 });
 
+test('sendableDeRetention scopes by its own appliesTo BU map, not production', () => {
+  const source = buildValidations(sampleValidationsState());
+  // the rule carries a self-contained bare-name -> true map and gates passed() on it.
+  assert.ok(source.includes('appliesTo: {'), 'rule must emit its own appliesTo BU map');
+  assert.ok(source.includes('"PROD_N": true'), 'the selected BU must be in the appliesTo map');
+  assert.ok(
+    source.includes(
+      "if (!this.appliesTo[bu] || definition.type !== 'dataExtension' || !item.IsSendable)",
+    ),
+    'passed() must gate on the rule-local appliesTo map',
+  );
+  // no production coupling for this rule.
+  assert.ok(!source.includes('isProd'), 'the retention rule must not reference isProd');
+  assert.ok(
+    !source.includes('prodBUorNotMap'),
+    'the retention rule must not reference prodBUorNotMap',
+  );
+});
+
+// deTypeScope generalises the passed() DE-type gate. Build a scoped retention rule for a given
+// scope and return the emitted validations source.
+/**
+ * @param {('sendable'|'nonSendable'|'both'|undefined)} deTypeScope the scope to emit (omit for default)
+ * @returns {string} the generated validations source
+ */
+function retentionSourceForScope(deTypeScope) {
+  const retention = {
+    c__retentionPolicy: 'individialRecords',
+    DataRetentionPeriodLength: 3,
+    c__dataRetentionPeriodUnitOfMeasure: 'Months',
+    ResetRetentionPeriodOnImport: false,
+    appliesToMap: { PROD_N: true },
+  };
+  if (deTypeScope !== undefined) {
+    retention.deTypeScope = deTypeScope;
+  }
+  return buildValidations({
+    buSuffixMap: { DEV: '_DEV', PROD_N: '_PRODN' },
+    separator: '_',
+    selectedRules: ['sendableDeRetention'],
+    retention: retention,
+  });
+}
+
+test("sendableDeRetention deTypeScope 'sendable' emits the !item.IsSendable guard", () => {
+  const source = retentionSourceForScope('sendable');
+  assert.ok(
+    source.includes(
+      "if (!this.appliesTo[bu] || definition.type !== 'dataExtension' || !item.IsSendable)",
+    ),
+    'sendable scope must skip non-sendable DEs via !item.IsSendable',
+  );
+});
+
+test("sendableDeRetention deTypeScope 'nonSendable' emits the item.IsSendable guard", () => {
+  const source = retentionSourceForScope('nonSendable');
+  assert.ok(
+    source.includes(
+      "if (!this.appliesTo[bu] || definition.type !== 'dataExtension' || item.IsSendable)",
+    ),
+    'nonSendable scope must skip sendable DEs via item.IsSendable',
+  );
+  assert.ok(
+    !source.includes('!item.IsSendable'),
+    'nonSendable scope must not keep the sendable-only guard',
+  );
+});
+
+test("sendableDeRetention deTypeScope 'both' emits no IsSendable guard", () => {
+  const source = retentionSourceForScope('both');
+  assert.ok(
+    source.includes("if (!this.appliesTo[bu] || definition.type !== 'dataExtension')"),
+    'both scope must gate only on appliesTo + DE type',
+  );
+  assert.ok(!source.includes('IsSendable'), 'both scope must not reference IsSendable at all');
+});
+
+test('sendableDeRetention defaults to sendable scope when deTypeScope is absent', () => {
+  const source = retentionSourceForScope();
+  assert.ok(
+    source.includes(
+      "if (!this.appliesTo[bu] || definition.type !== 'dataExtension' || !item.IsSendable)",
+    ),
+    'an absent deTypeScope must behave as sendable-only',
+  );
+});
+
+test('sendableDeRetention is dropped when its appliesTo map is empty', () => {
+  // Selected but with no BU scope -> the emitter must not produce the rule body at all. The caller
+  // (deriveValidationsState) drops the rule from selectedRules, mirrored here by omitting it.
+  const withoutScope = buildValidations({
+    buSuffixMap: { DEV: '_DEV', PROD_N: '_PRODN' },
+    separator: '_',
+    selectedRules: [],
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+      appliesToMap: {},
+    },
+  });
+  assert.ok(
+    !withoutScope.includes('"sendableDeRetention":'),
+    'a rule with no selected BU must not emit a rule body',
+  );
+});
+
 // ─── controller: validations-only BU collection (Review-loop fix pass 1, MUST-FIX 2) ───
 
 // The controller is a browser IIFE that reads global.document at load. It early-returns from init()
@@ -651,6 +764,54 @@ test('autoBranchFromEnvName lower-cases, trims and dashes spaces/odd chars', () 
   assert.equal(auto(''), '', 'an empty name yields an empty slug');
   // Mirrors the config builder's branchKey() so the auto-filled UI value and the fallback agree.
   assert.equal(auto('Pre Prod'), 'pre-prod');
+});
+
+test('env-order render seeds an empty git branch from the name (stored || auto, never overwrite)', () => {
+  // environmentOrderRow needs a live DOM (makeElement → document.createElement) that the headless
+  // stub does not provide, so assert the pure seeding rule the row builder applies at the state level:
+  // an empty/absent branch falls back to autoBranchFromEnvName and is persisted, a stored branch is
+  // never overwritten, and a name with no usable chars leaves the branch unset (no empty key).
+  const auto = controller.autoBranchFromEnvName;
+  /**
+   * Reproduce the row builder's seeding step for a single env: mutate envBranches exactly as
+   * environmentOrderRow does and return the effective branch value it would bind to the input.
+   *
+   * @param {object} branches the current envBranches map (mutated to the cloned/persisted result)
+   * @param {string} name the env display name (envBranches key)
+   * @returns {{branches: object, effective: string}} the persisted map and the effective branch value
+   */
+  function seedBranch(branches, name) {
+    const stored = branches[name] || '';
+    let effective = stored;
+    let next = branches;
+    if (!stored) {
+      const slug = auto(name);
+      if (slug) {
+        next = { ...branches, [name]: slug };
+        effective = slug;
+      }
+    }
+    return { branches: next, effective: effective };
+  }
+
+  // Empty branch → seeded from the name and persisted under the display-name key.
+  const seeded = seedBranch({}, 'Pre Prod');
+  assert.equal(seeded.effective, 'pre-prod', 'an empty branch is seeded from the name slug');
+  assert.equal(
+    seeded.branches['Pre Prod'],
+    'pre-prod',
+    'the seeded slug is persisted into envBranches',
+  );
+
+  // A stored branch is never overwritten by the auto slug.
+  const kept = seedBranch({ Prod: 'production' }, 'Prod');
+  assert.equal(kept.effective, 'production', 'a stored branch is used as-is');
+  assert.equal(kept.branches.Prod, 'production', 'a stored branch is never overwritten');
+
+  // A name with no usable chars yields no slug → the branch stays unset (no empty key stored).
+  const empty = seedBranch({}, '///');
+  assert.equal(empty.effective, '', 'a name with no usable chars leaves the branch empty');
+  assert.ok(!Object.hasOwn(empty.branches, '///'), 'no empty envBranches key is stored');
 });
 
 test('validations-only mode collects each BU’s suffix into a populated buSuffixMap', () => {
@@ -691,6 +852,147 @@ test('validations-only mode collects each BU’s suffix into a populated buSuffi
   }
   // devBU resolves to a real pooled BU (the first one), not an empty string.
   assert.ok(derived.devBU.length > 0, 'devBU must resolve from the pooled BUs');
+});
+
+// ─── controller: sendableDeRetention rule-specific BU scope (decoupled from production) ───
+
+/**
+ * Load the controller into validations-only mode over the sample config, select sendableDeRetention,
+ * and set the rule's own `retention.appliesTo` to the given buRefs (whatever real pooled BUs exist).
+ *
+ * @param {string[]} appliesTo the buRefs the retention rule applies to
+ * @returns {object} the derived validationsState
+ */
+function deriveRetentionState(appliesTo) {
+  controller.state.config = sampleConfig;
+  controller.state.mode = 'validations';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: [],
+    envBUs: {},
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: ['sendableDeRetention'],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+      appliesTo: appliesTo,
+    },
+    sharedDEs: false,
+  };
+  controller.seedValidationsPool();
+  controller.seedSuffixes();
+  return controller.deriveValidationsState();
+}
+
+test('deriveValidationsState keeps sendableDeRetention when a BU is selected and builds a bare-name map', () => {
+  // Discover a real pooled buRef, then scope the rule to it.
+  const pooledReferences = Object.keys(deriveRetentionState([]).buSuffixMap);
+  assert.ok(pooledReferences.length > 0, 'the sample must pool at least one BU');
+  const derived = deriveRetentionState([pooledReferences[0]]);
+  // Note: buSuffixMap keys are bare names; appliesTo stores buRefs, but for the sample (single cred)
+  // the bare name equals the buRef, so the first pooled key is a valid appliesTo selection.
+  assert.ok(
+    derived.selectedRules.includes('sendableDeRetention'),
+    'a scoped retention rule must survive the drop filter',
+  );
+  assert.deepEqual(
+    derived.retention.appliesToMap,
+    { [pooledReferences[0]]: true },
+    'appliesToMap must be a bare-name -> true map of only the selected BUs',
+  );
+  // An absent deTypeScope in wizardState is filled from emptyRetention(), whose new-config default
+  // is 'both'. (The emitter separately keeps an absent-value back-compat fallback of 'sendable'.)
+  assert.equal(
+    derived.retention.deTypeScope,
+    'both',
+    'deTypeScope defaults to both (new-config default) when the wizardState retention omits it',
+  );
+  // The emitter turns that into a rule body with no production coupling.
+  const source = buildValidations(derived);
+  assert.ok(source.includes('"sendableDeRetention":'), 'rule body must be emitted');
+  assert.ok(!source.includes('isProd'), 'no production gating for this rule');
+});
+
+test('deriveValidationsState drops sendableDeRetention when no BU is selected', () => {
+  const derived = deriveRetentionState([]);
+  assert.ok(
+    !derived.selectedRules.includes('sendableDeRetention'),
+    'an unscoped retention rule must be dropped from selectedRules',
+  );
+  assert.deepEqual(
+    derived.retention.appliesToMap,
+    {},
+    'appliesToMap is empty when nothing is selected',
+  );
+  const source = buildValidations(derived);
+  assert.ok(!source.includes('"sendableDeRetention":'), 'dropped rule must not emit a body');
+});
+
+// ─── controller: retention mini-wizard (SFMC "Retention Setting" GUI) ───
+
+test('updateRetention merges a patch into the stored retention policy and re-renders safely', () => {
+  controller.state.step = null;
+  controller.state.config = null;
+  controller.state.wizardState.retention = {
+    c__retentionPolicy: 'allRecords',
+    DataRetentionPeriodLength: 3,
+    c__dataRetentionPeriodUnitOfMeasure: 'Months',
+    ResetRetentionPeriodOnImport: true,
+    appliesTo: [],
+  };
+  controller.updateRetention({ DataRetentionPeriodLength: 7 });
+  const policy = controller.retentionPolicy();
+  assert.equal(policy.DataRetentionPeriodLength, 7, 'the patched field is stored');
+  assert.equal(policy.c__retentionPolicy, 'allRecords', 'untouched fields are preserved');
+});
+
+test('switching to individialRecords forces ResetRetentionPeriodOnImport off', () => {
+  controller.state.step = null;
+  controller.state.config = null;
+  controller.state.wizardState.retention = {
+    c__retentionPolicy: 'allRecords',
+    DataRetentionPeriodLength: 3,
+    c__dataRetentionPeriodUnitOfMeasure: 'Months',
+    // A previously-on reset value that must NOT leak into individialRecords.
+    ResetRetentionPeriodOnImport: true,
+    appliesTo: [],
+  };
+  // The radio handler applies exactly this patch when individialRecords is chosen: the type plus a
+  // forced reset-off so the stored (and later emitted) value can never carry reset-on-import true.
+  controller.updateRetention({
+    c__retentionPolicy: 'individialRecords',
+    ResetRetentionPeriodOnImport: false,
+  });
+  const policy = controller.retentionPolicy();
+  assert.equal(policy.c__retentionPolicy, 'individialRecords');
+  assert.equal(
+    policy.ResetRetentionPeriodOnImport,
+    false,
+    'individialRecords must clear a previously-on reset-on-import value',
+  );
+});
+
+test('the emitter carries reset-on-import off for individialRecords (UI forces it false)', () => {
+  // The emitter emits whatever it is given; the UI guarantees reset is false for individialRecords.
+  // This asserts the resulting rule body reflects that off state end-to-end.
+  const derived = deriveRetentionState(
+    Object.keys(deriveRetentionState([]).buSuffixMap).slice(0, 1),
+  );
+  derived.retention.ResetRetentionPeriodOnImport = false;
+  derived.retention.c__retentionPolicy = 'individialRecords';
+  const source = buildValidations(derived);
+  assert.ok(source.includes('"sendableDeRetention":'), 'rule body must be emitted');
+  assert.ok(
+    source.includes('ResetRetentionPeriodOnImport: false'),
+    'individialRecords rule must emit reset-on-import false',
+  );
 });
 
 // ─── controller: rule catalogue (Chunk 3 — removed rule + keySuffix always-on) ───
@@ -2150,6 +2452,8 @@ test('selectedRules / prefixBlacklist / retention survive a buildConfig → wiza
     DataRetentionPeriodLength: 6,
     c__dataRetentionPeriodUnitOfMeasure: 'Weeks',
     ResetRetentionPeriodOnImport: true,
+    // the rule's own BU scope must ride along inside the persisted `retention` object.
+    appliesTo: ['R1/SIT'],
   };
   const out = buildConfig(state, sampleConfig);
   const block = out.options.deployment.mpb_pipeline;

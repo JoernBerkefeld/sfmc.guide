@@ -80,9 +80,13 @@
      * The retention-policy defaults for the `sendableDeRetention` mini-wizard. Field names mirror
      * the DevTools data-extension metadata model that the validations builder emits verbatim:
      * `c__retentionPolicy` / `DataRetentionPeriodLength` (number) / `c__dataRetentionPeriodUnitOfMeasure`
-     * / `ResetRetentionPeriodOnImport` (boolean).
+     * / `ResetRetentionPeriodOnImport` (boolean). `appliesTo` is the rule's own buRef selection (the
+     * business units this policy is enforced on) — independent of the pipeline's production set.
+     * `deTypeScope` picks which data-extension types the policy is enforced on
+     * (`'sendable'` | `'nonSendable'` | `'both'` default). An absent value in a saved config is
+     * still read as `'sendable'` by the emitter for back-compat.
      *
-     * @returns {{c__retentionPolicy: string, DataRetentionPeriodLength: number, c__dataRetentionPeriodUnitOfMeasure: string, ResetRetentionPeriodOnImport: boolean}} default policy
+     * @returns {{c__retentionPolicy: string, DataRetentionPeriodLength: number, c__dataRetentionPeriodUnitOfMeasure: string, ResetRetentionPeriodOnImport: boolean, appliesTo: string[], deTypeScope: ('sendable'|'nonSendable'|'both')}} default policy
      */
     function emptyRetention() {
         return {
@@ -90,6 +94,8 @@
             DataRetentionPeriodLength: 3,
             c__dataRetentionPeriodUnitOfMeasure: 'Months',
             ResetRetentionPeriodOnImport: false,
+            appliesTo: [],
+            deTypeScope: 'both',
         };
     }
 
@@ -2174,7 +2180,21 @@
             text: 'git branch',
             attrs: { for: branchId },
         });
-        const branchValue = (state.wizardState.envBranches || {})[name] || '';
+        // Auto-seed the git branch from the env name whenever the stored branch is empty/absent, using
+        // the SAME rule as the blur handler. Persist the slug into envBranches[name] (so it round-trips
+        // and downstream branchSourceTargetMapping keys are populated) — never overwriting a stored
+        // value, and never storing an empty key when the name has no usable chars (auto === '').
+        const stored = (state.wizardState.envBranches || {})[name] || '';
+        let branchValue = stored;
+        if (!stored) {
+            const auto = autoBranchFromEnvironmentName(name);
+            if (auto) {
+                state.wizardState.envBranches = { ...state.wizardState.envBranches, [name]: auto };
+                branchValue = auto;
+                // Debounced, so a burst of seeded rows on one render collapses into a single save.
+                scheduleAutosave();
+            }
+        }
         const branchInput = makeElement('input', {
             type: 'text',
             value: branchValue,
@@ -3734,13 +3754,30 @@
      * Retention-policy option lists for the `sendableDeRetention` mini-wizard. Values match the
      * DevTools data-extension metadata model consumed verbatim by the validations builder.
      */
+    // The three real retention types, mirroring SFMC's "Apply To → Delete" radio group. `none`
+    // is intentionally NOT listed here: in the GUI it is represented by the "Retention Setting"
+    // On/Off master toggle being Off, not by a fourth radio. `individialRecords` keeps the
+    // DevTools spelling verbatim (it is emitted into the rule as-is).
     const RETENTION_TYPE_OPTIONS = [
-        { value: 'individialRecords', label: 'Individual records' },
+        { value: 'individialRecords', label: 'Individual Records' },
+        { value: 'allRecordsAndDataextension', label: 'All records and data extensions' },
         { value: 'allRecords', label: 'All records' },
-        { value: 'allRecordsAndDataextension', label: 'All records and the data extension' },
-        { value: 'none', label: 'No retention policy' },
     ];
+    // The default real type restored when the master toggle is switched from Off back to On.
+    const RETENTION_DEFAULT_TYPE = 'individialRecords';
+    // Remembers the last real retention type chosen so toggling Off→On restores it rather than
+    // always jumping to the default. UI-only (not persisted in wizardState); updated in
+    // `updateRetention` whenever a real type is stored.
+    let lastRealRetentionType = RETENTION_DEFAULT_TYPE;
     const RETENTION_UNIT_OPTIONS = ['Years', 'Months', 'Weeks', 'Days'];
+    // DE-type scope options for the retention policy: which data-extension types it is enforced on.
+    // New configs default to `both`; an absent value in an old saved config is read as `sendable`
+    // by the emitter to preserve the historical sendable-only behaviour.
+    const RETENTION_DE_TYPE_OPTIONS = [
+        { value: 'sendable', label: 'Sendable only' },
+        { value: 'nonSendable', label: 'Non-sendable only' },
+        { value: 'both', label: 'Sendable and Non-sendable DEs' },
+    ];
 
     /**
      * Which rule mini-wizard `<details>` panels are currently expanded. This is UI-only state (not
@@ -3817,8 +3854,8 @@
         },
         {
             id: 'sendableDeRetention',
-            name: 'Sendable DE retention policy',
-            description: 'Enforces a data-retention policy on sendable data extensions in production.',
+            name: 'DE retention policy',
+            description: 'Enforces a data-retention policy on the selected data extensions and business units.',
             autoFix: true,
             miniWizard: true,
         },
@@ -3906,7 +3943,7 @@
     /**
      * Build the `<details>/<summary>` sub-wizard for a mini-wizard rule. The panel body is picked by
      * rule id: `filterPrefixByBu` → a per-BU forbidden-prefix blacklist editor; `sendableDeRetention`
-     * → an applies-to (production BUs) selector plus the retention-policy inputs. Its open/closed
+     * → an applies-to BU selector plus the retention-policy inputs. Its open/closed
      * state is remembered in `openMiniWizards` so a `render()` triggered by editing inside it keeps
      * the panel open.
      *
@@ -4100,7 +4137,7 @@
      * The stored retention policy, filled in from defaults for any missing field so the mini-wizard
      * always renders a complete form.
      *
-     * @returns {{c__retentionPolicy: string, DataRetentionPeriodLength: number, c__dataRetentionPeriodUnitOfMeasure: string, ResetRetentionPeriodOnImport: boolean}} the policy
+     * @returns {{c__retentionPolicy: string, DataRetentionPeriodLength: number, c__dataRetentionPeriodUnitOfMeasure: string, ResetRetentionPeriodOnImport: boolean, appliesTo: string[], deTypeScope: ('sendable'|'nonSendable'|'both')}} the policy
      */
     function retentionPolicy() {
         return { ...emptyRetention(), ...state.wizardState.retention };
@@ -4114,14 +4151,19 @@
      */
     function updateRetention(patch) {
         state.wizardState.retention = { ...retentionPolicy(), ...patch };
+        // Remember the last real type so the On/Off toggle can restore it (UI-only, not persisted).
+        const type = state.wizardState.retention.c__retentionPolicy;
+        if (type && type !== 'none') {
+            lastRealRetentionType = type;
+        }
         render();
     }
 
     /**
-     * `sendableDeRetention` mini-wizard body: an applies-to selector (which BUs are production — the
-     * rule only checks production sendable DEs) plus the retention-policy inputs (type, length, unit,
-     * reset-on-import). The applies-to checkboxes write `wizardState.prodBUs` (the same store the
-     * Production step uses), so the derived `prodMap` scopes the rule; the policy inputs write
+     * `sendableDeRetention` mini-wizard body: an applies-to selector (which business units this
+     * policy is enforced on) plus the retention-policy inputs (type, length, unit, reset-on-import).
+     * The applies-to checkboxes write `wizardState.retention.appliesTo` (this rule's own buRef set,
+     * decoupled from the pipeline's production concept); the policy inputs write
      * `wizardState.retention`.
      *
      * @param {HTMLElement} body the mini-wizard body to mount into
@@ -4134,21 +4176,58 @@
     }
 
     /**
-     * The applies-to block: production BUs are pre-selected (via the Production step's default) and
-     * the rule only applies to them. Toggling here edits the shared `prodBUs` set.
+     * Toggle a buRef in/out of the retention rule's own `appliesTo` set and re-render.
+     *
+     * @param {string} reference the buRef to toggle
+     * @param {boolean} on true to include the BU, false to exclude it
+     * @returns {void}
+     */
+    function toggleRetentionAppliesTo(reference, on) {
+        const current = Array.isArray(retentionPolicy().appliesTo) ? retentionPolicy().appliesTo : [];
+        const next = on
+            ? (current.includes(reference) ? current : [...current, reference])
+            : current.filter((existing) => existing !== reference);
+        updateRetention({ appliesTo: next });
+    }
+
+    /**
+     * The applies-to (WHERE) block: the user picks which data-extension types (`deTypeScope`) and
+     * which business units this retention policy targets. The DE-type select is independent of the
+     * On/Off master toggle. Toggling the BU checkboxes edits this rule's own
+     * `wizardState.retention.appliesTo` set — it does not touch the pipeline's production BUs.
      *
      * @param {HTMLElement} body the mini-wizard body to mount into
      * @returns {void}
      */
     function renderRetentionAppliesTo(body) {
-        seedProductionBUs();
-        body.append(
-            makeElement('label', { class: 'mpb-mini-label', text: 'Applies to (production BUs)' })
-        );
+        const policy = retentionPolicy();
+        body.append(makeElement('label', { class: 'mpb-mini-label', text: 'Applies to' }));
+
+        // "DE type": which data-extension types the policy targets. Independent of the On/Off master
+        // toggle (it scopes WHERE the rule applies, not whether the policy is enforced), so it stays
+        // enabled regardless of the toggle state.
+        const deTypeField = makeElement('div', { class: 'mpb-field' });
+        deTypeField.append(makeElement('label', { text: 'DE type' }));
+        const deTypeSelect = makeElement('select', {
+            attrs: { 'aria-label': 'Data extension types this retention policy applies to' },
+        });
+        for (const option of RETENTION_DE_TYPE_OPTIONS) {
+            const element = makeElement('option', { value: option.value, text: option.label });
+            if (option.value === policy.deTypeScope) {
+                element.selected = true;
+            }
+            deTypeSelect.append(element);
+        }
+        deTypeSelect.addEventListener('change', () => {
+            updateRetention({ deTypeScope: deTypeSelect.value });
+        });
+        deTypeField.append(deTypeSelect);
+        body.append(deTypeField);
+
         body.append(
             makeElement('p', {
                 class: 'text-muted',
-                text: 'This rule only checks sendable data extensions on production BUs. Confirm which BUs count as production.',
+                text: 'Select the business units this retention policy applies to.',
             })
         );
         const references = childBUReferences();
@@ -4158,97 +4237,178 @@
             );
             return;
         }
-        const productionBUs = new Set(state.wizardState.prodBUs || []);
+        const selected = new Set(retentionPolicy().appliesTo || []);
         // Wrapping equal-width flex list: BUs flow into multiple columns when space allows.
         const list = makeElement('div', { class: 'mpb-bu-flex' });
         for (const reference of references) {
             const label = makeElement('label', { class: 'mpb-check-row mpb-bu-flex-item' });
             const checkbox = makeElement('input', {
                 type: 'checkbox',
-                checked: productionBUs.has(reference),
+                checked: selected.has(reference),
             });
             checkbox.addEventListener('change', () => {
-                toggleProductionBU(reference, checkbox.checked);
+                toggleRetentionAppliesTo(reference, checkbox.checked);
             });
             label.append(checkbox, makeElement('span', { text: reference }));
             list.append(label);
         }
         body.append(list);
+
+        // Selecting no BU drops the rule from the generated file — warn so it is not silently omitted.
+        if (selected.size === 0) {
+            body.append(
+                makeElement('p', {
+                    class: 'mpb-warn',
+                    text: 'Select at least one business unit — otherwise this rule is not included in the generated validations file.',
+                })
+            );
+        }
     }
 
     /**
-     * The retention-policy inputs: type `<select>`, an integer length input, a unit `<select>`, and a
-     * reset-on-import checkbox. Length + unit are hidden when the type is `none` (no period applies).
+     * The retention-policy inputs, mirroring SFMC's native Data Extension "Retention Setting" GUI:
+     * a master On/Off toggle (Off ⇔ `c__retentionPolicy === 'none'`), an "Apply To → Delete" radio
+     * group of the three real types, an "After [n] [unit]" period row, and a "Reset period on import"
+     * checkbox. When the toggle is Off the whole config is rendered but disabled/greyed. The reset
+     * checkbox is unchecked+disabled for `individialRecords` and active for the other two types.
      *
      * @param {HTMLElement} body the mini-wizard body to mount into
      * @returns {void}
      */
     function renderRetentionInputs(body) {
         const policy = retentionPolicy();
-        body.append(makeElement('label', { class: 'mpb-mini-label', text: 'Retention policy' }));
+        const isOn = policy.c__retentionPolicy !== 'none';
+        // Reset-on-import only applies to the record-level types; SFMC disables + clears it for
+        // `individialRecords`.
+        const isResetDisabled = !isOn || policy.c__retentionPolicy === 'individialRecords';
 
-        // Retention type.
+        // Section heading names the field AND states the enforced outcome (not just the field name).
+        body.append(
+            makeElement('label', {
+                class: 'mpb-mini-label',
+                text: 'Retention setting — require this policy on the selected data extensions',
+            })
+        );
+
+        // Master On/Off segmented pill ("Retention Setting"), modelled on SFMC's GUI. Off stores the
+        // `none` sentinel; On restores a real type — the previous real type if we still have one,
+        // else the DevTools default. Two connected buttons in a `role="group"` pill.
+        const segToggle = makeElement('div', {
+            class: 'mpb-seg-toggle',
+            attrs: { role: 'group', 'aria-label': 'Retention setting on or off' },
+        });
+        const onButton = makeElement('button', {
+            type: 'button',
+            class: isOn ? 'mpb-seg-btn mpb-seg-on is-active' : 'mpb-seg-btn mpb-seg-on',
+            text: 'On',
+            attrs: { 'aria-pressed': isOn ? 'true' : 'false' },
+        });
+        const offButton = makeElement('button', {
+            type: 'button',
+            class: isOn ? 'mpb-seg-btn mpb-seg-off' : 'mpb-seg-btn mpb-seg-off is-active',
+            text: 'Off',
+            attrs: { 'aria-pressed': isOn ? 'false' : 'true' },
+        });
+        onButton.addEventListener('click', () => {
+            if (!isOn) {
+                updateRetention({ c__retentionPolicy: lastRealRetentionType || RETENTION_DEFAULT_TYPE });
+            }
+        });
+        offButton.addEventListener('click', () => {
+            if (isOn) {
+                updateRetention({ c__retentionPolicy: 'none' });
+            }
+        });
+        segToggle.append(onButton, offButton);
+        body.append(segToggle);
+
+        // Everything below the toggle is greyed + disabled when the toggle is Off, matching SFMC.
+        const config = makeElement('div', {
+            class: isOn ? 'mpb-retention-config' : 'mpb-retention-config mpb-retention-disabled',
+        });
+
+        // "Apply To → Delete": a radio group of the three real types.
         const typeField = makeElement('div', { class: 'mpb-field' });
-        typeField.append(makeElement('label', { text: 'Type' }));
-        const typeSelect = makeElement('select');
+        typeField.append(makeElement('label', { text: 'Delete' }));
+        const radioGroup = makeElement('div', { class: 'mpb-radio-group', attrs: { role: 'radiogroup' } });
         for (const option of RETENTION_TYPE_OPTIONS) {
-            const element = makeElement('option', { value: option.value, text: option.label });
-            if (option.value === policy.c__retentionPolicy) {
+            const radioRow = makeElement('label', { class: 'mpb-check-row' });
+            const radio = makeElement('input', {
+                type: 'radio',
+                name: 'mpb-retention-type',
+                value: option.value,
+                checked: isOn && policy.c__retentionPolicy === option.value,
+                disabled: !isOn,
+            });
+            radio.addEventListener('change', () => {
+                // Switching to `individialRecords` forces reset-on-import off so a previously-on
+                // value cannot leak into the emitted rule.
+                const patch = { c__retentionPolicy: option.value };
+                if (option.value === 'individialRecords') {
+                    patch.ResetRetentionPeriodOnImport = false;
+                }
+                updateRetention(patch);
+            });
+            radioRow.append(radio, makeElement('span', { text: option.label }));
+            radioGroup.append(radioRow);
+        }
+        typeField.append(radioGroup);
+        config.append(typeField);
+
+        // "Period → After [n] [unit ▾]": a compact (100px) length input with the unit inline beside it.
+        const periodField = makeElement('div', { class: 'mpb-field' });
+        periodField.append(makeElement('label', { text: 'Period' }));
+        const periodRow = makeElement('div', { class: 'mpb-inline-row' });
+        periodRow.append(makeElement('span', { class: 'mpb-mini-label', text: 'After' }));
+        const lengthInput = makeElement('input', {
+            type: 'number',
+            class: 'mpb-length-input',
+            value: String(policy.DataRetentionPeriodLength),
+            disabled: !isOn,
+            attrs: { min: '1', step: '1', 'aria-label': 'Retention period length' },
+        });
+        lengthInput.addEventListener('change', () => {
+            const parsed = Math.trunc(Number(lengthInput.value));
+            updateRetention({
+                DataRetentionPeriodLength: Number.isNaN(parsed) || parsed < 1 ? 1 : parsed,
+            });
+        });
+        const unitSelect = makeElement('select', {
+            disabled: !isOn,
+            attrs: { 'aria-label': 'Retention period unit' },
+        });
+        for (const unit of RETENTION_UNIT_OPTIONS) {
+            const element = makeElement('option', { value: unit, text: unit });
+            if (unit === policy.c__dataRetentionPeriodUnitOfMeasure) {
                 element.selected = true;
             }
-            typeSelect.append(element);
+            unitSelect.append(element);
         }
-        typeSelect.addEventListener('change', () => {
-            updateRetention({ c__retentionPolicy: typeSelect.value });
+        unitSelect.addEventListener('change', () => {
+            updateRetention({ c__dataRetentionPeriodUnitOfMeasure: unitSelect.value });
         });
-        typeField.append(typeSelect);
-        body.append(typeField);
+        periodRow.append(lengthInput, unitSelect);
+        periodField.append(periodRow);
+        config.append(periodField);
 
-        // Length + unit only apply when a real retention period is used. They share one row: a
-        // compact (100px) length input with the unit `<select>` inline beside it.
-        if (policy.c__retentionPolicy !== 'none') {
-            const periodField = makeElement('div', { class: 'mpb-field' });
-            periodField.append(makeElement('label', { text: 'Retention period' }));
-            const periodRow = makeElement('div', { class: 'mpb-inline-row' });
-            const lengthInput = makeElement('input', {
-                type: 'number',
-                class: 'mpb-length-input',
-                value: String(policy.DataRetentionPeriodLength),
-                attrs: { min: '1', step: '1', 'aria-label': 'Retention period length' },
-            });
-            lengthInput.addEventListener('change', () => {
-                const parsed = Math.trunc(Number(lengthInput.value));
-                updateRetention({
-                    DataRetentionPeriodLength: Number.isNaN(parsed) || parsed < 1 ? 1 : parsed,
-                });
-            });
-            const unitSelect = makeElement('select', { attrs: { 'aria-label': 'Retention period unit' } });
-            for (const unit of RETENTION_UNIT_OPTIONS) {
-                const element = makeElement('option', { value: unit, text: unit });
-                if (unit === policy.c__dataRetentionPeriodUnitOfMeasure) {
-                    element.selected = true;
-                }
-                unitSelect.append(element);
-            }
-            unitSelect.addEventListener('change', () => {
-                updateRetention({ c__dataRetentionPeriodUnitOfMeasure: unitSelect.value });
-            });
-            periodRow.append(lengthInput, unitSelect);
-            periodField.append(periodRow);
-            body.append(periodField);
-        }
-
-        // Reset-on-import: a horizontal row so the checkbox sits to the LEFT of its label.
-        const resetLabel = makeElement('label', { class: 'mpb-check-row' });
+        // "Reset period on import": checkbox to the LEFT of its label. Unchecked + disabled for
+        // `individialRecords` (and when the whole setting is Off), active otherwise. When disabled,
+        // the row also carries `is-disabled` so the label text greys along with the checkbox.
+        const resetLabel = makeElement('label', {
+            class: isResetDisabled ? 'mpb-check-row is-disabled' : 'mpb-check-row',
+        });
         const resetCheckbox = makeElement('input', {
             type: 'checkbox',
-            checked: !!policy.ResetRetentionPeriodOnImport,
+            checked: !isResetDisabled && !!policy.ResetRetentionPeriodOnImport,
+            disabled: isResetDisabled,
         });
         resetCheckbox.addEventListener('change', () => {
             updateRetention({ ResetRetentionPeriodOnImport: resetCheckbox.checked });
         });
-        resetLabel.append(resetCheckbox, makeElement('span', { text: 'Reset retention period on import' }));
-        body.append(resetLabel);
+        resetLabel.append(resetCheckbox, makeElement('span', { text: 'Reset period on import' }));
+        config.append(resetLabel);
+
+        body.append(config);
     }
 
     /**
@@ -4714,9 +4874,10 @@
      * the loaded config. The builder keys `buSuffixMap` / `prodMap` / `prefixBlacklist` by **bare**
      * BU name and needs the source (DEV) BU name plus the pipeline MIDs. The two Chunk-3a mini-wizard
      * fields are mapped here: `prefixBlacklist` (from `wizardState.prefixBlacklist`, re-keyed to bare
-     * names and stripped of empty lists) and `retention` (from `wizardState.retention`). A mini-wizard
-     * rule whose sub-config is left empty is **dropped** from `selectedRules` so no dead rule is
-     * emitted (`filterPrefixByBu` with no prefixes on any BU).
+     * names and stripped of empty lists) and `retention` (from `wizardState.retention`, including its
+     * bare-name `appliesToMap` scope). A mini-wizard rule whose sub-config is left empty is **dropped**
+     * from `selectedRules` so no dead rule is emitted (`filterPrefixByBu` with no prefixes on any BU;
+     * `sendableDeRetention` with no BU selected).
      *
      * @returns {import('./mcdev-pipeline-validations-builder.js').ValidationsState} the derived state
      */
@@ -4758,12 +4919,31 @@
 
         const retention = { ...emptyRetention(), ...wizardState.retention };
 
-        // Drop mini-wizard rules whose sub-config is empty so no dead rule is emitted. Only
-        // filterPrefixByBu can be "empty" (no prefixes anywhere); sendableDeRetention always carries
-        // a policy, so being selected is enough.
+        // sendableDeRetention scope: the rule's own BU selection, re-keyed to bare BU names. Only the
+        // still-assigned, user-selected child BUs get a `true` entry — the emitter reads this map to
+        // decide which BUs the policy is enforced on (fully decoupled from the pipeline prod set).
+        const retentionAppliesToSet = new Set(Array.isArray(retention.appliesTo) ? retention.appliesTo : []);
+        const retentionAppliesToMap = {};
+        for (const reference of references) {
+            if (retentionAppliesToSet.has(reference)) {
+                retentionAppliesToMap[bareBUName(reference)] = true;
+            }
+        }
+        retention.appliesToMap = retentionAppliesToMap;
+
+        // Drop mini-wizard rules whose sub-config is empty so no dead rule is emitted:
+        // filterPrefixByBu with no prefixes on any BU, and sendableDeRetention with no BU selected.
         const selectedRules = (
             Array.isArray(wizardState.selectedRules) ? [...wizardState.selectedRules] : []
-        ).filter((id) => id !== 'filterPrefixByBu' || Object.keys(prefixBlacklist).length > 0);
+        ).filter((id) => {
+            if (id === 'filterPrefixByBu') {
+                return Object.keys(prefixBlacklist).length > 0;
+            }
+            if (id === 'sendableDeRetention') {
+                return Object.keys(retentionAppliesToMap).length > 0;
+            }
+            return true;
+        });
 
         return {
             buSuffixMap: buSuffixMap,
@@ -7069,6 +7249,11 @@
         setEnvironmentProduction: setEnvironmentProduction,
         toggleProductionBU: toggleProductionBU,
         seedProductionBUs: seedProductionBUs,
+        // Test hooks for the retention mini-wizard (SFMC "Retention Setting" GUI): the merged-defaults
+        // reader and the patch/re-render setter, so the force-`individialRecords`-clears-reset guard the
+        // radio handler relies on can be asserted without a rendered form.
+        retentionPolicy: retentionPolicy,
+        updateRetention: updateRetention,
     };
 
     if (document_.readyState === 'loading') {

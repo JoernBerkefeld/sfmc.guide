@@ -1026,6 +1026,78 @@
   font-size: $text-sm;
 
   input[type="checkbox"] { flex: none; margin: 0; }
+  input[type="radio"] { flex: none; margin: 0; }
+
+  // A disabled check row greys its LABEL text too (the browser only dims the native control).
+  // Toggled explicitly from JS since `:has(input:disabled)` is not reliable in the toolchain.
+  &.is-disabled {
+    color: $text-muted;
+    cursor: default;
+  }
+}
+
+// Master On/Off segmented pill for the retention setting, modelled on SFMC's GUI: two connected
+// buttons sharing a single seam, with only the outer corners rounded. The active side is filled
+// (green-ish On via the success token, muted grey Off), the inactive side reads as a plain button.
+.mpb-seg-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+}
+
+.mpb-seg-btn {
+  padding: $space-1 $space-4;
+  border: 1px solid $border-default;
+  background: $bg-surface;
+  color: $text-secondary;
+  font-weight: 700;
+  font-size: $text-sm;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast, border-color $transition-fast;
+
+  // Outer corners rounded; the shared inner edge stays square.
+  &:first-child { border-radius: $radius-md 0 0 $radius-md; }
+  // Pull the second button onto the first so their borders collapse into one sharp seam.
+  &:last-child {
+    border-radius: 0 $radius-md $radius-md 0;
+    margin-left: -1px;
+  }
+
+  &.is-active {
+    z-index: 1; // keep the active button's (colored) border above its neighbour's grey border
+  }
+
+  &.mpb-seg-on.is-active {
+    background: $color-success;
+    border-color: $color-success;
+    color: #ffffff;
+  }
+
+  &.mpb-seg-off.is-active {
+    background: $bg-overlay;
+    border-color: $border-default;
+    color: $text-secondary;
+  }
+}
+
+// The retention config block below the master toggle. When the toggle is Off it carries the
+// `.mpb-retention-disabled` modifier: greyed + non-interactive (the inputs also get the native
+// `disabled` attribute, so this is a visual reinforcement, not the sole guard).
+.mpb-retention-config {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.mpb-retention-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// "Apply To → Delete" radio group: stacked radio rows.
+.mpb-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
 }
 
 // Applies-to BU list: wrapping equal-width items that flow into multiple columns when space allows.
