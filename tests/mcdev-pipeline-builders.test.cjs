@@ -1434,6 +1434,20 @@ test('parentBandNodes is empty when sharedDEs is off and lists assigned BUs with
   ]);
 });
 
+test('setSharedDEs flips wizardState.sharedDEs', () => {
+  // Keep render() on the null-DOM-safe intake branch (the toggle remounts the lineage step).
+  controller.state.step = 'intake';
+  controller.state.wizardState.sharedDEs = false;
+  controller.setSharedDEs(true);
+  assert.equal(controller.state.wizardState.sharedDEs, true, 'checkbox on writes sharedDEs true');
+  controller.setSharedDEs(false);
+  assert.equal(
+    controller.state.wizardState.sharedDEs,
+    false,
+    'checkbox off writes sharedDEs false',
+  );
+});
+
 test('full-pipeline mode never carries the synthetic "All BUs" env in envOrder', () => {
   // Reproduce re-opening a config that was saved in validations-only mode: its persisted envOrder is
   // exactly ['All BUs']. The mode-aware guard must strip it so the first real env shows a real name.

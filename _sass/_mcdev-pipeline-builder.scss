@@ -837,11 +837,24 @@
   border: 1px solid transparent;
 }
 
-// Read-only Parent BU band: a labelled, bordered row spanning every environment column.
+// Outer 0fr → 1fr animator for the Parent BU `<details>` (checkbox show/hide, including summary).
+.mpb-parent-band-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $transition-normal;
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  &.is-visible {
+    grid-template-rows: 1fr;
+  }
+}
+
+// Read-only Parent BU band: a labelled, bordered `<details>` spanning every environment column.
 .mpb-parent-band {
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
   padding: $space-3;
   border: 1px solid $border-muted;
   border-radius: $radius-md;
@@ -853,6 +866,30 @@
   font-weight: 700;
   margin: 0;
   color: $text-muted;
+  cursor: pointer;
+}
+
+.mpb-parent-band[open] > .mpb-parent-band-title {
+  margin-bottom: $space-3;
+}
+
+// Inner 0fr → 1fr animator for the lineage board (native summary toggle). The closed-state
+// selector beats the UA `details:not([open]) > *:not(summary) { display: none }` so the grid
+// can actually interpolate instead of popping through `display`.
+.mpb-parent-band > .mpb-parent-band-body,
+.mpb-parent-band:not([open]) > .mpb-parent-band-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $transition-normal;
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+
+.mpb-parent-band[open] > .mpb-parent-band-body {
+  grid-template-rows: 1fr;
 }
 
 // Inert Parent BU node: quieter than the interactive lineage nodes (no grab cursor, no select).
@@ -876,6 +913,7 @@
     text-align: left;
     word-break: break-word;
     min-width: 0;
+    color: $text-muted;
   }
 
   .mpb-parent-node-suffix {

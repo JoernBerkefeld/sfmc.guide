@@ -2725,6 +2725,8 @@
         // or hide the read-only parent overlay without leaving the step.
         panel.append(sharedDEsToggle());
         if (rows.length === 0) {
+            // No board to reveal into — drop a pending enter animation so it cannot fire later.
+            shouldAnimateParentBandEnter = false;
             panel.append(
                 makeElement('p', { class: 'text-muted', text: 'Nothing to link yet — assign BUs first.' })
             );
@@ -2739,6 +2741,7 @@
         const parentMount = state.wizardState.sharedDEs ? renderParentBand() : null;
         if (parentMount) {
             stack.append(parentMount.band);
+            revealParentBand(parentMount);
         }
 
         // One column per environment (in env order); the lowest/source env has no upstream, so its
@@ -2772,7 +2775,7 @@
     /**
      * The read-only Parent BU overlay groups: one entry per environment (including empty ones, so
      * columns stay aligned with the lineage board), each listing that env's assigned child BUs and
-     * their stored suffixes. Empty when `sharedDEs` is off — the band is not rendered in that case.
+     * their stored suffixes. Empty when `sharedDEs` is off — the band is not mounted in that case.
      *
      * @returns {{environment: string, nodes: {reference: string, suffix: string}[]}[]} env-grouped nodes
      */
@@ -2790,21 +2793,46 @@
     }
 
     /**
-     * Build the spanning Parent BU band: a labelled wrapper across every environment column, with
-     * one inert node per assigned child BU (name + stored suffix) grouped into the same columns as
-     * the lineage board below. Decorative — no drag, no select, no focus.
+     * Whether the Parent BU `<details>` is expanded. UI-only (not part of `wizardState`, so it is
+     * neither persisted nor fed to the builders). Defaults to true; reset to true whenever
+     * `sharedDEs` flips from false → true. Survives `render()` so a lineage remount does not force
+     * the band back open after the user collapsed it via the summary.
      *
-     * @returns {{band: HTMLElement, board: HTMLElement, overlay: SVGElement}} mount handles
+     * @type {boolean}
+     */
+    let isParentBandExpanded = true;
+
+    /**
+     * One-shot: the next Parent BU mount should play the 0fr → 1fr enter animation (checkbox just
+     * turned shared DEs on). Cleared when consumed. UI-only — never persisted.
+     *
+     * @type {boolean}
+     */
+    let shouldAnimateParentBandEnter = false;
+
+    /**
+     * Build the spanning Parent BU band: a native `<details>` / `<summary>` across every environment
+     * column, with one inert node per assigned child BU (name + stored suffix) grouped into the
+     * same columns as the lineage board below. Decorative — no drag, no select, no focus. The
+     * outer slot is the 0fr → 1fr animator so enabling shared DEs expands the whole band
+     * top-to-bottom; the inner body uses the same grid so collapsing via the summary animates too.
+     *
+     * @returns {{band: HTMLElement, board: HTMLElement, overlay: SVGElement, shouldAnimateEnter: boolean}} mount handles
      */
     function renderParentBand() {
-        const band = makeElement('div', {
+        const shouldAnimateEnter = shouldAnimateParentBandEnter;
+        shouldAnimateParentBandEnter = false;
+        const slot = makeElement('div', { class: 'mpb-parent-band-slot' });
+        const details = makeElement('details', {
             class: 'mpb-parent-band',
+            open: isParentBandExpanded,
             attrs: {
                 role: 'group',
                 'aria-label': 'Parent BU shared-data-extension flows',
             },
         });
-        band.append(makeElement('p', { class: 'mpb-parent-band-title', text: 'Parent BU' }));
+        details.append(makeElement('summary', { class: 'mpb-parent-band-title', text: 'Parent BU' }));
+        const body = makeElement('div', { class: 'mpb-parent-band-body' });
         const board = makeElement('div', { class: 'mpb-lineage-board' });
         for (const group of parentBandNodes()) {
             const column = makeElement('div', { class: 'mpb-lineage-col' });
@@ -2819,8 +2847,53 @@
             'data-marker-id': 'mpb-parent-arrowhead',
         });
         board.append(overlay);
-        band.append(board);
-        return { band: band, board: board, overlay: overlay };
+        body.append(board);
+        details.append(body);
+        slot.append(details);
+        details.addEventListener('toggle', () => {
+            isParentBandExpanded = details.open;
+            drawLineageArrows();
+        });
+        body.addEventListener('transitionend', (event) => {
+            if (event.propertyName === 'grid-template-rows') {
+                drawLineageArrows();
+            }
+        });
+        slot.addEventListener('transitionend', (event) => {
+            if (event.propertyName === 'grid-template-rows') {
+                drawLineageArrows();
+            }
+        });
+        return { band: slot, board: board, overlay: overlay, shouldAnimateEnter: shouldAnimateEnter };
+    }
+
+    /**
+     * Reveal the Parent BU slot after it is in the document. A normal remount (lineage drag /
+     * suffix-less re-render) applies `.is-visible` immediately so the band does not re-animate.
+     * A shared-DEs false → true flip starts at 0fr and adds the class on the next frame so the
+     * grid row animates open top-to-bottom.
+     *
+     * @param {{band: HTMLElement, shouldAnimateEnter: boolean}} parentMount the slot + enter flag
+     * @returns {void}
+     */
+    function revealParentBand(parentMount) {
+        const slot = parentMount.band;
+        if (!parentMount.shouldAnimateEnter) {
+            slot.classList.add('is-visible');
+            return;
+        }
+        // Force a 0fr layout so adding `.is-visible` on the next frame animates 0fr → 1fr.
+        if (typeof slot.getBoundingClientRect === 'function') {
+            slot.getBoundingClientRect();
+        }
+        const reveal = () => {
+            slot.classList.add('is-visible');
+        };
+        if (global.requestAnimationFrame) {
+            global.requestAnimationFrame(reveal);
+        } else {
+            reveal();
+        }
     }
 
     /**
@@ -3141,6 +3214,15 @@
         }
         const lineage = state.wizardState.lineage || {};
         for (const overlay of lineageOverlays) {
+            // Skip the Parent BU overlay while its `<details>` is closed so we do not measure
+            // collapsed node boxes. The interactive child board has no ancestor details.
+            const parentDetails =
+                overlay.board && typeof overlay.board.closest === 'function'
+                    ? overlay.board.closest('details.mpb-parent-band')
+                    : null;
+            if (parentDetails && !parentDetails.open) {
+                continue;
+            }
             drawLineageConnectors(overlay.board, collectLineageNodeMap(overlay.board), lineage);
         }
     }
@@ -3595,9 +3677,7 @@
             checked: !!state.wizardState.sharedDEs,
         });
         checkbox.addEventListener('change', () => {
-            state.wizardState.sharedDEs = checkbox.checked;
-            scheduleAutosave();
-            render();
+            setSharedDEs(checkbox.checked);
         });
         label.append(checkbox, makeElement('span', { text: 'Do you use shared data extensions?' }));
         field.append(label);
@@ -3608,6 +3688,26 @@
             })
         );
         return field;
+    }
+
+    /**
+     * Persist the shared-DEs answer and remount the lineage step. Flipping false → true resets the
+     * Parent BU `<details>` to open and requests the enter animation; flipping off unmounts the
+     * band (same hide as before). The expand/collapse flag is UI-only — not written to wizardState.
+     *
+     * @param {boolean} enabled whether shared data extensions are in use
+     * @returns {void}
+     */
+    function setSharedDEs(enabled) {
+        const isEnabled = !!enabled;
+        const wasOn = !!state.wizardState.sharedDEs;
+        if (isEnabled && !wasOn) {
+            isParentBandExpanded = true;
+            shouldAnimateParentBandEnter = true;
+        }
+        state.wizardState.sharedDEs = isEnabled;
+        scheduleAutosave();
+        render();
     }
 
     /**
@@ -7378,6 +7478,7 @@
         // asserted directly (env all-production reflection + bulk (un)mark) without a rendered DOM.
         renderEnvironmentColumns: renderEnvironmentColumns,
         parentBandNodes: parentBandNodes,
+        setSharedDEs: setSharedDEs,
         isEnvironmentAllProduction: isEnvironmentAllProduction,
         setEnvironmentProduction: setEnvironmentProduction,
         toggleProductionBU: toggleProductionBU,
