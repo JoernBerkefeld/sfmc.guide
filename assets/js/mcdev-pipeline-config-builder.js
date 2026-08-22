@@ -166,22 +166,25 @@
     }
 
     /**
-     * Turn an environment name token (e.g. `QA`) into the mcdev SQL-LIKE band pattern pair the
-     * shared-DE parent pipeline keys on, matching the gold config's `%[_]<UP>[_]%` / `%[_]<UP>`
-     * shape. The separator is written as a literal `[_]` per `Util.stringLike` semantics (`_` means
-     * "exactly one char", so a literal separator must be bracket-escaped), and the token is bounded
-     * by a separator on BOTH sides in the "contained" variant so `_QA_` never matches `_QANEW`.
+     * Escape SQL-LIKE wildcards so a suffix is matched as a literal (mcdev `Util.stringLike`).
+     * `_` is "exactly one character" and `%` is "any run", so both must be bracket-escaped.
      *
-     * @param {string} environment environment display name (slugged to the key token)
-     * @param {string} separator suffix separator (typically `_`)
-     * @returns {string[]} two patterns: contained (`%[_]<tok>[_]%`) and trailing (`%[_]<tok>`)
+     * @param {string} value raw suffix (includes the separator, e.g. `_DEV`)
+     * @returns {string} suffix with `_` and `%` escaped
      */
-    function environmentBandPatterns(environment, separator) {
-        // The literal-separator escape for stringLike (a single `_` would otherwise be a wildcard).
-        const separatorEscaped = separator === '_' ? '[_]' : separator;
-        const token = slug(environment);
-        // Contained: `%<sep><tok><sep>%` (a full mid-key segment); trailing: `%<sep><tok>` (key end).
-        return ['%' + separatorEscaped + token + separatorEscaped + '%', '%' + separatorEscaped + token];
+    function likeEscape(value) {
+        return String(value).replaceAll(/[_%]/g, (ch) => '[' + ch + ']');
+    }
+
+    /**
+     * Ends-only LIKE pattern for a BU suffix: `%` + escaped suffix. Matches keys that end with
+     * that suffix (e.g. `_DEV` → `%[_]DEV`) without a contained mid-key band.
+     *
+     * @param {string} suffix BU suffix including the separator
+     * @returns {string} ends-only pattern
+     */
+    function suffixEndPattern(suffix) {
+        return '%' + likeEscape(suffix);
     }
 
     /**
@@ -335,16 +338,16 @@
             const marketNames = environmentMarketNames[environment];
             for (const reference of references) {
                 const name = marketNames.get(reference);
+                const suffix = suffixes[reference] || separator + slug(environment);
                 config.markets[name] = {
-                    suffix: suffixes[reference] || separator + slug(environment),
+                    suffix: suffix,
                 };
-            }
-            // Parent market (shared DEs) reuses the child suffix band of this env.
-            if (state.sharedDEs && references.length > 0) {
-                const parentName = MPB + slug(environment) + '_parent';
-                config.markets[parentName] = {
-                    suffix: suffixes[references[0]] || separator + slug(environment),
-                };
+                // One parent market per child BU, carrying that BU's configured suffix.
+                if (state.sharedDEs) {
+                    config.markets[name + '_parent'] = {
+                        suffix: suffix,
+                    };
+                }
             }
         }
 
@@ -418,31 +421,28 @@
                 config.marketList[sourceMlName] = sourceMl;
                 config.marketList[targetMlName] = targetMl;
                 branchMap[sourceMlName] = targetMlName;
-            }
 
-            // Optional shared-DE parent pipeline for this hop (one pair, keyed under the same branch).
-            // The parent (source==target) marketList must isolate what the parent BU deploys to just
-            // the UPSTREAM env's key band, so promoting e.g. "QA baseline → UAT" never re-picks earlier
-            // SIT-era changes. We band on the upstream env NAME token (matching the gold config's
-            // `%[_]<UP>[_]%` / `%[_]<UP>` include patterns). The include is self-isolating: `%[_]QA`
-            // matches only keys carrying the `_QA` segment, never a lower env's `_SIT`/`_DEV` keys —
-            // so, like the gold config, no separate lower-env exclude band is required.
-            if (state.sharedDEs) {
-                const parentSourceName = MPB + 'deployment-' + branch + '-parent-source';
-                const parentTargetName = MPB + 'deployment-' + branch + '-parent-target';
-                const cred = credOf(sourceReferences[0] || tgtReferences[0] || '', baseConfig);
-                // Include: the upstream env's own name-token band (contained + trailing).
-                const includePatterns = environmentBandPatterns(sourceEnvironment, separator);
-                const parentSource = {
-                    filter: { include: { key: { '*': includePatterns } } },
-                    [cred + '/_ParentBU_']: MPB + slug(sourceEnvironment) + '_parent',
-                };
-                const parentTarget = {
-                    [cred + '/_ParentBU_']: MPB + slug(tgtEnvironment) + '_parent',
-                };
-                config.marketList[parentSourceName] = parentSource;
-                config.marketList[parentTargetName] = parentTarget;
-                branchMap[parentSourceName] = parentTargetName;
+                // Optional shared-DE parent pair for this lineage group (same infix / branch as the child).
+                // Filter is ends-only on the source BU's suffix so each parent pair isolates that hop's
+                // keys (e.g. `_DEV` → `%[_]DEV`) without a contained mid-key band or a lower-env exclude.
+                if (state.sharedDEs) {
+                    const parentSourceName = MPB + 'deployment-' + branch + infix + '-parent-source';
+                    const parentTargetName = MPB + 'deployment-' + branch + infix + '-parent-target';
+                    const cred = credOf(group.source, baseConfig);
+                    const sourceSuffix = suffixes[group.source] || separator + slug(sourceEnvironment);
+                    const parentSource = {
+                        filter: { include: { key: { '*': [suffixEndPattern(sourceSuffix)] } } },
+                        [cred + '/_ParentBU_']: sourceMarketNames.get(group.source) + '_parent',
+                    };
+                    const targetParentMarkets = Array.from(group.targets, reference => tgtMarketNames.get(reference) + '_parent');
+                    const parentTarget = {
+                        [cred + '/_ParentBU_']:
+                            targetParentMarkets.length === 1 ? targetParentMarkets[0] : targetParentMarkets,
+                    };
+                    config.marketList[parentSourceName] = parentSource;
+                    config.marketList[parentTargetName] = parentTarget;
+                    branchMap[parentSourceName] = parentTargetName;
+                }
             }
         }
 
