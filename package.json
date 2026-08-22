@@ -18,8 +18,8 @@
     "generate:all": "npm run generate:function-index && npm run generate:handlebars-index && npm run generate:site-index && npm run generate:lexer-data",
     "check:bom": "node scripts/check-bom.mjs",
     "test": "node --test \"tests/**/*.test.cjs\"",
-    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\"",
-    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\"",
+    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\"",
+    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

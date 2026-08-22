@@ -1,0 +1,195 @@
+@use "variables" as *;
+
+// ── Environment-order board (one column per environment, mirroring the lineage board) ──
+// Naming + ordering combined: a horizontal row of environment columns spread evenly across the
+// width. Unlike the lineage board it wraps (many envs flow onto a second line rather than
+// scrolling), consistent with the bu-assign columns.
+.mpb-env-order-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-5;
+}
+
+.mpb-env-order-col {
+  flex: 1 1 0;
+  min-width: 160px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  &.is-dragover { border-color: $accent-primary; }
+
+  // Header line: the drag handle on the left, the reorder/remove buttons pushed to the right.
+  .mpb-env-order-col-header {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  .mpb-row-actions { display: flex; gap: $space-1; margin-left: auto; }
+
+  // Small input labels (env name / git branch), mirroring the lineage "deploys from" label look.
+  .mpb-env-order-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
+
+  // Inline name + git-branch inputs keep the rounded-box look the name input had before.
+  .mpb-env-name-input,
+  .mpb-env-branch-input {
+    min-width: 0;
+    padding: 0.45em 0.7em;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+
+  .mpb-env-name-warnings .mpb-warn,
+  .mpb-env-branch-warnings .mpb-warn { margin-top: 0; }
+}
+
+// Dedicated drag handle — the only draggable element in an env-order column, so the name input
+// stays editable (a draggable column can swallow the mousedown needed to focus the input).
+.mpb-drag-handle {
+  flex: none;
+  cursor: grab;
+  user-select: none;
+  color: $text-muted;
+  font-size: $text-base;
+  line-height: 1;
+  padding: 0 0.15em;
+
+  &:active { cursor: grabbing; }
+}
+
+.mpb-move-btn {
+  font-size: $text-sm;
+  line-height: 1;
+  padding: 0.25em 0.5em;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  background: $bg-elevated;
+  color: $text-secondary;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: $accent-primary; color: $accent-primary; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ── BU-assignment board (lineage visual: full-width Unassigned strip + one column per env) ──
+// The Unassigned pool is a full-width horizontal strip (`.mpb-unassigned-row`) above one column
+// per environment (`.mpb-env-board`), so assigned BUs read left-to-right like the lineage board.
+.mpb-board {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.mpb-board-col {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  // The Unassigned pool is visually distinct from the environment columns and fills its region.
+  &--pool {
+    width: 100%;
+    background: $bg-elevated;
+    border-style: dashed;
+  }
+}
+
+.mpb-board-col-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+}
+
+// The drop target: keep a minimum height so an empty column is still an obvious drop zone.
+.mpb-board-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  min-height: 2.5rem;
+  padding: $space-1;
+  border-radius: $radius-sm;
+
+  &:empty::before {
+    content: "Drop BUs here";
+    display: block;
+    padding: $space-3;
+    text-align: center;
+    color: $text-muted;
+    font-size: $text-xs;
+    font-style: italic;
+  }
+}
+
+.mpb-board-chip {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+  color: $text-primary;
+  font-size: $text-sm;
+  cursor: grab;
+
+  &:active { cursor: grabbing; }
+
+  .mpb-board-grip {
+    flex: none;
+    color: $text-muted;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .mpb-board-chip-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  // Keyboard/a11y reassignment picker — the drag-free alternative. Visually hidden (the drag board
+  // is the primary affordance) but kept Tab-focusable + SR-operable via the 1px-clip pattern. The
+  // rule lives here (descendant specificity) so it reliably wins over any base `.mpb-board-move`.
+  .mpb-board-move {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+// SortableJS drag states.
+.mpb-board-chip.sortable-ghost {
+  opacity: 0.4;
+  border-style: dashed;
+  border-color: $accent-primary;
+}
+
+.mpb-board-chip.sortable-chosen {
+  border-color: $accent-primary;
+}
+
+.mpb-board-chip.sortable-drag {
+  box-shadow: $shadow-sm;
+  opacity: 0.9;
+}

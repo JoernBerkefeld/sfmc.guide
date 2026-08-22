@@ -36,9 +36,7 @@ assets/
 sw.js
 
 # …except the mcdev Pipeline Builder JS, which is scoped-linted/formatted on its own.
-!assets/js/mcdev-pipeline-builder.js
-!assets/js/mcdev-pipeline-config-builder.js
-!assets/js/mcdev-pipeline-validations-builder.js
+!assets/js/mcdev-pipeline-*.js
 
 # Site, CI and package configuration
 _config.yml

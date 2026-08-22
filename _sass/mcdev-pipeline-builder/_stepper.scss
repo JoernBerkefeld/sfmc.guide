@@ -1,0 +1,93 @@
+@use "variables" as *;
+
+// ── Stepper / wizard nav ────────────────────────────────────────────────────
+.mpb-stepper {
+  margin-bottom: $space-6;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid $border-muted;
+}
+
+.mpb-stepper-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Each stepper item is a pill. The inner `<button>` (clickable steps) is a transparent, unstyled
+// wrapper so the pill itself carries all visuals — that keeps clickable and inert items pixel-aligned.
+.mpb-stepper-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+  font-size: $text-xs;
+  font-weight: 600;
+  padding: 0.2em 0.7em;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  color: $text-muted; // future / not-yet-reachable steps are muted by default
+  background: $bg-elevated;
+
+  // Completed, gate-satisfied earlier steps: green colour-coding to signal "done".
+  &.is-done {
+    color: $color-success;
+    border-color: rgba($color-success, 0.5);
+    background: rgba($color-success, 0.08);
+  }
+
+  // The active step: strongest highlight. Wins over is-done when both could apply.
+  &.is-current {
+    color: #fff;
+    background: $accent-primary;
+    border-color: $accent-primary;
+  }
+
+  // Reachable navigation targets: pointer affordance + hover feedback via the inner button.
+  &.is-clickable {
+    padding: 0;
+
+    .mpb-stepper-btn {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35em;
+      padding: 0.2em 0.7em;
+      margin: 0;
+      border: none;
+      border-radius: $radius-full;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+
+      &:hover { text-decoration: underline; }
+      &:focus-visible { outline: 2px solid $accent-primary; outline-offset: 1px; }
+    }
+  }
+
+  // Inert (current or gated-off) steps: no pointer, no focus affordance.
+  &[aria-disabled="true"] {
+    cursor: default;
+  }
+}
+
+.mpb-wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-top: $space-6;
+}
+
+// Duplicate Back/Next immediately under the stepper. Sit tight against the
+// stepper's bottom border (the adjacent-sibling rule cancels the stepper's
+// margin-bottom) and keep the same space before the step host via a bottom
+// margin instead of the default top.
+.mpb-wizard-nav--top {
+  margin-top: 0;
+  margin-bottom: $space-6;
+}
+
+.mpb-stepper + .mpb-wizard-nav--top {
+  margin-top: -$space-6;
+}

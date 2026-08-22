@@ -1,0 +1,98 @@
+@use "variables" as *;
+
+// ── Shared environment-columns layout (bu-assign / suffixes / prod-confirm) ──
+// The same horizontal one-column-per-environment visual the lineage board uses, factored so the
+// three redesigned steps share it. A flex row spreads the columns evenly across the width and,
+// on narrow viewports, scrolls horizontally rather than crushing the columns (matching lineage).
+.mpb-env-board {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: $space-5;
+  overflow-x: auto;
+}
+
+.mpb-env-col {
+  flex: 1 1 0;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.mpb-env-col-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+  color: $text-primary;
+}
+
+// Column header that doubles as a "select all" control (prod-confirm): the checkbox sits inline
+// with the environment name and stays clickable as a whole label.
+.mpb-env-col-select-all {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  cursor: pointer;
+
+  input[type="checkbox"] { flex: none; }
+}
+
+// One BU inside a column: the BU name plus its per-node control (suffix input / production toggle),
+// mirroring the lineage node's name + "deploys from" select slot.
+.mpb-env-node {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  .mpb-env-node-name { font-weight: 600; word-break: break-word; }
+  .mpb-env-node-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
+}
+
+// The per-node control slot (label + input/checkbox); a checkbox toggle lays out inline.
+.mpb-env-node-control {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.mpb-prod-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: $space-2;
+  cursor: pointer;
+
+  input[type="checkbox"] { flex: none; }
+}
+
+// The suffixes step's central separator control sits ABOVE the environment columns (a single
+// control spanning the column row), not inline per column.
+.mpb-separator-row {
+  margin-bottom: $space-4;
+}
+
+// The bu-assign Unassigned pool: a full-browser-width strip ABOVE the environment columns whose
+// chips flow horizontally (not a same-height left column).
+.mpb-unassigned-row {
+  margin-bottom: $space-5;
+
+  // The pool spans the full width; its list flows chips left-to-right and wraps.
+  .mpb-board-col--pool { width: 100%; }
+}
+
+// The pool's chip list flows horizontally (wrapping) instead of stacking vertically.
+.mpb-board-list--pool {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+// Warnings inline (internal-space suffix etc.)
+.mpb-warn {
+  font-size: $text-xs;
+  color: $color-warning;
+  margin-top: $space-1;
+}

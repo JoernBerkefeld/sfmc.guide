@@ -986,8 +986,125 @@ Object.defineProperty(globalThis, 'document', {
     addEventListener: () => {},
   },
 });
+require('../assets/js/mcdev-pipeline-core.js');
+require('../assets/js/mcdev-pipeline-step-environment-order.js');
+require('../assets/js/mcdev-pipeline-step-production-confirm.js');
+require('../assets/js/mcdev-pipeline-step-suffixes.js');
+require('../assets/js/mcdev-pipeline-step-rules.js');
+require('../assets/js/mcdev-pipeline-step-bu-assign.js');
+require('../assets/js/mcdev-pipeline-step-lineage.js');
+require('../assets/js/mcdev-pipeline-intake.js');
+require('../assets/js/mcdev-pipeline-mode.js');
+require('../assets/js/mcdev-pipeline-output.js');
 require('../assets/js/mcdev-pipeline-builder.js');
 const controller = globalThis.mpbController;
+
+// ─── controller: intake parse gate (classifyIntake) ───
+//
+// classifyIntake is a pure classifier: it never stores config/secrets and never interpolates
+// input values into the rejection message. Only `kind === 'ok'` carries a `config`.
+
+/**
+ * Distinctive auth-file JSON used to prove rejection-by-shape and that the canned auth
+ * message never echoes client id/secret/url/account/credential names.
+ *
+ * @returns {{filename: string, raw: string, secrets: string[]}} fixture
+ */
+function authFileFixture() {
+  const secrets = [
+    'uniq-client-id-XYZ99',
+    'uniq-secret-ABC88',
+    'https://auth.example.invalid/v2/token',
+    '987654321',
+    'SecretCredName',
+    'acme-prod',
+  ];
+  const parsed = {
+    SecretCredName: {
+      client_id: 'uniq-client-id-XYZ99',
+      client_secret: 'uniq-secret-ABC88',
+      auth_url: 'https://auth.example.invalid/v2/token',
+      account_id: 987654321,
+    },
+  };
+  return {
+    filename: 'acme-prod.mcdev-auth.json',
+    raw: JSON.stringify(parsed),
+    secrets: secrets,
+  };
+}
+
+/**
+ * Assert an auth rejection never interpolates caller-supplied values into the canned message.
+ *
+ * @param {{kind: string, message?: string, config?: object}} result classifyIntake result
+ * @param {string[]} secrets values that must not appear in `message`
+ * @returns {void}
+ */
+function assertAuthRejectionDoesNotEcho(result, secrets) {
+  assert.equal(result.kind, 'auth', 'auth files must be rejected as kind auth');
+  assert.equal(result.config, undefined, 'auth rejection must not return the parsed object');
+  assert.equal(typeof result.message, 'string');
+  assert.match(result.message, /mcdev-auth\.json/);
+  for (const secret of secrets) {
+    assert.ok(
+      !result.message.includes(secret),
+      `auth message must not echo input value ${JSON.stringify(secret)}`,
+    );
+  }
+}
+
+test('classifyIntake rejects an auth file by filename and does not echo the name', () => {
+  const { filename, secrets } = authFileFixture();
+  assert.equal(controller.isAuthFileName(filename), true);
+  assert.equal(controller.isAuthFileName('.mcdevrc.json'), false);
+  // Filename hint wins even when the JSON is not auth-shaped (and even when parse fails).
+  const byName = controller.classifyIntake('{"credentials":{}}', filename);
+  assertAuthRejectionDoesNotEcho(byName, secrets);
+  const notJson = controller.classifyIntake('{ not json', filename);
+  assertAuthRejectionDoesNotEcho(notJson, secrets);
+});
+
+test('classifyIntake rejects an auth file by JSON shape even when the name looks like .mcdevrc.json', () => {
+  const { raw, secrets } = authFileFixture();
+  assert.equal(controller.looksLikeAuthFile(JSON.parse(raw)), true);
+  assert.equal(controller.looksLikeAuthFile({}), false, 'an empty object is not an auth file');
+  const result = controller.classifyIntake(raw, '.mcdevrc.json');
+  assertAuthRejectionDoesNotEcho(result, secrets);
+});
+
+test('classifyIntake rejects non-JSON that is not named like an auth file', () => {
+  const result = controller.classifyIntake('{ not json at all', 'project.mcdevrc.json');
+  assert.equal(result.kind, 'not-json');
+  assert.equal(result.config, undefined);
+  assert.match(result.message, /JSON/i);
+  assert.ok(
+    !result.message.includes('{ not json at all'),
+    'non-JSON message must not echo the paste',
+  );
+});
+
+test('classifyIntake rejects missing credentials and missing businessUnits', () => {
+  const noCredentials = controller.classifyIntake('{"options":{}}', 'project.mcdevrc.json');
+  assert.equal(noCredentials.kind, 'not-mcdevrc');
+  assert.equal(noCredentials.config, undefined);
+  assert.match(noCredentials.message, /credentials/i);
+
+  const noBusinessUnits = controller.classifyIntake(
+    JSON.stringify({ credentials: { ssjs: { eid: 1 } } }),
+    'project.mcdevrc.json',
+  );
+  assert.equal(noBusinessUnits.kind, 'incomplete');
+  assert.equal(noBusinessUnits.config, undefined);
+  assert.match(noBusinessUnits.message, /businessUnits/i);
+
+  const ok = controller.classifyIntake(
+    JSON.stringify({ credentials: { ssjs: { businessUnits: { DEV: 111 } } } }),
+    'project.mcdevrc.json',
+  );
+  assert.equal(ok.kind, 'ok');
+  assert.equal(ok.config.credentials.ssjs.businessUnits.DEV, 111);
+});
 
 // ─── controller: env → git-branch slug helper (WS3) ───
 
@@ -1366,10 +1483,33 @@ test('canProceed("env-order") flips as a simulated env-name keystroke edits the 
   );
 });
 
-test('validations-only visibleSteps includes suffixes + prod-confirm, not env-ordering/lineage', () => {
+test('canProceed("env-order") fails when fewer than two environments', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: [],
+    envBUs: {},
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+  assert.equal(controller.canProceed('env-order').ok, false, 'zero environments cannot proceed');
+  controller.state.wizardState.envOrder = ['DEV'];
+  assert.equal(controller.canProceed('env-order').ok, false, 'a single environment cannot proceed');
+  controller.state.wizardState.envOrder = ['DEV', 'QA'];
+  assert.equal(controller.canProceed('env-order').ok, true, 'two environments proceed');
+});
+
+test('validations-only visibleSteps includes suffixes + prod-confirm + Download, not env-ordering/lineage', () => {
   controller.state.mode = 'validations';
   const ids = controller.visibleSteps().map((step) => step.id);
-  assert.deepEqual(ids, ['suffixes', 'prod-confirm', 'rules']);
+  assert.deepEqual(ids, ['suffixes', 'prod-confirm', 'rules', 'output']);
   assert.ok(!ids.includes('env-order'), 'env-ordering stays out of validations-only mode');
   assert.ok(!ids.includes('lineage'), 'lineage stays out of validations-only mode');
 });
@@ -1401,7 +1541,16 @@ test('full-pipeline visibleSteps drops the removed standalone env-names step', (
   };
   const ids = controller.visibleSteps().map((step) => step.id);
   assert.ok(!ids.includes('env-names'), 'the standalone env-names step id must be gone');
-  assert.deepEqual(ids, ['env-order', 'bu-assign', 'suffixes', 'lineage', 'prod-confirm', 'rules']);
+  assert.deepEqual(ids, [
+    'env-order',
+    'bu-assign',
+    'suffixes',
+    'lineage',
+    'prod-confirm',
+    'rules',
+    'output',
+  ]);
+  assert.equal(ids.at(-1), 'output', 'full pipeline ends with Download');
 });
 
 test('parentBandNodes is empty when sharedDEs is off and lists assigned BUs with stored suffixes when on', () => {
@@ -1482,6 +1631,81 @@ test('unusedLineageBUs flags a downstream BU with an empty deploys-from', () => 
   );
 });
 
+test('skipped lineage leaves wizardState.lineage empty; buildConfig still emits single-source hops', () => {
+  // Option (b): autoDeriveLineage runs only from renderLineageStep. A 1-BU-per-env pipeline skips
+  // that step, so lineage stays {}. buildConfig then falls back to env[i] → env[i-1] single-source.
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'SIT', 'Prod'],
+    envBUs: { DEV: ['DEV'], SIT: ['SIT'], Prod: ['Randstad_EUN'] },
+    lineage: {},
+    separator: '_',
+    suffixes: { DEV: '_DEV', SIT: '_SIT', Randstad_EUN: '_RSN' },
+    prodBUs: ['Randstad_EUN'],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+  const ids = controller.visibleSteps().map((step) => step.id);
+  assert.ok(!ids.includes('lineage'), 'one BU per env skips the lineage step');
+  assert.equal(ids.at(-1), 'output', 'Download remains the last visible step');
+  assert.deepEqual(
+    controller.state.wizardState.lineage,
+    {},
+    'skipping lineage must not fill wizardState.lineage',
+  );
+
+  const out = buildConfig(controller.state.wizardState, sampleConfig);
+  assert.deepEqual(
+    out.options.deployment.mpb_pipeline.lineage,
+    {},
+    'persisted lineage stays empty',
+  );
+  assert.deepEqual(out.marketList['mpb_deployment-sit-source'], { 'ssjs/DEV': 'mpb_DEV' });
+  assert.deepEqual(out.marketList['mpb_deployment-sit-target'], { 'ssjs/SIT': 'mpb_SIT' });
+  assert.deepEqual(out.marketList['mpb_deployment-prod-source'], { 'ssjs/SIT': 'mpb_SIT' });
+  assert.deepEqual(out.marketList['mpb_deployment-prod-target'], {
+    'ssjs/Randstad_EUN': 'mpb_Prod',
+  });
+});
+
+test('skipped lineage: buildConfig same-index fallback hops with empty lineage', () => {
+  // Multi-BU hop with no lineage map: pair target BUs to the previous env by index.
+  const state = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['QA', 'UAT'],
+    envBUs: { QA: ['EUN_QA', 'EUS_QA'], UAT: ['EUN_UAT', 'EUS_UAT'] },
+    lineage: {},
+    separator: '_',
+    suffixes: {
+      EUN_QA: '_QAN',
+      EUS_QA: '_QAS',
+      EUN_UAT: '_UATN',
+      EUS_UAT: '_UATS',
+    },
+    prodBUs: [],
+    sharedDEs: false,
+  };
+  const out = buildConfig(state, sampleConfig);
+  assert.deepEqual(state.lineage, {}, 'the caller lineage object is not filled');
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-source'], {
+    'ssjs/EUN_QA': 'mpb_QA_EUN_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUN_QA-target'], {
+    'ssjs/EUN_UAT': 'mpb_UAT_EUN_UAT',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-source'], {
+    'ssjs/EUS_QA': 'mpb_QA_EUS_QA',
+  });
+  assert.deepEqual(out.marketList['mpb_deployment-uat-EUS_QA-target'], {
+    'ssjs/EUS_UAT': 'mpb_UAT_EUS_UAT',
+  });
+});
+
 test('canProceed("lineage") stays ok when a source BU is unused', () => {
   controller.state.mode = 'full';
   controller.state.wizardState = {
@@ -1502,6 +1726,37 @@ test('canProceed("lineage") stays ok when a source BU is unused', () => {
     controller.canProceed('lineage').ok,
     true,
     'an unused source-env BU must not block Next',
+  );
+});
+
+test('canProceed("lineage") hard-fails when a child has no upstream mapping', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'SIT'],
+    envBUs: { DEV: ['DEV', 'DEV_Regional'], SIT: ['SIT', 'SIT_Regional'] },
+    // SIT is mapped; SIT_Regional is a child with no parent — that must block Next.
+    lineage: { SIT: 'DEV_Regional' },
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+  const blocked = controller.canProceed('lineage');
+  assert.equal(blocked.ok, false, 'an unlinked child BU must block Next');
+  assert.match(blocked.reason, /upstream/i);
+  controller.state.wizardState.lineage = {
+    SIT: 'DEV_Regional',
+    SIT_Regional: 'DEV_Regional',
+  };
+  assert.equal(
+    controller.canProceed('lineage').ok,
+    true,
+    'every child mapped (unused source still allowed) proceeds',
   );
 });
 
@@ -1544,11 +1799,42 @@ test('full-pipeline mode never carries the synthetic "All BUs" env in envOrder',
   );
 });
 
+/**
+ * A real two-env full-pipeline fixture: one BU per env (lineage skippable), empty `prodBUs`.
+ * Used to prove the diagram gate is drawable, not wizard-complete.
+ *
+ * @returns {void}
+ */
+function seedDrawableTwoEnvironmentState() {
+  controller.state.config = {
+    credentials: { ssjs: { businessUnits: { DEV: {}, SIT: {}, _ParentBU_: {} } } },
+  };
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'SIT'],
+    envBUs: { DEV: ['DEV'], SIT: ['SIT'] },
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+    },
+    sharedDEs: false,
+  };
+}
+
 test('validations-only mode never offers the diagram / leaks the "All BUs" container (Review-loop fix pass 2)', () => {
   // Reproduce the validations-only state: the synthetic VALIDATIONS_POOL_ENV ("All BUs") env is
-  // seeded so the suffix/production steps have data. Before the fix, renderDiagramPreview was gated
-  // only by isComplete, so the diagram CTA showed and buildDiagramJSON() emitted a container literally
-  // labelled "All BUs".
+  // seeded so the suffix/production steps have data. The UI must never offer Diagramforce here —
+  // if buildDiagramJSON() were called it would emit a container literally labelled "All BUs".
   controller.state.config = sampleConfig;
   controller.state.mode = 'validations';
   controller.state.wizardState = {
@@ -1572,15 +1858,20 @@ test('validations-only mode never offers the diagram / leaks the "All BUs" conta
   };
   controller.seedValidationsPool();
 
-  // The visibility decision is false in validations mode even when the wizard is "complete".
+  // Hard hide even if the wizard is "complete". The UI must never call buildDiagramJSON here.
   assert.equal(
-    controller.isDiagramOffered(true),
+    controller.isDiagramDrawable(),
     false,
     'diagram must not be offered in validations-only mode',
   );
+  assert.equal(
+    controller.isDiagramOffered(true),
+    false,
+    'isDiagramOffered is a drawable alias and stays false in validations-only',
+  );
 
   // Guard-rail: the pooled env IS named "All BUs", so if the diagram were ever built here it would
-  // leak that synthetic container. This proves the guard (diagramIsOffered=false) is what prevents it.
+  // leak that synthetic container. This proves the UI guard is what prevents it.
   const containers = controller
     .buildDiagramJSON()
     .graph.cells.filter((cell) => cell.type === 'sf.Container');
@@ -1589,17 +1880,173 @@ test('validations-only mode never offers the diagram / leaks the "All BUs" conta
     'sanity: the validations pool env is the synthetic "All BUs" container the guard must keep hidden',
   );
 
-  // Contrast: in full-pipeline mode a complete wizard DOES offer the diagram.
+  // Flipping mode to full without stripping the pool is NOT drawable (All BUs is a single env).
   controller.state.mode = 'full';
   assert.equal(
-    controller.isDiagramOffered(true),
+    controller.isDiagramDrawable(),
+    false,
+    'seedValidationsPool + mode=full without strip is not a drawable graph',
+  );
+});
+
+test('isDiagramDrawable offers a two-env graph without prod-confirm and rejects an empty envOrder', () => {
+  seedDrawableTwoEnvironmentState();
+  assert.equal(
+    controller.isDiagramDrawable(),
     true,
-    'diagram is still offered in full-pipeline mode when complete',
+    'two envs + one BU each + empty prodBUs is drawable (prod-confirm is not a diagram gate)',
   );
   assert.equal(
     controller.isDiagramOffered(false),
+    true,
+    'isDiagramOffered ignores isComplete and follows the drawable gate',
+  );
+
+  // everyEnvironmentHasOneBU() is true when envOrder is empty — that must not be sufficient.
+  controller.state.wizardState.envOrder = [];
+  controller.state.wizardState.envBUs = {};
+  assert.equal(
+    controller.isDiagramDrawable(),
     false,
-    'diagram is not offered in full-pipeline mode when incomplete',
+    'empty envOrder is not drawable even though everyEnvironmentHasOneBU() is true',
+  );
+
+  // Two named envs with no assignments → not drawable.
+  controller.state.wizardState.envOrder = ['DEV', 'SIT'];
+  controller.state.wizardState.envBUs = { DEV: [], SIT: [] };
+  assert.equal(
+    controller.isDiagramDrawable(),
+    false,
+    'two envs with no BU assignments are not drawable',
+  );
+
+  // Multi-BU env with no lineage mapping: lineage is not skippable and canProceed('lineage') fails.
+  controller.state.wizardState.envOrder = ['DEV', 'QA'];
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['SIT', 'EUN_QA'] };
+  controller.state.wizardState.lineage = {};
+  assert.equal(controller.isDiagramDrawable(), false, 'unlinked multi-BU lineage is not drawable');
+  controller.state.wizardState.lineage = { SIT: 'DEV', EUN_QA: 'DEV' };
+  assert.equal(
+    controller.isDiagramDrawable(),
+    true,
+    'linked multi-BU lineage is drawable without prod-confirm',
+  );
+});
+
+/**
+ * Stub Download-menu panel: collects appended menuitem descriptors without a real document.
+ *
+ * @returns {{items: object[], append: (node: object) => void}} collector
+ */
+function stubDownloadPanel() {
+  const items = [];
+  return {
+    items: items,
+    append(node) {
+      items.push(node);
+    },
+  };
+}
+
+test('header Download Diagramforce menuitem: omitted in validations-only, disabled until drawable, enabled when drawable', () => {
+  controller.state.config = sampleConfig;
+  controller.state.mode = 'validations';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: [],
+    envBUs: {},
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+    },
+    sharedDEs: false,
+  };
+  controller.seedValidationsPool();
+  assert.equal(
+    controller.shouldShowDiagramforceMenuItem(),
+    false,
+    'validations-only omits the row',
+  );
+  assert.equal(controller.diagramforceMenuItemSpec(), null, 'validations-only spec is null');
+  const validationsPanel = stubDownloadPanel();
+  controller.fillBuilderDownloadDiagramItem(validationsPanel);
+  assert.equal(
+    validationsPanel.items.length,
+    0,
+    'validations-only panel has no Diagramforce menuitem',
+  );
+
+  // Full mode, graph not ready: row is present but disabled with the until-ready tooltip.
+  controller.state.mode = 'full';
+  controller.state.wizardState.envOrder = [];
+  controller.state.wizardState.envBUs = {};
+  assert.equal(controller.isDiagramDrawable(), false, 'precondition: not drawable');
+  assert.equal(controller.shouldShowDiagramforceMenuItem(), true, 'full mode still shows the row');
+  const notReady = controller.diagramforceMenuItemSpec();
+  assert.equal(notReady.disabled, true, 'not-drawable row is disabled');
+  assert.equal(
+    notReady.title,
+    'Finish environment order, BU assignment, and lineage first.',
+    'disabled row carries the until-ready tooltip',
+  );
+  const notReadyPanel = stubDownloadPanel();
+  controller.fillBuilderDownloadDiagramItem(notReadyPanel);
+  assert.equal(notReadyPanel.items.length, 1, 'not-drawable panel appends one menuitem');
+  assert.equal(notReadyPanel.items[0].disabled, true);
+  assert.equal(notReadyPanel.items[0].textContent, 'Open in Diagramforce');
+
+  // Full mode, drawable: enabled menuitem, no tooltip.
+  seedDrawableTwoEnvironmentState();
+  assert.equal(controller.isDiagramDrawable(), true, 'precondition: drawable');
+  const ready = controller.diagramforceMenuItemSpec();
+  assert.equal(ready.disabled, false, 'drawable row is enabled');
+  assert.equal(ready.title, null, 'enabled row has no until-ready tooltip');
+  const readyPanel = stubDownloadPanel();
+  controller.fillBuilderDownloadDiagramItem(readyPanel);
+  assert.equal(readyPanel.items.length, 1, 'drawable panel appends one menuitem');
+  assert.equal(readyPanel.items[0].disabled, false);
+  assert.equal(readyPanel.items[0].textContent, 'Open in Diagramforce');
+  assert.equal(readyPanel.items[0].role, 'menuitem');
+});
+
+test('outputBlockers skips the Download step even when wizardStep is output', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: [],
+    envBUs: {},
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+    },
+    sharedDEs: false,
+  };
+  controller.setWizardStep('output');
+  const ids = controller.visibleSteps().map((step) => step.id);
+  assert.ok(ids.includes('output'), 'Download is a visible wizard step');
+  const blockers = controller.outputBlockers();
+  assert.ok(blockers.length > 0, 'earlier unfinished steps still produce blockers');
+  assert.ok(
+    blockers.every((reason) => !/download|\boutput\b/i.test(reason)),
+    'outputBlockers never includes a Download/output reason',
   );
 });
 
@@ -1782,10 +2229,25 @@ test('parseHash returns the intake default for empty / malformed / non-string in
   assert.deepEqual(controller.parseHash(null), intakeDefault);
 });
 
-test('parseHash ignores unknown extra params but keeps the known ones', () => {
-  assert.deepEqual(controller.parseHash('#view=output&s=xyz&extra=1&step='), {
-    view: 'output',
+test('parseHash treats view=output as an unknown view (no alias)', () => {
+  // Download is only `#view=wizard&step=output`. An unpublished `#view=output` parses like any
+  // unknown view (intake default); extra params are ignored and a present `s=` is still extracted.
+  assert.deepEqual(controller.parseHash('#view=output'), {
+    view: 'intake',
     step: null,
+    sessionId: null,
+  });
+  assert.deepEqual(controller.parseHash('#view=output&s=xyz&extra=1&step='), {
+    view: 'intake',
+    step: null,
+    sessionId: 'xyz',
+  });
+});
+
+test('parseHash ignores unknown extra params but keeps the known ones', () => {
+  assert.deepEqual(controller.parseHash('#view=wizard&s=xyz&extra=1&step=suffixes'), {
+    view: 'wizard',
+    step: 'suffixes',
     sessionId: 'xyz',
   });
 });
@@ -1807,8 +2269,10 @@ test('hashFromLocation builds the expected string for each top-level view', () =
   controller.state.step = 'wizard';
   assert.equal(controller.hashFromLocation(), '#view=wizard&step=suffixes&s=sess-1');
 
-  controller.state.step = 'output';
-  assert.equal(controller.hashFromLocation(), '#view=output&s=sess-1');
+  // Download is a wizard sub-step, not a top-level view. state.step stays 'wizard'.
+  controller.setWizardStep('output');
+  assert.equal(controller.state.step, 'wizard');
+  assert.equal(controller.hashFromLocation(), '#view=wizard&step=output&s=sess-1');
 
   // Restore state we borrowed for the assertions.
   controller.state.step = savedStep;
@@ -2347,6 +2811,111 @@ test('goBack: a Back navigation also clears a pending stepper-jump stash (defens
   );
 });
 
+// Dual Back/Next (slice 2). The null-querySelector stub never sees #mpb-back-top / #mpb-next-top,
+// so markup is asserted from the page source and lockstep labels via the setWizardNavDom seam.
+
+test('wizard markup places a top Back/Next pair under the stepper and keeps the bottom pair', () => {
+  const markup = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'mcdev-pipeline-builder', 'index.md'),
+    'utf8',
+  );
+  const stepperIndex = markup.indexOf('id="mpb-stepper"');
+  const topNavIndex = markup.indexOf('mpb-wizard-nav--top');
+  const backTopIndex = markup.indexOf('id="mpb-back-top"');
+  const nextTopIndex = markup.indexOf('id="mpb-next-top"');
+  const hostIndex = markup.indexOf('id="mpb-step-host"');
+  const backIndex = markup.indexOf('id="mpb-back"');
+  const nextIndex = markup.indexOf('id="mpb-next"');
+  assert.ok(stepperIndex !== -1, 'stepper is present');
+  assert.ok(topNavIndex !== -1, 'top nav class is present');
+  assert.ok(backTopIndex !== -1 && nextTopIndex !== -1, 'top pair ids are present');
+  assert.ok(backIndex !== -1 && nextIndex !== -1, 'bottom pair ids are present');
+  assert.ok(
+    stepperIndex < topNavIndex && topNavIndex < hostIndex,
+    'top nav sits immediately under the stepper, above the step host',
+  );
+  assert.ok(
+    backTopIndex < hostIndex && nextTopIndex < hostIndex,
+    'top buttons sit above the step host',
+  );
+  assert.ok(
+    hostIndex < backIndex && hostIndex < nextIndex,
+    'bottom pair remains below the step host',
+  );
+  assert.match(markup, /id="mpb-back-top"[^>]*>← Back/);
+  assert.match(markup, /id="mpb-next-top"[^>]*>Next →/);
+  assert.match(markup, /id="mpb-back"[^>]*>← Back/);
+  assert.match(markup, /id="mpb-next"[^>]*>Next →/);
+});
+
+test('wizard markup places Download inside the wizard between the step host and the bottom nav', () => {
+  const markup = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'mcdev-pipeline-builder', 'index.md'),
+    'utf8',
+  );
+  const wizardIndex = markup.indexOf('id="mpb-wizard"');
+  const hostIndex = markup.indexOf('id="mpb-step-host"');
+  const outputIndex = markup.indexOf('id="mpb-step-output"');
+  const backIndex = markup.indexOf('id="mpb-back"');
+  const wizardClose = markup.indexOf('</div>', markup.indexOf('id="mpb-step-error"'));
+  assert.ok(
+    wizardIndex !== -1 && outputIndex !== -1,
+    'wizard shell and Download section are present',
+  );
+  assert.ok(
+    wizardIndex < outputIndex && outputIndex < wizardClose,
+    'Download section lives inside #mpb-wizard',
+  );
+  assert.ok(hostIndex < outputIndex, 'Download section sits after the step host');
+  assert.ok(outputIndex < backIndex, 'Download section sits before the bottom Back/Next pair');
+});
+
+/**
+ * Headless Back/Next stand-in for `syncWizardNav` (null-querySelector stub has no real buttons).
+ *
+ * @param {string} text initial label
+ * @returns {{textContent: string, hidden: boolean, disabled: boolean}} fake button
+ */
+function fakeWizardNavButton(text) {
+  return { textContent: text, hidden: false, disabled: false };
+}
+
+test('syncWizardNav keeps both pairs in lockstep labels and hides Next only on Download', () => {
+  const back = fakeWizardNavButton('stale-back');
+  const next = fakeWizardNavButton('stale-next');
+  const backTop = fakeWizardNavButton('stale-back-top');
+  const nextTop = fakeWizardNavButton('stale-next-top');
+  next.hidden = true;
+  next.disabled = true;
+  nextTop.hidden = true;
+  nextTop.disabled = true;
+  controller.setWizardNavDom(back, next, backTop, nextTop);
+  try {
+    controller.setWizardStep('rules');
+    controller.syncWizardNav();
+    assert.equal(back.textContent, '← Back', 'bottom Back label');
+    assert.equal(backTop.textContent, '← Back', 'top Back label matches bottom');
+    assert.equal(next.textContent, 'Next →', 'bottom Next label');
+    assert.equal(nextTop.textContent, 'Next →', 'top Next label matches bottom');
+    assert.equal(next.hidden, false, 'Next visible on non-Download steps');
+    assert.equal(nextTop.hidden, false, 'top Next visible on non-Download steps');
+    // Disabling Next on canProceed failure is out of scope — goNext shows #mpb-step-error.
+    assert.equal(next.disabled, true, 'syncWizardNav must not change Next disabled');
+    assert.equal(nextTop.disabled, true, 'syncWizardNav must not change top Next disabled');
+
+    controller.setWizardStep('output');
+    controller.syncWizardNav();
+    assert.equal(next.hidden, true, 'Next hidden when wizardStep === output');
+    assert.equal(nextTop.hidden, true, 'top Next hidden when wizardStep === output');
+    assert.equal(next.disabled, true, 'Download hide must not also disable Next');
+    assert.equal(nextTop.disabled, true, 'Download hide must not also disable top Next');
+    assert.equal(next.textContent, 'Next →', 'labels stay in lockstep on Download');
+    assert.equal(nextTop.textContent, 'Next →', 'top label stays in lockstep on Download');
+  } finally {
+    controller.setWizardNavDom(null, null, null, null);
+  }
+});
+
 test('computeStepperStates: forward steps are not clickable while the bu-assign soft gate holds', () => {
   const steps = [
     { id: 'bu-assign', title: 'Assign BUs' },
@@ -2488,6 +3057,27 @@ test('syncBuilderModeClass toggles the root class from state.step (isBuilderMode
     globalThis.document.documentElement = previousRoot;
     controller.state.step = previousStep;
   }
+});
+
+test('diagram fallback host is authored as a child of the sticky builder header', () => {
+  const markup = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'mcdev-pipeline-builder', 'index.md'),
+    'utf8',
+  );
+  const headerIndex = markup.indexOf('id="mpb-builder-header"');
+  const actionsIndex = markup.indexOf('id="mpb-builder-header-actions"');
+  const fallbackIndex = markup.indexOf('id="mpb-diagram-fallback-header"');
+  assert.ok(headerIndex !== -1 && fallbackIndex !== -1, 'header and fallback hosts are present');
+  assert.ok(
+    headerIndex < actionsIndex && actionsIndex < fallbackIndex,
+    'fallback is authored after the header action slot',
+  );
+  const between = markup.slice(actionsIndex, fallbackIndex);
+  assert.equal(
+    (between.match(/<\/div>/g) || []).length,
+    1,
+    'only the action slot closes between actions and fallback (header stays open)',
+  );
 });
 
 test('syncBuilderHeaderMount hoists the header into .layout-content in builder mode and parks it on intake', () => {
@@ -2668,6 +3258,20 @@ test('seedProductionBUs still auto-selects the LAST environment’s BUs by defau
   );
 });
 
+test('canProceed("prod-confirm") fails when prodBUs is empty and passes with at least one', () => {
+  seedProductionConfirmState();
+  assert.deepEqual(controller.state.wizardState.prodBUs, []);
+  const empty = controller.canProceed('prod-confirm');
+  assert.equal(empty.ok, false, 'zero production BUs cannot proceed');
+  assert.match(empty.reason, /production/i);
+  controller.state.wizardState.prodBUs = ['Randstad_EUN'];
+  assert.equal(
+    controller.canProceed('prod-confirm').ok,
+    true,
+    'one confirmed production BU proceeds',
+  );
+});
+
 // ─── controller: WS4 vanilla reverse-inference (inferWizardStateFromVanilla) ───
 
 // A real gold-standard vanilla config with a full hand-built multi-BU pipeline and NO mpb_pipeline
@@ -2839,4 +3443,115 @@ test('wizardStateFromConfig infers a vanilla config (no mpb_pipeline block)', ()
   const state = controller.wizardStateFromConfig(strippedGoldConfig());
   assert.ok(state.envOrder.length > 1, 'a vanilla config produces a real multi-env wizard state');
   assert.equal(state.lineage.SIT, 'DEV', 'the inferred lineage reaches the wizard state');
+});
+
+test('downloadText keeps a leading-dot filename on the anchor download attribute', () => {
+  // Cheap DOM stub: capture a.download without a real browser download. Chrome-style stripping
+  // of leading dots is a browser quirk; the controller still sets `.mcdevrc.json` on the attr.
+  const previousCreate = globalThis.document.createElement;
+  const previousBody = globalThis.document.body;
+  const previousTextNode = globalThis.document.createTextNode;
+  const previousCreateObjectURL = URL.createObjectURL;
+  const previousRevokeObjectURL = URL.revokeObjectURL;
+  let clicked;
+  const anchor = {
+    href: '',
+    download: '',
+    className: '',
+    click() {
+      clicked = { download: anchor.download, href: anchor.href };
+    },
+    remove() {},
+    append() {},
+    setAttribute() {},
+  };
+  globalThis.document.createElement = () => anchor;
+  globalThis.document.createTextNode = (text) => ({ textContent: String(text) });
+  globalThis.document.body = { append() {} };
+  URL.createObjectURL = () => 'blob:mpb-test';
+  URL.revokeObjectURL = () => {};
+  try {
+    controller.downloadText('.mcdevrc.json', '{"ok":true}', 'application/json');
+    assert.ok(clicked, 'the generated anchor was clicked');
+    assert.equal(clicked.download, '.mcdevrc.json', 'leading-dot filename is kept on a.download');
+  } finally {
+    globalThis.document.createElement = previousCreate;
+    globalThis.document.body = previousBody;
+    globalThis.document.createTextNode = previousTextNode;
+    URL.createObjectURL = previousCreateObjectURL;
+    URL.revokeObjectURL = previousRevokeObjectURL;
+  }
+});
+
+/**
+ * Page-script `mcdev-pipeline-*.js` srcs from index.md, in document order.
+ * Sortable (CDN) is excluded — the lock compares only the local pipeline scripts.
+ *
+ * @returns {string[]} basename list
+ */
+function pagePipelineScriptBasenames() {
+  const markup = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'mcdev-pipeline-builder', 'index.md'),
+    'utf8',
+  );
+  const names = [];
+  const re = /mcdev-pipeline-[^'"/\s]+\.js/g;
+  let match;
+  while ((match = re.exec(markup)) !== null) {
+    names.push(match[0]);
+  }
+  return names;
+}
+
+/**
+ * Test-file require() list of pipeline builder scripts, in file order.
+ * Only matches real require() statements (not comments).
+ *
+ * @returns {string[]} basename list
+ */
+function testPipelineRequireBasenames() {
+  const source = fs.readFileSync(__filename, 'utf8');
+  const names = [];
+  const re = /^\s*require\('\.\.\/assets\/js\/(mcdev-pipeline-[^']+\.js)'\);/gm;
+  let match;
+  while ((match = re.exec(source)) !== null) {
+    names.push(match[1]);
+  }
+  return names;
+}
+
+test('script-order lock: index.md pipeline srcs match the test require() list', () => {
+  const page = pagePipelineScriptBasenames();
+  const required = testPipelineRequireBasenames();
+  assert.deepEqual(
+    page,
+    required,
+    'index.md mcdev-pipeline-*.js srcs must match tests require() order (Sortable excluded)',
+  );
+  assert.deepEqual(page, [
+    'mcdev-pipeline-config-builder.js',
+    'mcdev-pipeline-validations-builder.js',
+    'mcdev-pipeline-core.js',
+    'mcdev-pipeline-step-environment-order.js',
+    'mcdev-pipeline-step-production-confirm.js',
+    'mcdev-pipeline-step-suffixes.js',
+    'mcdev-pipeline-step-rules.js',
+    'mcdev-pipeline-step-bu-assign.js',
+    'mcdev-pipeline-step-lineage.js',
+    'mcdev-pipeline-intake.js',
+    'mcdev-pipeline-mode.js',
+    'mcdev-pipeline-output.js',
+    'mcdev-pipeline-builder.js',
+  ]);
+});
+
+test('every WIZARD_STEP_IDS id has a registered render + canProceed after the full require list', () => {
+  const ids = controller.WIZARD_STEP_IDS;
+  assert.ok(Array.isArray(ids) && ids.length > 0, 'core exports WIZARD_STEP_IDS');
+  for (const id of ids) {
+    const entry = controller.getRegisteredStep(id);
+    assert.ok(entry, 'step "' + id + '" is registered');
+    assert.equal(typeof entry.render, 'function', 'step "' + id + '" has render');
+    assert.equal(typeof entry.canProceed, 'function', 'step "' + id + '" has canProceed');
+  }
 });

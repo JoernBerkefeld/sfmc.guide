@@ -1,0 +1,327 @@
+@use "variables" as *;
+
+.mpb {
+  margin: $space-6 0;
+
+  // ── Callouts (scope + version requirement + security) ──
+  &-callout {
+    padding: $space-4 $space-5;
+    border-radius: $radius-md;
+    margin-bottom: $space-4;
+    font-size: $text-sm;
+    line-height: $leading-normal;
+
+    strong { display: block; margin-bottom: $space-1; }
+
+    &--scope {
+      border: 1px solid rgba($accent-primary, 0.35);
+      background: $accent-dim;
+      color: $text-secondary;
+    }
+
+    &--version {
+      border: 1px solid rgba($color-warning, 0.4);
+      background: rgba($color-warning, 0.08);
+      color: $color-warning;
+    }
+
+    &--security {
+      border: 1px solid rgba($color-success, 0.35);
+      background: rgba($color-success, 0.08);
+      color: $color-success;
+    }
+  }
+
+  // ── Persistent banners (storage disabled / quota / tab lock / external change) ──
+  &-banners:not(:empty) {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    margin-bottom: $space-4;
+  }
+
+  &-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    border-radius: $radius-md;
+    font-size: $text-sm;
+    border: 1px solid $border-default;
+    background: $bg-elevated;
+    color: $text-secondary;
+
+    &--warning {
+      border-color: rgba($color-warning, 0.4);
+      background: rgba($color-warning, 0.08);
+      color: $color-warning;
+    }
+
+    &--danger {
+      border-color: rgba($color-danger, 0.4);
+      background: rgba($color-danger, 0.08);
+      color: $color-danger;
+    }
+
+    .mpb-banner-actions {
+      margin-left: auto;
+      display: flex;
+      gap: $space-2;
+    }
+  }
+}
+
+// ── Wizard steps ────────────────────────────────────────────────────────────
+.mpb-step {
+  margin: $space-6 0;
+
+  h2 { margin-bottom: $space-4; }
+  h3 { margin: $space-5 0 $space-2; }
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────────
+.mpb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-sm;
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $accent-primary;
+    color: #fff;
+
+    &:hover:not(:disabled) { background: $text-link-hover; }
+  }
+
+  &--secondary {
+    background: $bg-elevated;
+    border-color: $border-default;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      border-color: $accent-primary;
+      color: $accent-primary;
+    }
+  }
+
+  &--danger {
+    background: transparent;
+    border-color: rgba($color-danger, 0.4);
+    color: $color-danger;
+
+    &:hover:not(:disabled) { background: rgba($color-danger, 0.08); }
+  }
+}
+
+// ── Generic wizard controls (rows, chips, fields) ───────────────────────────
+.mpb-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-4;
+
+  label { font-weight: 600; font-size: $text-sm; }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    padding: 0.45em 0.7em;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+}
+
+// The separator only ever holds 1–2 characters, so keep the input compact.
+.mpb-separator-input {
+  width: 4rem;
+  text-align: center;
+  font-family: $font-mono;
+}
+
+// The per-BU suffix control reads as ONE rounded field like the Step 1 env-name box:
+// the read-only separator prefix and the editable body share a single bordered container.
+.mpb-suffix-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  // Highlight the whole composite when the inner input is focused.
+  &:focus-within { border-color: $accent-primary; }
+
+  // Read-only prefix (e.g. "_"): muted, monospaced, small left padding.
+  .mpb-suffix-sep {
+    padding-left: 0.7em;
+    color: $text-muted;
+    font-family: $font-mono;
+    font-size: $text-sm;
+  }
+
+  // Editable body: borderless/transparent so it blends into the shared box.
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45em 0.7em 0.45em 0;
+    border: 0;
+    background: transparent;
+    outline: 0;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-family: $font-sans;
+  }
+}
+
+// Forbidden-prefix editor reuses the suffix-input box for the input+Add-button layout, but it has
+// no leading separator — so restore the input's left padding (the suffix variant zeroes it to sit
+// flush against the "_" separator).
+.mpb-prefix-input input[type="text"] {
+  padding: 0.45em 0.7em;
+}
+
+.mpb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+}
+
+.mpb-chips-label {
+  color: $text-muted;
+  font-size: $text-sm;
+}
+
+.mpb-chip {
+  font-size: $text-xs;
+  font-weight: 600;
+  padding: 0.25em 0.7em;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  background: $bg-elevated;
+  color: $text-secondary;
+  cursor: pointer;
+
+  &:hover { border-color: $accent-primary; color: $accent-primary; }
+}
+
+// Removable value pill for the forbidden-prefix editor — mirrors the bu-assign node aesthetic
+// (surface background, muted border, rounded) with an inline borderless × remove control.
+.mpb-prefix-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 0.2em 0.3em 0.2em 0.7em;
+  border: 1px solid $border-muted;
+  border-radius: $radius-full;
+  background: $bg-surface;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.mpb-prefix-chip-text {
+  font-family: $font-mono;
+}
+
+.mpb-prefix-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $text-muted;
+  font-size: 1.05em;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+  }
+}
+
+.mpb-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+// ── Forbidden-prefix editor board (one card per child BU) ──
+// Cards wrap and stack flexibly in both directions rather than forming full-width rows,
+// mirroring the bu-assign board's node card aesthetic.
+.mpb-prefix-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-4;
+}
+
+// One BU card: title (BU ref) + its prefix chips + the add-prefix control, mirroring
+// the `.mpb-env-node` / `.mpb-env-order-col` card look (surface, muted border, rounded).
+.mpb-prefix-card {
+  flex: 1 1 260px;
+  min-width: 240px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  .mpb-prefix-card-name { font-weight: 600; word-break: break-word; }
+}
+
+// ── Errors (parse gate, download guard, step errors) ────────────────────────
+.mpb-error {
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  border: 1px solid rgba($color-danger, 0.4);
+  background: rgba($color-danger, 0.08);
+  color: $color-danger;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+
+  &[hidden] { display: none; }
+}
+
+// ── Visually-hidden (screen-reader-only) ────────────────────────────────────
+// The 1px-clip pattern: kept in the accessibility tree + Tab order + SR-operable, but not rendered.
+// Used for the keyboard/SR BU-reassign <select> that mirrors the drag board.
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

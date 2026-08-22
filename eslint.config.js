@@ -19,7 +19,10 @@ import js from '@eslint/js';
  */
 
 const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js'];
-const TEST_FILES = ['tests/mcdev-pipeline-builders.test.cjs'];
+const TEST_FILES = [
+    'tests/mcdev-pipeline-builders.test.cjs',
+    'tests/mcdev-pipeline-builder-css.test.cjs',
+];
 const ALL_FILES = [...BUILDER_FILES, ...TEST_FILES];
 
 export default [

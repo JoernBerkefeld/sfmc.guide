@@ -1,0 +1,163 @@
+@use "variables" as *;
+
+// ── Intake screen ───────────────────────────────────────────────────────────
+.mpb-intake-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  text-align: center;
+  padding: $space-8 $space-5;
+  border: 2px dashed $border-default;
+  border-radius: $radius-lg;
+  background: $bg-surface;
+  cursor: pointer;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  &:hover,
+  &:focus,
+  &.is-dragover {
+    border-color: $accent-primary;
+    background: $accent-dim;
+    outline: none;
+  }
+
+  p { margin: 0; }
+}
+
+.mpb-paste {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  label { font-weight: 600; font-size: $text-sm; }
+
+  textarea {
+    width: 100%;
+    font-family: $font-mono;
+    font-size: $text-sm;
+    padding: $space-3;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-surface;
+    color: $text-primary;
+    resize: vertical;
+  }
+}
+
+// ── Saved-sessions list + storage gauge ──
+.mpb-saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-3;
+
+  &:empty::before {
+    content: "No saved sessions yet — load a config above to begin.";
+    display: block;
+    padding: $space-4;
+    color: $text-muted;
+    font-size: $text-sm;
+    font-style: italic;
+    border: 1px dashed $border-muted;
+    border-radius: $radius-md;
+  }
+}
+
+.mpb-saved-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  .mpb-saved-name {
+    font-weight: 600;
+    color: $text-primary;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: $text-base;
+    cursor: text;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mpb-saved-meta {
+    font-size: $text-xs;
+    color: $text-muted;
+  }
+
+  .mpb-saved-actions {
+    display: flex;
+    gap: $space-2;
+    margin-left: auto;
+  }
+}
+
+.mpb-storage-gauge {
+  font-size: $text-xs;
+  color: $text-muted;
+
+  .mpb-gauge-bar {
+    height: 6px;
+    border-radius: $radius-full;
+    background: $bg-overlay;
+    overflow: hidden;
+    margin-top: $space-1;
+  }
+
+  .mpb-gauge-fill {
+    height: 100%;
+    background: $accent-primary;
+    transition: width $transition-normal;
+  }
+}
+
+// ── Mode picker ─────────────────────────────────────────────────────────────
+.mpb-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  text-align: left;
+  padding: $space-5;
+  border: 1px solid $border-muted;
+  border-radius: $radius-lg;
+  background: $bg-surface;
+  cursor: pointer;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:hover,
+  &:focus,
+  &.is-selected {
+    border-color: $accent-primary;
+    box-shadow: $shadow-sm;
+    outline: none;
+  }
+
+  .mpb-mode-title { font-size: $text-lg; font-weight: 700; color: $text-primary; }
+  .mpb-mode-desc { font-size: $text-sm; color: $text-secondary; line-height: $leading-relaxed; }
+}

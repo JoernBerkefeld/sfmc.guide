@@ -1,0 +1,211 @@
+@use "variables" as *;
+
+// ── Lineage board (one column per environment, connected by arrowed SVG links) ──
+// Unlike the BU-assignment board (a dense masonry grid), the lineage board spreads its environment
+// columns evenly across the full width with a flex row so the source→target flow reads left-to-right
+// and the connector arrows have a stable horizontal span. `position: relative` anchors the absolute
+// SVG overlay to the board's own box.
+.mpb-lineage-board {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: $space-12;
+  overflow-x: auto;
+}
+
+.mpb-lineage-col {
+  flex: 1 1 0;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.mpb-lineage-col-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+  color: $text-primary;
+}
+
+// Shared title-row layout for Parent BU nodes and interactive lineage nodes.
+// Name color is NOT shared: parent names are muted (immovable); interactive names inherit body color.
+.mpb-lineage-node-title {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: $space-2;
+  min-width: 0;
+}
+
+.mpb-lineage-node-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  text-align: left;
+  word-break: break-word;
+}
+
+.mpb-lineage-node-suffix {
+  flex: none;
+  margin-left: auto;
+  font-weight: 400;
+  text-align: right;
+  color: $text-muted;
+}
+
+.mpb-lineage-node-unused {
+  flex: none;
+  color: $color-warning;
+  font-weight: 400;
+  line-height: 1;
+}
+
+// One BU inside a column. Kept above the overlay (z-index) so the <select> stays clickable and the
+// arrows visibly terminate at the node's edge rather than covering it.
+.mpb-lineage-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+  // Draggable source for drag-to-connect; the grab affordance hints the gesture.
+  cursor: grab;
+
+  .mpb-lineage-node-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
+
+  .mpb-lineage-select {
+    padding: 0.35em 0.5em;
+    border: 1px solid $border-default;
+    border-radius: $radius-sm;
+    background: $bg-surface;
+    color: $text-primary;
+    font-size: $text-xs;
+    font-family: $font-sans;
+    // The <select> is an interactive control, not a drag handle.
+    cursor: pointer;
+  }
+
+  // Drag-to-connect affordances: the dragged node dims, a valid adjacent target highlights in the
+  // lineage accent, and an invalid target shows a not-allowed state.
+  &.is-dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  &.is-drop-target {
+    border-color: $color-lineage-accent;
+    box-shadow: 0 0 0 2px rgba($color-lineage-accent, 0.35);
+  }
+
+  &.is-drop-invalid {
+    cursor: not-allowed;
+    border-color: $color-danger;
+  }
+}
+
+// Decorative connector overlay: sits on top of the columns but never intercepts pointer events.
+.mpb-lineage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+// Stack that holds the optional Parent BU band above the interactive lineage board so both
+// reuse `.mpb-lineage-board` / `.mpb-lineage-col` and keep the same horizontal rhythm.
+.mpb-lineage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+// When the Parent BU band is present, inset the child board to match the band's horizontal
+// padding + 1px border so env columns (and therefore arrows) line up.
+.mpb-lineage-stack--with-parent > .mpb-lineage-board {
+  padding-left: $space-3;
+  padding-right: $space-3;
+  border: 1px solid transparent;
+}
+
+// Outer 0fr → 1fr animator for the Parent BU `<details>` (checkbox show/hide, including summary).
+.mpb-parent-band-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $transition-normal;
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  &.is-visible {
+    grid-template-rows: 1fr;
+  }
+}
+
+// Read-only Parent BU band: a labelled, bordered `<details>` spanning every environment column.
+.mpb-parent-band {
+  padding: $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+}
+
+.mpb-parent-band-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+  color: $text-muted;
+  cursor: pointer;
+}
+
+.mpb-parent-band[open] > .mpb-parent-band-title {
+  margin-bottom: $space-3;
+}
+
+// Inner 0fr → 1fr animator for the lineage board (native summary toggle). The closed-state
+// selector beats the UA `details:not([open]) > *:not(summary) { display: none }` so the grid
+// can actually interpolate instead of popping through `display`.
+.mpb-parent-band > .mpb-parent-band-body,
+.mpb-parent-band:not([open]) > .mpb-parent-band-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $transition-normal;
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+
+.mpb-parent-band[open] > .mpb-parent-band-body {
+  grid-template-rows: 1fr;
+}
+
+// Inert Parent BU node: quieter than the interactive lineage nodes (no grab cursor, no select).
+// Title-row layout is shared; only the parent name is muted, to mark the bubble as immovable.
+.mpb-parent-node {
+  position: relative;
+  z-index: 1;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+  pointer-events: none;
+  cursor: default;
+
+  .mpb-lineage-node-name {
+    color: $text-muted;
+  }
+}
+
+.mpb-lineage-unused-note {
+  margin-top: $space-3;
+}

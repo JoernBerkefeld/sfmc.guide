@@ -1,0 +1,61 @@
+@use "variables" as *;
+
+// ── Output ──────────────────────────────────────────────────────────────────
+.mpb-output-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mpb-output-card {
+  border: 1px solid $border-muted;
+  border-radius: $radius-lg;
+  padding: $space-4 $space-5;
+  background: $bg-surface;
+
+  h3 { margin-bottom: $space-3; }
+}
+
+.mpb-output-actions {
+  display: flex;
+  gap: $space-2;
+  margin-bottom: $space-3;
+}
+
+// Muted hint below the download buttons (also reused in the header Download dropdown):
+// warns that some browsers strip the leading dot from the saved filename.
+.mpb-dl-hint {
+  margin: 0 0 $space-3;
+  font-size: $text-xs;
+  color: $text-muted;
+
+  code { font-size: inherit; }
+}
+
+.mpb-code-fallback {
+  width: 100%;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  padding: $space-3;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+  color: $text-primary;
+  resize: vertical;
+}
+
+.mpb-diagram-cta {
+  margin-top: $space-6;
+  padding: $space-4 $space-5;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+
+  p { margin: $space-2 0 0; }
+}
+
+.mpb-diagram-fallback { margin-top: $space-3; }
