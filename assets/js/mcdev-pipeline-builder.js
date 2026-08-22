@@ -1412,6 +1412,70 @@
     }
 
     /**
+     * Collect assigned buRefs from one environment's list, first-seen order, skipping empties.
+     *
+     * @param {string[]} references one environment's assigned buRefs
+     * @param {string[]} assigned accumulator
+     * @param {Set<string>} seen already-recorded buRefs
+     * @returns {void}
+     */
+    function collectAssignedBUReferences(references, assigned, seen) {
+        if (!Array.isArray(references)) {
+            return;
+        }
+        for (const reference of references) {
+            if (!reference || seen.has(reference)) {
+                continue;
+            }
+            seen.add(reference);
+            assigned.push(reference);
+        }
+    }
+
+    /**
+     * Assigned BUs that do not appear in any lineage mapping — neither as a source
+     * (`Object.values(lineage)`) nor as a target (`Object.keys(lineage)`). Typical case: a
+     * source-env BU that nothing deploys from, or a downstream BU whose "deploys from" is empty.
+     * Pure: does not read `wizardState`.
+     *
+     * @param {{[environment: string]: string[]}} environmentBUs environment → assigned buRefs
+     * @param {{[childReference: string]: string}} lineage child → parent map
+     * @returns {string[]} unused buRefs in assignment order (first-seen)
+     */
+    function unusedLineageBUs(environmentBUs, lineage) {
+        const assigned = [];
+        const seen = new Set();
+        const grouped = Object.values(environmentBUs || {});
+        for (const references of grouped) {
+            collectAssignedBUReferences(references, assigned, seen);
+        }
+        const map = lineage || {};
+        const used = new Set([...Object.keys(map), ...Object.values(map)]);
+        return assigned.filter((reference) => !used.has(reference));
+    }
+
+    /**
+     * Non-blocking explainer listing unused BUs. One original sentence; empty unused → empty string.
+     *
+     * @param {string[]} unused unused buRefs
+     * @returns {string} the note text
+     */
+    function unusedLineageNoteText(unused) {
+        if (!unused || unused.length === 0) {
+            return '';
+        }
+        const names = unused.join(', ');
+        if (unused.length === 1) {
+            return (
+                names + ' is not linked in the lineage, so it will not appear in generated pipelines.'
+            );
+        }
+        return (
+            names + ' are not linked in the lineage, so they will not appear in generated pipelines.'
+        );
+    }
+
+    /**
      * Per-step "can proceed" gate. Returns whether the given step is complete enough to advance,
      * plus a human-readable reason when it is not. All seven steps validate for real; the `rules`
      * step is intentionally permissive (zero rules is allowed).
@@ -2747,10 +2811,13 @@
         // One column per environment (in env order); the lowest/source env has no upstream, so its
         // BUs are shown as read-only source nodes and every later env lists its child BUs with an
         // upstream-BU <select>. Columns spread evenly across the width (flex, no masonry wrap).
+        const unusedSet = new Set(
+            unusedLineageBUs(state.wizardState.envBUs, state.wizardState.lineage)
+        );
         const board = makeElement('div', { class: 'mpb-lineage-board' });
         const order = environmentNames();
         for (const [environmentIndex, environment] of order.entries()) {
-            board.append(lineageColumn(environment, environmentIndex));
+            board.append(lineageColumn(environment, environmentIndex, unusedSet));
         }
         // The SVG overlay draws the child→parent connector arrows on top of the columns. It is
         // decorative (the <select>s carry the real state), so it is marked aria-hidden.
@@ -2762,6 +2829,10 @@
         board.append(overlay);
         stack.append(board);
         panel.append(stack);
+        const unused = [...unusedSet];
+        if (unused.length > 0) {
+            panel.append(unusedLineageNote(unused));
+        }
         // Anchor each overlay + schedule the first draw once the columns have a real layout, and keep
         // the arrows in sync with window resizes until the step is left (teardownLineageOverlay).
         if (parentMount) {
@@ -2811,6 +2882,23 @@
     let shouldAnimateParentBandEnter = false;
 
     /**
+     * The mounted Parent BU slot, or null when the band is not in the document. Lets the
+     * shared-DEs exit animation collapse in place without a remount.
+     *
+     * @type {HTMLElement|null}
+     */
+    let parentBandSlotElement = null;
+
+    /**
+     * Pending shared-DEs collapse: the slot being hidden and its `transitionend` handler. Null
+     * when no exit is in flight. Cancelled if the checkbox is turned back on before the collapse
+     * finishes.
+     *
+     * @type {{slot: HTMLElement, onEnd: (event: TransitionEvent) => void}|null}
+     */
+    let parentBandExit = null;
+
+    /**
      * Build the spanning Parent BU band: a native `<details>` / `<summary>` across every environment
      * column, with one inert node per assigned child BU (name + stored suffix) grouped into the
      * same columns as the lineage board below. Decorative — no drag, no select, no focus. The
@@ -2850,6 +2938,7 @@
         body.append(board);
         details.append(body);
         slot.append(details);
+        parentBandSlotElement = slot;
         details.addEventListener('toggle', () => {
             isParentBandExpanded = details.open;
             drawLineageArrows();
@@ -2887,6 +2976,10 @@
             slot.getBoundingClientRect();
         }
         const reveal = () => {
+            // Rapid uncheck before this frame: stay collapsed so the exit path owns the slot.
+            if (parentBandExit || !state.wizardState.sharedDEs) {
+                return;
+            }
             slot.classList.add('is-visible');
         };
         if (global.requestAnimationFrame) {
@@ -2897,9 +2990,58 @@
     }
 
     /**
-     * One inert Parent BU node: BU name (bold, left) and the stored suffix including its separator
-     * (normal weight, right). Not focusable and not a drag source — the child board owns the
-     * interactive lineage mapping.
+     * Shared name + suffix title row used by both the inert Parent BU nodes and the interactive
+     * lineage nodes. The unused-pipeline warning sits between name and suffix when requested so
+     * the suffix stays right-aligned.
+     *
+     * @param {string} reference the BU reference
+     * @param {{suffix?: string, unused?: boolean}} [options] stored suffix override + unused flag
+     * @returns {HTMLElement} the title-row element
+     */
+    function lineageNodeTitleRow(reference, options) {
+        const settings = options || {};
+        const suffix = typeof settings.suffix === 'string' ? settings.suffix : suffixOf(reference);
+        const row = makeElement('div', { class: 'mpb-lineage-node-title' });
+        row.append(makeElement('span', { class: 'mpb-lineage-node-name', text: reference }));
+        if (settings.unused) {
+            row.append(unusedLineageIcon());
+        }
+        row.append(makeElement('span', { class: 'mpb-lineage-node-suffix', text: suffix }));
+        return row;
+    }
+
+    /**
+     * Small non-blocking warning mark for a BU that is assigned but unused in the lineage.
+     *
+     * @returns {HTMLElement} the icon element
+     */
+    function unusedLineageIcon() {
+        return makeElement('span', {
+            class: 'mpb-lineage-node-unused',
+            text: '\u{26A0}',
+            attrs: {
+                role: 'img',
+                'aria-label': 'Not used in any pipeline',
+            },
+        });
+    }
+
+    /**
+     * Non-blocking note below the lineage board listing unused BUs.
+     *
+     * @param {string[]} unused unused buRefs
+     * @returns {HTMLElement} the note paragraph
+     */
+    function unusedLineageNote(unused) {
+        return makeElement('p', {
+            class: 'mpb-warn mpb-lineage-unused-note',
+            text: unusedLineageNoteText(unused),
+        });
+    }
+
+    /**
+     * One inert Parent BU node: shared title row (name left, suffix right). Not focusable and not
+     * a drag source — the child board owns the interactive lineage mapping.
      *
      * @param {string} reference the child buRef
      * @param {string} suffix the stored suffix (may be empty; never invented here)
@@ -2913,10 +3055,7 @@
                 'data-bu': reference,
             },
         });
-        node.append(
-            makeElement('span', { class: 'mpb-parent-node-name', text: reference }),
-            makeElement('span', { class: 'mpb-parent-node-suffix', text: suffix })
-        );
+        node.append(lineageNodeTitleRow(reference, { suffix: suffix }));
         return node;
     }
 
@@ -2939,9 +3078,10 @@
      *
      * @param {string} environment the environment name
      * @param {number} environmentIndex the environment's index in env order (0 = source)
+     * @param {Set<string>} unusedSet assigned buRefs that are unused in the lineage
      * @returns {HTMLElement} the column element
      */
-    function lineageColumn(environment, environmentIndex) {
+    function lineageColumn(environment, environmentIndex, unusedSet) {
         const column = makeElement('div', { class: 'mpb-lineage-col' });
         column.append(
             makeElement('p', {
@@ -2951,8 +3091,9 @@
         );
         const parentOptions =
             environmentIndex > 0 ? assignedBUReferences(environmentNames()[environmentIndex - 1]) : [];
+        const unused = unusedSet || new Set();
         for (const reference of assignedBUReferences(environment)) {
-            column.append(lineageNode(environmentIndex, reference, parentOptions));
+            column.append(lineageNode(environmentIndex, reference, parentOptions, unused));
         }
         return column;
     }
@@ -2965,9 +3106,10 @@
      * @param {number} environmentIndex the environment's index in env order
      * @param {string} reference the BU reference
      * @param {string[]} parentOptions the upstream env's BU references (empty for the source env)
+     * @param {Set<string>} unusedSet assigned buRefs that are unused in the lineage
      * @returns {HTMLElement} the node element
      */
-    function lineageNode(environmentIndex, reference, parentOptions) {
+    function lineageNode(environmentIndex, reference, parentOptions, unusedSet) {
         const node = makeElement('div', {
             class: 'mpb-lineage-node',
             // draggable + data-env-index drive the native drag-to-connect handlers (mountLineageDnd):
@@ -2979,7 +3121,9 @@
                 'data-env-index': String(environmentIndex),
             },
         });
-        node.append(makeElement('span', { class: 'mpb-lineage-node-name', text: reference }));
+        node.append(
+            lineageNodeTitleRow(reference, { unused: unusedSet && unusedSet.has(reference) })
+        );
         // The source env has no upstream to choose — its BUs are pure connector targets/sources.
         if (environmentIndex === 0) {
             return node;
@@ -3064,9 +3208,77 @@
         if (select) {
             select.value = parentReference;
         }
-        drawLineageArrows();
+        refreshUnusedLineageWarnings(board);
         updateNavGate();
         scheduleAutosave();
+    }
+
+    /**
+     * Sync unused-BU warning icons and the board-level explainer after a lineage mapping change,
+     * then redraw connectors (icon presence can change node height). Safe on a stub board that
+     * lacks `querySelectorAll`.
+     *
+     * @param {HTMLElement} board the interactive lineage board
+     * @returns {void}
+     */
+    function refreshUnusedLineageWarnings(board) {
+        const unused = unusedLineageBUs(state.wizardState.envBUs, state.wizardState.lineage);
+        if (board && typeof board.querySelectorAll === 'function') {
+            const unusedSet = new Set(unused);
+            for (const node of board.querySelectorAll('.mpb-lineage-node')) {
+                const title = node.querySelector('.mpb-lineage-node-title');
+                if (!title) {
+                    continue;
+                }
+                const existing = title.querySelector('.mpb-lineage-node-unused');
+                const isUnused = unusedSet.has(node.dataset.bu);
+                if (isUnused && !existing) {
+                    const suffix = title.querySelector('.mpb-lineage-node-suffix');
+                    title.insertBefore(unusedLineageIcon(), suffix || null);
+                } else if (!isUnused && existing && existing.parentNode) {
+                    existing.remove();
+                }
+            }
+            refreshUnusedLineageNote(board, unused);
+        }
+        drawLineageArrows();
+    }
+
+    /**
+     * Create, update, or remove the non-blocking unused-BU note below the lineage board.
+     *
+     * @param {HTMLElement} board the interactive lineage board
+     * @param {string[]} unused unused buRefs
+     * @returns {void}
+     */
+    function refreshUnusedLineageNote(board, unused) {
+        const stack = board.parentElement;
+        if (!stack) {
+            return;
+        }
+        const host = stack.parentElement;
+        if (!host) {
+            return;
+        }
+        const note =
+            typeof host.querySelector === 'function' ? host.querySelector('.mpb-lineage-unused-note') : null;
+        if (unused.length === 0) {
+            if (note && note.parentNode) {
+                note.remove();
+            }
+            return;
+        }
+        const text = unusedLineageNoteText(unused);
+        if (note) {
+            setText(note, text);
+            return;
+        }
+        const created = unusedLineageNote(unused);
+        if (typeof stack.after === 'function') {
+            stack.after(created);
+        } else if (typeof host.append === 'function') {
+            host.append(created);
+        }
     }
 
     /**
@@ -3223,6 +3435,15 @@
             if (parentDetails && !parentDetails.open) {
                 continue;
             }
+            // Skip the parent overlay while the shared-DEs exit collapse is in flight.
+            if (
+                parentBandExit &&
+                overlay.board &&
+                typeof overlay.board.closest === 'function' &&
+                overlay.board.closest('.mpb-parent-band-slot')
+            ) {
+                continue;
+            }
             drawLineageConnectors(overlay.board, collectLineageNodeMap(overlay.board), lineage);
         }
     }
@@ -3299,6 +3520,8 @@
      * @returns {void}
      */
     function teardownLineageOverlay() {
+        clearParentBandExit();
+        parentBandSlotElement = null;
         for (const overlay of lineageOverlays) {
             if (global.removeEventListener) {
                 global.removeEventListener('resize', overlay.onResize);
@@ -3691,9 +3914,10 @@
     }
 
     /**
-     * Persist the shared-DEs answer and remount the lineage step. Flipping false → true resets the
-     * Parent BU `<details>` to open and requests the enter animation; flipping off unmounts the
-     * band (same hide as before). The expand/collapse flag is UI-only — not written to wizardState.
+     * Persist the shared-DEs answer. Flipping false → true resets the Parent BU `<details>` to
+     * open and requests the enter animation (or cancels a pending collapse). Flipping on → off
+     * collapses the slot in place (1fr → 0fr) and unmounts on `transitionend` — it does not
+     * remount immediately. The expand/collapse flag is UI-only — not written to wizardState.
      *
      * @param {boolean} enabled whether shared data extensions are in use
      * @returns {void}
@@ -3701,13 +3925,134 @@
     function setSharedDEs(enabled) {
         const isEnabled = !!enabled;
         const wasOn = !!state.wizardState.sharedDEs;
-        if (isEnabled && !wasOn) {
-            isParentBandExpanded = true;
-            shouldAnimateParentBandEnter = true;
-        }
         state.wizardState.sharedDEs = isEnabled;
         scheduleAutosave();
-        render();
+        if (isEnabled && !wasOn) {
+            isParentBandExpanded = true;
+            if (cancelParentBandExit()) {
+                return;
+            }
+            shouldAnimateParentBandEnter = true;
+            render();
+            return;
+        }
+        if (!isEnabled && wasOn) {
+            if (beginParentBandExit()) {
+                return;
+            }
+            render();
+        }
+    }
+
+    /**
+     * Drop a pending shared-DEs exit listener without unmounting the slot.
+     *
+     * @returns {void}
+     */
+    function clearParentBandExit() {
+        if (!parentBandExit) {
+            return;
+        }
+        parentBandExit.slot.removeEventListener('transitionend', parentBandExit.onEnd);
+        parentBandExit = null;
+    }
+
+    /**
+     * Cancel an in-flight shared-DEs collapse: keep the slot, re-add `.is-visible`, and redraw.
+     *
+     * @returns {boolean} true when a pending exit was cancelled
+     */
+    function cancelParentBandExit() {
+        if (!parentBandExit) {
+            return false;
+        }
+        const slot = parentBandExit.slot;
+        clearParentBandExit();
+        slot.classList.add('is-visible');
+        slot.removeAttribute('inert');
+        drawLineageArrows();
+        return true;
+    }
+
+    /**
+     * Start the top-to-bottom collapse. The slot stays in the DOM until `transitionend` on
+     * `grid-template-rows`. A slot that was never revealed unmounts immediately.
+     *
+     * @returns {boolean} true when a mounted slot is being collapsed (or was immediately removed)
+     */
+    function beginParentBandExit() {
+        const slot = parentBandSlotElement;
+        if (!slot || !slot.classList) {
+            return false;
+        }
+        clearParentBandExit();
+        if (!slot.classList.contains('is-visible')) {
+            finishParentBandExit(slot);
+            return true;
+        }
+        const onEnd = (event) => {
+            if (event.target !== slot || event.propertyName !== 'grid-template-rows') {
+                return;
+            }
+            clearParentBandExit();
+            finishParentBandExit(slot);
+        };
+        parentBandExit = { slot: slot, onEnd: onEnd };
+        slot.addEventListener('transitionend', onEnd);
+        slot.classList.remove('is-visible');
+        slot.setAttribute('inert', '');
+        return true;
+    }
+
+    /**
+     * Tear down one lineage overlay (resize listener + pending frame) whose board matches.
+     *
+     * @param {HTMLElement|null} board the board whose overlay should be dropped
+     * @returns {void}
+     */
+    function teardownLineageOverlayForBoard(board) {
+        if (!board) {
+            return;
+        }
+        const remaining = [];
+        for (const overlay of lineageOverlays) {
+            if (overlay.board === board) {
+                if (global.removeEventListener) {
+                    global.removeEventListener('resize', overlay.onResize);
+                }
+                if (overlay.frame !== null && global.cancelAnimationFrame) {
+                    global.cancelAnimationFrame(overlay.frame);
+                }
+            } else {
+                remaining.push(overlay);
+            }
+        }
+        lineageOverlays = remaining;
+    }
+
+    /**
+     * Remove the collapsed Parent BU slot, drop its overlay, restore child-board alignment, and
+     * redraw the remaining connectors.
+     *
+     * @param {HTMLElement} slot the `.mpb-parent-band-slot` being removed
+     * @returns {void}
+     */
+    function finishParentBandExit(slot) {
+        const parentBoard =
+            typeof slot.querySelector === 'function' ? slot.querySelector('.mpb-lineage-board') : null;
+        teardownLineageOverlayForBoard(parentBoard);
+        const stack =
+            typeof slot.closest === 'function' ? slot.closest('.mpb-lineage-stack') : slot.parentElement;
+        if (slot.parentNode) {
+            slot.remove();
+        }
+        if (stack && stack.classList) {
+            stack.classList.remove('mpb-lineage-stack--with-parent');
+        }
+        if (parentBandSlotElement === slot) {
+            parentBandSlotElement = null;
+        }
+        drawLineageArrows();
     }
 
     /**
@@ -7478,6 +7823,8 @@
         // asserted directly (env all-production reflection + bulk (un)mark) without a rendered DOM.
         renderEnvironmentColumns: renderEnvironmentColumns,
         parentBandNodes: parentBandNodes,
+        unusedLineageBUs: unusedLineageBUs,
+        unusedLineageNoteText: unusedLineageNoteText,
         setSharedDEs: setSharedDEs,
         isEnvironmentAllProduction: isEnvironmentAllProduction,
         setEnvironmentProduction: setEnvironmentProduction,

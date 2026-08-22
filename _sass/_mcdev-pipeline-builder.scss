@@ -764,6 +764,39 @@
   color: $text-primary;
 }
 
+// Shared title-row layout for Parent BU nodes and interactive lineage nodes.
+// Name color is NOT shared: parent names are muted (immovable); interactive names inherit body color.
+.mpb-lineage-node-title {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: $space-2;
+  min-width: 0;
+}
+
+.mpb-lineage-node-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  text-align: left;
+  word-break: break-word;
+}
+
+.mpb-lineage-node-suffix {
+  flex: none;
+  margin-left: auto;
+  font-weight: 400;
+  text-align: right;
+  color: $text-muted;
+}
+
+.mpb-lineage-node-unused {
+  flex: none;
+  color: $color-warning;
+  font-weight: 400;
+  line-height: 1;
+}
+
 // One BU inside a column. Kept above the overlay (z-index) so the <select> stays clickable and the
 // arrows visibly terminate at the node's edge rather than covering it.
 .mpb-lineage-node {
@@ -779,7 +812,6 @@
   // Draggable source for drag-to-connect; the grab affordance hints the gesture.
   cursor: grab;
 
-  .mpb-lineage-node-name { font-weight: 600; word-break: break-word; }
   .mpb-lineage-node-label { font-size: $text-xs; color: $text-muted; font-weight: 600; }
 
   .mpb-lineage-select {
@@ -893,14 +925,10 @@
 }
 
 // Inert Parent BU node: quieter than the interactive lineage nodes (no grab cursor, no select).
+// Title-row layout is shared; only the parent name is muted, to mark the bubble as immovable.
 .mpb-parent-node {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: $space-2;
   padding: $space-2 $space-3;
   border: 1px solid $border-muted;
   border-radius: $radius-md;
@@ -908,20 +936,13 @@
   pointer-events: none;
   cursor: default;
 
-  .mpb-parent-node-name {
-    font-weight: 600;
-    text-align: left;
-    word-break: break-word;
-    min-width: 0;
+  .mpb-lineage-node-name {
     color: $text-muted;
   }
+}
 
-  .mpb-parent-node-suffix {
-    flex: none;
-    font-weight: 400;
-    text-align: right;
-    color: $text-muted;
-  }
+.mpb-lineage-unused-note {
+  margin-top: $space-3;
 }
 
 // ── Shared environment-columns layout (bu-assign / suffixes / prod-confirm) ──

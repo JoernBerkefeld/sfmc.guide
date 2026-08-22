@@ -1448,6 +1448,63 @@ test('setSharedDEs flips wizardState.sharedDEs', () => {
   );
 });
 
+test('unusedLineageBUs flags assigned BUs that are neither source nor target', () => {
+  // Screenshot fixture: DEV is assigned but nothing deploys from it; DEV_Regional fans out to
+  // SIT + SIT_Regional, so it is used as a source. SIT / SIT_Regional are used as targets.
+  const environmentBUs = {
+    DEV: ['DEV', 'DEV_Regional'],
+    SIT: ['SIT', 'SIT_Regional'],
+  };
+  const lineage = {
+    SIT: 'DEV_Regional',
+    SIT_Regional: 'DEV_Regional',
+  };
+  const unused = controller.unusedLineageBUs(environmentBUs, lineage);
+  assert.deepEqual(unused, ['DEV'], 'DEV is assigned but unused in the lineage');
+  assert.ok(!unused.includes('DEV_Regional'), 'DEV_Regional is used as a source');
+  assert.equal(
+    controller.unusedLineageNoteText(unused),
+    'DEV is not linked in the lineage, so it will not appear in generated pipelines.',
+  );
+});
+
+test('unusedLineageBUs flags a downstream BU with an empty deploys-from', () => {
+  const environmentBUs = { DEV: ['DEV'], SIT: ['SIT'] };
+  assert.deepEqual(
+    controller.unusedLineageBUs(environmentBUs, {}),
+    ['DEV', 'SIT'],
+    'neither BU appears as a source or a target',
+  );
+  assert.deepEqual(
+    controller.unusedLineageBUs(environmentBUs, { SIT: 'DEV' }),
+    [],
+    'a complete mapping leaves no unused BUs',
+  );
+});
+
+test('canProceed("lineage") stays ok when a source BU is unused', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'SIT'],
+    envBUs: { DEV: ['DEV', 'DEV_Regional'], SIT: ['SIT', 'SIT_Regional'] },
+    lineage: { SIT: 'DEV_Regional', SIT_Regional: 'DEV_Regional' },
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+  assert.equal(
+    controller.canProceed('lineage').ok,
+    true,
+    'an unused source-env BU must not block Next',
+  );
+});
+
 test('full-pipeline mode never carries the synthetic "All BUs" env in envOrder', () => {
   // Reproduce re-opening a config that was saved in validations-only mode: its persisted envOrder is
   // exactly ['All BUs']. The mode-aware guard must strip it so the first real env shows a real name.
