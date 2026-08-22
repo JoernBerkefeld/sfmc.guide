@@ -1401,7 +1401,37 @@ test('full-pipeline visibleSteps drops the removed standalone env-names step', (
   };
   const ids = controller.visibleSteps().map((step) => step.id);
   assert.ok(!ids.includes('env-names'), 'the standalone env-names step id must be gone');
-  assert.deepEqual(ids, ['env-order', 'bu-assign', 'lineage', 'suffixes', 'prod-confirm', 'rules']);
+  assert.deepEqual(ids, ['env-order', 'bu-assign', 'suffixes', 'lineage', 'prod-confirm', 'rules']);
+});
+
+test('parentBandNodes is empty when sharedDEs is off and lists assigned BUs with stored suffixes when on', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'QA'],
+    envBUs: { DEV: ['DEV'], QA: ['EUN_QA', 'EUS_QA'] },
+    lineage: { EUN_QA: 'DEV', EUS_QA: 'DEV' },
+    separator: '_',
+    suffixes: { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAS' },
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {},
+    sharedDEs: false,
+  };
+  assert.deepEqual(controller.parentBandNodes(), [], 'no Parent BU overlay when sharedDEs is off');
+  controller.state.wizardState.sharedDEs = true;
+  assert.deepEqual(controller.parentBandNodes(), [
+    { environment: 'DEV', nodes: [{ reference: 'DEV', suffix: '_DEV' }] },
+    {
+      environment: 'QA',
+      nodes: [
+        { reference: 'EUN_QA', suffix: '_QAN' },
+        { reference: 'EUS_QA', suffix: '_QAS' },
+      ],
+    },
+  ]);
 });
 
 test('full-pipeline mode never carries the synthetic "All BUs" env in envOrder', () => {
@@ -2125,8 +2155,8 @@ function seedSoftGateBoard() {
     version: 1,
     multiCred: false,
     envOrder: ['A', 'B'],
-    // Both envs have a BU → hard gate passes. B has two BUs so the lineage step stays visible (a
-    // single-BU-per-env pipeline auto-skips lineage). QA stays pooled → the soft gate applies.
+    // Both envs have a BU → hard gate passes. B has two BUs so the lineage step stays visible after
+    // suffixes (a single-BU-per-env pipeline auto-skips lineage). QA stays pooled → the soft gate applies.
     envBUs: { A: ['DEV'], B: ['SIT', 'EXTRA'] },
     lineage: {},
     separator: '_',
@@ -2144,7 +2174,7 @@ test('isForwardJumpSoftBlocked: a forward jump off bu-assign is soft-blocked unt
 
   // Forward off bu-assign with an unassigned BU and no confirmation → blocked.
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     true,
     'a forward jump must be soft-blocked while BUs are unassigned',
   );
@@ -2158,7 +2188,7 @@ test('isForwardJumpSoftBlocked: a forward jump off bu-assign is soft-blocked unt
   // Once the user confirms (latch set), the forward jump is no longer blocked.
   controller.setUnassignedConfirmed(true);
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     false,
     'a confirmed set no longer blocks the forward jump',
   );
@@ -2167,7 +2197,7 @@ test('isForwardJumpSoftBlocked: a forward jump off bu-assign is soft-blocked unt
   controller.setUnassignedConfirmed(false);
   controller.assignBUToEnvironment('QA', 'B');
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     false,
     'no unassigned BUs → no soft block',
   );
@@ -2182,7 +2212,7 @@ test('jumpToStep: a soft-blocked forward jump is a no-op (shows the banner, neve
   const stepBefore = controller.state.step;
 
   // A forward jump while unconfirmed must NOT navigate — the confirm banner is shown instead.
-  controller.jumpToStep('lineage');
+  controller.jumpToStep('suffixes');
 
   assert.equal(
     controller.state.step,
@@ -2190,7 +2220,7 @@ test('jumpToStep: a soft-blocked forward jump is a no-op (shows the banner, neve
     'a blocked jump does not change the top-level view',
   );
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     true,
     'the jump was blocked, not committed — the soft gate still holds',
   );
@@ -2198,7 +2228,7 @@ test('jumpToStep: a soft-blocked forward jump is a no-op (shows the banner, neve
   // Confirm the set → the same forward jump is now permitted by the gate.
   controller.setUnassignedConfirmed(true);
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     false,
     'after confirming, the forward jump is no longer soft-blocked',
   );
@@ -2210,10 +2240,10 @@ test('confirmUnassignedGoBack: dismissing the banner clears the pending stepper-
   const stepBefore = controller.state.step;
 
   // A soft-blocked forward jump stashes the target (the banner would normally be shown).
-  controller.jumpToStep('lineage');
+  controller.jumpToStep('suffixes');
   assert.equal(
     controller.getPendingJumpTarget(),
-    'lineage',
+    'suffixes',
     'the blocked forward jump stashes its target',
   );
 
@@ -2223,7 +2253,7 @@ test('confirmUnassignedGoBack: dismissing the banner clears the pending stepper-
   assert.equal(controller.getPendingJumpTarget(), null, 'the pending jump stash is cleared');
   assert.equal(controller.state.step, stepBefore, 'dismissing the banner does not navigate');
   assert.equal(
-    controller.isForwardJumpSoftBlocked('bu-assign', 'lineage'),
+    controller.isForwardJumpSoftBlocked('bu-assign', 'suffixes'),
     true,
     'the soft gate still holds — nothing was confirmed',
   );
@@ -2234,8 +2264,8 @@ test('goBack: a Back navigation also clears a pending stepper-jump stash (defens
   controller.persistence.currentId = null;
 
   // Stash a pending forward jump via the soft gate.
-  controller.jumpToStep('lineage');
-  assert.equal(controller.getPendingJumpTarget(), 'lineage', 'precondition: a jump is stashed');
+  controller.jumpToStep('suffixes');
+  assert.equal(controller.getPendingJumpTarget(), 'suffixes', 'precondition: a jump is stashed');
 
   // Pressing Back must never resume a stashed forward jump → the stash is dropped.
   controller.goBack();
@@ -2249,22 +2279,22 @@ test('goBack: a Back navigation also clears a pending stepper-jump stash (defens
 test('computeStepperStates: forward steps are not clickable while the bu-assign soft gate holds', () => {
   const steps = [
     { id: 'bu-assign', title: 'Assign BUs' },
-    { id: 'lineage', title: 'Lineage' },
     { id: 'suffixes', title: 'Suffixes' },
+    { id: 'lineage', title: 'Lineage' },
   ];
   // All hard gates pass, but the soft gate is engaged (4th arg true) → no forward step is clickable.
   const blocked = controller.computeStepperStates(steps, 'bu-assign', gateAllOk, true);
   assert.equal(
     blocked[1].clickable,
     false,
-    'lineage is not clickable while unassigned-BUs unconfirmed',
+    'suffixes is not clickable while unassigned-BUs unconfirmed',
   );
-  assert.equal(blocked[2].clickable, false, 'suffixes is not clickable either');
+  assert.equal(blocked[2].clickable, false, 'lineage is not clickable either');
 
   // Same steps, soft gate cleared → forward steps become clickable again.
   const allowed = controller.computeStepperStates(steps, 'bu-assign', gateAllOk, false);
-  assert.equal(allowed[1].clickable, true, 'lineage clickable once the soft gate clears');
-  assert.equal(allowed[2].clickable, true, 'suffixes clickable once the soft gate clears');
+  assert.equal(allowed[1].clickable, true, 'suffixes clickable once the soft gate clears');
+  assert.equal(allowed[2].clickable, true, 'lineage clickable once the soft gate clears');
 });
 
 // ─── sticky builder sub-header ──────────────────────────────────────────────

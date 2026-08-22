@@ -206,8 +206,8 @@
     const WIZARD_STEP_IDS = [
         'env-order',
         'bu-assign',
-        'lineage',
         'suffixes',
+        'lineage',
         'prod-confirm',
         'rules',
     ];
@@ -1333,7 +1333,7 @@
      * environment. Assigning it to `targetEnv` first removes it from EVERY environment, then appends
      * it to `targetEnv` (when non-null). `targetEnv === null` therefore un-assigns it back to the
      * Unassigned pool. Writes a fresh `envBUs` (never mutates the stored arrays) and re-renders so
-     * downstream steps (lineage/suffixes/diagram) recompute. Both the drag-drop reconciliation and
+     * downstream steps (suffixes/lineage/diagram) recompute. Both the drag-drop reconciliation and
      * the keyboard `<select>` route through here so the invariant can never be bypassed.
      *
      * @param {string} buReference the buRef to (re)assign
@@ -1929,7 +1929,7 @@
 
     /**
      * Render the current wizard step's UI into `#mpb-step-host`. All six steps are implemented
-     * (env-order / bu-assign / lineage / suffixes / prod-confirm / rules). Environment naming and
+     * (env-order / bu-assign / suffixes / lineage / prod-confirm / rules). Environment naming and
      * ordering are combined into the single `env-order` step.
      *
      * @param {string} stepId the active step id
@@ -2721,11 +2721,24 @@
                 text: 'Link each environment BU to the upstream BU it deploys from. Sensible defaults are filled in — adjust the branching ones as needed. Arrows show which upstream BU each one deploys from.',
             })
         );
+        // Shared-DE question sits above the board (and the Parent BU band) so toggling it can show
+        // or hide the read-only parent overlay without leaving the step.
+        panel.append(sharedDEsToggle());
         if (rows.length === 0) {
             panel.append(
                 makeElement('p', { class: 'text-muted', text: 'Nothing to link yet — assign BUs first.' })
             );
             return;
+        }
+
+        const stack = makeElement('div', {
+            class: state.wizardState.sharedDEs ? 'mpb-lineage-stack mpb-lineage-stack--with-parent' : 'mpb-lineage-stack',
+        });
+        // Read-only Parent BU band: same env-column rhythm as the board below, only when shared DEs
+        // are in play. Mounted first so it reads as a spanning row above the interactive graph.
+        const parentMount = state.wizardState.sharedDEs ? renderParentBand() : null;
+        if (parentMount) {
+            stack.append(parentMount.band);
         }
 
         // One column per environment (in env order); the lowest/source env has no upstream, so its
@@ -2738,14 +2751,111 @@
         }
         // The SVG overlay draws the child→parent connector arrows on top of the columns. It is
         // decorative (the <select>s carry the real state), so it is marked aria-hidden.
-        const overlay = makeSvg('svg', { class: 'mpb-lineage-overlay', 'aria-hidden': 'true' });
+        const overlay = makeSvg('svg', {
+            class: 'mpb-lineage-overlay',
+            'aria-hidden': 'true',
+            'data-marker-id': 'mpb-lineage-arrowhead',
+        });
         board.append(overlay);
-        panel.append(board);
-        // Anchor the overlay + schedule the first draw once the columns have a real layout, and keep
+        stack.append(board);
+        panel.append(stack);
+        // Anchor each overlay + schedule the first draw once the columns have a real layout, and keep
         // the arrows in sync with window resizes until the step is left (teardownLineageOverlay).
+        if (parentMount) {
+            mountLineageOverlay(parentMount.board, parentMount.overlay);
+        }
         mountLineageOverlay(board, overlay);
         // Enable drag-to-connect (native HTML5 DnD) on top of the <select> keyboard fallback.
         mountLineageDnd(board);
+    }
+
+    /**
+     * The read-only Parent BU overlay groups: one entry per environment (including empty ones, so
+     * columns stay aligned with the lineage board), each listing that env's assigned child BUs and
+     * their stored suffixes. Empty when `sharedDEs` is off — the band is not rendered in that case.
+     *
+     * @returns {{environment: string, nodes: {reference: string, suffix: string}[]}[]} env-grouped nodes
+     */
+    function parentBandNodes() {
+        if (!state.wizardState.sharedDEs) {
+            return [];
+        }
+        return environmentNames().map((environment) => ({
+            environment: environment,
+            nodes: assignedBUReferences(environment).map((reference) => ({
+                reference: reference,
+                suffix: suffixOf(reference),
+            })),
+        }));
+    }
+
+    /**
+     * Build the spanning Parent BU band: a labelled wrapper across every environment column, with
+     * one inert node per assigned child BU (name + stored suffix) grouped into the same columns as
+     * the lineage board below. Decorative — no drag, no select, no focus.
+     *
+     * @returns {{band: HTMLElement, board: HTMLElement, overlay: SVGElement}} mount handles
+     */
+    function renderParentBand() {
+        const band = makeElement('div', {
+            class: 'mpb-parent-band',
+            attrs: {
+                role: 'group',
+                'aria-label': 'Parent BU shared-data-extension flows',
+            },
+        });
+        band.append(makeElement('p', { class: 'mpb-parent-band-title', text: 'Parent BU' }));
+        const board = makeElement('div', { class: 'mpb-lineage-board' });
+        for (const group of parentBandNodes()) {
+            const column = makeElement('div', { class: 'mpb-lineage-col' });
+            for (const node of group.nodes) {
+                column.append(parentBandNode(node.reference, node.suffix));
+            }
+            board.append(column);
+        }
+        const overlay = makeSvg('svg', {
+            class: 'mpb-lineage-overlay',
+            'aria-hidden': 'true',
+            'data-marker-id': 'mpb-parent-arrowhead',
+        });
+        board.append(overlay);
+        band.append(board);
+        return { band: band, board: board, overlay: overlay };
+    }
+
+    /**
+     * One inert Parent BU node: BU name (bold, left) and the stored suffix including its separator
+     * (normal weight, right). Not focusable and not a drag source — the child board owns the
+     * interactive lineage mapping.
+     *
+     * @param {string} reference the child buRef
+     * @param {string} suffix the stored suffix (may be empty; never invented here)
+     * @returns {HTMLElement} the node element
+     */
+    function parentBandNode(reference, suffix) {
+        const node = makeElement('div', {
+            class: 'mpb-parent-node',
+            attrs: {
+                id: parentBandNodeId(reference),
+                'data-bu': reference,
+            },
+        });
+        node.append(
+            makeElement('span', { class: 'mpb-parent-node-name', text: reference }),
+            makeElement('span', { class: 'mpb-parent-node-suffix', text: suffix })
+        );
+        return node;
+    }
+
+    /**
+     * Stable DOM id for a Parent BU overlay node. Prefixed separately from `lineageNodeId` so the
+     * two boards can share a document without id collisions.
+     *
+     * @param {string} reference the BU reference
+     * @returns {string} the element id
+     */
+    function parentBandNodeId(reference) {
+        return 'mpb-parent-node-' + reference.replaceAll(/[^a-zA-Z0-9_-]/g, '_');
     }
 
     /**
@@ -2912,13 +3022,14 @@
     }
 
     /**
-     * Module-scoped handle for the active lineage connector overlay: the board + svg it draws into,
-     * the bound resize listener, and any pending animation frame. Non-null only while the lineage
-     * step is mounted so `teardownLineageOverlay` can remove the listener and cancel the frame.
+     * Module-scoped handles for every active lineage connector overlay (the interactive board plus
+     * the optional Parent BU band). Each entry is the board + svg it draws into, the bound resize
+     * listener, and any pending animation frame. Empty when the lineage step is not mounted so
+     * `teardownLineageOverlay` can remove every listener and cancel every frame.
      *
-     * @type {({board: HTMLElement, svg: SVGElement, onResize: () => void, frame: (number|null)}|null)}
+     * @type {{board: HTMLElement, svg: SVGElement, onResize: () => void, frame: (number|null)}[]}
      */
-    let lineageOverlay = null;
+    let lineageOverlays = [];
 
     /**
      * The connector arrow colour — the Marketing accent already used for the diagramforce preview,
@@ -2944,81 +3055,108 @@
         if (typeof board.getBoundingClientRect !== 'function' || !global.requestAnimationFrame) {
             return;
         }
-        const onResize = () => {
-            if (lineageOverlay && lineageOverlay.frame !== null) {
+        const overlay = { board: board, svg: svg, onResize: null, frame: null };
+        overlay.onResize = () => {
+            if (overlay.frame !== null) {
                 return;
             }
-            if (lineageOverlay) {
-                lineageOverlay.frame = global.requestAnimationFrame(() => {
-                    if (!lineageOverlay) {
-                    	return;
-                    }
-
-                    lineageOverlay.frame = null;
-                    drawLineageArrows();
-                });
-            }
+            overlay.frame = global.requestAnimationFrame(() => {
+                if (!lineageOverlays.includes(overlay)) {
+                    return;
+                }
+                overlay.frame = null;
+                drawLineageArrows();
+            });
         };
-        lineageOverlay = { board: board, svg: svg, onResize: onResize, frame: null };
+        lineageOverlays.push(overlay);
         if (global.addEventListener) {
-            global.addEventListener('resize', onResize);
+            global.addEventListener('resize', overlay.onResize);
         }
         // Draw on the next frame so the columns have their final laid-out sizes.
-        lineageOverlay.frame = global.requestAnimationFrame(() => {
-            if (!lineageOverlay) {
-            	return;
+        overlay.frame = global.requestAnimationFrame(() => {
+            if (!lineageOverlays.includes(overlay)) {
+                return;
             }
-
-            lineageOverlay.frame = null;
+            overlay.frame = null;
             drawLineageArrows();
         });
     }
 
     /**
-     * Draw one arrowed connector per child→parent lineage link over the current board: from the
-     * parent (upstream) BU node to the child BU node, with the arrowhead pointing at the child. All
-     * geometry is derived from live `getBoundingClientRect` deltas against the board's own rect, so
-     * the lines stay correct across column reflow. Rebuilt from scratch each call (cheap, and avoids
-     * stale segments).
+     * Collect a buRef → node map from every `[data-bu]` element inside a connector container
+     * (the interactive lineage board or the Parent BU band). Scoped to that container so the two
+     * boards never resolve each other's nodes.
      *
+     * @param {HTMLElement} container the board that owns the nodes
+     * @returns {{[reference: string]: HTMLElement}} the node map
+     */
+    function collectLineageNodeMap(container) {
+        const nodeMap = {};
+        for (const node of container.querySelectorAll('[data-bu]')) {
+            nodeMap[node.dataset.bu] = node;
+        }
+        return nodeMap;
+    }
+
+    /**
+     * Draw one arrowed connector per child→parent lineage link whose both ends exist in `nodeMap`.
+     * Geometry is derived from live `getBoundingClientRect` deltas against `container`'s own rect.
+     * Shared by the interactive lineage board and the read-only Parent BU band.
+     *
+     * @param {HTMLElement} container the board the SVG is sized to
+     * @param {{[reference: string]: HTMLElement}} nodeMap buRef → node element
+     * @param {{[childReference: string]: string}} lineage child → parent map
      * @returns {void}
      */
-    function drawLineageArrows() {
-        if (!lineageOverlay) {
+    function drawLineageConnectors(container, nodeMap, lineage) {
+        const svg = container.querySelector('.mpb-lineage-overlay');
+        if (!svg || typeof container.getBoundingClientRect !== 'function') {
             return;
         }
-        const { board, svg } = lineageOverlay;
-        const boardRect = board.getBoundingClientRect();
-        // Size the SVG viewport to the board so its coordinate system matches the board's pixels.
+        const boardRect = container.getBoundingClientRect();
         svg.setAttribute('width', String(boardRect.width));
         svg.setAttribute('height', String(boardRect.height));
         svg.setAttribute('viewBox', '0 0 ' + boardRect.width + ' ' + boardRect.height);
-        // Reset content, then (re)add the shared arrowhead marker def.
+        const markerId = svg.dataset.markerId || 'mpb-lineage-arrowhead';
         setText(svg, '');
-        svg.append(buildArrowMarkerDefs());
-        const lineage = state.wizardState.lineage || {};
-        const links = Object.entries(lineage);
-        for (const [childReference, parentReference] of links) {
-            // ids are sanitised by lineageNodeId, so `#<id>` is always a valid selector; scope the
-            // lookup to the board so a stale same-id node elsewhere can never be matched.
-            const childNode = board.querySelector('#' + lineageNodeId(childReference));
-            const parentNode = board.querySelector('#' + lineageNodeId(parentReference));
+        svg.append(buildArrowMarkerDefs(markerId));
+        for (const [childReference, parentReference] of Object.entries(lineage)) {
+            const childNode = nodeMap[childReference];
+            const parentNode = nodeMap[parentReference];
             if (childNode && parentNode) {
-                svg.append(buildArrowPath(boardRect, parentNode, childNode));
+                svg.append(buildArrowPath(boardRect, parentNode, childNode, markerId));
             }
         }
     }
 
     /**
-     * Build the `<defs>` holding the single reusable arrowhead `<marker>`, pointing right and tinted
-     * with the lineage accent colour.
+     * Redraw every mounted lineage overlay (interactive board + optional Parent BU band) from the
+     * current `wizardState.lineage`. Rebuilt from scratch each call (cheap, and avoids stale segments).
      *
+     * @returns {void}
+     */
+    function drawLineageArrows() {
+        if (lineageOverlays.length === 0) {
+            return;
+        }
+        const lineage = state.wizardState.lineage || {};
+        for (const overlay of lineageOverlays) {
+            drawLineageConnectors(overlay.board, collectLineageNodeMap(overlay.board), lineage);
+        }
+    }
+
+    /**
+     * Build the `<defs>` holding one reusable arrowhead `<marker>`, pointing right and tinted
+     * with the lineage accent colour. `markerId` is unique per overlay so two SVGs in the same
+     * document do not share a `#id`.
+     *
+     * @param {string} markerId the marker element id
      * @returns {SVGElement} the defs element
      */
-    function buildArrowMarkerDefs() {
+    function buildArrowMarkerDefs(markerId) {
         const defs = makeSvg('defs');
         const marker = makeSvg('marker', {
-            id: 'mpb-lineage-arrowhead',
+            id: markerId,
             markerWidth: 8,
             markerHeight: 8,
             refX: 7,
@@ -3042,9 +3180,10 @@
      * @param {DOMRect} boardRect the board's bounding rect (the coordinate origin)
      * @param {HTMLElement} parentNode the upstream BU node (curve start)
      * @param {HTMLElement} childNode the child BU node (arrow target)
+     * @param {string} markerId the arrowhead marker id declared on this overlay's svg
      * @returns {SVGElement} the path element
      */
-    function buildArrowPath(boardRect, parentNode, childNode) {
+    function buildArrowPath(boardRect, parentNode, childNode, markerId) {
         const parentRect = parentNode.getBoundingClientRect();
         const childRect = childNode.getBoundingClientRect();
         // Start at the parent's right-middle, end at the child's left-middle, relative to the board.
@@ -3066,7 +3205,7 @@
             stroke: LINEAGE_ARROW_COLOR,
             'stroke-width': 1.8,
             'stroke-linecap': 'round',
-            'marker-end': 'url(#mpb-lineage-arrowhead)',
+            'marker-end': 'url(#' + markerId + ')',
         });
     }
 
@@ -3078,16 +3217,15 @@
      * @returns {void}
      */
     function teardownLineageOverlay() {
-        if (!lineageOverlay) {
-            return;
+        for (const overlay of lineageOverlays) {
+            if (global.removeEventListener) {
+                global.removeEventListener('resize', overlay.onResize);
+            }
+            if (overlay.frame !== null && global.cancelAnimationFrame) {
+                global.cancelAnimationFrame(overlay.frame);
+            }
         }
-        if (global.removeEventListener) {
-            global.removeEventListener('resize', lineageOverlay.onResize);
-        }
-        if (lineageOverlay.frame !== null && global.cancelAnimationFrame) {
-            global.cancelAnimationFrame(lineageOverlay.frame);
-        }
-        lineageOverlay = null;
+        lineageOverlays = [];
     }
 
     /**
@@ -3352,12 +3490,6 @@
             })
         );
 
-        // Shared-DE question (full-pipeline mode only): drives whether the config builder emits an
-        // extra parent-BU (source==target) pipeline per hop that carries shared data extensions.
-        if (state.mode !== 'validations') {
-            panel.append(sharedDEsToggle());
-        }
-
         const references = childBUReferences();
         if (references.length === 0) {
             panel.append(separatorField(() => {}));
@@ -3447,11 +3579,11 @@
     }
 
     /**
-     * The "Do you use shared data extensions?" question for the suffixes step (full-pipeline mode).
+     * The "Do you use shared data extensions?" question for the lineage step (full-pipeline mode).
      * A single yes/no checkbox bound to `state.wizardState.sharedDEs` plus a short explainer. Toggling
-     * it persists the answer (autosave) and re-checks the nav gate in place — no full re-render. When
-     * on, the config builder emits a parent-BU (`_ParentBU_`) source==target pipeline per hop that
-     * isolates each upstream env's shared-DE metadata.
+     * it persists the answer (autosave) and re-renders so the Parent BU band appears or disappears.
+     * When on, the config builder emits a parent-BU (`_ParentBU_`) source==target pipeline per hop
+     * that isolates each upstream env's shared-DE metadata.
      *
      * @returns {HTMLElement} the toggle field (label + checkbox + explainer)
      */
@@ -3464,8 +3596,8 @@
         });
         checkbox.addEventListener('change', () => {
             state.wizardState.sharedDEs = checkbox.checked;
-            updateNavGate();
             scheduleAutosave();
+            render();
         });
         label.append(checkbox, makeElement('span', { text: 'Do you use shared data extensions?' }));
         field.append(label);
@@ -5968,7 +6100,7 @@
                 renderStepper(steps);
                 if (wizardStep) {
                     // renderWizardStep now renders all six steps for real (env-order / bu-assign /
-                    // lineage / suffixes / prod-confirm / rules).
+                    // suffixes / lineage / prod-confirm / rules).
                     renderWizardStep(wizardStep);
                 }
                 clearStepError();
@@ -7245,6 +7377,7 @@
         // the column builder is exercised indirectly, while the pure production predicate/toggle are
         // asserted directly (env all-production reflection + bulk (un)mark) without a rendered DOM.
         renderEnvironmentColumns: renderEnvironmentColumns,
+        parentBandNodes: parentBandNodes,
         isEnvironmentAllProduction: isEnvironmentAllProduction,
         setEnvironmentProduction: setEnvironmentProduction,
         toggleProductionBU: toggleProductionBU,

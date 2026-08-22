@@ -821,6 +821,71 @@
   overflow: visible;
 }
 
+// Stack that holds the optional Parent BU band above the interactive lineage board so both
+// reuse `.mpb-lineage-board` / `.mpb-lineage-col` and keep the same horizontal rhythm.
+.mpb-lineage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+// When the Parent BU band is present, inset the child board to match the band's horizontal
+// padding + 1px border so env columns (and therefore arrows) line up.
+.mpb-lineage-stack--with-parent > .mpb-lineage-board {
+  padding-left: $space-3;
+  padding-right: $space-3;
+  border: 1px solid transparent;
+}
+
+// Read-only Parent BU band: a labelled, bordered row spanning every environment column.
+.mpb-parent-band {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-elevated;
+}
+
+.mpb-parent-band-title {
+  font-size: $text-sm;
+  font-weight: 700;
+  margin: 0;
+  color: $text-muted;
+}
+
+// Inert Parent BU node: quieter than the interactive lineage nodes (no grab cursor, no select).
+.mpb-parent-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  background: $bg-surface;
+  pointer-events: none;
+  cursor: default;
+
+  .mpb-parent-node-name {
+    font-weight: 600;
+    text-align: left;
+    word-break: break-word;
+    min-width: 0;
+  }
+
+  .mpb-parent-node-suffix {
+    flex: none;
+    font-weight: 400;
+    text-align: right;
+    color: $text-muted;
+  }
+}
+
 // ── Shared environment-columns layout (bu-assign / suffixes / prod-confirm) ──
 // The same horizontal one-column-per-environment visual the lineage board uses, factored so the
 // three redesigned steps share it. A flex row spreads the columns evenly across the width and,
