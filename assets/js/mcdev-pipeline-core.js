@@ -1769,31 +1769,39 @@
     const DIAGRAMFORCE_APP_VERSION = '1.22.3';
 
 
-    // Marketing Cloud branding (per DIAGRAM_JSON_SPEC.md): the Marketing accent colour, the
-    // env-container icon, and the parent-BU (shared-DE) icon.
-    const DIAGRAM_ACCENT = '#F49825';
+    // Position-locked environment bands (not by env name). First is a dedicated source-env green;
+    // middle and last match `_sass/_variables.scss` color-purple and the Marketing / lineage accent.
+    const DIAGRAM_BAND = {
+        first: { fill: '#27ae60', stroke: '#1e8449' },
+        middle: { fill: '#7C3AED', stroke: '#6D28D9' },
+        last: { fill: '#F49825', stroke: '#C2410C' },
+    };
 
     const DIAGRAM_ENV_ICON = 'custom-marketing';
 
     const DIAGRAM_PARENT_BU_ICON = 'custom-data';
 
+    const DIAGRAM_HEADER_ACCENT_HEIGHT = 48;
 
-    // Layout geometry (the spec is not auto-layout — every cell carries its own position).
-    const DIAGRAM_COLUMN_X = 60;
 
-    const DIAGRAM_COLUMN_STEP = 320;
+    // Layout geometry. The spec is not auto-layout for free-standing cells — every cell carries
+    // its own position — but Diagramforce reflows *embedded* children on import (see
+    // diagramEnvironmentContainer). Tasks stay top-level so these numbers survive paste/import.
+    const DIAGRAM_COLUMN_X = 48;
 
-    const DIAGRAM_COLUMN_WIDTH = 240;
+    const DIAGRAM_COLUMN_STEP = 400;
 
-    const DIAGRAM_HEADER_Y = 90;
+    const DIAGRAM_COLUMN_WIDTH = 280;
 
-    const DIAGRAM_TASK_WIDTH = 180;
+    const DIAGRAM_HEADER_Y = 104;
 
-    const DIAGRAM_TASK_HEIGHT = 60;
+    const DIAGRAM_TASK_WIDTH = 220;
 
-    const DIAGRAM_TASK_GAP = 24;
+    const DIAGRAM_TASK_HEIGHT = 52;
 
-    const DIAGRAM_CONTAINER_PADDING = 20;
+    const DIAGRAM_TASK_GAP = 40;
+
+    const DIAGRAM_CONTAINER_PADDING = 36;
 
 
     /**
@@ -1805,6 +1813,25 @@
      */
     function diagramIconHref(iconId) {
         return 'data:image/svg+xml,<svg data-icon-id="' + iconId + '"/>';
+    }
+
+
+    /**
+     * Band colours for an environment column by position: first → A, last → C, everything
+     * between → B. A single column is first (A). Two columns are A then C (no middle).
+     *
+     * @param {number} columnIndex 0-based environment index
+     * @param {number} columnCount number of environments
+     * @returns {{fill: string, stroke: string}} the band colours
+     */
+    function diagramBand(columnIndex, columnCount) {
+        if (columnIndex <= 0) {
+            return DIAGRAM_BAND.first;
+        }
+        if (columnIndex >= columnCount - 1) {
+            return DIAGRAM_BAND.last;
+        }
+        return DIAGRAM_BAND.middle;
     }
 
 
@@ -1839,17 +1866,22 @@
 
 
     /**
-     * Build one `sf.Container` cell for an environment column, branded with the Marketing accent and
-     * `custom-marketing` header icon (per the spec).
+     * Build one `sf.Container` cell for an environment column. Header accent and outline use the
+     * position-locked band; the body stays on Diagramforce's dark container tokens. Visual lane
+     * only: do not set `embeds`. The app's import path (`js/canvas/embedding.js` —
+     * `fitParentToChildren` / `tuckChildInside`) auto-sizes a parent to its children and tucks
+     * embeds below the header, discarding authored width/height/gap/x/y. Auto-sizing is a Display
+     * menu localStorage toggle (`sfdiag::autoSizing`); the JSON envelope has no flag to disable it.
      *
      * @param {string} id the container cell id
      * @param {string} name the environment name (header label)
      * @param {number} x the column x position
-     * @param {number} height the container height (sized to its embedded BU tasks)
-     * @param {string[]} embeds the ids of the embedded BU-task cells
+     * @param {number} height the container height (sized to the stacked BU tasks it visually wraps)
+     * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
      * @returns {object} the `sf.Container` cell
      */
-    function diagramEnvironmentContainer(id, name, x, height, embeds) {
+    function diagramEnvironmentContainer(id, name, x, height, band) {
+        const headerMidY = Math.round(DIAGRAM_HEADER_ACCENT_HEIGHT / 2);
         return {
             id: id,
             type: 'sf.Container',
@@ -1863,15 +1895,29 @@
                     rx: 12,
                     ry: 12,
                     fill: 'var(--container-bg)',
-                    stroke: 'var(--container-border)',
-                    strokeWidth: 1,
+                    stroke: band.stroke,
+                    strokeWidth: 1.5,
                 },
-                accent: { x: 1, y: 1, width: 'calc(w - 2)', height: 40, rx: 11, ry: 11, fill: DIAGRAM_ACCENT },
-                accentFill: { x: 1, y: 20, width: 'calc(w - 2)', height: 21, fill: DIAGRAM_ACCENT },
-                headerIcon: { x: 12, y: 9, width: 24, height: 24, href: diagramIconHref(DIAGRAM_ENV_ICON) },
+                accent: {
+                    x: 1,
+                    y: 1,
+                    width: 'calc(w - 2)',
+                    height: DIAGRAM_HEADER_ACCENT_HEIGHT,
+                    rx: 11,
+                    ry: 11,
+                    fill: band.fill,
+                },
+                accentFill: {
+                    x: 1,
+                    y: 20,
+                    width: 'calc(w - 2)',
+                    height: DIAGRAM_HEADER_ACCENT_HEIGHT - 19,
+                    fill: band.fill,
+                },
+                headerIcon: { x: 12, y: headerMidY - 12, width: 24, height: 24, href: diagramIconHref(DIAGRAM_ENV_ICON) },
                 headerLabel: {
                     x: 44,
-                    y: 21,
+                    y: headerMidY,
                     textAnchor: 'start',
                     textVerticalAnchor: 'middle',
                     fontSize: 14,
@@ -1881,24 +1927,34 @@
                     text: name,
                 },
             },
-            embeds: embeds,
         };
     }
 
 
     /**
-     * Build one `sf.BpmnTask` cell for a business unit, on the Marketing accent body with a white
-     * label. A shared-DE parent BU carries the `custom-data` icon to set it apart from a regular BU.
+     * Build one `sf.BpmnTask` cell for a business unit. Fill/stroke follow the column band so the
+     * task matches its environment header. Regular BUs hide `taskIcon` (the `custom-*` placeholder
+     * renders as a broken image on `sf.BpmnTask`). A shared-DE parent BU still uses `custom-data`.
+     * Top-level only (no `parent`) so import honours the authored `position` and `size`.
      *
      * @param {string} id the task cell id
-     * @param {string} parentId the owning container id
      * @param {string} label the BU display label
      * @param {number} x the task x position
      * @param {number} y the task y position
      * @param {boolean} isParentBU whether this BU is a shared-DE parent BU
+     * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
      * @returns {object} the `sf.BpmnTask` cell
      */
-    function diagramBUTask(id, parentId, label, x, y, isParentBU) {
+    function diagramBUTask(id, label, x, y, isParentBU, band) {
+        const taskIcon = isParentBU
+            ? {
+                  x: 8,
+                  y: 8,
+                  width: 14,
+                  height: 14,
+                  href: diagramIconHref(DIAGRAM_PARENT_BU_ICON),
+              }
+            : { display: 'none', width: 0, height: 0, href: '' };
         return {
             id: id,
             type: 'sf.BpmnTask',
@@ -1906,23 +1962,15 @@
             size: { width: DIAGRAM_TASK_WIDTH, height: DIAGRAM_TASK_HEIGHT },
             z: 2000,
             taskType: 'task',
-            parent: parentId,
             attrs: {
                 body: {
                     width: 'calc(w)',
                     height: 'calc(h)',
                     rx: 8,
                     ry: 8,
-                    fill: DIAGRAM_ACCENT,
-                    stroke: '#222222',
-                    strokeWidth: 1.5,
-                },
-                taskIcon: {
-                    x: 6,
-                    y: 6,
-                    width: 14,
-                    height: 14,
-                    href: diagramIconHref(isParentBU ? DIAGRAM_PARENT_BU_ICON : DIAGRAM_ENV_ICON),
+                    fill: band.fill,
+                    stroke: band.stroke,
+                    strokeWidth: isParentBU ? 2.5 : 1.5,
                 },
                 label: {
                     x: 'calc(0.5 * w)',
@@ -1935,6 +1983,7 @@
                     text: label,
                     textWrap: { width: 'calc(w - 16)', maxLineCount: 4, ellipsis: true },
                 },
+                taskIcon: taskIcon,
             },
             ports: diagramPorts(),
         };
@@ -1966,10 +2015,12 @@
 
     /**
      * Build the full Diagramforce diagram JSON for the current pipeline: each environment (in
-     * `envOrder`) becomes a branded `sf.Container` column, each assigned BU an `sf.BpmnTask` embedded
-     * in it, and deploy arrows connect each BU to its upstream counterpart (via `lineage` when set,
-     * else the same-index BU of the previous environment). Shared-DE parent BUs use the `custom-data`
-     * icon. Returns a spec-conformant object (never mutates state).
+     * `envOrder`) becomes a band-coloured `sf.Container` column, each assigned BU a top-level
+     * `sf.BpmnTask` positioned over that lane (not embedded — Diagramforce reflows embeds), and
+     * deploy arrows connect each BU to its upstream counterpart (via `lineage`
+     * when set, else the same-index BU of the previous environment). Column colours are locked by
+     * position (first / middle / last), not by environment name. Shared-DE parent BUs use the
+     * `custom-data` icon. Returns a spec-conformant object (never mutates state).
      *
      * @returns {object} the diagram JSON envelope
      */
@@ -1984,32 +2035,37 @@
         const taskIdByColumn = [];
         let cellCounter = 0;
         const nextId = (prefix) => prefix + '-' + String((cellCounter += 1));
+        const columnCount = environments.length;
 
         for (const [columnIndex, environment] of environments.entries()) {
             const references = assignedBUReferences(environment);
             const columnX = DIAGRAM_COLUMN_X + columnIndex * DIAGRAM_COLUMN_STEP;
             const taskX = columnX + (DIAGRAM_COLUMN_WIDTH - DIAGRAM_TASK_WIDTH) / 2;
             const containerId = nextId('env');
-            const embeds = [];
             const columnMap = {};
+            const band = diagramBand(columnIndex, columnCount);
 
             for (const [rowIndex, reference] of references.entries()) {
                 const taskId = nextId('bu');
                 const taskY = 50 + DIAGRAM_HEADER_Y + rowIndex * (DIAGRAM_TASK_HEIGHT + DIAGRAM_TASK_GAP);
                 const isParentBU = bareBUName(reference) === '_ParentBU_';
-                cells.push(diagramBUTask(taskId, containerId, buDisplayLabel(reference), taskX, taskY, isParentBU));
-                embeds.push(taskId);
+                cells.push(
+                    diagramBUTask(taskId, buDisplayLabel(reference), taskX, taskY, isParentBU, band)
+                );
                 columnMap[reference] = taskId;
             }
 
-            // Size the container to its header + stacked tasks (+ bottom padding).
+            // Size the lane to its header + stacked tasks (+ bottom padding). Tasks are not
+            // embedded; this height is only so the column visually wraps them.
             const taskCount = Math.max(references.length, 1);
             const containerHeight =
                 DIAGRAM_HEADER_Y +
                 taskCount * DIAGRAM_TASK_HEIGHT +
                 (taskCount - 1) * DIAGRAM_TASK_GAP +
                 DIAGRAM_CONTAINER_PADDING;
-            cells.push(diagramEnvironmentContainer(containerId, environment, columnX, containerHeight, embeds));
+            cells.push(
+                diagramEnvironmentContainer(containerId, environment, columnX, containerHeight, band)
+            );
             taskIdByColumn.push(columnMap);
         }
 
@@ -3723,6 +3779,8 @@
             return pendingJumpTarget;
         },
         buildDiagramJSON: buildDiagramJSON,
+        DIAGRAM_BAND: DIAGRAM_BAND,
+        diagramBand: diagramBand,
         isDiagramDrawable: isDiagramDrawable,
         isDiagramOffered: isDiagramOffered,
         shouldShowDiagramforceMenuItem: shouldShowDiagramforceMenuItem,

@@ -1933,6 +1933,179 @@ test('isDiagramDrawable offers a two-env graph without prod-confirm and rejects 
   );
 });
 
+const DIAGRAM_BAND_FIRST = { fill: '#27ae60', stroke: '#1e8449' };
+const DIAGRAM_BAND_MIDDLE = { fill: '#7C3AED', stroke: '#6D28D9' };
+const DIAGRAM_BAND_LAST = { fill: '#F49825', stroke: '#C2410C' };
+
+/**
+ * Seed a full-pipeline wizard with one uniquely-named BU per environment so lineage is skippable
+ * and `buildDiagramJSON` can emit one container + one task per env.
+ *
+ * @param {string[]} environments environment names in left-to-right order
+ * @returns {void}
+ */
+function seedDiagramEnvironments(environments) {
+  const environmentBUs = {};
+  const businessUnits = {};
+  for (const environment of environments) {
+    environmentBUs[environment] = [environment];
+    businessUnits[environment] = {};
+  }
+  controller.state.config = { credentials: { ssjs: { businessUnits: businessUnits } } };
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: environments,
+    envBUs: environmentBUs,
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+    },
+    sharedDEs: false,
+  };
+}
+
+/**
+ * Containers in left-to-right column order (by x) from a diagram envelope.
+ *
+ * @param {object} diagram `buildDiagramJSON()` result
+ * @returns {object[]} `sf.Container` cells
+ */
+function diagramContainers(diagram) {
+  return diagram.graph.cells
+    .filter((cell) => cell.type === 'sf.Container')
+    .toSorted((left, right) => left.position.x - right.position.x);
+}
+
+/**
+ * BU tasks visually in a container column. Tasks are top-level (not `embeds`) so
+ * membership is the task x sitting inside the container's x-range.
+ *
+ * @param {object} diagram `buildDiagramJSON()` result
+ * @param {object} container the column `sf.Container`
+ * @returns {object[]} `sf.BpmnTask` cells
+ */
+function diagramTasksIn(diagram, container) {
+  const left = container.position.x;
+  const right = left + container.size.width;
+  return diagram.graph.cells.filter((cell) => {
+    if (cell.type !== 'sf.BpmnTask') {
+      return false;
+    }
+    const taskX = cell.position.x;
+    return taskX >= left && taskX < right;
+  });
+}
+
+/**
+ * Assert header accent + container stroke + every embedded task use the same band.
+ *
+ * @param {object} diagram `buildDiagramJSON()` result
+ * @param {object} container the column container
+ * @param {{fill: string, stroke: string}} band expected colours
+ * @param {string} label assertion prefix
+ * @returns {void}
+ */
+function assertColumnBand(diagram, container, band, label) {
+  assert.equal(container.attrs.accent.fill, band.fill, label + ' header fill');
+  assert.equal(container.attrs.accentFill.fill, band.fill, label + ' header accentFill');
+  assert.equal(container.attrs.body.stroke, band.stroke, label + ' container stroke');
+  const tasks = diagramTasksIn(diagram, container);
+  assert.ok(tasks.length > 0, label + ' has at least one task');
+  for (const task of tasks) {
+    assert.equal(task.attrs.body.fill, band.fill, label + ' task fill');
+    assert.equal(task.attrs.body.stroke, band.stroke, label + ' task stroke');
+  }
+}
+
+test('diagramBand locks first / last / middle by position, not env name', () => {
+  assert.deepEqual(controller.diagramBand(0, 2), DIAGRAM_BAND_FIRST);
+  assert.deepEqual(controller.diagramBand(1, 2), DIAGRAM_BAND_LAST);
+  assert.deepEqual(controller.diagramBand(0, 3), DIAGRAM_BAND_FIRST);
+  assert.deepEqual(controller.diagramBand(1, 3), DIAGRAM_BAND_MIDDLE);
+  assert.deepEqual(controller.diagramBand(2, 3), DIAGRAM_BAND_LAST);
+  assert.deepEqual(controller.diagramBand(0, 5), DIAGRAM_BAND_FIRST);
+  assert.deepEqual(controller.diagramBand(1, 5), DIAGRAM_BAND_MIDDLE);
+  assert.deepEqual(controller.diagramBand(3, 5), DIAGRAM_BAND_MIDDLE);
+  assert.deepEqual(controller.diagramBand(4, 5), DIAGRAM_BAND_LAST);
+  assert.deepEqual(controller.DIAGRAM_BAND, {
+    first: DIAGRAM_BAND_FIRST,
+    middle: DIAGRAM_BAND_MIDDLE,
+    last: DIAGRAM_BAND_LAST,
+  });
+});
+
+test('buildDiagramJSON two-env uses first then last colours (no middle)', () => {
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+  assert.equal(containers.length, 2, 'two environment columns');
+  assertColumnBand(diagram, containers[0], DIAGRAM_BAND_FIRST, 'first env');
+  assertColumnBand(diagram, containers[1], DIAGRAM_BAND_LAST, 'last env');
+  const fills = containers.flatMap((container) => [
+    container.attrs.accent.fill,
+    ...diagramTasksIn(diagram, container).map((task) => task.attrs.body.fill),
+  ]);
+  assert.ok(
+    !fills.includes(DIAGRAM_BAND_MIDDLE.fill),
+    'a two-env graph must never paint the middle band',
+  );
+  const links = diagram.graph.cells.filter((cell) => cell.type === 'standard.Link');
+  assert.equal(links.length, 1, 'same-index fallback still draws a deploy arrow');
+});
+
+test('buildDiagramJSON three-env paints the middle column with the between colour', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+  assert.equal(containers.length, 3, 'three environment columns');
+  assertColumnBand(diagram, containers[0], DIAGRAM_BAND_FIRST, 'first env');
+  assertColumnBand(diagram, containers[1], DIAGRAM_BAND_MIDDLE, 'middle env');
+  assertColumnBand(diagram, containers[2], DIAGRAM_BAND_LAST, 'last env');
+});
+
+test('buildDiagramJSON five-env keeps every in-between column on the middle band', () => {
+  seedDiagramEnvironments(['DEV', 'SIT', 'QA', 'UAT', 'Prod']);
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+  assert.equal(containers.length, 5, 'five environment columns');
+  assertColumnBand(diagram, containers[0], DIAGRAM_BAND_FIRST, 'first env');
+  assertColumnBand(diagram, containers[1], DIAGRAM_BAND_MIDDLE, 'SIT');
+  assertColumnBand(diagram, containers[2], DIAGRAM_BAND_MIDDLE, 'QA');
+  assertColumnBand(diagram, containers[3], DIAGRAM_BAND_MIDDLE, 'UAT');
+  assertColumnBand(diagram, containers[4], DIAGRAM_BAND_LAST, 'last env');
+});
+
+test('buildDiagramJSON hides regular-BU task icons and keeps parent-BU custom-data', () => {
+  seedDiagramEnvironments(['DEV', 'SIT']);
+  controller.state.config.credentials.ssjs.businessUnits._ParentBU_ = {};
+  controller.state.wizardState.envBUs.DEV = ['DEV', '_ParentBU_'];
+  const diagram = controller.buildDiagramJSON();
+  const tasks = diagram.graph.cells.filter((cell) => cell.type === 'sf.BpmnTask');
+  const regular = tasks.find((cell) => cell.attrs.label.text === 'DEV');
+  const parent = tasks.find((cell) => cell.attrs.label.text === '_ParentBU_');
+  assert.ok(regular, 'regular BU task is present');
+  assert.ok(parent, 'parent BU task is present');
+  assert.equal(regular.attrs.taskIcon.href, '', 'regular BU omits a task icon href');
+  assert.equal(regular.attrs.taskIcon.display, 'none', 'regular BU hides the task icon');
+  assert.match(parent.attrs.taskIcon.href, /custom-data/, 'parent BU keeps the custom-data icon');
+  assert.equal(parent.attrs.body.strokeWidth, 2.5, 'parent BU uses a heavier stroke');
+  assert.equal(regular.size.width, 220, 'task width matches the roomier layout');
+  assert.equal(regular.size.height, 52, 'task height matches the slimmer layout');
+  const container = diagramContainers(diagram)[0];
+  assert.equal(container.size.width, 280, 'column width is the roomier layout');
+  assert.equal(container.attrs.accent.height, 48, 'header accent is taller than the old 40px bar');
+});
+
 /**
  * Stub Download-menu panel: collects appended menuitem descriptors without a real document.
  *
