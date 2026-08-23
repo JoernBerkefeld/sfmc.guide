@@ -2,6 +2,13 @@
   <div class="sidebar-inner">
     {% assign nav = site.data.navigation %}
     {% for section in nav %}
+      {% comment %}
+        Skip sections whose landing page has discoverable: false. The plugin
+        fills site.data.undiscoverable_urls from frontmatter so a leftover
+        navigation.yml URL is still omitted.
+      {% endcomment %}
+      {% assign nav_path = section.url | split: '#' | first %}
+      {% unless site.data.undiscoverable_urls[nav_path] %}
       <div class="sidebar-section {% if page.url contains section.url %}is-active{% endif %}">
         <a href="{{ section.url | relative_url }}"
            class="sidebar-section-title {% if page.url contains section.url %}is-current{% endif %}">
@@ -19,6 +26,8 @@
               {% if child.title contains "—" %}
                 <li class="sidebar-group-label">{{ child.title | remove: "—" | strip }}</li>
               {% else %}
+                {% assign nav_path = child.url | split: '#' | first %}
+                {% unless site.data.undiscoverable_urls[nav_path] %}
                 {% comment %}
                   Third level (e.g. the per-function pages under "AMPscript
                   Function Index"). Open whenever the current page is the parent
@@ -86,33 +95,41 @@
                               </button>
                               <ul class="sidebar-cat-items">
                           {% else %}
+                            {% assign nav_path = grandchild.url | split: '#' | first %}
+                            {% unless site.data.undiscoverable_urls[nav_path] %}
                             <li class="sidebar-item">
                               <a href="{{ grandchild.url | relative_url }}"
                                  class="sidebar-link sidebar-link--nested {% if page.url == grandchild.url %}is-active{% endif %}">
                                 {{ grandchild.title }}
                               </a>
                             </li>
+                            {% endunless %}
                           {% endif %}
                         {% endfor %}
                         {% if group_open %}</ul></li>{% endif %}
                       {% else %}
                         {% for grandchild in child.children %}
+                          {% assign nav_path = grandchild.url | split: '#' | first %}
+                          {% unless site.data.undiscoverable_urls[nav_path] %}
                           <li class="sidebar-item">
                             <a href="{{ grandchild.url | relative_url }}"
                                class="sidebar-link sidebar-link--nested {% if page.url == grandchild.url %}is-active{% endif %}">
                               {{ grandchild.title }}
                             </a>
                           </li>
+                          {% endunless %}
                         {% endfor %}
                       {% endif %}
                     </ul>
                   {% endif %}
                 </li>
+                {% endunless %}
               {% endif %}
             {% endfor %}
           </ul>
         {% endif %}
       </div>
+      {% endunless %}
     {% endfor %}
   </div>
 </nav>

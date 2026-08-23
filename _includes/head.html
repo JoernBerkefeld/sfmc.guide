@@ -5,6 +5,9 @@
 
 <title>{% if page.title %}{{ page.title | escape }} — {% endif %}{{ site.title }}</title>
 <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+{% if page.discoverable == false %}{% unless page.robots %}
+<meta name="robots" content="noindex, nofollow">
+{% endunless %}{% endif %}
 
 <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url | cache_bust }}">

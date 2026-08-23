@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { shouldListOnToolsIndex } from './lib/discoverable.cjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE = path.resolve(__dirname, '..');
@@ -40,7 +41,8 @@ function badgeHtml(platforms) {
  *  links?: {label: string, url: string}[],
  *  deprecated?: boolean,
  *  wip?: boolean,
- *  externalOnly?: boolean
+ *  externalOnly?: boolean,
+ *  discoverable?: boolean
  * }>} */
 const tools = [
   {
@@ -415,8 +417,16 @@ function card(t) {
 </a>`;
 }
 
-const own = tools.filter((t) => t.group === 'own');
-const community = tools.filter((t) => t.group === 'community');
+function hiddenFrontmatter(t) {
+  if (t.discoverable !== false) return '';
+  return `discoverable: false
+sitemap: false
+robots: noindex, nofollow
+`;
+}
+
+const own = tools.filter((t) => t.group === 'own' && shouldListOnToolsIndex(t));
+const community = tools.filter((t) => t.group === 'community' && shouldListOnToolsIndex(t));
 
 write(
   'tools/index.md',
@@ -469,7 +479,7 @@ parent_url: /tools/
 permalink: /tools/${t.slug}/
 platforms:
 ${platformsYaml(t.platforms)}
----
+${hiddenFrontmatter(t)}---
 
 ${t.body}
 

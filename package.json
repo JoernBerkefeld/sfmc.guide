@@ -10,6 +10,7 @@
     "prepare": "husky || true",
     "serve": "bundle exec jekyll serve --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\" --port 4002 --host 127.0.0.1 --no-watch",
     "serve:live": "bundle exec jekyll serve --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\" --port 4002 --host 127.0.0.1 --livereload",
+    "serve:stop": "node scripts/serve-stop.mjs",
     "build": "bundle exec jekyll build --source \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide\" --destination \"c:/EDF/Git/sfmc-amscript-language/sfmc.guide/_site\"",
     "generate:function-index": "node scripts/generate-ampscript-function-index.mjs",
     "generate:handlebars-index": "node scripts/generate-handlebars-helper-index.mjs",
@@ -18,8 +19,8 @@
     "generate:all": "npm run generate:function-index && npm run generate:handlebars-index && npm run generate:site-index && npm run generate:lexer-data",
     "check:bom": "node scripts/check-bom.mjs",
     "test": "node --test \"tests/**/*.test.cjs\"",
-    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\"",
-    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\"",
+    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\"",
+    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

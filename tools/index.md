@@ -25,14 +25,6 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
   <div class="tool-card-desc">CLI to retrieve, deploy, and version Marketing Cloud Engagement metadata as code across business units.</div>
 
 </a>
-<a class="tool-card" href="/tools/mcdev-pipeline-builder/">
-  <div class="tool-card-title">SFMC DevTools Pipeline Builder</div>
-  <div class="platform-badges">
-    <span class="platform-badge platform-badge--engagement">Engagement</span>
-  </div>
-  <div class="tool-card-desc">Client-side wizard that turns your <code>.mcdevrc.json</code> into a git-based mcdev deployment pipeline plus a matching <code>.mcdev-validations.js</code>. For SFMC DevTools / mcdev only; requires mcdev &ge; v8.3.0.</div>
-
-</a>
 <a class="tool-card" href="/tools/vscode-sfmc-devtools/">
   <div class="tool-card-title">SFMC DevTools for VS Code</div>
   <div class="platform-badges">

@@ -28,6 +28,20 @@ node sfmc.guide/scripts/generate-tools.mjs
 
 `generate-site-content.mjs` and `generate-tools.mjs` are **not** part of the hook and overwrite tracked pages under `engagement/` and `tools/` from `../SFMC-Cookbook` and a catalog inside the script. Run them only when you intend to re-scaffold those pages, and review the diff — they will revert hand-edits.
 
+## Hidden / draft pages
+
+To keep a page **built and deep-linkable** but out of search, the sitemap, the sidebar, and the tools index, set:
+
+```yaml
+discoverable: false
+```
+
+That is the only required author switch. Jekyll fills `sitemap: false` via `_plugins/discoverable.rb` if the key is omitted. The layout (`_includes/head.html`) emits `<meta name="robots" content="noindex, nofollow">` if `robots:` is omitted; authors may still set `robots:` themselves to override that default. Search/Lunr already skips on `discoverable: false` alone — do not add `sitemap: false` just for search. Do **not** use `published: false` (that drops the page from the build). There is no `status:` field and no on-page Draft/Beta banner.
+
+Sidebar and the tools index skip any page with `discoverable: false` even if its URL is still listed in `_data/navigation.yml` or the tools catalog. Do not rely on remembering to delete the YAML entry.
+
+AMPscript / Handlebars / SSJS function-index catalogs are not filtered in this pass.
+
 ## Syntax highlighting
 
 Rouge lexers in `_plugins/` highlight the SFMC languages. Fence a block with:

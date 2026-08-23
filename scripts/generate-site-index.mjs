@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { shouldIndexPage } from './lib/discoverable.cjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE = path.resolve(__dirname, '..');
@@ -40,7 +41,7 @@ const index = [];
 for (const file of files) {
   const raw = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
   const fm = parseFm(raw);
-  if (!fm.title || fm.sitemap === 'false') continue;
+  if (!shouldIndexPage(fm)) continue;
   let url = fm.permalink;
   if (!url) {
     const rel = path.relative(SITE, file).replace(/\\/g, '/');
