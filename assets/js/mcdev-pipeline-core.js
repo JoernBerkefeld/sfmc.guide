@@ -2153,6 +2153,8 @@
                 { source: 'diagramforce', type: 'import', v: 1, json: json },
                 DIAGRAMFORCE_ORIGIN
             );
+            // eslint-disable-next-line no-console
+            console.log('diagramforce ready', JSON.stringify(json, null, 2));
             global.removeEventListener('message', onMessage);
         };
         global.addEventListener('message', onMessage);
