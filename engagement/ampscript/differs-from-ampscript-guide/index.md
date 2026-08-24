@@ -9,6 +9,7 @@ platforms:
   - engagement
 aggregate_verification: false
 sitemap: false
+discoverable: false
 ---
 
 The pages on this site describe AMPscript as it **actually runs** on a live Marketing Cloud Engagement CloudPage. Every function reference here was proven by deploying the function and reading back what it returned — not by reading a documentation page. [ampscript.guide](https://ampscript.guide/) is a separate, well-regarded community reference that many people rely on, but it was written from the docs rather than from runtime probes, so in a handful of places its own description would mislead a reader who trusted it.
