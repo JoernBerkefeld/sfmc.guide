@@ -162,7 +162,7 @@
           data-version="{{ f.mcn }}"
           id="fn-{{ f.slug }}">
         <td data-label="Function">
-          {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}</code></a>{% else %}<code>{{ f.name }}</code>{% endif %}
+          {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}()</code></a>{% else %}<code>{{ f.name }}()</code>{% endif %}
           {%- if f.verified %} <span class="cat-state cat-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
           {%- if f.deprecated %}<span class="cat-flag cat-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
           {%- if f.differsFromDocs %}<span class="cat-flag cat-flag--warning" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
