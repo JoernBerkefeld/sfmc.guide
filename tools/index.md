@@ -229,7 +229,7 @@ Third-party tools that help Engagement teams. None of these are Marketing Cloud 
   </div>
   <div class="tool-card-desc">AMPscript syntax validation and highlighting in the browser.</div>
 </a>
-<a class="tool-card" href="https://adessose.github.io/ssjs-webpack/" target="_blank" rel="noopener">
+<a class="tool-card" href="https://github.com/adessoSE/ssjs-webpack" target="_blank" rel="noopener">
   <div class="tool-card-title">SSJS Framework</div>
   <div class="platform-badges">
     <span class="platform-badge platform-badge--engagement">Engagement</span>
