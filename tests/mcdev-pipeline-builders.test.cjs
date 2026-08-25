@@ -1987,8 +1987,9 @@ function diagramContainers(diagram) {
 }
 
 /**
- * BU tasks visually in a container column. Tasks are top-level (not `embeds`) so
- * membership is the task x sitting inside the container's x-range.
+ * BU tasks in a container column, by x-range. Tasks are also captured by the lane
+ * (`parent` + the lane's `embeds`); the x-range membership matches that grouping and
+ * is used by the colour-band assertions.
  *
  * @param {object} diagram `buildDiagramJSON()` result
  * @param {object} container the column `sf.Container`
@@ -2102,8 +2103,102 @@ test('buildDiagramJSON hides regular-BU task icons and keeps parent-BU custom-da
   assert.equal(regular.size.width, 220, 'task width matches the roomier layout');
   assert.equal(regular.size.height, 52, 'task height matches the slimmer layout');
   const container = diagramContainers(diagram)[0];
-  assert.equal(container.size.width, 280, 'column width is the roomier layout');
+  assert.equal(
+    container.size.width,
+    316,
+    'column width is the roomier layout (task 220 + 2*48 inset)',
+  );
   assert.equal(container.attrs.accent.height, 48, 'header accent is taller than the old 40px bar');
+});
+
+test('buildDiagramJSON gives every lane one shared top and one shared height (uneven BU counts)', () => {
+  // DEV gets three BUs, the rest one — a bar chart if height tracked card count, uniform lanes now.
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  controller.state.config.credentials.ssjs.businessUnits.DEV_b = {};
+  controller.state.config.credentials.ssjs.businessUnits.DEV_c = {};
+  controller.state.wizardState.envBUs.DEV = ['DEV', 'DEV_b', 'DEV_c'];
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+  assert.equal(containers.length, 3, 'three lanes');
+  const heights = new Set(containers.map((container) => container.size.height));
+  const tops = new Set(containers.map((container) => container.position.y));
+  assert.equal(heights.size, 1, 'every lane shares one height (not sized to its own card count)');
+  assert.equal(tops.size, 1, 'every lane shares one top');
+  assert.equal([...tops][0], 50, 'shared lane top is y=50');
+  // Shared height = the deepest lane (3 cards): 88 + 3*52 + 2*24 + 48 = 340.
+  assert.equal([...heights][0], 340, 'shared height is driven by the lane with the most cards');
+});
+
+test('buildDiagramJSON captures every BU task in its lane (both embed sides) and pins the lane', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  controller.state.config.credentials.ssjs.businessUnits.DEV_b = {};
+  controller.state.wizardState.envBUs.DEV = ['DEV', 'DEV_b'];
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+  const cellById = new Map(diagram.graph.cells.map((cell) => [cell.id, cell]));
+  for (const container of containers) {
+    assert.ok(Array.isArray(container.embeds) && container.embeds.length > 0, 'lane has embeds');
+    assert.equal(container.manualSize, true, 'lane is pinned with manualSize');
+    for (const childId of container.embeds) {
+      const child = cellById.get(childId);
+      assert.ok(child, 'embedded id resolves to a cell');
+      assert.equal(child.type, 'sf.BpmnTask', 'embedded cell is a BU task');
+      assert.equal(
+        child.parent,
+        container.id,
+        'child parent points back to the lane (both sides set)',
+      );
+    }
+  }
+  // No task is captured by more than one lane, and none is left un-parented.
+  const tasks = diagram.graph.cells.filter((cell) => cell.type === 'sf.BpmnTask');
+  for (const task of tasks) {
+    assert.ok(task.parent, 'every BU task has a parent lane');
+    const owner = cellById.get(task.parent);
+    assert.ok(owner.embeds.includes(task.id), 'the parent lane lists the task in embeds');
+  }
+});
+
+test('buildDiagramJSON tasks sit 48px inside the lane and 88px below the lane top', () => {
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const diagram = controller.buildDiagramJSON();
+  const container = diagramContainers(diagram)[0];
+  const task = diagramTasksIn(diagram, container)[0];
+  assert.equal(
+    task.position.x - container.position.x,
+    48,
+    'card sits 48px inside the lane left edge',
+  );
+  assert.ok(
+    task.position.y >= container.position.y + 88,
+    'first card is at least 88px below the lane top (40px header + 48px pad)',
+  );
+});
+
+test('buildDiagramJSON advertises the diagramforce appVersion that ships manualSize', () => {
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const diagram = controller.buildDiagramJSON();
+  assert.equal(
+    diagram.appVersion,
+    '1.23.1',
+    'appVersion matches the live manualSize-capable release',
+  );
+});
+
+test('diagramCardYs spreads cards evenly inside the lane insets', () => {
+  // laneHeight 340 → inner band [138, 342] (50 + 88 top inset .. 50 + 340 - 48 bottom inset).
+  // One card is centred in the band; two or more spread from the top with an even gap.
+  assert.deepEqual(controller.diagramCardYs(1, 340), [214], 'single card is centred in the band');
+  assert.deepEqual(
+    controller.diagramCardYs(2, 340),
+    [138, 290],
+    'two cards pin to band top and bottom',
+  );
+  assert.deepEqual(
+    controller.diagramCardYs(3, 340),
+    [138, 214, 290],
+    'three cards fall on the 24px minimum row gap',
+  );
 });
 
 /**

@@ -1766,7 +1766,7 @@
 
     const DIAGRAMFORCE_IMPORT_URL = DIAGRAMFORCE_ORIGIN + '/#import=postmessage';
 
-    const DIAGRAMFORCE_APP_VERSION = '1.22.3';
+    const DIAGRAMFORCE_APP_VERSION = '1.23.1';
 
 
     // Position-locked environment bands (not by env name). First is a dedicated source-env green;
@@ -1784,24 +1784,29 @@
     const DIAGRAM_HEADER_ACCENT_HEIGHT = 48;
 
 
-    // Layout geometry. The spec is not auto-layout for free-standing cells — every cell carries
-    // its own position — but Diagramforce reflows *embedded* children on import (see
-    // diagramEnvironmentContainer). Tasks stay top-level so these numbers survive paste/import.
+    // Layout geometry, authored to the spec's "Container lanes" section so the diagram reads as a set
+    // of uniform lanes (not a bar chart). Every lane shares one top (`y: 50`) and one height; each BU
+    // task is embedded in its lane (`parent`/`embeds`) and the lane is pinned with `manualSize: true`
+    // so Diagramforce's content-hug (`fitParentToChildren`) leaves the uniform height intact on import
+    // and on the first card drag. Insets follow the spec: 40px header + 48px pad = 88px top inset, 48px
+    // bottom, 48px left/right (so lane width = task 220 + 2*48 = 316), 24px between rows.
     const DIAGRAM_COLUMN_X = 48;
 
     const DIAGRAM_COLUMN_STEP = 400;
 
-    const DIAGRAM_COLUMN_WIDTH = 280;
-
-    const DIAGRAM_HEADER_Y = 104;
+    const DIAGRAM_COLUMN_WIDTH = 316;
 
     const DIAGRAM_TASK_WIDTH = 220;
 
     const DIAGRAM_TASK_HEIGHT = 52;
 
-    const DIAGRAM_TASK_GAP = 40;
+    const DIAGRAM_LANE_TOP_INSET = 88;
 
-    const DIAGRAM_CONTAINER_PADDING = 36;
+    const DIAGRAM_LANE_BOTTOM_INSET = 48;
+
+    const DIAGRAM_LANE_SIDE_INSET = 48;
+
+    const DIAGRAM_ROW_GAP = 24;
 
 
     /**
@@ -1867,20 +1872,23 @@
 
     /**
      * Build one `sf.Container` cell for an environment column. Header accent and outline use the
-     * position-locked band; the body stays on Diagramforce's dark container tokens. Visual lane
-     * only: do not set `embeds`. The app's import path (`js/canvas/embedding.js` —
-     * `fitParentToChildren` / `tuckChildInside`) auto-sizes a parent to its children and tucks
-     * embeds below the header, discarding authored width/height/gap/x/y. Auto-sizing is a Display
-     * menu localStorage toggle (`sfdiag::autoSizing`); the JSON envelope has no flag to disable it.
+     * position-locked band; the body stays on Diagramforce's dark container tokens. The lane
+     * captures its BU tasks: their ids are listed in `embeds` and each task carries the matching
+     * `parent` (see the spec "Capture" section — the loader does not reconcile a half-declared
+     * embed). `manualSize: true` pins the authored geometry so the content-hug
+     * (`js/canvas/embedding.js` — `fitParentToChildren` early-returns on `manualSize`) does not
+     * shrink-wrap the lane to its own card count on import or on the first card drag, keeping every
+     * lane at the shared uniform height computed in `buildDiagramJSON`.
      *
      * @param {string} id the container cell id
      * @param {string} name the environment name (header label)
      * @param {number} x the column x position
-     * @param {number} height the container height (sized to the stacked BU tasks it visually wraps)
+     * @param {number} height the shared lane height (identical for every lane)
      * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
+     * @param {string[]} embeds the ids of the BU tasks captured by this lane
      * @returns {object} the `sf.Container` cell
      */
-    function diagramEnvironmentContainer(id, name, x, height, band) {
+    function diagramEnvironmentContainer(id, name, x, height, band, embeds) {
         const headerMidY = Math.round(DIAGRAM_HEADER_ACCENT_HEIGHT / 2);
         return {
             id: id,
@@ -1888,6 +1896,8 @@
             position: { x: x, y: 50 },
             size: { width: DIAGRAM_COLUMN_WIDTH, height: height },
             z: 1000,
+            embeds: embeds,
+            manualSize: true,
             attrs: {
                 body: {
                     width: 'calc(w)',
@@ -1935,7 +1945,9 @@
      * Build one `sf.BpmnTask` cell for a business unit. Fill/stroke follow the column band so the
      * task matches its environment header. Regular BUs hide `taskIcon` (the `custom-*` placeholder
      * renders as a broken image on `sf.BpmnTask`). A shared-DE parent BU still uses `custom-data`.
-     * Top-level only (no `parent`) so import honours the authored `position` and `size`.
+     * The task is captured by its environment lane via `parent` (the lane also lists this id in its
+     * `embeds`); the lane carries `manualSize: true`, so the authored `position` / `size` survive
+     * import instead of being tucked/reflowed.
      *
      * @param {string} id the task cell id
      * @param {string} label the BU display label
@@ -1943,9 +1955,10 @@
      * @param {number} y the task y position
      * @param {boolean} isParentBU whether this BU is a shared-DE parent BU
      * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
+     * @param {string} parent the id of the environment container that captures this task
      * @returns {object} the `sf.BpmnTask` cell
      */
-    function diagramBUTask(id, label, x, y, isParentBU, band) {
+    function diagramBUTask(id, label, x, y, isParentBU, band, parent) {
         const taskIcon = isParentBU
             ? {
                   x: 8,
@@ -1961,6 +1974,7 @@
             position: { x: x, y: y },
             size: { width: DIAGRAM_TASK_WIDTH, height: DIAGRAM_TASK_HEIGHT },
             z: 2000,
+            parent: parent,
             taskType: 'task',
             attrs: {
                 body: {
@@ -2014,13 +2028,47 @@
 
 
     /**
+     * The vertical centre-to-top offsets for `count` cards evenly spread inside a lane's inner box.
+     * Mirrors the spec's `spread()` (layout-core.js `planLaneNormalisation`): a single card centres
+     * in the box; otherwise the gap is `max(rowGap, (innerHeight - count*taskHeight)/(count-1))`, so
+     * mixed counts stay evenly separated and no lane packs from its own top. Returns absolute `y`
+     * (top-left) values on the shared row grid, identical maths for every lane.
+     *
+     * @param {number} count the number of cards in the lane (floored at 1 by the caller)
+     * @param {number} laneHeight the shared lane height
+     * @returns {number[]} the task `y` (top) positions, top to bottom
+     */
+    function diagramCardYs(count, laneHeight) {
+        const innerTop = 50 + DIAGRAM_LANE_TOP_INSET;
+        const innerBottom = 50 + laneHeight - DIAGRAM_LANE_BOTTOM_INSET;
+        const innerHeight = innerBottom - innerTop;
+        if (count <= 1) {
+            return [Math.round(innerTop + Math.max(0, (innerHeight - DIAGRAM_TASK_HEIGHT) / 2))];
+        }
+        const gap = Math.max(
+            DIAGRAM_ROW_GAP,
+            (innerHeight - count * DIAGRAM_TASK_HEIGHT) / (count - 1)
+        );
+        const ys = [];
+        let y = innerTop;
+        for (let index = 0; index < count; index += 1) {
+            ys.push(Math.round(y));
+            y += DIAGRAM_TASK_HEIGHT + gap;
+        }
+        return ys;
+    }
+
+
+    /**
      * Build the full Diagramforce diagram JSON for the current pipeline: each environment (in
-     * `envOrder`) becomes a band-coloured `sf.Container` column, each assigned BU a top-level
-     * `sf.BpmnTask` positioned over that lane (not embedded — Diagramforce reflows embeds), and
-     * deploy arrows connect each BU to its upstream counterpart (via `lineage`
-     * when set, else the same-index BU of the previous environment). Column colours are locked by
-     * position (first / middle / last), not by environment name. Shared-DE parent BUs use the
-     * `custom-data` icon. Returns a spec-conformant object (never mutates state).
+     * `envOrder`) becomes a band-coloured `sf.Container` lane, each assigned BU a `sf.BpmnTask`
+     * captured by that lane (`parent` on the task, id in the lane's `embeds`), and deploy arrows
+     * connect each BU to its upstream counterpart (via `lineage` when set, else the same-index BU of
+     * the previous environment). All lanes share one top (`y: 50`) and one height — the deepest
+     * lane's need — and carry `manualSize: true`, so they read as uniform lanes and stay put on
+     * import (see the spec "Container lanes"). Column colours are locked by position (first / middle
+     * / last), not by environment name. Shared-DE parent BUs use the `custom-data` icon. Returns a
+     * spec-conformant object (never mutates state).
      *
      * @returns {object} the diagram JSON envelope
      */
@@ -2037,34 +2085,51 @@
         const nextId = (prefix) => prefix + '-' + String((cellCounter += 1));
         const columnCount = environments.length;
 
+        // First pass: one shared lane height for every lane — the deepest lane's need — so the
+        // columns read as uniform lanes, not a bar chart. `n` is floored at 1 so an empty lane still
+        // reserves a header + one row of space.
+        const laneHeight = environments.reduce((tallest, environment) => {
+            const count = Math.max(assignedBUReferences(environment).length, 1);
+            const needed =
+                DIAGRAM_LANE_TOP_INSET +
+                count * DIAGRAM_TASK_HEIGHT +
+                (count - 1) * DIAGRAM_ROW_GAP +
+                DIAGRAM_LANE_BOTTOM_INSET;
+            return Math.max(tallest, needed);
+        }, 0);
+
+        // Second pass: place each lane's cards (evenly spread down the shared inner box), capture
+        // them in the lane, and emit the pinned uniform-height container.
         for (const [columnIndex, environment] of environments.entries()) {
             const references = assignedBUReferences(environment);
             const columnX = DIAGRAM_COLUMN_X + columnIndex * DIAGRAM_COLUMN_STEP;
-            const taskX = columnX + (DIAGRAM_COLUMN_WIDTH - DIAGRAM_TASK_WIDTH) / 2;
+            const taskX = columnX + DIAGRAM_LANE_SIDE_INSET;
             const containerId = nextId('env');
             const columnMap = {};
+            const embeds = [];
             const band = diagramBand(columnIndex, columnCount);
+            const cardYs = diagramCardYs(Math.max(references.length, 1), laneHeight);
 
             for (const [rowIndex, reference] of references.entries()) {
                 const taskId = nextId('bu');
-                const taskY = 50 + DIAGRAM_HEADER_Y + rowIndex * (DIAGRAM_TASK_HEIGHT + DIAGRAM_TASK_GAP);
                 const isParentBU = bareBUName(reference) === '_ParentBU_';
                 cells.push(
-                    diagramBUTask(taskId, buDisplayLabel(reference), taskX, taskY, isParentBU, band)
+                    diagramBUTask(
+                        taskId,
+                        buDisplayLabel(reference),
+                        taskX,
+                        cardYs[rowIndex],
+                        isParentBU,
+                        band,
+                        containerId
+                    )
                 );
                 columnMap[reference] = taskId;
+                embeds.push(taskId);
             }
 
-            // Size the lane to its header + stacked tasks (+ bottom padding). Tasks are not
-            // embedded; this height is only so the column visually wraps them.
-            const taskCount = Math.max(references.length, 1);
-            const containerHeight =
-                DIAGRAM_HEADER_Y +
-                taskCount * DIAGRAM_TASK_HEIGHT +
-                (taskCount - 1) * DIAGRAM_TASK_GAP +
-                DIAGRAM_CONTAINER_PADDING;
             cells.push(
-                diagramEnvironmentContainer(containerId, environment, columnX, containerHeight, band)
+                diagramEnvironmentContainer(containerId, environment, columnX, laneHeight, band, embeds)
             );
             taskIdByColumn.push(columnMap);
         }
@@ -2228,9 +2293,9 @@
         if (state.mode === 'validations' || !isDiagramDrawable()) {
             return;
         }
-        // eslint-disable-next-line no-console
-        console.log('diagramforce debug', JSON.stringify(buildDiagramJSON(), null, 2));
         const json = jsonPretty(buildDiagramJSON());
+        // eslint-disable-next-line no-console
+        console.log('diagramforce debug', JSON.stringify(json, null, 2));
         const opened = openInDiagramforce(json);
         if (opened) {
             return;
@@ -3781,6 +3846,7 @@
             return pendingJumpTarget;
         },
         buildDiagramJSON: buildDiagramJSON,
+        diagramCardYs: diagramCardYs,
         DIAGRAM_BAND: DIAGRAM_BAND,
         diagramBand: diagramBand,
         isDiagramDrawable: isDiagramDrawable,
