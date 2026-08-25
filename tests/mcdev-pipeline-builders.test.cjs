@@ -2804,6 +2804,149 @@ test('backward compatible: a save with no persisted mode still reopens on the mo
   }
 });
 
+// ─── controller: deeplink banner is cleared when a real config is opened/uploaded ───
+
+/**
+ * Minimal fake element for the banner DOM: records attributes, supports `append` / `remove`, and a
+ * `querySelector('[data-banner="X"]')` that matches the controller's `clearBanner` lookup. Enough
+ * for `showBanner` (makeElement → createElement) and `clearBanner` to run headlessly.
+ */
+class FakeBannerNode {
+  constructor() {
+    this.children = [];
+    this.attrs = {};
+    this.className = '';
+    this.textContent = '';
+    this.parentNode = null;
+  }
+
+  setAttribute(name, value) {
+    this.attrs[name] = String(value);
+  }
+
+  append(child) {
+    this.children.push(child);
+    child.parentNode = this;
+  }
+
+  remove() {
+    if (!this.parentNode) {
+      return;
+    }
+    const index = this.parentNode.children.indexOf(this);
+    if (index !== -1) {
+      this.parentNode.children.splice(index, 1);
+    }
+    this.parentNode = null;
+  }
+
+  querySelector(selector) {
+    const match = /^\[data-banner="(.+)"\]$/.exec(selector);
+    if (!match) {
+      return null;
+    }
+    return this.children.find((child) => child.attrs['data-banner'] === match[1]) || null;
+  }
+}
+
+/**
+ * Install a fake `dom.banners` container plus a `document.createElement`/`createTextNode` that back
+ * `makeElement`, so `showBanner` / `clearBanner` operate on real (fake) nodes. Returns a teardown.
+ *
+ * @returns {{banners: FakeBannerNode, restore: () => void}} the container and a teardown
+ */
+function installFakeBanners() {
+  const banners = new FakeBannerNode();
+  const previousBanners = controller.dom.banners;
+  const previousCreate = globalThis.document.createElement;
+  const previousTextNode = globalThis.document.createTextNode;
+  controller.dom.banners = banners;
+  globalThis.document.createElement = () => new FakeBannerNode();
+  globalThis.document.createTextNode = (text) => ({ textContent: String(text) });
+  return {
+    banners: banners,
+    restore() {
+      controller.dom.banners = previousBanners;
+      globalThis.document.createElement = previousCreate;
+      globalThis.document.createTextNode = previousTextNode;
+    },
+  };
+}
+
+test('opening a saved session clears a leftover cross-device deeplink banner', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    // Seed a real, reopenable save (mode-bearing so reopenSave lands cleanly).
+    const id = 'deeplink-clear-open';
+    localStorage.setItem(
+      'mcdevpipe::save::' + id,
+      JSON.stringify({
+        id: id,
+        name: 'Has config',
+        version: 1,
+        timestamp: Date.now(),
+        config: sampleConfig,
+        wizardState: {
+          version: 1,
+          multiCred: false,
+          mode: 'full',
+          envOrder: ['DEV'],
+          envBUs: { DEV: ['DEV'] },
+          lineage: {},
+          separator: '_',
+          suffixes: {},
+          prodBUs: [],
+          selectedRules: [],
+          prefixBlacklist: {},
+          retention: {},
+          sharedDEs: false,
+        },
+      }),
+    );
+    // A stale cross-device share notice is showing.
+    controller.showBanner('deeplink', 'shared link not in this browser', [], 'warning');
+    assert.ok(banners.banners.querySelector('[data-banner="deeplink"]'), 'deeplink banner is up');
+    // Opening a real session must drop it.
+    controller.reopenSave(id);
+    assert.equal(
+      banners.banners.querySelector('[data-banner="deeplink"]'),
+      null,
+      'reopening a saved session clears the deeplink banner',
+    );
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+test('accepting a fresh config clears a leftover cross-device deeplink banner', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    controller.state.config = sampleConfig;
+    // A stale cross-device share notice is showing.
+    controller.showBanner('deeplink', 'shared link not in this browser', [], 'warning');
+    assert.ok(banners.banners.querySelector('[data-banner="deeplink"]'), 'deeplink banner is up');
+    // Uploading/pasting a fresh config must drop it.
+    controller.createSaveForConfig(sampleConfig);
+    assert.equal(
+      banners.banners.querySelector('[data-banner="deeplink"]'),
+      null,
+      'accepting a fresh config clears the deeplink banner',
+    );
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
 // ─── controller: stepper reachability logic (Fix 4) ───
 
 /**

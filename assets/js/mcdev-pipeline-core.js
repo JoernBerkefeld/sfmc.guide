@@ -3063,6 +3063,9 @@
      * @returns {void}
      */
     function createSaveForConfig(config) {
+        // Accepting a fresh config clears any stale cross-device "shared link not in this browser"
+        // notice from a leftover `?s=`/hash deep link (no-op when it isn't showing).
+        clearBanner('deeplink');
         const id = newId();
         persistence.currentId = id;
         persistence.readOnly = false;
@@ -3302,6 +3305,9 @@
             return;
         }
         clearBanner('restore');
+        // A newly-opened session supersedes any cross-device "shared link not in this browser"
+        // notice, so drop the deeplink banner too (no-op when it isn't showing).
+        clearBanner('deeplink');
         persistence.currentId = id;
         state.config = blob.config;
         state.wizardState = Object.assign(emptyWizardState(), blob.wizardState);
