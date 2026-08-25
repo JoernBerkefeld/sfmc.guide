@@ -97,6 +97,129 @@
         return LANE_TOP_INSET + rows * BU_ROW_STEP - (BU_ROW_STEP - BU_HEIGHT) + LANE_BOTTOM_PAD;
     }
 
+    /**
+     * True when two id→y maps assign the same value to every id in the first map. Used as the
+     * fixed-point test for the layout relaxation: identical maps mean nothing moved, which both
+     * terminates the loop and rules out oscillation (a repeated state stops iterating).
+     *
+     * @param {Map<string, number>} a the previous-iteration map
+     * @param {Map<string, number>} b the current-iteration map
+     * @returns {boolean} whether every entry in `a` matches `b`
+     */
+    function sameYMap(a, b) {
+        for (const [id, value] of a) {
+            if (b.get(id) !== value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Assign every BU an absolute top-y so that 1:1 deploy hops are straight horizontal lines
+     * and 1:n fan-outs sit their source vertically centered on the span of its targets. The
+     * model carries no y-coordinates, so all vertical positioning is computed here from the
+     * link graph. Deterministic and general — never keyed to a specific pipeline's numbers.
+     *
+     * Passes:
+     *   1. First column: stack BUs top-to-bottom from the lane top inset at `BU_ROW_STEP`.
+     *   2. Left→right: give each linked BU the center of its resolved parent(s); unlinked BUs
+     *      keep their model-order slot. Then a min-gap sweep pushes overlaps down, preserving
+     *      top-to-bottom model order.
+     *   3. Right→left: re-center every source on the span (min→max center) of its children —
+     *      this straightens 1:1 chains (parent inherits the child's y) and centers 1:n sources
+     *      on their fan-out. A min-gap sweep re-runs on each column so nothing overlaps. Because
+     *      the sweep can shove a re-centered source off its target center (under crossing
+     *      lineage a low-order source that belongs high gets pushed down), the whole right→left
+     *      pass is iterated to a fixed point: {re-center every column, sweep every column} repeats
+     *      until the y-map stops changing (stable) or a small bounded cap is reached. The equality
+     *      check on the y-map guarantees termination and rules out oscillation; when centering and
+     *      the order+min-gap constraints are mutually unsatisfiable the loop settles on the
+     *      order-preserving, overlap-free placement nearest each source's target center.
+     *
+     * @param {DrawioColumn[]} columns the model columns, left-to-right
+     * @param {DrawioLink[]} links the deploy-lineage edges
+     * @returns {Map<string, number>} cellId → absolute top-y in px
+     */
+    function computeBuLayout(columns, links) {
+        const parentsOf = new Map();
+        const childrenOf = new Map();
+        for (const link of links) {
+            if (!childrenOf.has(link.sourceCellId)) {
+                childrenOf.set(link.sourceCellId, []);
+            }
+            childrenOf.get(link.sourceCellId).push(link.targetCellId);
+            if (!parentsOf.has(link.targetCellId)) {
+                parentsOf.set(link.targetCellId, []);
+            }
+            parentsOf.get(link.targetCellId).push(link.sourceCellId);
+        }
+
+        const orderInColumn = columns.map((column) => (column.bus || []).map((bu) => bu.cellId));
+        const y = new Map();
+        const top = LANE_TOP + LANE_TOP_INSET;
+
+        // Center of the span covered by a set of related cells (min top-center → max top-center),
+        // expressed as the top-y that would place a BU box on that center line.
+        function spanCenterTop(cellIds) {
+            const centers = cellIds.map((id) => y.get(id) + BU_HEIGHT / 2);
+            return (Math.min(...centers) + Math.max(...centers)) / 2 - BU_HEIGHT / 2;
+        }
+
+        // Push overlapping/out-of-order BUs down to a minimum BU_ROW_STEP gap, keeping model order.
+        function sweep(columnIndex) {
+            const ids = orderInColumn[columnIndex];
+            for (let row = 1; row < ids.length; row += 1) {
+                const minY = y.get(ids[row - 1]) + BU_ROW_STEP;
+                if (y.get(ids[row]) < minY) {
+                    y.set(ids[row], minY);
+                }
+            }
+        }
+
+        // Pass 1 — first column stacks in model order from the lane top inset.
+        const firstColumn = orderInColumn[0] || [];
+        for (const [row, id] of firstColumn.entries()) {
+            y.set(id, top + row * BU_ROW_STEP);
+        }
+
+        // Pass 2 — left→right: center each linked BU on its parents, else keep its slot; sweep.
+        for (let columnIndex = 1; columnIndex < columns.length; columnIndex += 1) {
+            const ids = orderInColumn[columnIndex];
+            for (const [row, id] of ids.entries()) {
+                const parents = parentsOf.get(id) || [];
+                y.set(id, parents.length ? spanCenterTop(parents) : top + row * BU_ROW_STEP);
+            }
+            sweep(columnIndex);
+        }
+
+        // Pass 3 — right→left, iterated to a fixed point: re-center each source on its children's
+        // span (straightens 1:1 chains, centers 1:n fan-outs), then re-sweep so the re-centered
+        // column keeps its min gap. A single sweep can push a re-centered source off its target
+        // center, so the pass repeats until the y-map is stable (or a bounded cap), which lets a
+        // crossing-lineage source settle as close to its children's center as order+min-gap allow.
+        const MAX_PASS3_ITERATIONS = 8;
+        for (let iteration = 0; iteration < MAX_PASS3_ITERATIONS; iteration += 1) {
+            const before = new Map(y);
+            for (let columnIndex = columns.length - 2; columnIndex >= 0; columnIndex -= 1) {
+                const ids = orderInColumn[columnIndex];
+                for (const id of ids) {
+                    const children = childrenOf.get(id) || [];
+                    if (children.length) {
+                        y.set(id, spanCenterTop(children));
+                    }
+                }
+                sweep(columnIndex);
+            }
+            // No BU moved this iteration, so the layout is stable and further passes are no-ops.
+            if (sameYMap(before, y)) {
+                break;
+            }
+        }
+
+        return y;
+    }
+
     // ── Approach A: native mxGraph XML ──────────────────────────────────────────────────
 
     /**
@@ -115,13 +238,26 @@
             'tooltips="1" connect="1" arrows="1" fold="0" page="1" pageScale="1" math="0" shadow="0">', '<root>', '<mxCell id="0"/>', '<mxCell id="1" parent="0"/>'];
         // The two seed cells draw.io requires: the model root (0) and the default layer (1).
 
+        // Every BU's absolute top-y comes from the link graph (1:1 hops horizontal, 1:n sources
+        // centered on their fan-out), and every lane shares one height so the columns line up as a
+        // uniform grid. All cells stay parented to "1" (absolute geometry). The uniform height is
+        // the greater of the BU-count height and the extent height: a fan-out plus the min-gap
+        // sweep can push a column's stack deeper than its BU count, so we take the lowest computed
+        // BU bottom across every cell and pad it — otherwise the bottom BU escapes below the lane.
+        const buY = computeBuLayout(columns, links);
+        const maxBuCount = columns.reduce((max, column) => Math.max(max, (column.bus || []).length), 0);
+        let maxBottom = LANE_TOP;
+        for (const topY of buY.values()) {
+            maxBottom = Math.max(maxBottom, topY + BU_HEIGHT);
+        }
+        const uniformHeight = Math.max(laneHeight(maxBuCount), maxBottom - LANE_TOP + LANE_BOTTOM_PAD);
+
         // One swimlane per column, with its BU boxes. Both are parented to "1" (the layer),
         // so BU geometry is absolute and never offset by the swimlane origin.
         for (const [columnIndex, column] of columns.entries()) {
             const laneId = 'lane-' + String(columnIndex + 1);
             const laneX = COLUMN_X + columnIndex * COLUMN_STEP;
             const bus = column.bus || [];
-            const height = laneHeight(bus.length);
             const band = column.band || {};
             // Body stays white; the title bar shows the position-locked band colour. In mxGraph a
             // swimlane's `fillColor` is the header bar and `swimlaneFillColor` is the body, so
@@ -132,11 +268,11 @@
                 ';fontColor=#FFFFFF;fontStyle=1;collapsible=0;';
             parts.push('<mxCell id="' + escapeXml(laneId) + '" value="' + escapeXml(column.env) +
                 '" style="' + escapeXml(laneStyle) + '" vertex="1" parent="1">', '<mxGeometry x="' + laneX + '" y="' + LANE_TOP + '" width="' + LANE_WIDTH +
-                '" height="' + height + '" as="geometry"/>', '</mxCell>');
+                '" height="' + uniformHeight + '" as="geometry"/>', '</mxCell>');
 
-            for (const [rowIndex, bu] of bus.entries()) {
+            for (const bu of bus) {
                 const buX = laneX + BU_LEFT_INSET;
-                const buY = LANE_TOP + LANE_TOP_INSET + rowIndex * BU_ROW_STEP;
+                const buYValue = buY.get(bu.cellId);
                 // Fill with the column band so each BU matches its environment header (mirrors
                 // Diagramforce's diagramBUTask). Parent vs regular differ only by shape/fontStyle;
                 // white text stays readable on the green/purple/orange band fills.
@@ -146,7 +282,7 @@
                     ? 'rounded=0;whiteSpace=wrap;html=1;fillColor=' + buFill + ';strokeColor=' + buStroke + ';fontColor=#FFFFFF;fontStyle=1;'
                     : 'rounded=1;whiteSpace=wrap;html=1;fillColor=' + buFill + ';strokeColor=' + buStroke + ';fontColor=#FFFFFF;';
                 parts.push('<mxCell id="' + escapeXml(bu.cellId) + '" value="' + escapeXml(bu.label) +
-                    '" style="' + escapeXml(buStyle) + '" vertex="1" parent="1">', '<mxGeometry x="' + buX + '" y="' + buY + '" width="' + BU_WIDTH +
+                    '" style="' + escapeXml(buStyle) + '" vertex="1" parent="1">', '<mxGeometry x="' + buX + '" y="' + buYValue + '" width="' + BU_WIDTH +
                     '" height="' + BU_HEIGHT + '" as="geometry"/>', '</mxCell>');
             }
         }
@@ -156,8 +292,9 @@
             const edgeId = 'edge-' + String(linkIndex + 1);
             // Fixed connection points: exit the source at its right-middle, enter the target at its
             // left-middle, so every arrow terminates at the left-middle of the target BU box.
-            const edgeStyle = 'edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;' +
-                'exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;';
+            // `rounded=1;curved=0;` gives rounded (not curved) corners on the orthogonal routing.
+            const edgeStyle = 'edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;' +
+                'exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=0;';
             parts.push('<mxCell id="' + escapeXml(edgeId) + '" style="' + escapeXml(edgeStyle) +
                 '" edge="1" parent="1" source="' + escapeXml(link.sourceCellId) +
                 '" target="' + escapeXml(link.targetCellId) + '">', '<mxGeometry relative="1" as="geometry"/>', '</mxCell>');

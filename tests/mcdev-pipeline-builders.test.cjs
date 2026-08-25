@@ -2686,6 +2686,228 @@ test('buildMxGraphXml edges terminate at the left-middle of the target BU box', 
   assert.equal(edgeCount, model.links.length, 'one styled edge per link');
 });
 
+test('buildMxGraphXml renders every connector with rounded (not curved) corners', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const edgeRe = /<mxCell id="edge-\d+" style="([^"]*)"/g;
+  let edgeMatch;
+  let edgeCount = 0;
+  while ((edgeMatch = edgeRe.exec(xml)) !== null) {
+    edgeCount += 1;
+    const style = edgeMatch[1];
+    // Rounded corners on the orthogonal routing — before: rounded=0 with no curved flag.
+    assert.ok(style.includes('rounded=1;'), 'edge uses rounded=1 corners');
+    assert.ok(style.includes('curved=0;'), 'edge is rounded but not curved');
+    assert.ok(!style.includes('rounded=0;'), 'no edge is left square (rounded=0)');
+  }
+  assert.equal(edgeCount, model.links.length, 'one styled edge per link');
+});
+
+test('buildMxGraphXml gives every lane the tallest lane height (uniform grid)', () => {
+  // QA has 3 BUs, Prod has 4 — every lane must share the height of the 4-BU (tallest) lane.
+  seedDiagramPipeline(['DEV', 'QA', 'Prod'], {
+    DEV: ['DEV'],
+    QA: ['QA_a', 'QA_b', 'QA_c'],
+    Prod: ['PRD_a', 'PRD_b', 'PRD_c', 'PRD_d'],
+  });
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const laneHeights = xml
+    .matchAll(/id="lane-\d+"[\s\S]*?<mxGeometry [^>]*height="(\d+)"/g)
+    .map((hit) => hit[1])
+    .toArray();
+  assert.equal(laneHeights.length, 3, 'three lane cells');
+  assert.ok(
+    laneHeights.every((height) => height === laneHeights[0]),
+    'all lanes share one height: ' + laneHeights.join(','),
+  );
+  // The shared height is the tallest lane's height (the 4-BU Prod lane), not the 1-BU DEV lane.
+  const maxBuCount = Math.max(...model.columns.map((column) => column.bus.length));
+  assert.equal(maxBuCount, 4, 'Prod is the tallest lane with 4 BUs');
+});
+
+/**
+ * Read every BU's absolute top-y from an emitted mxGraph document, keyed by cell id.
+ *
+ * @param {string} xml the `buildMxGraphXml` output
+ * @returns {{[cellId: string]: number}} cellId → absolute top-y
+ */
+function readBuYs(xml) {
+  const buYs = {};
+  const re = /<mxCell id="(bu-\d+-\d+)"[^>]*>\s*<mxGeometry x="\d+" y="(-?\d+)"/g;
+  let hit;
+  while ((hit = re.exec(xml)) !== null) {
+    buYs[hit[1]] = Number(hit[2]);
+  }
+  return buYs;
+}
+
+test('buildMxGraphXml places a clean 1:1 hop at the same y (horizontal connector)', () => {
+  // Single BU per env, one link each: a pure 1:1 chain must be perfectly horizontal.
+  seedDiagramPipeline(['DEV', 'QA', 'Prod'], { DEV: ['DEV'], QA: ['QA_a'], Prod: ['PRD_a'] });
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const buYs = readBuYs(xml);
+  const developmentId = model.columns[0].bus[0].cellId;
+  const qaId = model.columns[1].bus[0].cellId;
+  const productionId = model.columns[2].bus[0].cellId;
+  assert.equal(buYs[developmentId], buYs[qaId], '1:1 hop keeps source and target at the same y');
+  assert.equal(buYs[qaId], buYs[productionId], '1:1 chain propagates the shared y across all hops');
+});
+
+test('buildMxGraphXml centers a 1:n source on the span of its targets, no overlap', () => {
+  // One DEV BU fans out to three Prod BUs via explicit lineage — the source sits centered on
+  // the min→max span of its targets, and the targets keep a full BU_HEIGHT-plus gap.
+  seedDiagramPipeline(['DEV', 'Prod'], { DEV: ['DEV'], Prod: ['PRD_a', 'PRD_b', 'PRD_c'] });
+  controller.state.wizardState.lineage = { PRD_a: 'DEV', PRD_b: 'DEV', PRD_c: 'DEV' };
+  const model = controller.buildDrawioModel();
+  assert.equal(model.links.length, 3, 'three fan-out links from the single DEV BU');
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const buYs = readBuYs(xml);
+  const BU_HEIGHT = 40;
+  const developmentId = model.columns[0].bus[0].cellId;
+  const targetIds = model.columns[1].bus.map((bu) => bu.cellId);
+  const targetTops = targetIds.map((id) => buYs[id]).toSorted((left, right) => left - right);
+  // Targets stay stacked in model order with at least a full BU height between successive tops.
+  for (let row = 1; row < targetTops.length; row += 1) {
+    assert.ok(
+      targetTops[row] - targetTops[row - 1] >= BU_HEIGHT,
+      'fan-out targets keep a min gap of at least one BU height',
+    );
+  }
+  // Source center equals the center of the (min, max) target span.
+  const targetCenters = targetTops.map((top) => top + BU_HEIGHT / 2);
+  const spanCenter = (Math.min(...targetCenters) + Math.max(...targetCenters)) / 2;
+  assert.equal(
+    buYs[developmentId] + BU_HEIGHT / 2,
+    spanCenter,
+    'the 1:n source is vertically centered on its targets span',
+  );
+});
+
+test('buildMxGraphXml grows the lane so a fan-out from the bottom BU stays inside it', () => {
+  // The tallest column by BU count is QA (3). Its bottom BU (QA_c) fans out to two Prod BUs, so
+  // the min-gap sweep centers them low and pushes the Prod stack below the count-based lane
+  // height — before the extent-aware fix the bottom BU escaped past the lane bottom.
+  const LANE_TOP = 40;
+  seedDiagramPipeline(['DEV', 'QA', 'Prod'], {
+    DEV: ['DEV'],
+    QA: ['QA_a', 'QA_b', 'QA_c'],
+    Prod: ['PRD_a', 'PRD_b'],
+  });
+  controller.state.wizardState.lineage = { PRD_a: 'QA_c', PRD_b: 'QA_c' };
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  // Every lane shares one height; read it (all equal, so the first is the uniform height).
+  const laneHeights = xml
+    .matchAll(/id="lane-\d+"[\s\S]*?<mxGeometry [^>]*height="(\d+)"/g)
+    .map((hit) => Number(hit[1]))
+    .toArray();
+  assert.ok(laneHeights.length >= 1, 'at least one lane height parsed');
+  assert.ok(
+    laneHeights.every((height) => height === laneHeights[0]),
+    'lanes stay uniform: ' + laneHeights.join(','),
+  );
+  const uniformHeight = laneHeights[0];
+  const laneBottom = LANE_TOP + uniformHeight;
+  // Parse every BU box's top-y + height and assert its bottom stays inside the lane.
+  const buRe =
+    /<mxCell id="bu-\d+-\d+"[^>]*>\s*<mxGeometry x="\d+" y="(-?\d+)" width="\d+" height="(\d+)"/g;
+  let hit;
+  let checked = 0;
+  while ((hit = buRe.exec(xml)) !== null) {
+    checked += 1;
+    const buBottomY = Number(hit[1]) + Number(hit[2]);
+    assert.ok(
+      buBottomY <= laneBottom,
+      'BU bottom ' + buBottomY + ' must not escape the lane bottom ' + laneBottom,
+    );
+  }
+  assert.equal(checked, 6, 'all six BU boxes were bounds-checked');
+});
+
+test('buildMxGraphXml centers crossing 1:n sources on their children, preserving order and gap', () => {
+  // Crossing lineage: col0 = [S1, S2] in model order, col1 = [t1, t2, t3, t4], with S1 → t3,t4 and
+  // S2 → t1,t2. S1 (top of its column) fans out LOW and S2 fans out HIGH. The converged Pass-3
+  // relaxation centers each source on its children's span as far as the order+min-gap constraints
+  // allow. A hand-built model gives exact control over ids, order and the crossing links.
+  const BU_HEIGHT = 40;
+  const BU_ROW_STEP = 60;
+  const model = {
+    title: 'crossing',
+    columns: [
+      {
+        env: 'Src',
+        band: { fill: '#27ae60', stroke: '#1e8449' },
+        bus: [
+          { cellId: 'bu-1-1', label: 'S1' },
+          { cellId: 'bu-1-2', label: 'S2' },
+        ],
+      },
+      {
+        env: 'Tgt',
+        band: { fill: '#F49825', stroke: '#b3701a' },
+        bus: [
+          { cellId: 'bu-2-1', label: 't1' },
+          { cellId: 'bu-2-2', label: 't2' },
+          { cellId: 'bu-2-3', label: 't3' },
+          { cellId: 'bu-2-4', label: 't4' },
+        ],
+      },
+    ],
+    links: [
+      { sourceCellId: 'bu-1-1', targetCellId: 'bu-2-3' },
+      { sourceCellId: 'bu-1-1', targetCellId: 'bu-2-4' },
+      { sourceCellId: 'bu-1-2', targetCellId: 'bu-2-1' },
+      { sourceCellId: 'bu-1-2', targetCellId: 'bu-2-2' },
+    ],
+  };
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const buYs = readBuYs(xml);
+  const centerOf = (id) => buYs[id] + BU_HEIGHT / 2;
+  const spanCenter = (ids) => {
+    const centers = ids.map((id) => centerOf(id));
+    return (Math.min(...centers) + Math.max(...centers)) / 2;
+  };
+  // Model order is preserved in each column (top-to-bottom = order in the bus array) with no overlap.
+  assert.ok(buYs['bu-1-1'] < buYs['bu-1-2'], 'source column keeps model order S1 above S2');
+  for (const [above, below] of [
+    ['bu-2-1', 'bu-2-2'],
+    ['bu-2-2', 'bu-2-3'],
+    ['bu-2-3', 'bu-2-4'],
+  ]) {
+    assert.ok(
+      buYs[above] < buYs[below],
+      'target column keeps model order ' + above + ' above ' + below,
+    );
+    assert.ok(
+      buYs[below] - buYs[above] >= BU_HEIGHT,
+      'adjacent targets never overlap (min one BU height apart)',
+    );
+  }
+  // S1 sits on the HIGHER-ROW children (t3, t4) and is centered on their span. This is the
+  // discriminating assertion: pre-layout code stacked S1 at the lane top (row 0, center 110),
+  // ~160px above its true children center — this fails there and passes with the centering layout.
+  const s1Center = centerOf('bu-1-1');
+  const s1Target = spanCenter(['bu-2-3', 'bu-2-4']);
+  assert.ok(
+    Math.abs(s1Center - s1Target) <= BU_ROW_STEP / 2,
+    'S1 is centered on its (lower) children t3,t4 within half a row step: ' +
+      s1Center +
+      ' vs ' +
+      s1Target,
+  );
+  // S2's children (t1, t2) sit HIGH, but model order forces S2 below S1 — its desired center
+  // (high) is unsatisfiable without reordering. The converged relaxation keeps order + min gap and
+  // parks S2 as high as allowed (one BU_ROW_STEP below S1), never overlapping and never reordered.
+  assert.equal(
+    buYs['bu-1-2'] - buYs['bu-1-1'],
+    BU_ROW_STEP,
+    'order-constrained S2 sits exactly one min-gap below S1 (as near its high children as allowed)',
+  );
+});
+
 test('buildMermaid emits a flowchart with a subgraph per env and one edge per link', () => {
   seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
   const model = controller.buildDrawioModel();
