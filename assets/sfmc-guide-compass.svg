@@ -1,47 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-label="sfmc.guide">
-  <!-- Outer Ring -->
-  <circle cx="250" cy="250" r="145" fill="none" stroke="#102A45" stroke-width="20"/>
+  <g transform="scale(7.8125) translate(1 2)">
+    <!-- white background -->
+    <circle fill="#FFFFFF" cx="31" cy="30" r="32"/>
+    <!-- magnifying glass -->
+    <path fill="#DD7A01" d="M59.4,51.6l-9.8-9.8C51.8,38.4,53,34.3,53,30c0-12.1-9.8-22-22-22S9,17.9,9,30s9.9,22,22,22 c3.8,0,7.4-1,10.5-2.7l10.1,10.1C52,59.8,52.5,60,53,60s1-0.2,1.4-0.6l5-5l0,0C60.2,53.6,60.2,52.4,59.4,51.6z"/>
+    <!-- Outer Ring -->
+    <circle fill="#FFFFFF" cx="31" cy="30" r="17"/>
+    <!-- filler for handle -->
+    <path fill="#FFFFFF" d="M47.1,45c-0.3,0.4-0.7,0.7-1,1c0,0-0.1,0.1-0.1,0.1c-0.4,0.3-0.7,0.7-1.1,1l0,0l8.1,8.1l2.2-2.2L47.1,45 C47.1,45,47.1,45,47.1,45z"/>
+  </g>
+  <g transform="translate(242.19 234.38) scale(1.1) translate(-242 -235)">
+    <!-- 8-Point Compass Star Base -->
+    <!-- North Point -->
+    <polygon points="250,25 250,250 210,210" fill="#2563EB"/>
+    <polygon points="250,25 290,210 250,250" fill="#0F172A"/>
 
-  <!-- 8-Point Compass Star Base -->
-  <!-- North Point -->
-  <polygon points="250,25 250,250 210,210" fill="#2563EB"/>
-  <polygon points="250,25 290,210 250,250" fill="#0F172A"/>
+    <!-- South Point -->
+    <polygon points="250,475 210,290 250,250" fill="#0F172A"/>
+    <polygon points="250,475 250,250 290,290" fill="#2563EB"/>
 
-  <!-- South Point -->
-  <polygon points="250,475 210,290 250,250" fill="#0F172A"/>
-  <polygon points="250,475 250,250 290,290" fill="#2563EB"/>
+    <!-- East Point -->
+    <polygon points="475,250 290,210 250,250" fill="#2563EB"/>
+    <polygon points="475,250 250,250 290,290" fill="#0F172A"/>
 
-  <!-- East Point -->
-  <polygon points="475,250 290,210 250,250" fill="#2563EB"/>
-  <polygon points="475,250 250,250 290,290" fill="#0F172A"/>
+    <!-- West Point -->
+    <polygon points="25,250 210,210 250,250" fill="#0F172A"/>
+    <polygon points="25,250 250,250 210,290" fill="#2563EB"/>
 
-  <!-- West Point -->
-  <polygon points="25,250 210,210 250,250" fill="#0F172A"/>
-  <polygon points="25,250 250,250 210,290" fill="#2563EB"/>
+    <!-- Diagonal Points (NE, SE, SW, NW) -->
+    <!-- NE -->
+    <polygon points="370,130 250,250 285,180" fill="#3B82F6"/>
+    <polygon points="370,130 320,215 250,250" fill="#1E3A8A"/>
+    <!-- SE -->
+    <polygon points="370,370 250,250 320,285" fill="#1E3A8A"/>
+    <polygon points="370,370 285,320 250,250" fill="#0F172A"/>
+    <!-- SW -->
+    <polygon points="130,370 250,250 215,320" fill="#1E3A8A"/>
+    <polygon points="130,370 180,285 250,250" fill="#3B82F6"/>
+    <!-- NW -->
+    <polygon points="130,130 250,250 180,215" fill="#3B82F6"/>
+    <polygon points="130,130 215,180 250,250" fill="#1E3A8A"/>
 
-  <!-- Diagonal Points (NE, SE, SW, NW) -->
-  <!-- NE -->
-  <polygon points="370,130 250,250 285,180" fill="#3B82F6"/>
-  <polygon points="370,130 320,215 250,250" fill="#1E3A8A"/>
-  <!-- SE -->
-  <polygon points="370,370 250,250 320,285" fill="#1E3A8A"/>
-  <polygon points="370,370 285,320 250,250" fill="#0F172A"/>
-  <!-- SW -->
-  <polygon points="130,370 250,250 215,320" fill="#1E3A8A"/>
-  <polygon points="130,370 180,285 250,250" fill="#3B82F6"/>
-  <!-- NW -->
-  <polygon points="130,130 250,250 180,215" fill="#3B82F6"/>
-  <polygon points="130,130 215,180 250,250" fill="#1E3A8A"/>
+    <!-- Primary Diagonal Compass Needle (SW -> NE) -->
+    <!-- Top Right / NE Pointer -->
+    <polygon points="395,105 250,250 222,222" fill="#FB923C"/>
+    <polygon points="395,105 278,278 250,250" fill="#EA580C"/>
 
-  <!-- Primary Diagonal Compass Needle (SW -> NE) -->
-  <!-- Top Right / NE Pointer -->
-  <polygon points="395,105 250,250 222,222" fill="#FB923C"/>
-  <polygon points="395,105 278,278 250,250" fill="#EA580C"/>
+    <!-- Bottom Left / SW Pointer -->
+    <polygon points="105,395 250,250 278,278" fill="#EA580C"/>
+    <polygon points="105,395 222,222 250,250" fill="#C2410C"/>
 
-  <!-- Bottom Left / SW Pointer -->
-  <polygon points="105,395 250,250 278,278" fill="#EA580C"/>
-  <polygon points="105,395 222,222 250,250" fill="#C2410C"/>
-
-  <!-- Center Cap Pin -->
-  <circle cx="250" cy="250" r="16" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+    <!-- Center Cap Pin -->
+    <circle cx="250" cy="250" r="16" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+  </g>
 </svg>
