@@ -202,6 +202,7 @@ platforms:
         crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-config-builder.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-validations-builder.js' | relative_url | cache_bust }}" defer></script>
+<script src="{{ '/assets/js/mcdev-pipeline-drawio.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-core.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-environment-order.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-production-confirm.js' | relative_url | cache_bust }}" defer></script>

@@ -2839,6 +2839,151 @@
 
 
     /**
+     * Build the plain draw.io model for the current pipeline, independent of `buildDiagramJSON`
+     * (the Diagramforce path is left untouched). Mirrors that function's Pass-A/Pass-B loop but
+     * owns its own stable cell ids: one swimlane column per environment, one BU box per assigned
+     * reference, and a deploy link per BU resolved as lineage-parent -> same-index -> first.
+     *
+     * @returns {import('./mcdev-pipeline-drawio.js').DrawioModel} the draw.io model
+     */
+    function buildDrawioModel() {
+        const wizardState = state.wizardState;
+        const environments = environmentNames();
+        const lineage = wizardState.lineage || {};
+        const columnCount = environments.length;
+
+        // Pass A — columns + stable cell ids (one per buRef-in-env), and a per-column ref->cellId map.
+        const columns = [];
+        const cellIdByColumn = [];
+        const columnReferences = [];
+        for (const [columnIndex, environment] of environments.entries()) {
+            const references = assignedBUReferences(environment);
+            const idMap = {};
+            const bus = [];
+            for (const [rowIndex, reference] of references.entries()) {
+                const cellId = 'bu-' + String(columnIndex + 1) + '-' + String(rowIndex + 1);
+                idMap[reference] = cellId;
+                bus.push({
+                    cellId: cellId,
+                    label: buDisplayLabel(reference),
+                    isParentBU: bareBUName(reference) === '_ParentBU_',
+                });
+            }
+            columns.push({
+                env: environment,
+                band: diagramBand(columnIndex, columnCount),
+                bus: bus,
+            });
+            cellIdByColumn.push(idMap);
+            columnReferences.push(references);
+        }
+
+        // Pass B — links to the upstream BU: prefer the explicit lineage parent, else the same-index
+        // BU (or the first) in the previous column. References the model's own cell ids.
+        const links = [];
+        for (let columnIndex = 1; columnIndex < environments.length; columnIndex += 1) {
+            const previousMap = cellIdByColumn[columnIndex - 1];
+            const references = columnReferences[columnIndex];
+            const previousReferences = columnReferences[columnIndex - 1];
+            for (const [rowIndex, reference] of references.entries()) {
+                const parentReference = lineage[reference];
+                let sourceCellId = parentReference ? previousMap[parentReference] : undefined;
+                if (!sourceCellId) {
+                    const fallbackReference = previousReferences[rowIndex] || previousReferences[0];
+                    sourceCellId = fallbackReference ? previousMap[fallbackReference] : undefined;
+                }
+                const targetCellId = cellIdByColumn[columnIndex][reference];
+                if (sourceCellId && targetCellId) {
+                    links.push({ sourceCellId: sourceCellId, targetCellId: targetCellId });
+                }
+            }
+        }
+
+        return { title: diagramTitle(), columns: columns, links: links };
+    }
+
+
+    /**
+     * Host hooks passed into the draw.io module so it stays DOM-free: the real window `open` and
+     * the core's `downloadText`. Kept as a helper so both draw.io rows share one wiring.
+     *
+     * @returns {{open: (url: string, target: string, features: string) => unknown, downloadText: (filename: string, text: string, mimeType: string) => void}} the io hooks
+     */
+    function drawioIo() {
+        return {
+            open: (url, target, features) => global.open(url, target, features),
+            downloadText: downloadText,
+        };
+    }
+
+
+    /**
+     * Append the "Open in draw.io (mxGraph)" Download row, gated by `isDiagramDrawable()`. Builds
+     * the model + mxGraph XML on click and hands off via the draw.io module (URL, else download).
+     *
+     * @param {{append: (node: unknown) => void}} panel the dropdown panel
+     * @returns {void}
+     */
+    function fillBuilderDrawioMxItem(panel) {
+        if (!panel || !isDiagramDrawable()) {
+            return;
+        }
+        const canCreate = document_ && typeof document_.createElement === 'function';
+        if (!canCreate) {
+            panel.append({ role: 'menuitem', textContent: 'Open in draw.io (mxGraph)' });
+            return;
+        }
+        const item = makeElement('button', {
+            type: 'button',
+            class: 'mpb-builder-open-row',
+            text: 'Open in draw.io (mxGraph)',
+            attrs: { role: 'menuitem' },
+        });
+        item.addEventListener('click', () => {
+            closeBuilderOpenPanel();
+            const model = buildDrawioModel();
+            const xml = global.mpbDrawio.buildMxGraphXml(model);
+            global.mpbDrawio.openInDrawioOrDownload(xml, model.title, 'pipeline.drawio', drawioIo());
+        });
+        panel.append(item);
+    }
+
+
+    /**
+     * Append the "Open in draw.io (mermaid)" Download row, gated by `isDiagramDrawable()`. Builds
+     * the model + mermaid flowchart on click and hands off via the draw.io module (URL, else
+     * download). Mermaid import is a natively-gated draw.io feature — a gated-off render fails in
+     * the opened tab with no signal back here.
+     *
+     * @param {{append: (node: unknown) => void}} panel the dropdown panel
+     * @returns {void}
+     */
+    function fillBuilderDrawioMermaidItem(panel) {
+        if (!panel || !isDiagramDrawable()) {
+            return;
+        }
+        const canCreate = document_ && typeof document_.createElement === 'function';
+        if (!canCreate) {
+            panel.append({ role: 'menuitem', textContent: 'Open in draw.io (mermaid)' });
+            return;
+        }
+        const item = makeElement('button', {
+            type: 'button',
+            class: 'mpb-builder-open-row',
+            text: 'Open in draw.io (mermaid)',
+            attrs: { role: 'menuitem' },
+        });
+        item.addEventListener('click', () => {
+            closeBuilderOpenPanel();
+            const model = buildDrawioModel();
+            const mermaid = global.mpbDrawio.buildMermaid(model);
+            global.mpbDrawio.openMermaidInDrawioOrDownload(mermaid, model.title, 'pipeline.mmd', drawioIo());
+        });
+        panel.append(item);
+    }
+
+
+    /**
      * Build the "Download ▾" dropdown: the `.mcdevrc.json` item (full mode + complete pipeline only,
      * disabled with a tooltip otherwise), the always-present `.mcdev-validations.js` item, and an
      * "Open in Diagramforce" row gated by `isDiagramDrawable()` only (file rows keep
@@ -2891,6 +3036,8 @@
             });
             panel.append(validationsItem);
             fillBuilderDownloadDiagramItem(panel);
+            fillBuilderDrawioMxItem(panel);
+            fillBuilderDrawioMermaidItem(panel);
         });
     }
 
@@ -4126,6 +4273,9 @@
         shouldShowDiagramforceMenuItem: shouldShowDiagramforceMenuItem,
         diagramforceMenuItemSpec: diagramforceMenuItemSpec,
         fillBuilderDownloadDiagramItem: fillBuilderDownloadDiagramItem,
+        buildDrawioModel: buildDrawioModel,
+        fillBuilderDrawioMxItem: fillBuilderDrawioMxItem,
+        fillBuilderDrawioMermaidItem: fillBuilderDrawioMermaidItem,
         downloadText: downloadText,
         assignBUToEnvironment: assignBUToEnvironment,
         unassignedBUReferences: unassignedBUReferences,

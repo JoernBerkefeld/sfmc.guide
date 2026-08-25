@@ -21,8 +21,10 @@ const vm = require('node:vm');
 // API to the global object, so we require() them for their side effect and read the global.
 require('../assets/js/mcdev-pipeline-config-builder.js');
 require('../assets/js/mcdev-pipeline-validations-builder.js');
+require('../assets/js/mcdev-pipeline-drawio.js');
 const { buildConfig } = globalThis.mpbConfigBuilder;
 const { buildValidations } = globalThis.mpbValidationsBuilder;
+const mpbDrawio = globalThis.mpbDrawio;
 
 const SAMPLE_PATH = path.join(__dirname, '..', '..', 'mcdev-ssjs-validation', '.mcdevrc.json');
 const sampleConfig = JSON.parse(fs.readFileSync(SAMPLE_PATH, 'utf8'));
@@ -2529,6 +2531,260 @@ test('buildDiagramJSON is idempotent: same seed → identical card Ys (fixed poi
   assert.deepEqual(second, first, 'a second build on the same seed yields identical card Ys');
 });
 
+// ─── draw.io export (mcdev-pipeline-drawio.js), built side-by-side with Diagramforce ───
+//
+// The draw.io module is pure: it takes the plain model from controller.buildDrawioModel()
+// and returns strings. These tests cover the mxGraph XML shape + escaping, the mermaid
+// flowchart, drawable-gating of the two Download rows, and the URL-length download fallback.
+
+/**
+ * Count non-overlapping occurrences of a substring.
+ *
+ * @param {string} haystack the string to scan
+ * @param {string} needle the substring to count
+ * @returns {number} occurrence count
+ */
+function countOccurrences(haystack, needle) {
+  return haystack.split(needle).length - 1;
+}
+
+test('buildDrawioModel mirrors the pipeline: one column per env, cell ids, same-index link', () => {
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const model = controller.buildDrawioModel();
+  assert.equal(model.columns.length, 2, 'two environment columns');
+  assert.deepEqual(
+    model.columns.map((column) => column.env),
+    ['DEV', 'Prod'],
+    'columns are in pipeline order',
+  );
+  assert.equal(model.columns[0].bus[0].label, 'DEV', 'BU label is the display label');
+  assert.equal(model.links.length, 1, 'same-index fallback still produces one deploy link');
+  const sourceIds = model.columns[0].bus.map((bu) => bu.cellId);
+  const targetIds = model.columns[1].bus.map((bu) => bu.cellId);
+  assert.ok(sourceIds.includes(model.links[0].sourceCellId), 'link source is a DEV cell id');
+  assert.ok(targetIds.includes(model.links[0].targetCellId), 'link target is a Prod cell id');
+});
+
+test('buildDrawioModel honours the explicit lineage parent over same-index', () => {
+  seedDiagramPipeline(['QA', 'Prod'], { QA: ['QA_a', 'QA_b'], Prod: ['PRD_a'] });
+  controller.state.wizardState.lineage = { PRD_a: 'QA_b' };
+  const model = controller.buildDrawioModel();
+  const qaB = model.columns[0].bus.find((bu) => bu.label === 'QA_b');
+  assert.equal(model.links.length, 1, 'one link for the single Prod BU');
+  assert.equal(model.links[0].sourceCellId, qaB.cellId, 'link resolves to the lineage parent QA_b');
+});
+
+test('buildMxGraphXml emits seed cells, one swimlane per env, and one edge per link', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  assert.match(xml, /^<mxGraphModel /, 'starts with the mxGraphModel root');
+  assert.ok(xml.includes('<mxCell id="0"/>'), 'has the model root seed cell');
+  assert.ok(xml.includes('<mxCell id="1" parent="0"/>'), 'has the default-layer seed cell');
+  assert.match(xml, /<mxGraphModel [^>]*\bfold="0"/, 'cells are not foldable (fold="0")');
+  assert.equal(countOccurrences(xml, 'swimlane;'), 3, 'one swimlane style per environment');
+  assert.equal(countOccurrences(xml, 'edge="1"'), model.links.length, 'one edge cell per link');
+  // Every edge source/target references a vertex id that exists in the document.
+  const idRe = /<mxCell id="([^"]+)"/g;
+  const ids = new Set();
+  let match;
+  while ((match = idRe.exec(xml)) !== null) {
+    ids.add(match[1]);
+  }
+  const edgeRe = /edge="1" parent="1" source="([^"]+)" target="([^"]+)"/g;
+  while ((match = edgeRe.exec(xml)) !== null) {
+    assert.ok(ids.has(match[1]), 'edge source ' + match[1] + ' is a real cell');
+    assert.ok(ids.has(match[2]), 'edge target ' + match[2] + ' is a real cell');
+  }
+  // Well-formed enough for draw.io: tags are balanced (equal open/close mxCell counts).
+  assert.equal(
+    countOccurrences(xml, '<mxCell') -
+      countOccurrences(xml, '<mxCell id="0"/>') -
+      countOccurrences(xml, '<mxCell id="1" parent="0"/>'),
+    countOccurrences(xml, '</mxCell>'),
+    'every non-seed mxCell is closed',
+  );
+});
+
+test('buildMxGraphXml XML-escapes labels containing & < > "', () => {
+  seedDiagramPipeline(['DEV', 'Prod'], { DEV: ['A & B <x>'], Prod: ['P'] });
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  assert.ok(xml.includes('A &amp; B &lt;x&gt;'), 'ampersand and angle brackets are escaped');
+  assert.ok(!/value="A & B <x>"/.test(xml), 'raw unescaped label must not appear');
+});
+
+test('buildMxGraphXml lanes have a white body with the band header colour and no fold toggle', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  // Every lane body is white; the header bar shows the position-locked band fill; no fold toggle.
+  const laneRe = /<mxCell id="lane-\d+"[^>]*style="([^"]*)"/g;
+  const laneStyles = [];
+  let laneMatch;
+  while ((laneMatch = laneRe.exec(xml)) !== null) {
+    laneStyles.push(laneMatch[1]);
+  }
+  assert.equal(laneStyles.length, 3, 'three lane cells');
+  for (const style of laneStyles) {
+    assert.ok(style.includes('swimlaneFillColor=#FFFFFF;'), 'lane body is white');
+    assert.ok(style.includes('collapsible=0;'), 'lane has no collapse/fold toggle');
+    assert.ok(style.includes('fontColor=#FFFFFF;fontStyle=1;'), 'lane title text stays white/bold');
+  }
+  // Header colour is position-locked: first green, middle purple, last orange (via fillColor).
+  assert.ok(laneStyles[0].includes('fillColor=#27ae60;'), 'first lane header is band green');
+  assert.ok(
+    laneStyles[0].includes('strokeColor=#1e8449;'),
+    'first lane stroke is band green stroke',
+  );
+  assert.ok(laneStyles[1].includes('fillColor=#7C3AED;'), 'middle lane header is band purple');
+  assert.ok(laneStyles[2].includes('fillColor=#F49825;'), 'last lane header is band orange');
+});
+
+test('buildMxGraphXml BU boxes are filled with their column band colour', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  // A BU in the first column (green band) carries the green band fill/stroke and readable white text.
+  const firstBuId = model.columns[0].bus[0].cellId;
+  const buRe = new RegExp('<mxCell id="' + firstBuId + '"[^>]*style="([^"]*)"');
+  const buStyle = buRe.exec(xml)[1];
+  assert.ok(
+    buStyle.includes('fillColor=#27ae60;'),
+    'first-column BU is filled with the green band',
+  );
+  assert.ok(
+    buStyle.includes('strokeColor=#1e8449;'),
+    'first-column BU stroke is the green band stroke',
+  );
+  assert.ok(
+    buStyle.includes('fontColor=#FFFFFF;'),
+    'BU label stays white for contrast on the band',
+  );
+  // A BU in the last column (orange band) carries the orange band fill.
+  const lastBuId = model.columns[2].bus[0].cellId;
+  const lastRe = new RegExp('<mxCell id="' + lastBuId + '"[^>]*style="([^"]*)"');
+  assert.ok(
+    lastRe.exec(xml)[1].includes('fillColor=#F49825;'),
+    'last-column BU is filled with the orange band',
+  );
+});
+
+test('buildMxGraphXml edges terminate at the left-middle of the target BU box', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const xml = mpbDrawio.buildMxGraphXml(model);
+  const edgeRe = /<mxCell id="edge-\d+" style="([^"]*)"/g;
+  let edgeMatch;
+  let edgeCount = 0;
+  while ((edgeMatch = edgeRe.exec(xml)) !== null) {
+    edgeCount += 1;
+    const style = edgeMatch[1];
+    assert.ok(style.includes('exitX=1;exitY=0.5;'), 'edge exits the source at its right-middle');
+    assert.ok(style.includes('entryX=0;entryY=0.5;'), 'edge enters the target at its left-middle');
+  }
+  assert.equal(edgeCount, model.links.length, 'one styled edge per link');
+});
+
+test('buildMermaid emits a flowchart with a subgraph per env and one edge per link', () => {
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const model = controller.buildDrawioModel();
+  const mermaid = mpbDrawio.buildMermaid(model);
+  assert.match(mermaid, /^flowchart LR/, 'starts with a flowchart LR directive');
+  assert.equal(countOccurrences(mermaid, 'subgraph '), 3, 'one subgraph per environment');
+  assert.equal(countOccurrences(mermaid, ' --> '), model.links.length, 'one arrow per link');
+});
+
+test('buildMermaid skips empty columns so no invalid empty subgraph is emitted', () => {
+  // A degenerate model with an empty column: mermaid rejects an empty `subgraph … end`.
+  const model = {
+    title: 'T',
+    columns: [
+      { env: 'DEV', bus: [{ cellId: 'bu-1-1', label: 'DEV_a' }] },
+      { env: 'Empty', bus: [] },
+      { env: 'Prod', bus: [{ cellId: 'bu-3-1', label: 'PRD_a' }] },
+    ],
+    links: [{ sourceCellId: 'bu-1-1', targetCellId: 'bu-3-1' }],
+  };
+  const mermaid = mpbDrawio.buildMermaid(model);
+  assert.equal(
+    countOccurrences(mermaid, 'subgraph '),
+    2,
+    'only the two populated columns emit a subgraph',
+  );
+  assert.ok(!mermaid.includes('Empty'), 'the empty column contributes no subgraph title');
+  assert.ok(!/subgraph [^\n]*\n\s*end/.test(mermaid), 'no subgraph is immediately followed by end');
+});
+
+test('openInDrawioOrDownload opens a tab under the cap and downloads over it', () => {
+  const opens = [];
+  const downloads = [];
+  const io = {
+    open: (url, target, features) => {
+      opens.push({ url, target, features });
+      return {};
+    },
+    downloadText: (filename, text, mime) => {
+      downloads.push({ filename, text, mime });
+    },
+  };
+  const small = mpbDrawio.openInDrawioOrDownload('<x/>', 'T', 'pipeline.drawio', io);
+  assert.equal(small, 'open', 'a tiny payload opens a tab');
+  assert.equal(opens.length, 1, 'open was called once');
+  assert.match(opens[0].url, /#R/, 'uses the #R raw-XML hash');
+  assert.equal(opens[0].features, 'noopener', 'opens with noopener');
+
+  const bigXml = '<x>' + 'y'.repeat(mpbDrawio.DRAWIO_URL_LIMIT) + '</x>';
+  const big = mpbDrawio.openInDrawioOrDownload(bigXml, 'T', 'pipeline.drawio', io);
+  assert.equal(big, 'download', 'an oversized payload downloads instead');
+  assert.equal(downloads.length, 1, 'downloadText was called once');
+  assert.equal(downloads[0].filename, 'pipeline.drawio', 'downloads a .drawio file');
+});
+
+test('openMermaidInDrawioOrDownload uses ?create= under the cap and downloads .mmd over it', () => {
+  const opens = [];
+  const downloads = [];
+  const io = {
+    open: (url) => {
+      opens.push(url);
+      return {};
+    },
+    downloadText: (filename, text, mime) => {
+      downloads.push({ filename, text, mime });
+    },
+  };
+  const small = mpbDrawio.openMermaidInDrawioOrDownload('flowchart LR', 'T', 'pipeline.mmd', io);
+  assert.equal(small, 'open', 'a small mermaid opens a tab');
+  assert.match(opens[0], /create=/, 'uses the ?create= JSON descriptor');
+
+  const bigMermaid = 'flowchart LR\n' + 'A-->B\n'.repeat(mpbDrawio.DRAWIO_URL_LIMIT);
+  const big = mpbDrawio.openMermaidInDrawioOrDownload(bigMermaid, 'T', 'pipeline.mmd', io);
+  assert.equal(big, 'download', 'an oversized mermaid downloads instead');
+  assert.equal(downloads[0].filename, 'pipeline.mmd', 'downloads a .mmd file');
+});
+
+test('draw.io Download rows: appended when drawable, omitted when not', () => {
+  // Not drawable in validations-only mode.
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  controller.state.mode = 'validations';
+  const notDrawable = stubDownloadPanel();
+  controller.fillBuilderDrawioMxItem(notDrawable);
+  controller.fillBuilderDrawioMermaidItem(notDrawable);
+  assert.equal(notDrawable.items.length, 0, 'no draw.io rows when not drawable');
+
+  // Drawable full-mode pipeline appends both rows.
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const drawable = stubDownloadPanel();
+  controller.fillBuilderDrawioMxItem(drawable);
+  controller.fillBuilderDrawioMermaidItem(drawable);
+  assert.equal(drawable.items.length, 2, 'both draw.io rows when drawable');
+  const labels = new Set(drawable.items.map((item) => item.textContent));
+  assert.ok(
+    labels.has('Open in draw.io (mxGraph)') && labels.has('Open in draw.io (mermaid)'),
+    'both draw.io row labels are present',
+  );
+});
+
 /**
  * Stub Download-menu panel: collects appended menuitem descriptors without a real document.
  *
@@ -4270,6 +4526,7 @@ test('script-order lock: index.md pipeline srcs match the test require() list', 
   assert.deepEqual(page, [
     'mcdev-pipeline-config-builder.js',
     'mcdev-pipeline-validations-builder.js',
+    'mcdev-pipeline-drawio.js',
     'mcdev-pipeline-core.js',
     'mcdev-pipeline-step-environment-order.js',
     'mcdev-pipeline-step-production-confirm.js',
