@@ -2028,30 +2028,280 @@
 
 
     /**
-     * The vertical centre-to-top offsets for `count` cards evenly spread inside a lane's inner box.
-     * Mirrors the spec's `spread()` (layout-core.js `planLaneNormalisation`): a single card centres
-     * in the box; otherwise the gap is `max(rowGap, (innerHeight - count*taskHeight)/(count-1))`, so
-     * mixed counts stay evenly separated and no lane packs from its own top. Returns absolute `y`
-     * (top-left) values on the shared row grid, identical maths for every lane.
+     * Plan the vertical placement of every lane's cards, porting Diagramforce's "Match Container
+     * Height" (layout-core.js `planLaneNormalisation`) to the pipeline's simpler world: every card
+     * shares one height (`DIAGRAM_TASK_HEIGHT`) and lanes are already ordered left-to-right. Only the
+     * REFERENCE lane (the one with the most cards) is evenly spread; every OTHER lane is placed by
+     * BARYCENTRE — each card sits at the mean centre of the cards it actually links to — walked
+     * outward from the reference across lane adjacency. A one-to-one link therefore reads as a flat
+     * connector; a fan reads as a symmetric block.
+     *
+     * Deliberate deviation from the app: a fan of cards sharing ONE source (identical barycentre) is
+     * centred symmetrically on that shared centre, not stacked downward from it.
+     *
+     * @param {Array<{id: string, cards: Array<{id: string}>}>} columns one entry per env (envOrder
+     *        order); each carries its container id and its ordered cards' task ids.
+     * @param {Array<{source: string, target: string}>} links upstream→downstream deploy links (task
+     *        id → task id); same-lane and dangling links are ignored.
+     * @returns {{top: number, height: number, ysByColumn: number[][]}} the shared lane top and
+     *          height, plus `ysByColumn[i]` = the top-`y` per card of column `i`, in card order.
+     */
+    function diagramLanePlacement(columns, links) {
+        const taskH = DIAGRAM_TASK_HEIGHT;
+        const rowGap = DIAGRAM_ROW_GAP;
+        const cols = Array.isArray(columns) ? columns : [];
+
+        // No columns → nothing to place; return the empty plan at the shared lane top base (50).
+        if (cols.length === 0) {
+            return { top: 50, height: 0, ysByColumn: [] };
+        }
+
+        // ── Shared geometry: one height for the whole diagram — the deepest lane's need — so columns
+        // read as uniform lanes. `n` is floored at 1 so an empty lane still reserves one row.
+        const laneNeed = (n) => {
+            const count = Math.max(n, 1);
+            return (
+                DIAGRAM_LANE_TOP_INSET +
+                count * taskH +
+                (count - 1) * rowGap +
+                DIAGRAM_LANE_BOTTOM_INSET
+            );
+        };
+        const top = 50;
+        const height = cols.reduce((tallest, column) => Math.max(tallest, laneNeed(column.cards.length)), 0);
+        const innerTop = top + DIAGRAM_LANE_TOP_INSET;
+        const innerBottom = top + height - DIAGRAM_LANE_BOTTOM_INSET;
+        const innerHeight = innerBottom - innerTop;
+
+        // ── Reference lane: most cards, tie-break to the leftmost (lowest index) for determinism.
+        // The app's "tallest" tie-break tier is intentionally omitted: every card shares one uniform
+        // DIAGRAM_TASK_HEIGHT, so lane height is a pure function of card count and that tier is vacuous.
+        let referenceIndex = 0;
+        for (let index = 1; index < cols.length; index += 1) {
+            if (cols[index].cards.length > cols[referenceIndex].cards.length) {
+                referenceIndex = index;
+            }
+        }
+
+        /**
+         * Spread `n` cards evenly down the inner box (equal gaps), returning their top-`y` in order.
+         * A single card is centred; otherwise the gap is floored at `rowGap`.
+         *
+         * @param {number} n the number of cards
+         * @returns {number[]} the top-`y` per card, top to bottom
+         */
+        const spread = (n) => {
+            if (n <= 1) {
+                return [Math.round(innerTop + Math.max(0, (innerHeight - taskH) / 2))];
+            }
+            const gap = Math.max(rowGap, (innerHeight - n * taskH) / (n - 1));
+            const ys = [];
+            let y = innerTop;
+            for (let index = 0; index < n; index += 1) {
+                ys.push(Math.round(y));
+                y += taskH + gap;
+            }
+            return ys;
+        };
+
+        /**
+         * Place cards at desired CENTRE `targetCentres` (index-aligned to `cards`), de-overlapped and
+         * clamped into the box, then apply the centred shared-source fan deviation. Returns top-`y`
+         * per card in ORIGINAL card order.
+         *
+         * @param {Array<{id: string}>} cards the lane's cards in card order
+         * @param {number[]} targetCentres the desired centre-`y` per card (index-aligned)
+         * @returns {number[]} the top-`y` per card, in original card order
+         */
+        const place = (cards, targetCentres) => {
+            // Sort by desired centre, de-overlap with a downward cursor, remembering original order.
+            const order = cards.map((card, index) => ({
+                index: index,
+                desired: targetCentres[index],
+                y: 0,
+            }));
+            order.sort((left, right) => left.desired - right.desired);
+            let cursor = innerTop;
+            for (const entry of order) {
+                entry.y = Math.max(entry.desired - taskH / 2, cursor);
+                cursor = entry.y + taskH + rowGap;
+            }
+            // Overflow → slide the whole stack up by the excess, then clamp each top to the box.
+            const overflow = cursor - rowGap - innerBottom;
+            if (overflow > 0) {
+                for (const entry of order) {
+                    entry.y = Math.max(innerTop, entry.y - overflow);
+                }
+            }
+
+            // Centred shared-source fan (deviation): each maximal run of EQUAL desired centres is a
+            // fan from one shared source; shift it up so the block straddles that centre symmetrically
+            // instead of hanging below it. Re-clamp to the box and never overlap the cards just
+            // outside the run.
+            let runStart = 0;
+            while (runStart < order.length) {
+                let runEnd = runStart;
+                while (
+                    runEnd + 1 < order.length &&
+                    order[runEnd + 1].desired === order[runStart].desired
+                ) {
+                    runEnd += 1;
+                }
+                const runCount = runEnd - runStart + 1;
+                if (runCount >= 2) {
+                    const shift = ((runCount - 1) * (taskH + rowGap)) / 2;
+                    // Upper bound: stay below the card above (min-gap) and inside the box top.
+                    const minTop = runStart > 0 ? order[runStart - 1].y + taskH + rowGap : innerTop;
+                    // Lower bound for the LAST card in the run: stay above the card below and the box.
+                    const maxBottomTop =
+                        (runEnd + 1 < order.length ? order[runEnd + 1].y - rowGap : innerBottom) - taskH;
+                    for (let position = 0; position < runCount; position += 1) {
+                        const entry = order[runStart + position];
+                        let newTop = entry.y - shift;
+                        // Clamp the whole run so its first card clears the neighbour above / box top…
+                        newTop = Math.max(newTop, minTop + position * (taskH + rowGap));
+                        // …and its last card clears the neighbour below / box bottom.
+                        newTop = Math.min(
+                            newTop,
+                            maxBottomTop - (runCount - 1 - position) * (taskH + rowGap)
+                        );
+                        entry.y = newTop;
+                    }
+                }
+                runStart = runEnd + 1;
+            }
+
+            // Re-project into original card order.
+            const ys = Array.from({length: cards.length});
+            for (const entry of order) {
+                ys[entry.index] = Math.round(entry.y);
+            }
+            return ys;
+        };
+
+        // ── Card → column index and adjacency (both directions), skipping same-lane/dangling links.
+        const columnOf = new Map();
+        for (const [index, column] of cols.entries()) {
+            for (const card of column.cards) {
+                columnOf.set(card.id, index);
+            }
+        }
+        const neighbours = new Map();
+        const linkList = links || [];
+        for (const link of linkList) {
+            if (!columnOf.has(link.source) || !columnOf.has(link.target)) {
+                continue;
+            }
+            if (columnOf.get(link.source) === columnOf.get(link.target)) {
+                continue;
+            }
+            if (!neighbours.has(link.source)) {
+                neighbours.set(link.source, []);
+            }
+            if (!neighbours.has(link.target)) {
+                neighbours.set(link.target, []);
+            }
+            neighbours.get(link.source).push(link.target);
+            neighbours.get(link.target).push(link.source);
+        }
+
+        // ── Commit helper: record top-`y` for a column and remember each card's centre for the walk.
+        const ysByColumn = Array.from({length: cols.length});
+        const placedCentre = new Map();
+        const commit = (columnIndex, ys) => {
+            ysByColumn[columnIndex] = ys;
+            const committedCards = cols[columnIndex].cards;
+            for (const [row, card] of committedCards.entries()) {
+                placedCentre.set(card.id, ys[row] + taskH / 2);
+            }
+        };
+
+        // Reference lane: even spread.
+        if (cols.length > 0) {
+            commit(referenceIndex, spread(cols[referenceIndex].cards.length));
+        }
+
+        // ── BFS across lane adjacency ("some card here links to some card there"), reaching left AND
+        // right of the reference. A `seen` set makes cycles harmless.
+        const laneNeighbours = (columnIndex) => {
+            const out = new Set();
+            const laneCards = cols[columnIndex].cards;
+            for (const card of laneCards) {
+                const linked = neighbours.get(card.id) || [];
+                for (const other of linked) {
+                    out.add(columnOf.get(other));
+                }
+            }
+            out.delete(columnIndex);
+            return [...out];
+        };
+        const seen = new Set([referenceIndex]);
+        const queue = laneNeighbours(referenceIndex);
+        while (queue.length) {
+            const columnIndex = queue.shift();
+            if (seen.has(columnIndex)) {
+                continue;
+            }
+            seen.add(columnIndex);
+            const cards = cols[columnIndex].cards;
+            const n = cards.length;
+            // Each card's target = mean centre of its already-placed linked neighbours. A dangling card
+            // (no placed neighbour) keeps its rank mapped into the box so it can't sort to the top.
+            const targets = cards.map((card, rank) => {
+                const linked = (neighbours.get(card.id) || []).filter((other) => placedCentre.has(other));
+                if (linked.length) {
+                    let sum = 0;
+                    for (const other of linked) {
+                        sum += placedCentre.get(other);
+                    }
+                    return sum / linked.length;
+                }
+                if (n <= 1) {
+                    return innerTop + Math.max(0, (innerHeight - taskH) / 2) + taskH / 2;
+                }
+                return innerTop + (rank / (n - 1)) * (innerHeight - taskH) + taskH / 2;
+            });
+            commit(columnIndex, place(cards, targets));
+            for (const nextIndex of laneNeighbours(columnIndex)) {
+                if (!seen.has(nextIndex)) {
+                    queue.push(nextIndex);
+                }
+            }
+        }
+
+        // ── Lanes never reached (no link path to the reference) get the same even spread.
+        for (const [index, col] of cols.entries()) {
+            if (ysByColumn[index] === undefined) {
+                commit(index, spread(col.cards.length));
+            }
+        }
+
+        return { top: top, height: height, ysByColumn: ysByColumn };
+    }
+
+
+    /**
+     * The vertical centre-to-top offsets for `count` cards evenly spread inside a lane's inner box —
+     * a thin shim exposing the same even-spread maths `diagramLanePlacement`'s internal `spread` uses
+     * (a single card centres; otherwise the gap is floored at `rowGap`). Retained for its direct unit
+     * test and any legacy callers. The even-spread maths is unchanged.
      *
      * @param {number} count the number of cards in the lane (floored at 1 by the caller)
      * @param {number} laneHeight the shared lane height
      * @returns {number[]} the task `y` (top) positions, top to bottom
      */
     function diagramCardYs(count, laneHeight) {
+        const n = Math.max(count, 1);
         const innerTop = 50 + DIAGRAM_LANE_TOP_INSET;
         const innerBottom = 50 + laneHeight - DIAGRAM_LANE_BOTTOM_INSET;
         const innerHeight = innerBottom - innerTop;
-        if (count <= 1) {
+        if (n <= 1) {
             return [Math.round(innerTop + Math.max(0, (innerHeight - DIAGRAM_TASK_HEIGHT) / 2))];
         }
-        const gap = Math.max(
-            DIAGRAM_ROW_GAP,
-            (innerHeight - count * DIAGRAM_TASK_HEIGHT) / (count - 1)
-        );
+        const gap = Math.max(DIAGRAM_ROW_GAP, (innerHeight - n * DIAGRAM_TASK_HEIGHT) / (n - 1));
         const ys = [];
         let y = innerTop;
-        for (let index = 0; index < count; index += 1) {
+        for (let index = 0; index < n; index += 1) {
             ys.push(Math.round(y));
             y += DIAGRAM_TASK_HEIGHT + gap;
         }
@@ -2078,40 +2328,71 @@
         const lineage = wizardState.lineage || {};
         const cells = [];
 
-        // Assign a stable cell id per buRef-in-env (a BU can appear in several envs) and remember the
-        // task id chosen for each buRef per column, so links can resolve upstream counterparts.
-        const taskIdByColumn = [];
         let cellCounter = 0;
         const nextId = (prefix) => prefix + '-' + String((cellCounter += 1));
         const columnCount = environments.length;
 
-        // First pass: one shared lane height for every lane — the deepest lane's need — so the
-        // columns read as uniform lanes, not a bar chart. `n` is floored at 1 so an empty lane still
-        // reserves a header + one row of space.
-        const laneHeight = environments.reduce((tallest, environment) => {
-            const count = Math.max(assignedBUReferences(environment).length, 1);
-            const needed =
-                DIAGRAM_LANE_TOP_INSET +
-                count * DIAGRAM_TASK_HEIGHT +
-                (count - 1) * DIAGRAM_ROW_GAP +
-                DIAGRAM_LANE_BOTTOM_INSET;
-            return Math.max(tallest, needed);
-        }, 0);
-
-        // Second pass: place each lane's cards (evenly spread down the shared inner box), capture
-        // them in the lane, and emit the pinned uniform-height container.
+        // ── Pass A — model + ids. Assign a stable task id per buRef-in-env (a BU can appear in
+        // several envs) and collect the per-column card lists the placement pass reads. `columnMap`
+        // (buRef → taskId) lets the link pass resolve upstream counterparts by reference.
+        const taskIdByColumn = [];
+        const columns = [];
+        const columnBands = [];
+        const columnReferences = [];
         for (const [columnIndex, environment] of environments.entries()) {
             const references = assignedBUReferences(environment);
-            const columnX = DIAGRAM_COLUMN_X + columnIndex * DIAGRAM_COLUMN_STEP;
-            const taskX = columnX + DIAGRAM_LANE_SIDE_INSET;
             const containerId = nextId('env');
             const columnMap = {};
-            const embeds = [];
-            const band = diagramBand(columnIndex, columnCount);
-            const cardYs = diagramCardYs(Math.max(references.length, 1), laneHeight);
-
-            for (const [rowIndex, reference] of references.entries()) {
+            const cards = [];
+            for (const reference of references) {
                 const taskId = nextId('bu');
+                columnMap[reference] = taskId;
+                cards.push({ id: taskId });
+            }
+            columns.push({ id: containerId, cards: cards });
+            columnBands.push(diagramBand(columnIndex, columnCount));
+            columnReferences.push(references);
+            taskIdByColumn.push(columnMap);
+        }
+
+        // ── Pass B — links FIRST (placement needs the deploy graph). Connect each BU to its upstream
+        // BU in the previous column: prefer the explicit lineage parent (child buRef → parent buRef),
+        // else fall back to the same-index BU (or the first). Emit each as a deploy-arrow cell AND
+        // collect it for `diagramLanePlacement`.
+        const links = [];
+        for (let columnIndex = 1; columnIndex < environments.length; columnIndex += 1) {
+            const previousMap = taskIdByColumn[columnIndex - 1];
+            const references = columnReferences[columnIndex];
+            const previousReferences = columnReferences[columnIndex - 1];
+            for (const [rowIndex, reference] of references.entries()) {
+                const parentReference = lineage[reference];
+                let sourceId = parentReference ? previousMap[parentReference] : undefined;
+                if (!sourceId) {
+                    const fallbackReference = previousReferences[rowIndex] || previousReferences[0];
+                    sourceId = fallbackReference ? previousMap[fallbackReference] : undefined;
+                }
+                const targetId = taskIdByColumn[columnIndex][reference];
+                if (sourceId && targetId) {
+                    links.push({ source: sourceId, target: targetId });
+                    cells.push(diagramDeployLink(nextId('link'), sourceId, targetId));
+                }
+            }
+        }
+
+        // ── Pass C — placement + emit. Plan every lane's card Ys from the model + graph (reference
+        // lane spread, others by barycentre), then emit each BU task at its planned `y` and each lane
+        // container at the shared top/height. Embeds/parent wiring and `manualSize` are unchanged.
+        const placement = diagramLanePlacement(columns, links);
+        for (const [columnIndex, environment] of environments.entries()) {
+            const references = columnReferences[columnIndex];
+            const columnX = DIAGRAM_COLUMN_X + columnIndex * DIAGRAM_COLUMN_STEP;
+            const taskX = columnX + DIAGRAM_LANE_SIDE_INSET;
+            const containerId = columns[columnIndex].id;
+            const band = columnBands[columnIndex];
+            const cardYs = placement.ysByColumn[columnIndex];
+            const embeds = [];
+            for (const [rowIndex, reference] of references.entries()) {
+                const taskId = columns[columnIndex].cards[rowIndex].id;
                 const isParentBU = bareBUName(reference) === '_ParentBU_';
                 cells.push(
                     diagramBUTask(
@@ -2124,34 +2405,18 @@
                         containerId
                     )
                 );
-                columnMap[reference] = taskId;
                 embeds.push(taskId);
             }
-
             cells.push(
-                diagramEnvironmentContainer(containerId, environment, columnX, laneHeight, band, embeds)
+                diagramEnvironmentContainer(
+                    containerId,
+                    environment,
+                    columnX,
+                    placement.height,
+                    band,
+                    embeds
+                )
             );
-            taskIdByColumn.push(columnMap);
-        }
-
-        // Deploy arrows: connect each BU in a column to its upstream BU in the previous column. Prefer
-        // the explicit lineage parent (child buRef → parent buRef); fall back to the same-index BU.
-        for (let columnIndex = 1; columnIndex < environments.length; columnIndex += 1) {
-            const previousMap = taskIdByColumn[columnIndex - 1];
-            const references = assignedBUReferences(environments[columnIndex]);
-            const previousReferences = assignedBUReferences(environments[columnIndex - 1]);
-            for (const [rowIndex, reference] of references.entries()) {
-                const parentReference = lineage[reference];
-                let sourceId = parentReference ? previousMap[parentReference] : undefined;
-                if (!sourceId) {
-                    const fallbackReference = previousReferences[rowIndex] || previousReferences[0];
-                    sourceId = fallbackReference ? previousMap[fallbackReference] : undefined;
-                }
-                const targetId = taskIdByColumn[columnIndex][reference];
-                if (sourceId && targetId) {
-                    cells.push(diagramDeployLink(nextId('link'), sourceId, targetId));
-                }
-            }
         }
 
         return {
@@ -2295,7 +2560,7 @@
         }
         const json = jsonPretty(buildDiagramJSON());
         // eslint-disable-next-line no-console
-        console.log('diagramforce debug', JSON.stringify(json, null, 2));
+        console.log('diagramforce debug', json);
         const opened = openInDiagramforce(json);
         if (opened) {
             return;
@@ -3853,6 +4118,7 @@
         },
         buildDiagramJSON: buildDiagramJSON,
         diagramCardYs: diagramCardYs,
+        diagramLanePlacement: diagramLanePlacement,
         DIAGRAM_BAND: DIAGRAM_BAND,
         diagramBand: diagramBand,
         isDiagramDrawable: isDiagramDrawable,

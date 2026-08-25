@@ -2201,6 +2201,334 @@ test('diagramCardYs spreads cards evenly inside the lane insets', () => {
   );
 });
 
+// ─── buildDiagramJSON: barycentre lane placement (ported "Match Container Height") ───
+
+const DIAGRAM_TASK_HEIGHT = 52;
+const DIAGRAM_ROW_GAP = 24;
+const DIAGRAM_LANE_TOP_INSET = 88;
+const DIAGRAM_LANE_BOTTOM_INSET = 48;
+
+/**
+ * Seed a multi-BU pipeline for placement tests: `environmentBUs` maps env → ordered buRefs, and
+ * every buRef is registered as a single-credential business unit so `assignedBUReferences` returns
+ * it. Callers set `controller.state.wizardState.lineage[childRef] = parentRef` afterwards to drive
+ * the deploy graph (which the placement pass reads).
+ *
+ * @param {string[]} environments env names in left-to-right order
+ * @param {{[env: string]: string[]}} environmentBUs env name → its ordered buRefs
+ * @returns {void}
+ */
+function seedDiagramPipeline(environments, environmentBUs) {
+  const businessUnits = {};
+  for (const environment of environments) {
+    const references = environmentBUs[environment] || [];
+    for (const reference of references) {
+      businessUnits[reference] = {};
+    }
+  }
+  controller.state.config = { credentials: { ssjs: { businessUnits: businessUnits } } };
+  controller.state.mode = 'full';
+  controller.state.wizardState = {
+    version: 1,
+    multiCred: false,
+    envOrder: environments,
+    envBUs: environmentBUs,
+    lineage: {},
+    separator: '_',
+    suffixes: {},
+    prodBUs: [],
+    selectedRules: [],
+    prefixBlacklist: {},
+    retention: {
+      c__retentionPolicy: 'individialRecords',
+      DataRetentionPeriodLength: 3,
+      c__dataRetentionPeriodUnitOfMeasure: 'Months',
+      ResetRetentionPeriodOnImport: false,
+    },
+    sharedDEs: false,
+  };
+}
+
+/**
+ * The BU task whose label is exactly `label`.
+ *
+ * @param {object} diagram `buildDiagramJSON()` result
+ * @param {string} label the BU display label (bare buRef in single-credential mode)
+ * @returns {object} the `sf.BpmnTask` cell
+ */
+function taskByLabel(diagram, label) {
+  const task = diagram.graph.cells.find(
+    (cell) => cell.type === 'sf.BpmnTask' && cell.attrs.label.text === label,
+  );
+  assert.ok(task, 'task "' + label + '" is present');
+  return task;
+}
+
+/**
+ * The vertical centre of a BU task.
+ *
+ * @param {object} task an `sf.BpmnTask` cell
+ * @returns {number} the centre `y`
+ */
+function centreOf(task) {
+  return task.position.y + task.size.height / 2;
+}
+
+/**
+ * Every BU task's top `y`, keyed by its display label — an order-independent snapshot of card
+ * placement for deterministic comparison across builds.
+ *
+ * @param {object} diagram `buildDiagramJSON()` result
+ * @returns {{[label: string]: number}} label → card top `y`
+ */
+function cardYsByLabel(diagram) {
+  const ys = {};
+  for (const cell of diagram.graph.cells) {
+    if (cell.type === 'sf.BpmnTask') {
+      ys[cell.attrs.label.text] = cell.position.y;
+    }
+  }
+  return ys;
+}
+
+test('diagramLanePlacement returns the empty plan for no columns', () => {
+  assert.deepEqual(controller.diagramLanePlacement([], []), {
+    top: 50,
+    height: 0,
+    ysByColumn: [],
+  });
+});
+
+test('buildDiagramJSON one-to-one links align each source and target on a flat connector', () => {
+  // DEV(2) → SIT(2) → Prod(2), each BU deploying from its own pairwise upstream.
+  seedDiagramPipeline(['DEV', 'SIT', 'Prod'], {
+    DEV: ['DEV_a', 'DEV_b'],
+    SIT: ['SIT_a', 'SIT_b'],
+    Prod: ['PRD_a', 'PRD_b'],
+  });
+  controller.state.wizardState.lineage = {
+    SIT_a: 'DEV_a',
+    SIT_b: 'DEV_b',
+    PRD_a: 'SIT_a',
+    PRD_b: 'SIT_b',
+  };
+  const diagram = controller.buildDiagramJSON();
+  for (const [source, target] of [
+    ['DEV_a', 'SIT_a'],
+    ['DEV_b', 'SIT_b'],
+    ['SIT_a', 'PRD_a'],
+    ['SIT_b', 'PRD_b'],
+  ]) {
+    assert.equal(
+      taskByLabel(diagram, source).position.y,
+      taskByLabel(diagram, target).position.y,
+      source + ' and ' + target + ' share a y (flat connector)',
+    );
+  }
+});
+
+test('buildDiagramJSON centres a shared-source fan symmetrically on the source (deviation)', () => {
+  // One upstream BU feeds TWO downstream BUs: the pair straddles the source centre, not hangs below.
+  seedDiagramPipeline(['DEV', 'SIT'], {
+    DEV: ['DEV_only'],
+    SIT: ['SIT_a', 'SIT_b'],
+  });
+  controller.state.wizardState.lineage = { SIT_a: 'DEV_only', SIT_b: 'DEV_only' };
+  const diagram = controller.buildDiagramJSON();
+  const sourceCentre = centreOf(taskByLabel(diagram, 'DEV_only'));
+  const a = centreOf(taskByLabel(diagram, 'SIT_a'));
+  const b = centreOf(taskByLabel(diagram, 'SIT_b'));
+  assert.equal((a + b) / 2, sourceCentre, 'the fan pair is centred on the source centre');
+  assert.equal(
+    Math.abs(a - sourceCentre),
+    Math.abs(b - sourceCentre),
+    'both children are equidistant from the source (equal offset above/below)',
+  );
+  assert.ok(a < sourceCentre && b > sourceCentre, 'one child sits above, one below the source');
+});
+
+test('buildDiagramJSON distinct sources put each downstream card on its own source row', () => {
+  // Two downstream BUs each from a DIFFERENT upstream BU → each shares its own source y.
+  seedDiagramPipeline(['DEV', 'SIT'], {
+    DEV: ['DEV_a', 'DEV_b'],
+    SIT: ['SIT_a', 'SIT_b'],
+  });
+  controller.state.wizardState.lineage = { SIT_a: 'DEV_a', SIT_b: 'DEV_b' };
+  const diagram = controller.buildDiagramJSON();
+  assert.equal(
+    taskByLabel(diagram, 'SIT_a').position.y,
+    taskByLabel(diagram, 'DEV_a').position.y,
+    'SIT_a aligns to DEV_a',
+  );
+  assert.equal(
+    taskByLabel(diagram, 'SIT_b').position.y,
+    taskByLabel(diagram, 'DEV_b').position.y,
+    'SIT_b aligns to DEV_b',
+  );
+  assert.notEqual(
+    taskByLabel(diagram, 'SIT_a').position.y,
+    taskByLabel(diagram, 'SIT_b').position.y,
+    'the two downstream cards do not collapse onto one row',
+  );
+});
+
+test('buildDiagramJSON: QA=10 reference lane drives height, spreads evenly, holds gap/box invariants', () => {
+  // A tall QA reference lane (10 cards) with two 2-card downstream lanes fed by mixed patterns.
+  const qaBUs = Array.from({ length: 10 }, (unused, index) => 'QA_' + index);
+  seedDiagramPipeline(['QA', 'UAT', 'Prod'], {
+    QA: qaBUs,
+    UAT: ['UAT_a', 'UAT_b'],
+    Prod: ['PRD_a', 'PRD_b'],
+  });
+  // (a) both UAT from ONE shared QA BU (a mid-lane card so symmetric centring is reachable);
+  //     PROD is a distinct-source pair off the two UAT cards.
+  controller.state.wizardState.lineage = {
+    UAT_a: 'QA_5',
+    UAT_b: 'QA_5',
+    PRD_a: 'UAT_a',
+    PRD_b: 'UAT_b',
+  };
+  const diagram = controller.buildDiagramJSON();
+  const containers = diagramContainers(diagram);
+
+  // Reference height is the 10-card QA lane: 88 + 10*52 + 9*24 + 48 = 872, shared by every lane.
+  const expectedHeight =
+    DIAGRAM_LANE_TOP_INSET +
+    10 * DIAGRAM_TASK_HEIGHT +
+    9 * DIAGRAM_ROW_GAP +
+    DIAGRAM_LANE_BOTTOM_INSET;
+  assert.equal(expectedHeight, 872, 'height maths sanity');
+  for (const container of containers) {
+    assert.equal(container.size.height, expectedHeight, 'every lane shares the 10-card height');
+    assert.equal(container.position.y, 50, 'every lane shares the top');
+  }
+
+  // QA cards evenly spread with the 24px min gap (a row pitch of 76 = 52 + 24 for a full lane).
+  const qaTasks = qaBUs.map((label) => taskByLabel(diagram, label));
+  const qaYs = qaTasks.map((task) => task.position.y).toSorted((left, right) => left - right);
+  for (let index = 1; index < qaYs.length; index += 1) {
+    assert.equal(qaYs[index] - qaYs[index - 1], 76, 'QA cards fall on the shared 76px row pitch');
+  }
+  // QA dangling cards keep ascending order (card order == vertical order).
+  for (let index = 1; index < qaTasks.length; index += 1) {
+    assert.ok(
+      qaTasks[index].position.y > qaTasks[index - 1].position.y,
+      'QA cards keep ascending order',
+    );
+  }
+
+  // The shared-source UAT fan straddles QA_5 symmetrically.
+  const qa5Centre = centreOf(taskByLabel(diagram, 'QA_5'));
+  const uatA = centreOf(taskByLabel(diagram, 'UAT_a'));
+  const uatB = centreOf(taskByLabel(diagram, 'UAT_b'));
+  assert.equal((uatA + uatB) / 2, qa5Centre, 'shared UAT fan is centred on QA_5');
+
+  // Box + gap invariants across every lane.
+  const innerTop = 50 + DIAGRAM_LANE_TOP_INSET;
+  const innerBottom = 50 + expectedHeight - DIAGRAM_LANE_BOTTOM_INSET;
+  for (const container of containers) {
+    const tasks = diagramTasksIn(diagram, container).toSorted(
+      (left, right) => left.position.y - right.position.y,
+    );
+    for (const task of tasks) {
+      assert.ok(task.position.y >= innerTop, 'no card above top+88');
+      assert.ok(
+        task.position.y + DIAGRAM_TASK_HEIGHT <= innerBottom,
+        'no card below top+height-48',
+      );
+    }
+    for (let index = 1; index < tasks.length; index += 1) {
+      assert.ok(
+        tasks[index].position.y - tasks[index - 1].position.y >=
+          DIAGRAM_TASK_HEIGHT + DIAGRAM_ROW_GAP,
+        'no two cards in a lane closer than 24px of clear space',
+      );
+    }
+  }
+});
+
+test('buildDiagramJSON: QA=10 with two DISTINCT QA sources places each UAT card on its source row', () => {
+  const qaBUs = Array.from({ length: 10 }, (unused, index) => 'QA_' + index);
+  seedDiagramPipeline(['QA', 'UAT', 'Prod'], {
+    QA: qaBUs,
+    UAT: ['UAT_a', 'UAT_b'],
+    Prod: ['PRD_a', 'PRD_b'],
+  });
+  // (b) each UAT from a DISTINCT QA BU → each at its source row.
+  controller.state.wizardState.lineage = {
+    UAT_a: 'QA_2',
+    UAT_b: 'QA_7',
+    PRD_a: 'UAT_a',
+    PRD_b: 'UAT_b',
+  };
+  const diagram = controller.buildDiagramJSON();
+  assert.equal(
+    taskByLabel(diagram, 'UAT_a').position.y,
+    taskByLabel(diagram, 'QA_2').position.y,
+    'UAT_a aligns to QA_2',
+  );
+  assert.equal(
+    taskByLabel(diagram, 'UAT_b').position.y,
+    taskByLabel(diagram, 'QA_7').position.y,
+    'UAT_b aligns to QA_7',
+  );
+});
+
+test('buildDiagramJSON: the centred-fan shift keeps clamp and min-gap invariants', () => {
+  // A shared-source fan pinned near the box top must clamp to top+88 (cannot centre past the box).
+  const qaBUs = Array.from({ length: 10 }, (unused, index) => 'QA_' + index);
+  seedDiagramPipeline(['QA', 'UAT'], {
+    QA: qaBUs,
+    UAT: ['UAT_a', 'UAT_b'],
+  });
+  // Both UAT from QA_0 (the topmost QA card): the fan wants to straddle the top card but is clamped.
+  controller.state.wizardState.lineage = { UAT_a: 'QA_0', UAT_b: 'QA_0' };
+  const diagram = controller.buildDiagramJSON();
+  const expectedHeight =
+    DIAGRAM_LANE_TOP_INSET +
+    10 * DIAGRAM_TASK_HEIGHT +
+    9 * DIAGRAM_ROW_GAP +
+    DIAGRAM_LANE_BOTTOM_INSET;
+  const innerTop = 50 + DIAGRAM_LANE_TOP_INSET;
+  const innerBottom = 50 + expectedHeight - DIAGRAM_LANE_BOTTOM_INSET;
+  const uatTasks = ['UAT_a', 'UAT_b']
+    .map((label) => taskByLabel(diagram, label))
+    .toSorted((left, right) => left.position.y - right.position.y);
+  assert.ok(uatTasks[0].position.y >= innerTop, 'clamped: top card stays at/below the box top');
+  assert.ok(
+    uatTasks[1].position.y + DIAGRAM_TASK_HEIGHT <= innerBottom,
+    'clamped: bottom card stays inside the box',
+  );
+  assert.ok(
+    uatTasks[1].position.y - uatTasks[0].position.y >= DIAGRAM_TASK_HEIGHT + DIAGRAM_ROW_GAP,
+    'the fan pair keeps the 24px min gap after the shift',
+  );
+  // Exact clamped Ys: the fan pins to the box top at [138, 214] (a 76px pitch).
+  assert.deepEqual(
+    uatTasks.map((task) => task.position.y).toSorted((left, right) => left - right),
+    [138, 214],
+  );
+});
+
+test('buildDiagramJSON is idempotent: same seed → identical card Ys (fixed point)', () => {
+  // QA=10 shared-source fan (same seeding as the reference-lane test) built twice on one input.
+  const qaBUs = Array.from({ length: 10 }, (unused, index) => 'QA_' + index);
+  seedDiagramPipeline(['QA', 'UAT', 'Prod'], {
+    QA: qaBUs,
+    UAT: ['UAT_a', 'UAT_b'],
+    Prod: ['PRD_a', 'PRD_b'],
+  });
+  controller.state.wizardState.lineage = {
+    UAT_a: 'QA_5',
+    UAT_b: 'QA_5',
+    PRD_a: 'UAT_a',
+    PRD_b: 'UAT_b',
+  };
+  const first = cardYsByLabel(controller.buildDiagramJSON());
+  const second = cardYsByLabel(controller.buildDiagramJSON());
+  assert.deepEqual(second, first, 'a second build on the same seed yields identical card Ys');
+});
+
 /**
  * Stub Download-menu panel: collects appended menuitem descriptors without a real document.
  *
