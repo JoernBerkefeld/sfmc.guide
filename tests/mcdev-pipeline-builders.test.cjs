@@ -174,13 +174,13 @@ test('buildConfig parent pipeline uses a stringLike include filter with [_] sepa
   // Ends-only on the source BU's suffix (`_DEV` → `%[_]DEV`). No contained mid-key band.
   assert.deepEqual(patterns, ['%[_]DEV'], 'the include is ends-only on the source BU suffix');
   assert.equal(parentSource.filter.exclude, undefined, 'no redundant lower-env exclude band');
-  // _ParentBU_ self-reference present, pointing at the source BU's parent market.
+  // _ParentBU_ self-reference present, pointing at the source BU's child market (reused, no _parent).
   const parentKey = Object.keys(parentSource).find((k) => k.endsWith('/_ParentBU_'));
   assert.ok(parentKey, 'parent-source keys on <cred>/_ParentBU_');
   assert.equal(
     parentSource[parentKey],
-    'mpb_DEV_parent',
-    'parent-source points at the source BU parent market',
+    'mpb_DEV',
+    'parent-source reuses the source BU child market',
   );
 });
 
@@ -194,38 +194,24 @@ test('buildConfig parent bands follow each hop (QA→UAT hop bands on each sourc
   // Suffixes from sampleWizardState(): EUN_QA=_QAN, EUS_QA=_QAS.
   assert.deepEqual(eunSource.filter.include.key['*'], ['%[_]QAN']);
   assert.deepEqual(eusSource.filter.include.key['*'], ['%[_]QAS']);
-  assert.equal(eunSource['ssjs/_ParentBU_'], 'mpb_QA_EUN_QA_parent');
-  assert.equal(eusSource['ssjs/_ParentBU_'], 'mpb_QA_EUS_QA_parent');
+  assert.equal(eunSource['ssjs/_ParentBU_'], 'mpb_QA_EUN_QA');
+  assert.equal(eusSource['ssjs/_ParentBU_'], 'mpb_QA_EUS_QA');
   const eunTarget = out.marketList['mpb_deployment-uat-EUN_QA-parent-target'];
   const eusTarget = out.marketList['mpb_deployment-uat-EUS_QA-parent-target'];
-  assert.equal(eunTarget['ssjs/_ParentBU_'], 'mpb_UAT_EUN_UAT_parent');
-  assert.equal(eusTarget['ssjs/_ParentBU_'], 'mpb_UAT_EUS_UAT_parent');
+  assert.equal(eunTarget['ssjs/_ParentBU_'], 'mpb_UAT_EUN_UAT');
+  assert.equal(eusTarget['ssjs/_ParentBU_'], 'mpb_UAT_EUS_UAT');
   assert.equal(typeof eunTarget['ssjs/_ParentBU_'], 'string', '1:1 target stays a string');
   assert.equal(typeof eusTarget['ssjs/_ParentBU_'], 'string', '1:1 target stays a string');
 });
 
-test('buildConfig emits a { suffix }-only parent market per child BU when sharedDEs is on', () => {
+test('buildConfig emits NO _parent markets when sharedDEs is on (parent marketLists reuse child markets)', () => {
   const out = buildConfig(sampleWizardState(), sampleConfig);
-  const expected = {
-    mpb_DEV_parent: '_DEV',
-    mpb_SIT_parent: '_SIT',
-    mpb_QA_EUN_QA_parent: '_QAN',
-    mpb_QA_EUS_QA_parent: '_QAS',
-    mpb_UAT_EUN_UAT_parent: '_UATN',
-    mpb_UAT_EUS_UAT_parent: '_UATS',
-    mpb_Prod_Randstad_EUN_parent: '_RSN',
-    mpb_Prod_Randstad_EUS_parent: '_RSS',
-  };
-  for (const [name, suffix] of Object.entries(expected)) {
-    const parentMarket = out.markets[name];
-    assert.ok(parentMarket, `${name} market exists`);
-    assert.deepEqual(Object.keys(parentMarket), ['suffix'], `${name} carries only a suffix`);
-    assert.equal(parentMarket.suffix, suffix, `${name} carries the child BU suffix`);
-  }
-  // No leftover env-level parent markets (one-per-env naming is gone).
-  for (const leftover of ['mpb_QA_parent', 'mpb_UAT_parent', 'mpb_Prod_parent']) {
-    assert.equal(out.markets[leftover], undefined, `${leftover} must not be emitted`);
-  }
+  const parentMarketNames = Object.keys(out.markets).filter((n) => n.endsWith('_parent'));
+  assert.deepEqual(
+    parentMarketNames,
+    [],
+    'no _parent markets are minted; parent marketLists reuse child markets',
+  );
 });
 
 test('buildConfig nests each parent pair under the same target branch as its child pairs', () => {
@@ -553,26 +539,23 @@ test('buildConfig on the gold config emits one parent pair per lineage group whe
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-EUN_QA-parent-target']['R1/_ParentBU_'],
-    'mpb_UAT_EUN_UAT_parent',
+    'mpb_UAT_EUN_UAT',
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-EUS_QA-parent-target']['R1/_ParentBU_'],
-    'mpb_UAT_EUS_UAT_parent',
+    'mpb_UAT_EUS_UAT',
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-QA_Regional-parent-target']['R1/_ParentBU_'],
-    'mpb_UAT_UAT_Regional_parent',
+    'mpb_UAT_UAT_Regional',
   );
 
   // SIT→QA: SIT fans out to two QA BUs → parent target is an array of 2; regional is 1:1 string.
   const sitParentTarget = out.marketList['mpb_deployment-qa-SIT-parent-target'];
-  assert.deepEqual(sitParentTarget['R1/_ParentBU_'], [
-    'mpb_QA_EUN_QA_parent',
-    'mpb_QA_EUS_QA_parent',
-  ]);
+  assert.deepEqual(sitParentTarget['R1/_ParentBU_'], ['mpb_QA_EUN_QA', 'mpb_QA_EUS_QA']);
   assert.equal(
     out.marketList['mpb_deployment-qa-SIT_Regional-parent-target']['R1/_ParentBU_'],
-    'mpb_QA_QA_Regional_parent',
+    'mpb_QA_QA_Regional',
   );
   assert.deepEqual(out.marketList['mpb_deployment-qa-SIT-parent-source'].filter.include.key['*'], [
     '%[_]SIT',
@@ -666,31 +649,28 @@ test('buildConfig parent pairs mirror child lineage groups (A/B/C hop shape)', (
   const sitDevelopment = out.marketList['mpb_deployment-sit-DEV-parent-source'];
   const sitReg = out.marketList['mpb_deployment-sit-DEV_Regional-parent-source'];
   assert.deepEqual(sitDevelopment.filter.include.key['*'], ['%[_]DEV']);
-  assert.equal(sitDevelopment[parentKey], 'mpb_DEV_DEV_parent');
-  assert.equal(
-    out.marketList['mpb_deployment-sit-DEV-parent-target'][parentKey],
-    'mpb_SIT_SIT_parent',
-  );
+  assert.equal(sitDevelopment[parentKey], 'mpb_DEV_DEV');
+  assert.equal(out.marketList['mpb_deployment-sit-DEV-parent-target'][parentKey], 'mpb_SIT_SIT');
   assert.deepEqual(sitReg.filter.include.key['*'], ['%[_]RDEV']);
-  assert.equal(sitReg[parentKey], 'mpb_DEV_DEV_Regional_parent');
+  assert.equal(sitReg[parentKey], 'mpb_DEV_DEV_Regional');
   assert.equal(
     out.marketList['mpb_deployment-sit-DEV_Regional-parent-target'][parentKey],
-    'mpb_SIT_SIT_Regional_parent',
+    'mpb_SIT_SIT_Regional',
   );
 
   // B) SIT→QA — SIT fans out to two QA BUs (array); regional is 1:1 string.
   const qaSit = out.marketList['mpb_deployment-qa-SIT-parent-source'];
   assert.deepEqual(qaSit.filter.include.key['*'], ['%[_]SIT']);
-  assert.equal(qaSit[parentKey], 'mpb_SIT_SIT_parent');
+  assert.equal(qaSit[parentKey], 'mpb_SIT_SIT');
   assert.deepEqual(out.marketList['mpb_deployment-qa-SIT-parent-target'][parentKey], [
-    'mpb_QA_EUN_QA_parent',
-    'mpb_QA_EUS_QA_parent',
+    'mpb_QA_EUN_QA',
+    'mpb_QA_EUS_QA',
   ]);
   const qaReg = out.marketList['mpb_deployment-qa-SIT_Regional-parent-source'];
   assert.deepEqual(qaReg.filter.include.key['*'], ['%[_]RSIT']);
   assert.equal(
     out.marketList['mpb_deployment-qa-SIT_Regional-parent-target'][parentKey],
-    'mpb_QA_QA_Regional_parent',
+    'mpb_QA_QA_Regional',
   );
 
   // C) QA→UAT — three 1:1 parent pairs.
@@ -700,7 +680,7 @@ test('buildConfig parent pairs mirror child lineage groups (A/B/C hop shape)', (
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-EUN_QA-parent-target'][parentKey],
-    'mpb_UAT_EUN_UAT_parent',
+    'mpb_UAT_EUN_UAT',
   );
   assert.deepEqual(
     out.marketList['mpb_deployment-uat-EUS_QA-parent-source'].filter.include.key['*'],
@@ -708,7 +688,7 @@ test('buildConfig parent pairs mirror child lineage groups (A/B/C hop shape)', (
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-EUS_QA-parent-target'][parentKey],
-    'mpb_UAT_EUS_UAT_parent',
+    'mpb_UAT_EUS_UAT',
   );
   assert.deepEqual(
     out.marketList['mpb_deployment-uat-QA_Regional-parent-source'].filter.include.key['*'],
@@ -716,23 +696,23 @@ test('buildConfig parent pairs mirror child lineage groups (A/B/C hop shape)', (
   );
   assert.equal(
     out.marketList['mpb_deployment-uat-QA_Regional-parent-target'][parentKey],
-    'mpb_UAT_UAT_Regional_parent',
+    'mpb_UAT_UAT_Regional',
   );
 
   // UAT→PROD mirrors child groups: 2-market array, string, 4-market array.
   assert.deepEqual(out.marketList['mpb_deployment-prod-EUN_UAT-parent-target'][parentKey], [
-    'mpb_Prod_Randstad_EUN_parent',
-    'mpb_Prod_TempoTeam_EUN_parent',
+    'mpb_Prod_Randstad_EUN',
+    'mpb_Prod_TempoTeam_EUN',
   ]);
   assert.equal(
     out.marketList['mpb_deployment-prod-EUS_UAT-parent-target'][parentKey],
-    'mpb_Prod_Randstad_EUS_parent',
+    'mpb_Prod_Randstad_EUS',
   );
   assert.deepEqual(out.marketList['mpb_deployment-prod-UAT_Regional-parent-target'][parentKey], [
-    'mpb_Prod_NL_RS_parent',
-    'mpb_Prod_NL_TT_parent',
-    'mpb_Prod_EMEA_RS_parent',
-    'mpb_Prod_EMEA_TT_parent',
+    'mpb_Prod_NL_RS',
+    'mpb_Prod_NL_TT',
+    'mpb_Prod_EMEA_RS',
+    'mpb_Prod_EMEA_TT',
   ]);
 
   // Hotfix stays child-only: no parent-BU hotfix pair.

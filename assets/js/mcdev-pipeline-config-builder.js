@@ -342,12 +342,6 @@
                 config.markets[name] = {
                     suffix: suffix,
                 };
-                // One parent market per child BU, carrying that BU's configured suffix.
-                if (state.sharedDEs) {
-                    config.markets[name + '_parent'] = {
-                        suffix: suffix,
-                    };
-                }
             }
         }
 
@@ -432,9 +426,9 @@
                     const sourceSuffix = suffixes[group.source] || separator + slug(sourceEnvironment);
                     const parentSource = {
                         filter: { include: { key: { '*': [suffixEndPattern(sourceSuffix)] } } },
-                        [cred + '/_ParentBU_']: sourceMarketNames.get(group.source) + '_parent',
+                        [cred + '/_ParentBU_']: sourceMarketNames.get(group.source),
                     };
-                    const targetParentMarkets = Array.from(group.targets, reference => tgtMarketNames.get(reference) + '_parent');
+                    const targetParentMarkets = Array.from(group.targets, reference => tgtMarketNames.get(reference));
                     const parentTarget = {
                         [cred + '/_ParentBU_']:
                             targetParentMarkets.length === 1 ? targetParentMarkets[0] : targetParentMarkets,
