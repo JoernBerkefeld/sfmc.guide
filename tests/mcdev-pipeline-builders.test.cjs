@@ -971,6 +971,7 @@ Object.defineProperty(globalThis, 'document', {
 require('../assets/js/mcdev-pipeline-core.js');
 require('../assets/js/mcdev-pipeline-step-environment-order.js');
 require('../assets/js/mcdev-pipeline-step-production-confirm.js');
+require('../assets/js/mcdev-pipeline-step-market-vars.js');
 require('../assets/js/mcdev-pipeline-step-suffixes.js');
 require('../assets/js/mcdev-pipeline-step-rules.js');
 require('../assets/js/mcdev-pipeline-step-bu-assign.js');
@@ -1529,6 +1530,7 @@ test('full-pipeline visibleSteps drops the removed standalone env-names step', (
     'suffixes',
     'lineage',
     'prod-confirm',
+    'market-vars',
     'rules',
     'output',
   ]);
@@ -4909,6 +4911,7 @@ test('script-order lock: index.md pipeline srcs match the test require() list', 
     'mcdev-pipeline-core.js',
     'mcdev-pipeline-step-environment-order.js',
     'mcdev-pipeline-step-production-confirm.js',
+    'mcdev-pipeline-step-market-vars.js',
     'mcdev-pipeline-step-suffixes.js',
     'mcdev-pipeline-step-rules.js',
     'mcdev-pipeline-step-bu-assign.js',
@@ -4929,4 +4932,272 @@ test('every WIZARD_STEP_IDS id has a registered render + canProceed after the fu
     assert.equal(typeof entry.render, 'function', 'step "' + id + '" has render');
     assert.equal(typeof entry.canProceed, 'function', 'step "' + id + '" has canProceed');
   }
+});
+
+// ─────────────────────────── market-vars feature ───────────────────────────
+
+test('buildConfig merges marketVariables into markets (suffix first + alphabetical, skips empty/whitespace)', () => {
+  const state = sampleWizardState();
+  // Populate one BU with out-of-order + empty + whitespace-only vars; a suffix/description key that
+  // must be dropped; and a real, non-empty pair.
+  state.marketVariables = {
+    DEV: {
+      sfmc_environment: 'dev',
+      Contact_Salesforce: 'cs-dev',
+      empty_var: '',
+      spaces_only: ' '.repeat(3),
+      suffix: 'SHOULD_BE_DROPPED',
+      description: 'SHOULD_BE_DROPPED',
+    },
+  };
+  const out = buildConfig(state, sampleConfig);
+  const market = out.markets['mpb_DEV'];
+  // suffix first, then the two non-empty vars alphabetically (case-insensitive); empty/whitespace and
+  // suffix/description keys skipped entirely.
+  assert.deepEqual(Object.keys(market), ['suffix', 'Contact_Salesforce', 'sfmc_environment']);
+  assert.equal(market.Contact_Salesforce, 'cs-dev');
+  assert.equal(market.sfmc_environment, 'dev');
+  // A BU with no marketVariables still emits a suffix-only market.
+  assert.deepEqual(Object.keys(out.markets['mpb_SIT']), ['suffix']);
+  // Idempotent: rebuilding over the output yields identical markets.
+  assert.deepEqual(buildConfig(state, out).markets['mpb_DEV'], market);
+});
+
+test('buildConfig writes a non-suffix variable value VERBATIM (surrounding spaces preserved); whitespace-only skipped', () => {
+  const state = sampleWizardState();
+  state.marketVariables = {
+    DEV: { Contact_Salesforce: '  X2-SA  ', regional_suffix: ' '.repeat(3) },
+  };
+  const out = buildConfig(state, sampleConfig);
+  const market = out.markets['mpb_DEV'];
+  // The intentional surrounding spaces survive (no trim on emit).
+  assert.equal(market.Contact_Salesforce, '  X2-SA  ');
+  // A whitespace-only value is skipped entirely.
+  assert.ok(!Object.hasOwn(market, 'regional_suffix'), 'whitespace-only var is not emitted');
+  assert.deepEqual(Object.keys(market), ['suffix', 'Contact_Salesforce']);
+});
+
+test('buildConfig emits a trimmed suffix even when the stored suffix carries surrounding spaces', () => {
+  const state = sampleWizardState();
+  // The market-vars suffix row auto-trims on store, but guard the emit path too: a stored suffix with
+  // surrounding spaces still emits a clean value with its separator preserved.
+  state.suffixes = { ...state.suffixes, DEV: '_DEV' };
+  const out = buildConfig(state, sampleConfig);
+  assert.equal(out.markets['mpb_DEV'].suffix, '_DEV');
+});
+
+test('buildConfig persists + round-trips marketVariables via the mpb_pipeline block', () => {
+  const state = sampleWizardState();
+  state.marketVariables = { DEV: { Contact_Salesforce: 'cs-dev' } };
+  const out = buildConfig(state, sampleConfig);
+  assert.deepEqual(out.options.deployment.mpb_pipeline.marketVariables, {
+    DEV: { Contact_Salesforce: 'cs-dev' },
+  });
+  const restored = controller.wizardStateFromConfig(out);
+  assert.deepEqual(restored.marketVariables, { DEV: { Contact_Salesforce: 'cs-dev' } });
+});
+
+/**
+ * A hand-authored vanilla (`no mpb_pipeline` block) `.mcdevrc.json` with a real DEV→SIT hop, markets
+ * named exactly after their BUs (so `resolveMarketForBU`'s `buName` / bare-ref candidates resolve),
+ * and extra market variables + a `description` on the DEV market. Kept inline so the assertions never
+ * bind to the untracked gold fixture.
+ *
+ * @returns {object} the vanilla config
+ */
+function vanillaMarketVariablesConfig() {
+  return {
+    credentials: { ssjs: { businessUnits: { DEV: 1, SIT: 2 } } },
+    markets: {
+      DEV: {
+        suffix: '_DEV',
+        description: 'dev market',
+        Contact_Salesforce: 'cs-dev',
+        sfmc_environment: 'dev',
+      },
+      SIT: { suffix: '_SIT' },
+    },
+    marketList: {
+      'deploy-sit-source': { 'ssjs/DEV': 'DEV' },
+      'deploy-sit-target': { 'ssjs/SIT': 'SIT' },
+    },
+    options: {
+      deployment: {
+        branchSourceTargetMapping: {
+          sit: { 'deploy-sit-source': 'deploy-sit-target' },
+        },
+      },
+    },
+  };
+}
+
+test('inferWizardStateFromVanilla populates marketVariables (excl suffix/description) from the same market as the suffix', () => {
+  const { state } = controller.inferWizardStateFromVanilla(vanillaMarketVariablesConfig());
+  // DEV's extra vars are extracted from its own market, excluding suffix + description.
+  assert.deepEqual(state.marketVariables.DEV, {
+    Contact_Salesforce: 'cs-dev',
+    sfmc_environment: 'dev',
+  });
+  // The suffix came from the SAME market entry the vars were read from.
+  assert.equal(state.suffixes.DEV, '_DEV');
+  assert.equal(state.suffixes.SIT, '_SIT');
+  // A BU whose market carried only a suffix gets no marketVariables entry.
+  assert.ok(!Object.hasOwn(state.marketVariables, 'SIT'), 'a var-less market yields no entry');
+});
+
+test('inferWizardStateFromVanilla excludes both suffix and description keys', () => {
+  const { state } = controller.inferWizardStateFromVanilla(vanillaMarketVariablesConfig());
+  // suffix + description are both dropped; only the real extra vars survive.
+  assert.deepEqual(state.marketVariables.DEV, {
+    Contact_Salesforce: 'cs-dev',
+    sfmc_environment: 'dev',
+  });
+  assert.ok(!Object.hasOwn(state.marketVariables.DEV, 'suffix'));
+  assert.ok(!Object.hasOwn(state.marketVariables.DEV, 'description'));
+});
+
+test('pipelinesByRoot / pipelineRootOf group child BUs by dev-source lineage root', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  // DEV chain and (added) a separate DEV_Regional chain must form two pipelines.
+  controller.state.wizardState.envBUs = {
+    DEV: ['DEV', 'DEV_Regional'],
+    SIT: ['SIT', 'SIT_Regional'],
+    QA: ['EUN_QA'],
+  };
+  controller.state.wizardState.lineage = {
+    SIT: 'DEV',
+    SIT_Regional: 'DEV_Regional',
+    EUN_QA: 'SIT',
+  };
+  assert.equal(controller.pipelineRootOf('EUN_QA'), 'DEV');
+  assert.equal(controller.pipelineRootOf('SIT_Regional'), 'DEV_Regional');
+  const groups = controller.pipelinesByRoot();
+  assert.deepEqual(groups.get('DEV'), ['DEV', 'SIT', 'EUN_QA']);
+  assert.deepEqual(groups.get('DEV_Regional'), ['DEV_Regional', 'SIT_Regional']);
+});
+
+test('pipelinesByRoot handles empty lineage (per-BU singletons) and a cycle guard terminates', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['A'], QA: ['B'] };
+  controller.state.wizardState.lineage = {};
+  const groups = controller.pipelinesByRoot();
+  assert.deepEqual(groups.get('A'), ['A']);
+  assert.deepEqual(groups.get('B'), ['B']);
+  // A self/loop lineage must terminate rather than infinite-loop.
+  controller.state.wizardState.lineage = { A: 'A' };
+  assert.equal(controller.pipelineRootOf('A'), 'A');
+  controller.state.wizardState.lineage = { A: 'B', B: 'A' };
+  // Either terminal is acceptable; the point is it returns (no hang).
+  assert.ok(['A', 'B'].includes(controller.pipelineRootOf('A')));
+});
+
+test('suffixFieldErrors flags empty + duplicate suffixes, and none for a distinct set', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['EUN_QA', 'EUS_QA'] };
+  controller.state.wizardState.lineage = {};
+  // Empty body for one BU.
+  controller.state.wizardState.suffixes = { DEV: '_', EUN_QA: '_QAN', EUS_QA: '_QAS' };
+  let errors = controller.suffixFieldErrors();
+  assert.ok((errors.get('DEV') || []).some((m) => m.startsWith('Enter a suffix for every BU.')));
+  // Duplicate suffix on two BUs.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAN' };
+  errors = controller.suffixFieldErrors();
+  assert.ok((errors.get('EUN_QA') || []).some((m) => m.startsWith('BU suffixes must be unique:')));
+  assert.ok((errors.get('EUS_QA') || []).some((m) => m.startsWith('BU suffixes must be unique:')));
+  // Fully distinct, non-empty → no errors.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAS' };
+  errors = controller.suffixFieldErrors();
+  assert.equal(errors.size, 0);
+});
+
+test('suffixFieldErrors does not add a duplicate error for two empty-suffix BUs (empty-body only)', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['EUN_QA', 'EUS_QA'] };
+  controller.state.wizardState.lineage = {};
+  // Two BUs both have an empty suffix body (bare separator): only the empty-suffix error, no duplicate.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_', EUS_QA: '_' };
+  let errors = controller.suffixFieldErrors();
+  for (const reference of ['EUN_QA', 'EUS_QA']) {
+    const messages = errors.get(reference) || [];
+    assert.ok(messages.some((m) => m.startsWith('Enter a suffix for every BU.')));
+    assert.ok(messages.every((m) => !m.startsWith('BU suffixes must be unique:')));
+  }
+  // Two BUs sharing the SAME non-empty suffix still both get the duplicate error.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAN' };
+  errors = controller.suffixFieldErrors();
+  assert.ok((errors.get('EUN_QA') || []).some((m) => m.startsWith('BU suffixes must be unique:')));
+  assert.ok((errors.get('EUS_QA') || []).some((m) => m.startsWith('BU suffixes must be unique:')));
+});
+
+test('canProceedSuffixes and canProceedMarketVars gate identically on suffix rules', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['EUN_QA', 'EUS_QA'] };
+  controller.state.wizardState.lineage = {};
+  // Distinct → both pass.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAS' };
+  assert.equal(controller.canProceed('suffixes').ok, true);
+  assert.equal(controller.canProceed('market-vars').ok, true);
+  // Blank suffix → both block.
+  controller.state.wizardState.suffixes = { DEV: '_', EUN_QA: '_QAN', EUS_QA: '_QAS' };
+  assert.equal(controller.canProceed('suffixes').ok, false);
+  assert.equal(controller.canProceed('market-vars').ok, false);
+  // Duplicate suffix → both block.
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAN' };
+  assert.equal(controller.canProceed('suffixes').ok, false);
+  assert.equal(controller.canProceed('market-vars').ok, false);
+});
+
+test('canProceedMarketVars is NOT blocked by empty non-suffix market variables', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['EUN_QA'] };
+  controller.state.wizardState.lineage = {};
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN' };
+  // An empty non-suffix var must not gate market-vars.
+  controller.state.wizardState.marketVariables = { DEV: { Contact_Salesforce: '' } };
+  assert.equal(controller.canProceed('market-vars').ok, true);
+});
+
+test('suffixFieldErrors preserves the parent-BU exemption (parent reusing a child suffix is not a duplicate)', () => {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  // Only child BUs are ever in childBUReferences(); a parent BU (_ParentBU_) is never assigned, so a
+  // shared suffix value it might reuse can never surface as a duplicate here.
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], QA: ['EUN_QA', 'EUS_QA'] };
+  controller.state.wizardState.lineage = {};
+  controller.state.wizardState.suffixes = { DEV: '_DEV', EUN_QA: '_QAN', EUS_QA: '_QAS' };
+  assert.equal(controller.suffixFieldErrors().size, 0);
+  assert.equal(controller.canProceed('suffixes').ok, true);
+});
+
+test('wizardStateFromConfig restores an old config (no marketVariables, version 1) to marketVariables:{} without failure', () => {
+  const config = {
+    credentials: {},
+    markets: {},
+    marketList: {},
+    options: {
+      deployment: {
+        mpb_pipeline: {
+          version: 1,
+          envOrder: ['DEV', 'QA'],
+          envBUs: { DEV: ['DEV'], QA: ['QA'] },
+          envBranches: {},
+          lineage: {},
+          separator: '_',
+          suffixes: { DEV: '_DEV', QA: '_QA' },
+          prodBUs: ['QA'],
+          sharedDEs: false,
+        },
+      },
+    },
+  };
+  const restored = controller.wizardStateFromConfig(config);
+  // The additive field defaults from emptyWizardState() — the old block restores cleanly (no blank wizard).
+  assert.deepEqual(restored.marketVariables, {});
+  assert.deepEqual(restored.envBUs, { DEV: ['DEV'], QA: ['QA'] });
 });

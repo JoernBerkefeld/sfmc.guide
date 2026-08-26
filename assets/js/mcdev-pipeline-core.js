@@ -277,6 +277,11 @@
             lineage: {},
             separator: '_',
             suffixes: {},
+            // Per-BU extra market variables surfaced by the market-vars step, keyed by BU ref then
+            // variable name (`suffix` is NOT stored here — it stays in `suffixes`). Additive field:
+            // old saved configs lacking it restore fine via this default (see intake restore), so
+            // `version` MUST stay 1 (bumping it makes every prior config unrestorable).
+            marketVariables: {},
             prodBUs: [],
             selectedRules: [],
             // Chunk-3a mini-wizard inputs, consumed by the validations builder via
@@ -409,6 +414,7 @@
         'suffixes',
         'lineage',
         'prod-confirm',
+        'market-vars',
         'rules',
         'output',
     ];
@@ -426,6 +432,7 @@
         lineage: 'Lineage',
         suffixes: 'Suffixes',
         'prod-confirm': 'Production',
+        'market-vars': 'Market Variables',
         rules: 'Rules',
         output: 'Download',
     };
@@ -743,6 +750,109 @@
     function suffixOf(reference) {
         const suffixes = state.wizardState.suffixes || {};
         return typeof suffixes[reference] === 'string' ? suffixes[reference] : '';
+    }
+
+
+    /**
+     * The lineage-root (dev-source) BU ref for a child buRef: walk `wizardState.lineage`
+     * child -> parent until a BU with no parent is reached. A cycle guard (visited set) makes a
+     * malformed self/loop lineage terminate at the entry point rather than spin forever. An empty
+     * lineage (`{}`) makes every BU its own root.
+     *
+     * @param {string} reference the buRef to resolve
+     * @returns {string} the lineage-root buRef (the reference itself when it has no parent)
+     */
+    function pipelineRootOf(reference) {
+        const lineage = state.wizardState.lineage || {};
+        const seen = new Set();
+        let current = reference;
+        // Walk child -> parent. The visited set makes a malformed self/loop lineage terminate rather
+        // than spin forever; a falsy/absent parent ends the walk at the current root.
+        let parent = lineage[current];
+        while (parent && !seen.has(current)) {
+            seen.add(current);
+            current = parent;
+            parent = lineage[current];
+        }
+        return current;
+    }
+
+
+    /**
+     * Group every child buRef by its lineage root, so BUs sharing a dev-source form one pipeline.
+     * BUs are visited in `childBUReferences()` order (env order then assignment order), so each
+     * root's array preserves that order and roots first appear in that order too.
+     *
+     * @returns {Map<string, string[]>} lineage-root buRef -> the child buRefs in that pipeline
+     */
+    function pipelinesByRoot() {
+        const groups = new Map();
+        for (const reference of childBUReferences()) {
+            const root = pipelineRootOf(reference);
+            if (!groups.has(root)) {
+                groups.set(root, []);
+            }
+            groups.get(root).push(reference);
+        }
+        return groups;
+    }
+
+
+    /**
+     * The single shared suffix validator consumed by BOTH the Suffixes step and the Market Variables
+     * step (for per-field red error text AND their `canProceed` gates), so the two can never drift.
+     * Returns a per-buRef list of error messages over `childBUReferences()` and the stored
+     * `wizardState.suffixes`: an empty-body error and a duplicate-value error. The parent-BU
+     * exemption is IMPLICIT — a parent BU is never in `childBUReferences()`, so no `_ParentBU_`
+     * special-casing exists. The reason strings mirror `canProceedSuffixes` (lines ~48 & ~59) verbatim.
+     *
+     * @returns {Map<string, string[]>} buRef -> error messages (empty array / absent when clean)
+     */
+    function suffixFieldErrors() {
+        const references = childBUReferences();
+        const separator = state.wizardState.separator || '_';
+        const errors = new Map();
+        const push = (reference, message) => {
+            if (!errors.has(reference)) {
+                errors.set(reference, []);
+            }
+            errors.get(reference).push(message);
+        };
+        // Empty-body error: the stored value has no suffix beyond the bare separator.
+        for (const reference of references) {
+            const stored = suffixOf(reference);
+            const body = stored.startsWith(separator) ? stored.slice(separator.length).trim() : stored.trim();
+            if (!body) {
+                push(reference, 'Enter a suffix for every BU. Missing: ' + reference + '.');
+            }
+        }
+        // Duplicate error: two child BUs share the same stored suffix value (first seen owns it).
+        // Empty-body suffixes are excluded — they already raise the empty-body error, and flagging
+        // them as duplicates of each other would over-flag the same red field twice.
+        const seen = new Map();
+        for (const reference of references) {
+            const value = suffixOf(reference);
+            const body = value.startsWith(separator) ? value.slice(separator.length).trim() : value.trim();
+            if (!body) {
+                continue;
+            }
+            if (seen.has(value)) {
+                const other = seen.get(value);
+                const message =
+                    'BU suffixes must be unique: "' +
+                    value +
+                    '" is used by both ' +
+                    other +
+                    ' and ' +
+                    reference +
+                    '.';
+                push(other, message);
+                push(reference, message);
+            } else {
+                seen.set(value, reference);
+            }
+        }
+        return errors;
     }
 
 
@@ -4198,6 +4308,9 @@
         assignedBUReferences: assignedBUReferences,
         childBUReferences: childBUReferences,
         suffixOf: suffixOf,
+        pipelineRootOf: pipelineRootOf,
+        pipelinesByRoot: pipelinesByRoot,
+        suffixFieldErrors: suffixFieldErrors,
         seedSuffixes: seedSuffixes,
         suffixSlug: suffixSlug,
         deriveRestoreFailure: deriveRestoreFailure,

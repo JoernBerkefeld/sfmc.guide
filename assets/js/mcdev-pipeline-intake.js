@@ -483,12 +483,28 @@
         state_.separator = '_';
         const markets = config_.markets && typeof config_.markets === 'object' ? config_.markets : {};
         state_.suffixes = {};
+        state_.marketVariables = {};
         for (const [buName, reference] of buReferenceByName) {
-            const suffix = suffixForBU(buName, reference, buMarketByName, markets);
+            // Resolve the ONE market entry the suffix comes from, so the extracted sibling variables
+            // are read from the SAME entry (same-entry resolution).
+            const market = resolveMarketForBU(buName, reference, buMarketByName, markets);
+            const suffix = market && typeof market.suffix === 'string' && market.suffix !== '' ? market.suffix : '';
             if (suffix) {
                 state_.suffixes[reference] = suffix;
             } else {
                 warnings.push('No suffix could be found for business unit "' + buName + '"; you will need to set it.');
+            }
+            // Copy every key except suffix/description from the resolved market into marketVariables.
+            if (market && typeof market === 'object') {
+                const variables = {};
+                for (const [key, value] of Object.entries(market)) {
+                    if (key !== 'suffix' && key !== 'description') {
+                        variables[key] = value;
+                    }
+                }
+                if (Object.keys(variables).length > 0) {
+                    state_.marketVariables[reference] = variables;
+                }
             }
         }
 
@@ -586,25 +602,39 @@
     }
 
     /**
-     * Resolve a BU's suffix from the `markets` map: prefer the market the BU maps to in a pipeline
-     * marketList, then a market named exactly after the BU, then a market named after the bare BU.
-     * Returns an empty string when none carry a `suffix`. Pure.
+     * Resolve the single market entry a BU's suffix (and its sibling variables) come from. Tries the
+     * candidate cascade `[buMarketByName.get(buName), buName, bareBUFromEntryKey(reference)]` — prefer
+     * the market the BU maps to in a pipeline marketList, then a market named exactly after the BU,
+     * then one named after the bare BU — and returns the FIRST candidate whose market carries a
+     * non-empty `suffix` (so the resolved entry is exactly the one the suffix is read from). When no
+     * candidate has a non-empty suffix, falls back to the first EXISTING candidate
+     * market (so sibling variables can still be extracted from a suffix-less market), or `undefined`
+     * when no candidate market exists at all. In that fallback path the returned entry's `suffix` is
+     * `''`, so the caller leaves `suffixes[ref]` unset and pushes a warning while still harvesting the
+     * market variables from that suffix-less entry. Pure.
      *
      * @param {string} buName the bare BU name
      * @param {string} reference the BU ref (bare or `<cred>/<BU>`)
      * @param {Map<string, string>} buMarketByName BU name → market name from pipeline marketLists
      * @param {object} markets the config `markets` map
-     * @returns {string} the suffix (including its leading separator) or `''`
+     * @returns {(object|undefined)} the resolved market entry, or `undefined`
      */
-    function suffixForBU(buName, reference, buMarketByName, markets) {
+    function resolveMarketForBU(buName, reference, buMarketByName, markets) {
         const candidates = [buMarketByName.get(buName), buName, bareBUFromEntryKey(reference)];
+        let firstExisting;
         for (const candidate of candidates) {
             const market = candidate && Object.hasOwn(markets, candidate) ? markets[candidate] : undefined;
-            if (market && typeof market.suffix === 'string' && market.suffix !== '') {
-                return market.suffix;
+            if (!market) {
+                continue;
+            }
+            if (firstExisting === undefined) {
+                firstExisting = market;
+            }
+            if (typeof market.suffix === 'string' && market.suffix !== '') {
+                return market;
             }
         }
-        return '';
+        return firstExisting;
     }
 
     /**

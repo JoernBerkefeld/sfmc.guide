@@ -23,6 +23,7 @@
     const setText = C.setText;
     const makeElement = C.makeEl;
     const childBUReferences = C.childBUReferences;
+    const suffixFieldErrors = C.suffixFieldErrors;
     const suffixOf = C.suffixOf;
     const suffixSlug = C.suffixSlug;
     const seedSuffixes = C.seedSuffixes;
@@ -38,34 +39,24 @@
      * @returns {{ok: boolean, reason: string}} gate result
      */
     function canProceedSuffixes() {
+        const errors = suffixFieldErrors();
+        // Preserve the original gate ordering: all empty-suffix errors (in childBUReferences order)
+        // take precedence over any duplicate error, so surface the first empty error, then the first
+        // duplicate error. The reason strings come verbatim from the shared validator.
         const references = childBUReferences();
-        const separator = state.wizardState.separator || '_';
-        // Every child BU needs a suffix body beyond the bare separator.
         for (const reference of references) {
-            const stored = suffixOf(reference);
-            const body = stored.startsWith(separator) ? stored.slice(separator.length).trim() : stored.trim();
-            if (!body) {
-                return { ok: false, reason: 'Enter a suffix for every BU. Missing: ' + reference + '.' };
+            const messages = errors.get(reference) || [];
+            const empty = messages.find((message) => message.startsWith('Enter a suffix for every BU.'));
+            if (empty) {
+                return { ok: false, reason: empty };
             }
         }
-        // Child-BU suffixes must be distinct (compared on the full stored value).
-        const seen = new Map();
         for (const reference of references) {
-            const value = suffixOf(reference);
-            if (seen.has(value)) {
-                return {
-                    ok: false,
-                    reason:
-                        'BU suffixes must be unique: "' +
-                        value +
-                        '" is used by both ' +
-                        seen.get(value) +
-                        ' and ' +
-                        reference +
-                        '.',
-                };
+            const messages = errors.get(reference) || [];
+            const duplicate = messages.find((message) => message.startsWith('BU suffixes must be unique:'));
+            if (duplicate) {
+                return { ok: false, reason: duplicate };
             }
-            seen.set(value, reference);
         }
         return { ok: true, reason: '' };
     }
@@ -208,19 +199,12 @@
          * @returns {void}
          */
         function refreshSuffixWarnings() {
-            const separator = state.wizardState.separator || '_';
-            // Duplicate index over the current stored values.
-            const counts = new Map();
-            for (const reference of childBUReferences()) {
-                const value = suffixOf(reference);
-                counts.set(value, (counts.get(value) || 0) + 1);
-            }
+            // Empty + duplicate suffix are ERRORS derived from the ONE shared validator so the rules
+            // stay identical on the Suffixes and Market Variables steps. They render as red
+            // .mpb-field-error text. The internal-space advisory stays a yellow .mpb-warn.
+            const errors = suffixFieldErrors();
             for (const row of rows) {
                 setText(row.warnings, '');
-                const stored = suffixOf(row.reference);
-                const storedBody = stored.startsWith(separator)
-                    ? stored.slice(separator.length)
-                    : stored;
                 // Internal-space warning reflects the RAW typed body (not the trimmed stored copy).
                 if (/\s/.test(row.input.value.trim())) {
                     row.warnings.append(
@@ -230,10 +214,19 @@
                         })
                     );
                 }
-                if (storedBody.trim() && counts.get(stored) > 1) {
+                const messages = errors.get(row.reference) || [];
+                if (messages.some((message) => message.startsWith('Enter a suffix for every BU.'))) {
                     row.warnings.append(
                         makeElement('p', {
-                            class: 'mpb-warn',
+                            class: 'mpb-field-error',
+                            text: 'A suffix is required for every BU.',
+                        })
+                    );
+                }
+                if (messages.some((message) => message.startsWith('BU suffixes must be unique:'))) {
+                    row.warnings.append(
+                        makeElement('p', {
+                            class: 'mpb-field-error',
                             text: 'Duplicate suffix — each child BU needs a distinct suffix.',
                         })
                     );

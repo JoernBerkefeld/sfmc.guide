@@ -18,6 +18,7 @@
  * @property {{[childRef: string]: string}} lineage child-BU ref -> upstream-BU ref (one hop up the chain)
  * @property {string} separator suffix separator (default `_`)
  * @property {{[buRef: string]: string}} suffixes BU ref -> suffix (includes the separator, e.g. `_UAT`)
+ * @property {{[buRef: string]: {[varName: string]: string}}} [marketVariables] BU ref -> extra market variables (merged into config.markets[name]; `suffix` is never stored here)
  * @property {string[]} prodBUs BU refs confirmed as production
  * @property {boolean} sharedDEs whether a shared-DE parent pipeline is used
  * @property {string[]} [selectedRules] validation rule ids the user picked (round-tripped)
@@ -339,9 +340,19 @@
             for (const reference of references) {
                 const name = marketNames.get(reference);
                 const suffix = suffixes[reference] || separator + slug(environment);
-                config.markets[name] = {
-                    suffix: suffix,
-                };
+                // suffix is always first; then merge the BU's extra market variables in
+                // case-insensitive alphabetical order. Skip empty/whitespace-only values and any
+                // accidental suffix/description keys; write kept values VERBATIM (no trim on emit).
+                const market = { suffix: suffix };
+                const variables = (state.marketVariables && state.marketVariables[reference]) || {};
+                const variableNames = Object.keys(variables)
+                    .filter((key) => key !== 'suffix' && key !== 'description')
+                    .filter((key) => String(variables[key]).trim() !== '')
+                    .toSorted((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : a.toLowerCase() > b.toLowerCase() ? 1 : 0));
+                for (const key of variableNames) {
+                    market[key] = variables[key];
+                }
+                config.markets[name] = market;
             }
         }
 
@@ -449,6 +460,9 @@
             lineage: state.lineage || {},
             separator: separator,
             suffixes: suffixes,
+            // Persist the per-BU extra market variables so a reopened tool config restores them
+            // (the merged values live under config.markets[...] but the wizard reads its state here).
+            marketVariables: state.marketVariables && typeof state.marketVariables === 'object' ? state.marketVariables : {},
             prodBUs: state.prodBUs || [],
             sharedDEs: !!state.sharedDEs,
             // Persist the three validations-tab inputs so a re-opened tool config restores them

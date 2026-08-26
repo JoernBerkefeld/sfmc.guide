@@ -221,6 +221,7 @@ platforms:
 <script src="{{ '/assets/js/mcdev-pipeline-core.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-environment-order.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-production-confirm.js' | relative_url | cache_bust }}" defer></script>
+<script src="{{ '/assets/js/mcdev-pipeline-step-market-vars.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-suffixes.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-rules.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-bu-assign.js' | relative_url | cache_bust }}" defer></script>

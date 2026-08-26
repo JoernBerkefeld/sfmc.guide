@@ -96,3 +96,37 @@
   color: $color-warning;
   margin-top: $space-1;
 }
+
+// Empty market-variable / suffix inputs get a bright-yellow border + soft-yellow background so a
+// missing value is obvious at a glance (advisory for non-suffix values; the suffix's own red error
+// text covers its hard-error case).
+.mpb-input-warn {
+  border: 1px solid #f5c518;
+  background: #fffbe6;
+}
+
+// Per-field suffix ERROR text (empty / duplicate) — small danger-coloured line, NOT the heavy padded
+// .mpb-error box. Shown in the per-field warnings slot on both the Suffixes and Market Variables steps.
+.mpb-field-error {
+  font-size: $text-xs;
+  color: $color-danger;
+  margin-top: $space-1;
+}
+
+// Per-pipeline section on the Market Variables step: a titled board grouped by lineage root.
+.mpb-market-pipeline {
+  margin-bottom: $space-5;
+}
+
+.mpb-market-pipeline-title {
+  font-size: $text-sm;
+  font-weight: 600;
+  margin-bottom: $space-2;
+}
+
+// Advisory legend explaining the yellow empty-input border (shown only when a non-suffix input is empty).
+.mpb-market-legend {
+  font-size: $text-xs;
+  color: $color-warning;
+  margin-bottom: $space-3;
+}
