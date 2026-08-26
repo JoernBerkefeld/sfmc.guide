@@ -164,21 +164,36 @@ platforms:
       </div>
     </div>
 
-    <div class="mpb-diagram-cta">
-      <button type="button" id="mpb-open-diagramforce" class="mpb-btn mpb-btn--secondary">
-        Open in Diagramforce ↗
-      </button>
-      <p class="text-sm text-muted">
-        Opens the third-party <a href="https://diagramforce.com" rel="noopener">diagramforce.com</a>
-        in a new tab and hands the pipeline shape over locally via <code>postMessage</code> —
-        no server, no account. Your BU names are only used to draw the diagram in your own browser tab.
-      </p>
-      <div id="mpb-diagram-fallback" class="mpb-diagram-fallback" hidden>
-        <p class="mpb-error" role="alert">Pop-up blocked. Allow pop-ups for this site, or copy the
-          diagram JSON below and use <em>Load &amp; Import → Paste</em> in Diagramforce.</p>
-        <textarea id="mpb-diagram-json" class="mpb-code-fallback" rows="8" readonly
-                  aria-label="Diagramforce diagram JSON"></textarea>
-        <button type="button" id="mpb-copy-diagram" class="mpb-btn mpb-btn--secondary">Copy JSON</button>
+    <h2>Architecture diagrams</h2>
+    <div class="mpb-output-grid">
+      <div class="mpb-diagram-cta">
+        <button type="button" id="mpb-open-diagramforce" class="mpb-btn mpb-btn--secondary">
+          Open in Diagramforce ↗
+        </button>
+        <p class="text-sm text-muted">
+          Opens the third-party <a href="https://diagramforce.com" rel="noopener">diagramforce.com</a>
+          in a new tab and hands the pipeline shape over locally via <code>postMessage</code> —
+          no server, no account. Your BU names are only used to draw the diagram in your own browser tab.
+        </p>
+        <div id="mpb-diagram-fallback" class="mpb-diagram-fallback" hidden>
+          <p class="mpb-error" role="alert">Pop-up blocked. Allow pop-ups for this site, or copy the
+            diagram JSON below and use <em>Load &amp; Import → Paste</em> in Diagramforce.</p>
+          <textarea id="mpb-diagram-json" class="mpb-code-fallback" rows="8" readonly
+                    aria-label="Diagramforce diagram JSON"></textarea>
+          <button type="button" id="mpb-copy-diagram" class="mpb-btn mpb-btn--secondary">Copy JSON</button>
+        </div>
+      </div>
+
+      <div class="mpb-diagram-cta">
+        <button type="button" id="mpb-open-drawio" class="mpb-btn mpb-btn--secondary">
+          Open in draw.io ↗
+        </button>
+        <p class="text-sm text-muted">
+          Opens the third-party <a href="https://app.diagrams.net" rel="noopener">draw.io</a>
+          in a new tab with the pipeline drawn as native mxGraph swimlanes — no server, no account.
+          If the diagram is too large for the URL, a <code>pipeline.drawio</code> file downloads
+          instead for you to open in draw.io.
+        </p>
       </div>
     </div>
   </section>

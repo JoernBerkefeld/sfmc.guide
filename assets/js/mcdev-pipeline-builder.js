@@ -96,6 +96,8 @@
         dom.diagramFallback = document_.querySelector('#mpb-diagram-fallback');
         dom.diagramJson = document_.querySelector('#mpb-diagram-json');
         dom.copyDiagram = document_.querySelector('#mpb-copy-diagram');
+        // ── draw.io export tile (shares the Architecture-diagrams block with diagramforce) ──
+        dom.openDrawio = document_.querySelector('#mpb-open-drawio');
         // Persistent header fallback (lineage + header Download menu; output keeps in-section ids).
         dom.diagramFallbackHeader = document_.querySelector('#mpb-diagram-fallback-header');
         dom.diagramJsonHeader = document_.querySelector('#mpb-diagram-json-header');

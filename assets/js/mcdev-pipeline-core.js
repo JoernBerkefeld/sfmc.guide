@@ -2918,8 +2918,26 @@
 
 
     /**
-     * Append the "Open in draw.io (mxGraph)" Download row, gated by `isDiagramDrawable()`. Builds
-     * the model + mxGraph XML on click and hands off via the draw.io module (URL, else download).
+     * Build the pipeline's mxGraph XML from the current model and hand it off to app.diagrams.net
+     * (the `#R<xml>` open path), falling back to a `pipeline.drawio` file download when the URL
+     * would exceed the module's length cap. Shared by the Download-dropdown row and the output
+     * step's draw.io tile so both trigger the identical open/fallback behaviour.
+     *
+     * @returns {('open'|'download'|undefined)} which branch the draw.io module took, if available
+     */
+    function openDrawioOrDownload() {
+        if (!global.mpbDrawio) {
+            return;
+        }
+        const model = buildDrawioModel();
+        const xml = global.mpbDrawio.buildMxGraphXml(model);
+        return global.mpbDrawio.openInDrawioOrDownload(xml, model.title, 'pipeline.drawio', drawioIo());
+    }
+
+
+    /**
+     * Append the "Open in draw.io" Download row, gated by `isDiagramDrawable()`. Hands off via the
+     * shared `openDrawioOrDownload()` (URL, else download) on click.
      *
      * @param {{append: (node: unknown) => void}} panel the dropdown panel
      * @returns {void}
@@ -2930,54 +2948,18 @@
         }
         const canCreate = document_ && typeof document_.createElement === 'function';
         if (!canCreate) {
-            panel.append({ role: 'menuitem', textContent: 'Open in draw.io (mxGraph)' });
+            panel.append({ role: 'menuitem', textContent: 'Open in draw.io' });
             return;
         }
         const item = makeElement('button', {
             type: 'button',
             class: 'mpb-builder-open-row',
-            text: 'Open in draw.io (mxGraph)',
+            text: 'Open in draw.io',
             attrs: { role: 'menuitem' },
         });
         item.addEventListener('click', () => {
             closeBuilderOpenPanel();
-            const model = buildDrawioModel();
-            const xml = global.mpbDrawio.buildMxGraphXml(model);
-            global.mpbDrawio.openInDrawioOrDownload(xml, model.title, 'pipeline.drawio', drawioIo());
-        });
-        panel.append(item);
-    }
-
-
-    /**
-     * Append the "Open in draw.io (mermaid)" Download row, gated by `isDiagramDrawable()`. Builds
-     * the model + mermaid flowchart on click and hands off via the draw.io module (URL, else
-     * download). Mermaid import is a natively-gated draw.io feature — a gated-off render fails in
-     * the opened tab with no signal back here.
-     *
-     * @param {{append: (node: unknown) => void}} panel the dropdown panel
-     * @returns {void}
-     */
-    function fillBuilderDrawioMermaidItem(panel) {
-        if (!panel || !isDiagramDrawable()) {
-            return;
-        }
-        const canCreate = document_ && typeof document_.createElement === 'function';
-        if (!canCreate) {
-            panel.append({ role: 'menuitem', textContent: 'Open in draw.io (mermaid)' });
-            return;
-        }
-        const item = makeElement('button', {
-            type: 'button',
-            class: 'mpb-builder-open-row',
-            text: 'Open in draw.io (mermaid)',
-            attrs: { role: 'menuitem' },
-        });
-        item.addEventListener('click', () => {
-            closeBuilderOpenPanel();
-            const model = buildDrawioModel();
-            const mermaid = global.mpbDrawio.buildMermaid(model);
-            global.mpbDrawio.openMermaidInDrawioOrDownload(mermaid, model.title, 'pipeline.mmd', drawioIo());
+            openDrawioOrDownload();
         });
         panel.append(item);
     }
@@ -3037,7 +3019,6 @@
             panel.append(validationsItem);
             fillBuilderDownloadDiagramItem(panel);
             fillBuilderDrawioMxItem(panel);
-            fillBuilderDrawioMermaidItem(panel);
         });
     }
 
@@ -4273,9 +4254,10 @@
         shouldShowDiagramforceMenuItem: shouldShowDiagramforceMenuItem,
         diagramforceMenuItemSpec: diagramforceMenuItemSpec,
         fillBuilderDownloadDiagramItem: fillBuilderDownloadDiagramItem,
+        buildBuilderDownloadDropdown: buildBuilderDownloadDropdown,
         buildDrawioModel: buildDrawioModel,
+        openDrawioOrDownload: openDrawioOrDownload,
         fillBuilderDrawioMxItem: fillBuilderDrawioMxItem,
-        fillBuilderDrawioMermaidItem: fillBuilderDrawioMermaidItem,
         downloadText: downloadText,
         assignBUToEnvironment: assignBUToEnvironment,
         unassignedBUReferences: unassignedBUReferences,

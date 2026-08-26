@@ -1,7 +1,7 @@
 /**
  * mcdev Pipeline Builder — draw.io export (pure, DOM-free at load).
  *
- * Builds two independent draw.io payloads from a plain pipeline model and owns the
+ * Builds a native mxGraph XML payload from a plain pipeline model and owns the
  * new-tab handoff to app.diagrams.net, falling back to a file download when the URL
  * exceeds the browser length cap. Kept side-by-side with the existing Diagramforce
  * `buildDiagramJSON` path in the core file — nothing here reads or mutates that path.
@@ -11,10 +11,7 @@
  * References no `document` / `window` / `open` at load time — all DOM/handoff access
  * happens inside functions invoked later, with `open` / `downloadText` passed in.
  *
- * Two approaches live in clearly delimited sections so the losing one can be deleted
- * wholesale (its section + its one dropdown row) without touching the other:
- *   - Approach A: native mxGraph XML swimlanes + arrows (loaded via the `#R` raw-XML hash).
- *   - Approach B: a mermaid flowchart (handed over via the `?create=` JSON descriptor).
+ * The mxGraph XML swimlanes + arrows are loaded via the `#R` raw-XML hash.
  *
  * @typedef {object} DrawioBand
  * @property {string} fill swimlane fill colour
@@ -220,7 +217,7 @@
         return y;
     }
 
-    // ── Approach A: native mxGraph XML ──────────────────────────────────────────────────
+    // ── native mxGraph XML ──────────────────────────────────────────────────────────────
 
     /**
      * Build a draw.io-native mxGraph XML document for the pipeline model: one swimlane per
@@ -327,95 +324,11 @@
         return 'download';
     }
 
-    // ── Approach B: mermaid ─────────────────────────────────────────────────────────────
-
-    /**
-     * Build a mermaid `flowchart LR` string for the pipeline model: a subgraph per non-empty
-     * environment holding its BU nodes, plus edges for the deploy lineage. Node ids reuse the
-     * model's stable cell ids so the links line up. Columns with no BUs are skipped because
-     * mermaid rejects an empty `subgraph … end` — well-formed models (every column populated)
-     * are unaffected.
-     *
-     * @param {DrawioModel} model the pipeline model
-     * @returns {string} mermaid flowchart source
-     */
-    function buildMermaid(model) {
-        const columns = (model && model.columns) || [];
-        const links = (model && model.links) || [];
-        const lines = ['flowchart LR'];
-        for (const [columnIndex, column] of columns.entries()) {
-            const bus = column.bus || [];
-            // Skip empty columns: an empty `subgraph … end` is a mermaid parse error.
-            if (bus.length === 0) {
-                continue;
-            }
-            // Subgraph ids are prefixed (`sg`) to stay provably disjoint from the `n_`-prefixed node
-            // ids, and the title uses the space-before-bracket form for broad mermaid compatibility.
-            lines.push('  subgraph sg' + String(columnIndex + 1) + ' [' + mermaidText(column.env) + ']');
-            for (const bu of bus) {
-                lines.push(' '.repeat(4) + mermaidNodeId(bu.cellId) + '[' + mermaidText(bu.label) + ']');
-            }
-            lines.push('  end');
-        }
-        for (const link of links) {
-            lines.push('  ' + mermaidNodeId(link.sourceCellId) + ' --> ' + mermaidNodeId(link.targetCellId));
-        }
-        return lines.join('\n');
-    }
-
-    /**
-     * Sanitise a model cell id into a mermaid-safe node id (alphanumeric + underscore).
-     *
-     * @param {string} cellId the model cell id
-     * @returns {string} a mermaid-safe node id
-     */
-    function mermaidNodeId(cellId) {
-        return 'n_' + String(cellId).replaceAll(/[^a-zA-Z0-9_]/g, '_');
-    }
-
-    /**
-     * Escape a label for use inside a mermaid `[...]` node/subgraph title by quoting it and
-     * neutralising the double-quote character mermaid uses to delimit the string.
-     *
-     * @param {string} value raw label text
-     * @returns {string} a quoted, mermaid-safe label
-     */
-    function mermaidText(value) {
-        return '"' + String(value).replaceAll('"', '&quot;') + '"';
-    }
-
-    /**
-     * Open the mermaid flowchart in app.diagrams.net via the `?create=` JSON descriptor
-     * (`{type:'mermaid', data}`), or download a `.mmd` file when the URL would exceed
-     * `DRAWIO_URL_LIMIT`. NOTE: draw.io's mermaid import is a natively-gated feature — if it is
-     * gated off for the visitor, the render throws *inside the opened tab* with no signal back
-     * here, so this fallback covers only the URL-length case, never a gated-off render.
-     *
-     * @param {string} mermaid the mermaid flowchart source
-     * @param {string} title the diagram title (tab title)
-     * @param {string} filename the `.mmd` filename for the download fallback
-     * @param {DrawioIo} io host hooks (`open`, `downloadText`)
-     * @returns {('open'|'download')} which branch was taken
-     */
-    function openMermaidInDrawioOrDownload(mermaid, title, filename, io) {
-        const descriptor = encodeURIComponent(JSON.stringify({ type: 'mermaid', data: mermaid }));
-        const finalUrl = 'https://app.diagrams.net/?title=' + encodeURIComponent(title) +
-            '&splash=0&create=' + descriptor;
-        if (finalUrl.length <= DRAWIO_URL_LIMIT) {
-            io.open(finalUrl, '_blank', 'noopener');
-            return 'open';
-        }
-        io.downloadText(filename, mermaid, 'text/plain');
-        return 'download';
-    }
-
     // ── module API ──────────────────────────────────────────────────────────────────────
 
     const api = {
         buildMxGraphXml: buildMxGraphXml,
-        buildMermaid: buildMermaid,
         openInDrawioOrDownload: openInDrawioOrDownload,
-        openMermaidInDrawioOrDownload: openMermaidInDrawioOrDownload,
         DRAWIO_URL_LIMIT: DRAWIO_URL_LIMIT,
     };
 

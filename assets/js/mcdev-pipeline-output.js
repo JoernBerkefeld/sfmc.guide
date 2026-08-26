@@ -36,6 +36,7 @@
     const isDiagramDrawable = C.isDiagramDrawable;
     const buildDiagramJSON = C.buildDiagramJSON;
     const openDiagramOrFallback = C.openDiagramOrFallback;
+    const openDrawioOrDownload = C.openDrawioOrDownload;
     const outputBlockers = C.outputBlockers;
     const downloadText = C.downloadText;
     const copyToClipboard = C.copyToClipboard;
@@ -272,17 +273,23 @@
     }
 
     /**
-     * Bind the output-section Diagramforce CTA (`#mpb-open-diagramforce`) and its in-section
-     * fallback. Offered only when `isDiagramDrawable()` — never called from lineage or the header.
-     * Rebuilds JSON on each click so it tracks the latest lineage.
+     * Bind the output-section "Architecture diagrams" CTAs — the Diagramforce tile
+     * (`#mpb-open-diagramforce`) with its in-section fallback, and the draw.io tile
+     * (`#mpb-open-drawio`). Both tiles are offered only when `isDiagramDrawable()` — never called
+     * from lineage or the header. Diagramforce rebuilds JSON on each click so it tracks the latest
+     * lineage; the draw.io tile hands off via the shared `openDrawioOrDownload()` (open, else file).
      *
      * @returns {void}
      */
     function renderDiagramPreview() {
         const cta = dom.openDiagramforce ? dom.openDiagramforce.closest('.mpb-diagram-cta') : null;
+        const drawioCta = dom.openDrawio ? dom.openDrawio.closest('.mpb-diagram-cta') : null;
         const isOffered = isDiagramDrawable();
         if (cta) {
             cta.hidden = !isOffered;
+        }
+        if (drawioCta) {
+            drawioCta.hidden = !isOffered;
         }
         if (dom.diagramFallback) {
             // Reset the in-section fallback each output render; it re-reveals only on a pop-up-block.
@@ -295,6 +302,12 @@
         if (dom.openDiagramforce) {
             dom.openDiagramforce.onclick = () => {
                 openDiagramOrFallback(dom.openDiagramforce);
+            };
+        }
+
+        if (dom.openDrawio) {
+            dom.openDrawio.onclick = () => {
+                openDrawioOrDownload();
             };
         }
 

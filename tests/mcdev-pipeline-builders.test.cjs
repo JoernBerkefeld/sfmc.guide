@@ -2534,8 +2534,8 @@ test('buildDiagramJSON is idempotent: same seed → identical card Ys (fixed poi
 // ─── draw.io export (mcdev-pipeline-drawio.js), built side-by-side with Diagramforce ───
 //
 // The draw.io module is pure: it takes the plain model from controller.buildDrawioModel()
-// and returns strings. These tests cover the mxGraph XML shape + escaping, the mermaid
-// flowchart, drawable-gating of the two Download rows, and the URL-length download fallback.
+// and returns strings. These tests cover the mxGraph XML shape + escaping, drawable-gating
+// of the Download row, and the URL-length download fallback.
 
 /**
  * Count non-overlapping occurrences of a substring.
@@ -2908,36 +2908,6 @@ test('buildMxGraphXml centers crossing 1:n sources on their children, preserving
   );
 });
 
-test('buildMermaid emits a flowchart with a subgraph per env and one edge per link', () => {
-  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
-  const model = controller.buildDrawioModel();
-  const mermaid = mpbDrawio.buildMermaid(model);
-  assert.match(mermaid, /^flowchart LR/, 'starts with a flowchart LR directive');
-  assert.equal(countOccurrences(mermaid, 'subgraph '), 3, 'one subgraph per environment');
-  assert.equal(countOccurrences(mermaid, ' --> '), model.links.length, 'one arrow per link');
-});
-
-test('buildMermaid skips empty columns so no invalid empty subgraph is emitted', () => {
-  // A degenerate model with an empty column: mermaid rejects an empty `subgraph … end`.
-  const model = {
-    title: 'T',
-    columns: [
-      { env: 'DEV', bus: [{ cellId: 'bu-1-1', label: 'DEV_a' }] },
-      { env: 'Empty', bus: [] },
-      { env: 'Prod', bus: [{ cellId: 'bu-3-1', label: 'PRD_a' }] },
-    ],
-    links: [{ sourceCellId: 'bu-1-1', targetCellId: 'bu-3-1' }],
-  };
-  const mermaid = mpbDrawio.buildMermaid(model);
-  assert.equal(
-    countOccurrences(mermaid, 'subgraph '),
-    2,
-    'only the two populated columns emit a subgraph',
-  );
-  assert.ok(!mermaid.includes('Empty'), 'the empty column contributes no subgraph title');
-  assert.ok(!/subgraph [^\n]*\n\s*end/.test(mermaid), 'no subgraph is immediately followed by end');
-});
-
 test('openInDrawioOrDownload opens a tab under the cap and downloads over it', () => {
   const opens = [];
   const downloads = [];
@@ -2963,48 +2933,97 @@ test('openInDrawioOrDownload opens a tab under the cap and downloads over it', (
   assert.equal(downloads[0].filename, 'pipeline.drawio', 'downloads a .drawio file');
 });
 
-test('openMermaidInDrawioOrDownload uses ?create= under the cap and downloads .mmd over it', () => {
-  const opens = [];
-  const downloads = [];
-  const io = {
-    open: (url) => {
-      opens.push(url);
-      return {};
-    },
-    downloadText: (filename, text, mime) => {
-      downloads.push({ filename, text, mime });
-    },
-  };
-  const small = mpbDrawio.openMermaidInDrawioOrDownload('flowchart LR', 'T', 'pipeline.mmd', io);
-  assert.equal(small, 'open', 'a small mermaid opens a tab');
-  assert.match(opens[0], /create=/, 'uses the ?create= JSON descriptor');
-
-  const bigMermaid = 'flowchart LR\n' + 'A-->B\n'.repeat(mpbDrawio.DRAWIO_URL_LIMIT);
-  const big = mpbDrawio.openMermaidInDrawioOrDownload(bigMermaid, 'T', 'pipeline.mmd', io);
-  assert.equal(big, 'download', 'an oversized mermaid downloads instead');
-  assert.equal(downloads[0].filename, 'pipeline.mmd', 'downloads a .mmd file');
-});
-
-test('draw.io Download rows: appended when drawable, omitted when not', () => {
+test('draw.io Download row: appended when drawable, omitted when not', () => {
   // Not drawable in validations-only mode.
   seedDiagramEnvironments(['DEV', 'Prod']);
   controller.state.mode = 'validations';
   const notDrawable = stubDownloadPanel();
   controller.fillBuilderDrawioMxItem(notDrawable);
-  controller.fillBuilderDrawioMermaidItem(notDrawable);
-  assert.equal(notDrawable.items.length, 0, 'no draw.io rows when not drawable');
+  assert.equal(notDrawable.items.length, 0, 'no draw.io row when not drawable');
 
-  // Drawable full-mode pipeline appends both rows.
+  // Drawable full-mode pipeline appends the row.
   seedDiagramEnvironments(['DEV', 'Prod']);
   const drawable = stubDownloadPanel();
   controller.fillBuilderDrawioMxItem(drawable);
-  controller.fillBuilderDrawioMermaidItem(drawable);
-  assert.equal(drawable.items.length, 2, 'both draw.io rows when drawable');
+  assert.equal(drawable.items.length, 1, 'the draw.io row when drawable');
   const labels = new Set(drawable.items.map((item) => item.textContent));
-  assert.ok(
-    labels.has('Open in draw.io (mxGraph)') && labels.has('Open in draw.io (mermaid)'),
-    'both draw.io row labels are present',
-  );
+  assert.ok(labels.has('Open in draw.io'), 'the draw.io row label is present');
+});
+
+test('openDrawioOrDownload builds the model + XML and hands off via the #R open path', () => {
+  // The output-step draw.io tile and the Download-dropdown row both call this shared helper, so
+  // it must reproduce the module's open/fallback handoff. A small pipeline opens app.diagrams.net
+  // via the #R raw-XML hash (no textarea, no download).
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  const previousOpen = Object.getOwnPropertyDescriptor(globalThis, 'open');
+  const opens = [];
+  // defineProperty (not a bare assignment) mirrors the harness's document stub and keeps the
+  // unicorn/no-global-object-property-assignment rule satisfied.
+  Object.defineProperty(globalThis, 'open', {
+    configurable: true,
+    writable: true,
+    value: (url, target, features) => {
+      opens.push({ url, target, features });
+      return {};
+    },
+  });
+  try {
+    const branch = controller.openDrawioOrDownload();
+    assert.equal(branch, 'open', 'a small pipeline opens a tab');
+    assert.equal(opens.length, 1, 'window.open was called once');
+    assert.match(opens[0].url, /app\.diagrams\.net/, 'hands off to app.diagrams.net');
+    assert.match(opens[0].url, /#R/, 'uses the #R raw-XML hash (mxGraph path)');
+    assert.equal(opens[0].features, 'noopener', 'opens with noopener');
+  } finally {
+    if (previousOpen) {
+      Object.defineProperty(globalThis, 'open', previousOpen);
+    } else {
+      delete globalThis.open;
+    }
+  }
+});
+
+test('openDrawioOrDownload downloads pipeline.drawio when the URL exceeds the cap (fallback)', () => {
+  // Force the too-long-URL branch by stubbing the module builders to emit an oversized XML, and
+  // capture the download without a real anchor. This proves the tile's fallback still triggers a
+  // pipeline.drawio file download when app.diagrams.net cannot be opened via the URL.
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const drawio = globalThis.mpbDrawio;
+  const previousBuild = drawio.buildMxGraphXml;
+  const previousCreate = globalThis.document.createElement;
+  const previousBody = globalThis.document.body;
+  const previousCreateObjectURL = URL.createObjectURL;
+  const previousRevokeObjectURL = URL.revokeObjectURL;
+  const oversizedXml = '<mxGraphModel>' + 'y'.repeat(drawio.DRAWIO_URL_LIMIT) + '</mxGraphModel>';
+  let clicked;
+  const anchor = {
+    href: '',
+    download: '',
+    className: '',
+    click() {
+      clicked = { download: anchor.download };
+    },
+    remove() {},
+    append() {},
+    setAttribute() {},
+  };
+  drawio.buildMxGraphXml = () => oversizedXml;
+  globalThis.document.createElement = () => anchor;
+  globalThis.document.body = { append() {} };
+  URL.createObjectURL = () => 'blob:mpb-test';
+  URL.revokeObjectURL = () => {};
+  try {
+    const branch = controller.openDrawioOrDownload();
+    assert.equal(branch, 'download', 'an oversized pipeline downloads instead of opening');
+    assert.ok(clicked, 'the generated anchor was clicked');
+    assert.equal(clicked.download, 'pipeline.drawio', 'downloads the pipeline.drawio file');
+  } finally {
+    drawio.buildMxGraphXml = previousBuild;
+    globalThis.document.createElement = previousCreate;
+    globalThis.document.body = previousBody;
+    URL.createObjectURL = previousCreateObjectURL;
+    URL.revokeObjectURL = previousRevokeObjectURL;
+  }
 });
 
 /**
@@ -3021,6 +3040,113 @@ function stubDownloadPanel() {
     },
   };
 }
+
+/**
+ * Minimal fake DOM element for driving `makeElement`-based builders end-to-end without jsdom.
+ * Records its `tagName`, `textContent`, `className`, attributes, and appended children in order.
+ *
+ * @param {string} tag element tag name
+ * @returns {object} fake element
+ */
+function makeFakeElement(tag) {
+  const element = {
+    tagName: String(tag).toUpperCase(),
+    textContent: '',
+    className: '',
+    hidden: false,
+    disabled: false,
+    attributes: {},
+    children: [],
+    append(...nodes) {
+      for (const node of nodes) {
+        element.children.push(node);
+      }
+    },
+    addEventListener() {},
+    setAttribute(name, value) {
+      element.attributes[name] = value;
+    },
+    getAttribute(name) {
+      return element.attributes[name];
+    },
+  };
+  return element;
+}
+
+/**
+ * Row label for the divider-order assertion: the sentinel `<hr>` for dividers, else the text.
+ *
+ * @param {object} row a fake dropdown child element
+ * @returns {string} the comparable label
+ */
+function dropdownRowLabel(row) {
+  return row.tagName === 'HR' ? '<hr>' : row.textContent;
+}
+
+/**
+ * Install a fake `document.createElement`/`createTextNode` for the duration of `run`, then restore.
+ *
+ * @param {() => void} run the body to execute with the fake document installed
+ * @returns {void}
+ */
+function withFakeDocument(run) {
+  const previousCreate = globalThis.document.createElement;
+  const previousTextNode = globalThis.document.createTextNode;
+  globalThis.document.createElement = (tag) => makeFakeElement(tag);
+  globalThis.document.createTextNode = (text) => ({ textContent: String(text) });
+  try {
+    run();
+  } finally {
+    globalThis.document.createElement = previousCreate;
+    globalThis.document.createTextNode = previousTextNode;
+  }
+}
+
+test('Download dropdown: a single <hr> divider sits after the file rows and before Open in Diagramforce', () => {
+  // A drawable full-mode pipeline renders every row: the two download-file rows, the divider, then
+  // the two open-in-tool rows (Diagramforce + draw.io).
+  seedDiagramEnvironments(['DEV', 'QA', 'Prod']);
+  withFakeDocument(() => {
+    const wrapper = controller.buildBuilderDownloadDropdown();
+    const panel = wrapper.children.find(
+      (child) => child && child.attributes && child.attributes.role === 'menu',
+    );
+    assert.ok(panel, 'the dropdown exposes a role="menu" panel');
+
+    // Flatten to the ordered list of appended rows/dividers (ignore the leading hint <p>).
+    const rows = panel.children.filter((child) => child && child.tagName);
+    const dividers = rows.filter((row) => row.tagName === 'HR');
+    assert.equal(dividers.length, 1, 'exactly one divider is inserted');
+
+    const sequence = rows.map(dropdownRowLabel);
+    const dividerIndex = sequence.indexOf('<hr>');
+    const configIndex = sequence.indexOf('Download .mcdevrc.json');
+    const validationsIndex = sequence.indexOf('Download .mcdev-validations.js');
+    const diagramforceIndex = sequence.indexOf('Open in Diagramforce');
+    const drawioIndex = sequence.indexOf('Open in draw.io');
+
+    assert.ok(configIndex !== -1 && validationsIndex !== -1, 'both download-file rows render');
+    assert.ok(diagramforceIndex !== -1 && drawioIndex !== -1, 'both open-in-tool rows render');
+    assert.ok(
+      configIndex < dividerIndex && validationsIndex < dividerIndex,
+      'the divider sits after the download-file rows',
+    );
+    assert.ok(
+      dividerIndex < diagramforceIndex && dividerIndex < drawioIndex,
+      'the divider sits immediately before the Open in Diagramforce row',
+    );
+    assert.equal(
+      dividerIndex + 1,
+      diagramforceIndex,
+      'the divider is directly before Open in Diagramforce (no row between)',
+    );
+    assert.equal(
+      panel.children.find((child) => child.tagName === 'HR').attributes.role,
+      'separator',
+      'the divider carries role="separator"',
+    );
+  });
+});
 
 test('header Download Diagramforce menuitem: omitted in validations-only, disabled until drawable, enabled when drawable', () => {
   controller.state.config = sampleConfig;
@@ -4085,6 +4211,57 @@ test('wizard markup places Download inside the wizard between the step host and 
   );
   assert.ok(hostIndex < outputIndex, 'Download section sits after the step host');
   assert.ok(outputIndex < backIndex, 'Download section sits before the bottom Back/Next pair');
+});
+
+test('output markup: Architecture diagrams h2 sits below the download-files grid, over both tiles', () => {
+  const markup = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'mcdev-pipeline-builder', 'index.md'),
+    'utf8',
+  );
+  // The download-files section: its "Download your files" h2 + the files output-grid.
+  const filesHeadingIndex = markup.indexOf('>Download your files<');
+  // The Architecture-diagrams block: its exact h2 + the two diagram tiles in a shared grid.
+  const archHeadingIndex = markup.indexOf('>Architecture diagrams<');
+  const diagramforceIndex = markup.indexOf('id="mpb-open-diagramforce"');
+  const drawioIndex = markup.indexOf('id="mpb-open-drawio"');
+  assert.ok(filesHeadingIndex !== -1, 'the download-files heading is present');
+  assert.ok(archHeadingIndex !== -1, 'the exact "Architecture diagrams" h2 renders');
+  assert.match(
+    markup,
+    /<h2>Architecture diagrams<\/h2>/,
+    'the heading is an <h2> with the exact text',
+  );
+  assert.ok(
+    filesHeadingIndex < archHeadingIndex,
+    'Architecture diagrams sits below the download-files section',
+  );
+  assert.ok(
+    archHeadingIndex < diagramforceIndex && archHeadingIndex < drawioIndex,
+    'the h2 sits above both diagram tiles',
+  );
+
+  // Both tiles share one .mpb-output-grid container (the 50/50 side-by-side layout).
+  const gridStart = markup.indexOf('<div class="mpb-output-grid">', archHeadingIndex);
+  assert.ok(gridStart !== -1, 'the two tiles live in an .mpb-output-grid container');
+  const gridEnd = markup.indexOf('</section>', gridStart);
+  const grid = markup.slice(gridStart, gridEnd);
+  assert.ok(grid.includes('id="mpb-open-diagramforce"'), 'diagramforce tile is inside the grid');
+  assert.ok(grid.includes('id="mpb-open-drawio"'), 'draw.io tile is inside the grid');
+  assert.equal(
+    countOccurrences(grid, 'class="mpb-diagram-cta"'),
+    2,
+    'exactly two diagram tiles sit side by side in the grid',
+  );
+});
+
+test('the draw.io output tile reuses the shared open/fallback handler', () => {
+  // The tile wiring in mcdev-pipeline-output.js reaches the identical handoff the dropdown row uses;
+  // the shared entry point is exported from core so both call sites stay in lock-step.
+  assert.equal(
+    typeof controller.openDrawioOrDownload,
+    'function',
+    'core exports the shared draw.io open/fallback handler',
+  );
 });
 
 /**
