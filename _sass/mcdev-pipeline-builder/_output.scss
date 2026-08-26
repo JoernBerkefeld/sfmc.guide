@@ -58,4 +58,9 @@
   p { margin: $space-2 0 0; }
 }
 
+// Inside the Architecture-diagrams grid the two tiles are laid out side by side (50/50 at
+// ≥768px, stacked below), so the grid gap owns their spacing — drop each tile's standalone
+// top margin so they align flush under the shared "Architecture diagrams" heading.
+.mpb-output-grid > .mpb-diagram-cta { margin-top: 0; }
+
 .mpb-diagram-fallback { margin-top: $space-3; }

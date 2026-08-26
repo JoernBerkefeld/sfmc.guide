@@ -3017,6 +3017,13 @@
                 downloadText('.mcdev-validations.js', validationsSource, 'text/javascript');
             });
             panel.append(validationsItem);
+            // Divider between the download-file rows above and the open-in-tool rows below.
+            panel.append(
+                makeElement('hr', {
+                    class: 'mpb-builder-open-divider',
+                    attrs: { role: 'separator' },
+                })
+            );
             fillBuilderDownloadDiagramItem(panel);
             fillBuilderDrawioMxItem(panel);
         });

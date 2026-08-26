@@ -210,3 +210,10 @@ html.mpb-builder-mode {
 
 .mpb-builder-open-row-name { font-weight: 600; }
 .mpb-builder-open-row-meta { font-size: $text-xs; color: $text-muted; }
+
+// Thin rule separating the download-file rows from the open-in-tool rows in the Download menu.
+.mpb-builder-open-divider {
+  margin: $space-1 0;
+  border: 0;
+  border-top: 1px solid $border-muted;
+}
