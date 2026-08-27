@@ -32,8 +32,6 @@
     const updateNavGate = C.updateNavGate;
     const scheduleAutosave = C.scheduleAutosave;
     const setSharedDEs = C.setSharedDEs;
-    const isDiagramDrawable = C.isDiagramDrawable;
-    const openDiagramOrFallback = C.openDiagramOrFallback;
 
     /**
      * Auto-derive the default lineage: for every environment after the first, link each of its
@@ -282,38 +280,6 @@
         mountLineageOverlay(board, overlay);
         // Enable drag-to-connect (native HTML5 DnD) on top of the <select> keyboard fallback.
         mountLineageDnd(board);
-        // In-step Diagramforce CTA: only when the graph is drawable. When lineage is skipped
-        // (one BU per env) this step is hidden, so the header Download item is the in-wizard path.
-        if (isDiagramDrawable()) {
-            panel.append(buildLineageDiagramCta());
-        }
-    }
-
-    /**
-     * Lineage-step Diagramforce CTA. Reuses `.mpb-diagram-cta` (same visual language as the output
-     * CTA) but does not duplicate the output `#mpb-open-diagramforce` ids. Wired to
-     * `openDiagramOrFallback` — never calls `renderDiagramPreview`.
-     *
-     * @returns {HTMLElement} the CTA wrapper
-     */
-    function buildLineageDiagramCta() {
-        const wrap = makeElement('div', { class: 'mpb-diagram-cta' });
-        const button = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Open in Diagramforce \u{2197}',
-        });
-        button.addEventListener('click', () => {
-            openDiagramOrFallback(button);
-        });
-        wrap.append(button);
-        wrap.append(
-            makeElement('p', {
-                class: 'text-sm text-muted',
-                text: 'Opens diagramforce.com with this pipeline shape — useful to confirm the graph.',
-            })
-        );
-        return wrap;
     }
 
     /**

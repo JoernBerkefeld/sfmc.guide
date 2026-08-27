@@ -100,7 +100,7 @@
 // Empty market-variable / suffix inputs get a bright-yellow border + soft-yellow background so a
 // missing value is obvious at a glance (advisory for non-suffix values; the suffix's own red error
 // text covers its hard-error case).
-.mpb-input-warn {
+input.mpb-input-warn {
   border: 1px solid #f5c518;
   background: #fffbe6;
 }
@@ -113,20 +113,207 @@
   margin-top: $space-1;
 }
 
-// Per-pipeline section on the Market Variables step: a titled board grouped by lineage root.
-.mpb-market-pipeline {
-  margin-bottom: $space-5;
-}
-
-.mpb-market-pipeline-title {
-  font-size: $text-sm;
-  font-weight: 600;
-  margin-bottom: $space-2;
-}
-
 // Advisory legend explaining the yellow empty-input border (shown only when a non-suffix input is empty).
 .mpb-market-legend {
   font-size: $text-xs;
   color: $color-warning;
   margin-bottom: $space-3;
+}
+
+// ── Market Variables step: per-pipeline table (variables × BUs) ──
+// One table per pipeline (grouped by lineage root): variables run down the rows (suffix first, then
+// alphabetical), one input column per BU under environment column-group headers. The horizontal
+// scroll wrapper mirrors the `.mpb-env-board` overflow pattern for many-BU pipelines.
+.mpb-mv-scroll {
+  overflow-x: auto;
+  margin-bottom: $space-5;
+}
+
+.mpb-mv-table {
+  border-collapse: collapse;
+  width: 100%;
+
+  // Per-pipeline title self-labels the table (replaces the old <section>/<h3>).
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: $space-2;
+  }
+
+  th,
+  td {
+    padding: $space-2 $space-3;
+    border: 1px solid $border-muted;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  thead th {
+    font-size: $text-xs;
+    font-weight: 700;
+    color: $text-primary;
+    background: $bg-elevated;
+    white-space: nowrap;
+  }
+
+  // Environment column-group header spanning its BU columns.
+  .mpb-mv-env-group {
+    text-align: center;
+    color: $accent-primary;
+  }
+
+  // Name + actions columns stay pinned left during horizontal scroll (many BUs); a solid background
+  // and a raised z-index keep them from showing through the scrolling value cells.
+  .mpb-mv-col-name,
+  .mpb-mv-col-actions,
+  .mpb-mv-name-cell,
+  .mpb-mv-actions-cell {
+    position: sticky;
+    background: $bg-surface;
+    z-index: 1;
+  }
+
+  .mpb-mv-col-name,
+  .mpb-mv-name-cell {
+    left: 0;
+    min-width: 12rem;
+  }
+
+  .mpb-mv-col-actions,
+  .mpb-mv-actions-cell {
+    left: 12rem;
+  }
+
+  thead .mpb-mv-col-name,
+  thead .mpb-mv-col-actions {
+    background: $bg-elevated;
+    z-index: 2;
+  }
+}
+
+// Non-suffix value input: a plain bordered field (NOT inside `.mpb-suffix-input`), so the
+// single-class `.mpb-input-warn` yellow wins cleanly and the padding is not inherited from the
+// borderless suffix body.
+.mpb-mv-input {
+  width: 100%;
+  min-width: 8rem;
+  padding: 0.45em 0.7em;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-surface;
+  color: $text-primary;
+  font-size: $text-sm;
+  font-family: $font-sans;
+
+  &:focus { border-color: $accent-primary; outline: 0; }
+}
+
+// Static `suffix` name label (the suffix row is not renamable).
+.mpb-mv-name-static {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+// Seamless inline rename input: reads as plain text until interacted with, then reveals the normal
+// input chrome on hover/focus. `:focus` covers touch + keyboard natively, so no touch handler.
+.mpb-mv-name-input {
+  width: 100%;
+  min-width: 10rem;
+  padding: 0.45em 0.7em;
+  border: 1px solid transparent;
+  border-radius: $radius-md;
+  background: transparent;
+  color: $text-primary;
+  font-size: $text-sm;
+  font-family: $font-sans;
+  font-weight: 600;
+
+  &:hover,
+  &:focus {
+    border-color: $border-default;
+    background: $bg-surface;
+    font-weight: 400;
+  }
+
+  &:focus {
+    border-color: $accent-primary;
+    outline: 0;
+  }
+}
+
+// Compact edit/delete button pair in the actions column.
+.mpb-mv-actions {
+  display: flex;
+  gap: $space-1;
+}
+
+.mpb-mv-action-btn {
+  padding: 0.25em 0.55em;
+  font-size: $text-sm;
+}
+
+// Trailing ghost add-row: the inline name input + Add button live in the sticky-left name column.
+.mpb-mv-add-controls {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.mpb-mv-add-input {
+  // The add-row input is always interactive, so show its chrome at rest (unlike the seamless rename
+  // input which hides until hover/focus).
+  border-color: $border-default;
+  background: $bg-surface;
+  font-weight: 400;
+  border-style: dashed;
+}
+
+// Brief highlight of the row that just landed after an add/rename re-sort, so the eye can follow it.
+// The flash paints EVERY cell of the row (name + actions + all BU value cells) so the whole row
+// pulses uniformly. It runs on the `<td>`s (not the `<tr>`) because the sticky name/actions cells
+// carry their own opaque `background`, which would otherwise mask a `<tr>`-level tint. It pulses
+// twice (~1.2s total) so the movement is easy to catch.
+.mpb-mv-flash > td {
+  animation: mpb-mv-flash 600ms ease-out 2;
+}
+
+// Keep the seamless rename input transparent during the flash so the cell tint shows through it
+// instead of the input's hover/focus surface masking it.
+.mpb-mv-flash > td .mpb-mv-name-input {
+  background: transparent;
+}
+
+@keyframes mpb-mv-flash {
+  from { background: rgba($accent-primary, 0.22); }
+  to { background: transparent; }
+}
+
+// Red double-flash on a CONFIRMED delete: the row pulses red twice (~1.2s), then the JS runs the
+// actual delete + re-render on animation end. Same per-cell strategy as the add/rename flash.
+.mpb-mv-flash-delete > td {
+  animation: mpb-mv-flash-delete 600ms ease-out 2;
+}
+
+@keyframes mpb-mv-flash-delete {
+  from { background: rgba($color-danger, 0.28); }
+  to { background: transparent; }
+}
+
+// Reduced-motion users get NO flash: `render()` wipes/rebuilds the panel, so a static tint would
+// have nothing to clear it and would linger — `animation: none` (no visible flash) is correct here.
+// (The delete path skips the animation entirely in JS under reduced motion and deletes immediately.)
+@media (prefers-reduced-motion: reduce) {
+  .mpb-mv-flash > td,
+  .mpb-mv-flash-delete > td { animation: none; }
+}
+
+// Suffix input yellow-warn override: the suffix body still lives inside `.mpb-suffix-input` (which
+// sets `border:0;background:transparent` in _shell.scss), so a matching-specificity rule is needed
+// for the empty-suffix yellow to show there.
+.mpb-suffix-input input[type="text"].mpb-input-warn {
+  border: 1px solid #f5c518;
+  background: #fffbe6;
 }

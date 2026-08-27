@@ -5201,3 +5201,199 @@ test('wizardStateFromConfig restores an old config (no marketVariables, version 
   assert.deepEqual(restored.marketVariables, {});
   assert.deepEqual(restored.envBUs, { DEV: ['DEV'], QA: ['QA'] });
 });
+
+// ─── market-vars: pure name-validation + rename/add/count state helpers ───
+//
+// The step's rename/add/delete UX is DOM glue over four PURE helpers published on the controller
+// (`variableNameError`, `renameVariable`, `addVariable`, `filledBUCountFor`). The fake DOM harness
+// cannot dispatch input/keydown/blur events, run `confirm()`, or animate the flash, so ONLY the
+// pure state transforms are tested here (the DOM glue is covered by manual verification). Each test
+// seeds `controller.state.wizardState.marketVariables` and drives the helper directly.
+
+/**
+ * Seed a two-BU pipeline (DEV, SIT) with the given per-BU market-variable maps and return the
+ * pipeline's buRef list for passing to the pure helpers.
+ *
+ * @param {object} marketVariables the `marketVariables` map to install on the wizard state
+ * @returns {string[]} the pipeline references `['DEV', 'SIT']`
+ */
+function seedMarketVariables(marketVariables) {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.envBUs = { DEV: ['DEV'], SIT: ['SIT'] };
+  controller.state.wizardState.lineage = { SIT: 'DEV' };
+  controller.state.wizardState.suffixes = { DEV: '_DEV', SIT: '_SIT' };
+  controller.state.wizardState.marketVariables = marketVariables;
+  return ['DEV', 'SIT'];
+}
+
+test('variableNameError: empty / whitespace-only names are rejected', () => {
+  const references = seedMarketVariables({});
+  assert.equal(controller.variableNameError('', references, null), 'Enter a variable name.');
+  assert.equal(
+    controller.variableNameError(' '.repeat(3), references, null),
+    'Enter a variable name.',
+  );
+});
+
+test('variableNameError: leading/trailing spaces are trimmed before validating', () => {
+  const references = seedMarketVariables({});
+  // A trimmed-valid name passes even with surrounding spaces...
+  assert.equal(controller.variableNameError('  Contact_Salesforce  ', references, null), '');
+  // ...but interior spaces / punctuation still fail the identifier charset.
+  assert.notEqual(controller.variableNameError('  bad name  ', references, null), '');
+});
+
+test('variableNameError: rejects the identifier-charset violations (spaces, dots, quotes, leading digit, hyphen)', () => {
+  const references = seedMarketVariables({});
+  for (const bad of ['bad name', 'foo.bar', "it's", '1foo', 'foo-bar', 'foo bar']) {
+    assert.notEqual(
+      controller.variableNameError(bad, references, null),
+      '',
+      'should reject: ' + bad,
+    );
+  }
+});
+
+test('variableNameError: rejects curly-brace names (mustache-token safety)', () => {
+  const references = seedMarketVariables({});
+  for (const bad of ['foo{bar}', '{{x}}', 'a{b']) {
+    assert.notEqual(
+      controller.variableNameError(bad, references, null),
+      '',
+      'should reject: ' + bad,
+    );
+  }
+});
+
+test('variableNameError: rejects the reserved names suffix / description / __proto__', () => {
+  const references = seedMarketVariables({});
+  for (const reserved of ['suffix', 'description', '__proto__']) {
+    assert.equal(
+      controller.variableNameError(reserved, references, null),
+      'That name is reserved.',
+    );
+  }
+});
+
+test("variableNameError: a name already on the pipeline is a duplicate; the row's own name is not", () => {
+  const references = seedMarketVariables({ DEV: { Contact_Salesforce: 'cs' }, SIT: {} });
+  // add-flow (selfName=null): the existing name collides.
+  assert.match(
+    controller.variableNameError('Contact_Salesforce', references, null),
+    /already exists/,
+  );
+  // rename-to-self (selfName === the name): NOT a collision.
+  assert.equal(
+    controller.variableNameError('Contact_Salesforce', references, 'Contact_Salesforce'),
+    '',
+  );
+  // A fresh valid identifier passes.
+  assert.equal(controller.variableNameError('sfmc_environment', references, null), '');
+});
+
+test('renameVariable: moves each BU value verbatim and drops the old key', () => {
+  const references = seedMarketVariables({
+    DEV: { varA: '  keep-spaces  ' },
+    SIT: { varA: 'plain' },
+  });
+  assert.equal(controller.renameVariable(references, 'varA', 'varB'), true);
+  const mv = controller.state.wizardState.marketVariables;
+  assert.equal(mv.DEV.varB, '  keep-spaces  ');
+  assert.equal(mv.SIT.varB, 'plain');
+  assert.ok(!Object.hasOwn(mv.DEV, 'varA'), 'old key dropped on DEV');
+  assert.ok(!Object.hasOwn(mv.SIT, 'varA'), 'old key dropped on SIT');
+});
+
+/**
+ * Fresh per-BU market-variable map for the rename-no-op cases: `varA` plus a second `other` var so
+ * the collision case has a real conflicting name.
+ *
+ * @returns {object} a fresh `marketVariables` fixture
+ */
+function renameNoOpFixture() {
+  return { DEV: { varA: 'a', other: 'o' }, SIT: { varA: 'a2' } };
+}
+
+test('renameVariable: collision / reserved / invalid / empty / rename-to-self are all no-ops', () => {
+  for (const target of [
+    'other',
+    'suffix',
+    'description',
+    '__proto__',
+    'bad name',
+    'foo{bar}',
+    '',
+    ' '.repeat(3),
+    'varA',
+  ]) {
+    const references = seedMarketVariables(renameNoOpFixture());
+    assert.equal(
+      controller.renameVariable(references, 'varA', target),
+      false,
+      'rename to "' + target + '" must be a no-op',
+    );
+    const mv = controller.state.wizardState.marketVariables;
+    assert.equal(mv.DEV.varA, 'a', 'varA retained on DEV after no-op rename to "' + target + '"');
+    assert.equal(mv.SIT.varA, 'a2', 'varA retained on SIT after no-op rename to "' + target + '"');
+  }
+});
+
+test('renameVariable: buildConfig emits the renamed key in suffix-first-alphabetical order', () => {
+  const references = seedMarketVariables({
+    DEV: { sfmc_environment: 'dev', zebra: 'z' },
+    SIT: {},
+  });
+  // Rename zebra -> Alpha so it must sort before sfmc_environment (case-insensitive).
+  assert.equal(controller.renameVariable(references, 'zebra', 'Alpha'), true);
+  const out = buildConfig(controller.state.wizardState, sampleConfig);
+  assert.deepEqual(Object.keys(out.markets['mpb_DEV']), ['suffix', 'Alpha', 'sfmc_environment']);
+  assert.equal(out.markets['mpb_DEV'].Alpha, 'z');
+});
+
+test('addVariable: a duplicate / reserved / invalid name does not create or alter an entry', () => {
+  for (const bad of [
+    'Contact_Salesforce',
+    'suffix',
+    'description',
+    '__proto__',
+    'bad name',
+    '{{x}}',
+    '',
+  ]) {
+    const references = seedMarketVariables({ DEV: { Contact_Salesforce: 'cs' }, SIT: {} });
+    assert.equal(
+      controller.addVariable(references, bad),
+      false,
+      'add "' + bad + '" must be a no-op',
+    );
+    const mv = controller.state.wizardState.marketVariables;
+    // The only non-suffix var remains Contact_Salesforce on DEV; nothing new was seeded on SIT.
+    assert.deepEqual(Object.keys(mv.DEV), ['Contact_Salesforce']);
+    assert.deepEqual(Object.keys(mv.SIT), []);
+  }
+});
+
+test('addVariable: a valid new name seeds an empty string on every pipeline BU', () => {
+  const references = seedMarketVariables({ DEV: {}, SIT: {} });
+  assert.equal(controller.addVariable(references, '  sfmc_environment  '), true);
+  const mv = controller.state.wizardState.marketVariables;
+  assert.equal(mv.DEV.sfmc_environment, '');
+  assert.equal(mv.SIT.sfmc_environment, '');
+});
+
+test('filledBUCountFor: counts BUs with a non-empty stored value (whitespace counts as empty)', () => {
+  const references = ['DEV', 'SIT', 'QA'];
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.marketVariables = {
+    DEV: { varA: 'x' },
+    SIT: { varA: ' '.repeat(3) },
+    QA: { varA: 'y' },
+  };
+  // 2 of 3 filled (whitespace-only SIT counts as empty).
+  assert.equal(controller.filledBUCountFor(references, 'varA'), 2);
+  // All-empty → 0.
+  controller.state.wizardState.marketVariables = { DEV: { varA: '' }, SIT: {}, QA: { varA: '  ' } };
+  assert.equal(controller.filledBUCountFor(references, 'varA'), 0);
+});
