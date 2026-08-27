@@ -5,7 +5,6 @@ description: "Client-side wizard that turns your .mcdevrc.json into a git-based 
 parent: Tools
 parent_url: /tools/
 permalink: /tools/mcdev-pipeline-builder/
-discoverable: false
 platforms:
   - engagement
 ---
