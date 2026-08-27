@@ -217,8 +217,11 @@ platforms:
 <script src="{{ '/assets/js/mcdev-pipeline-config-builder.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-validations-builder.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-drawio.js' | relative_url | cache_bust }}" defer></script>
+<script src="{{ '/assets/js/mcdev-pipeline-diagramforce.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-core.js' | relative_url | cache_bust }}" defer></script>
-<script src="{{ '/assets/js/mcdev-pipeline-step-environment-order.js' | relative_url | cache_bust }}" defer></script>
+ <script src="{{ '/assets/js/mcdev-pipeline-persistence.js' | relative_url | cache_bust }}" defer></script>
+ <script src="{{ '/assets/js/mcdev-pipeline-builder-header.js' | relative_url | cache_bust }}" defer></script>
+ <script src="{{ '/assets/js/mcdev-pipeline-step-environment-order.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-production-confirm.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-market-vars.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-suffixes.js' | relative_url | cache_bust }}" defer></script>

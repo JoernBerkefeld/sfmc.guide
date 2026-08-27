@@ -187,11 +187,12 @@
         // Autosave: any render past intake reflects the latest answers — persist them (debounced) so
         // a reopened config resumes exactly. Read-only (another tab holds the lock) skips the write.
         if (state.step && state.step !== 'intake' && state.config) {
-            scheduleAutosave();
+            global.mpbController.scheduleAutosave();
         }
         // Hydrate the sticky builder sub-header (name + actions) to reflect the latest state. A no-op
-        // under the headless stub (slots are null).
-        renderBuilderHeader();
+        // under the headless stub (slots are null). Lives in the builder-header module now, so it is
+        // reached through the controller.
+        global.mpbController.renderBuilderHeader();
         // Hide the persistent header Diagramforce fallback when the graph is no longer drawable
         // (validations-only, intake, or a later edit that drops an env/BU/lineage link).
         if (dom.diagramFallbackHeader && !isDiagramDrawable()) {
@@ -245,7 +246,7 @@
         const isEnabled = !!enabled;
         const wasOn = !!state.wizardState.sharedDEs;
         state.wizardState.sharedDEs = isEnabled;
-        scheduleAutosave();
+        global.mpbController.scheduleAutosave();
         if (typeof hooks.onSharedDEsChange === 'function' && hooks.onSharedDEsChange(isEnabled, wasOn)) {
             return;
         }
@@ -893,7 +894,7 @@
         const steps = clampWizardStep();
         const ids = steps.map((step) => step.id);
         const index = ids.indexOf(wizardStep);
-        clearBanner('unassigned-bus');
+        global.mpbController.clearBanner('unassigned-bus');
         if (index !== -1 && index < ids.length - 1) {
             wizardStep = ids[index + 1];
             render();
@@ -933,7 +934,7 @@
             ' business unit(s) are not assigned to any environment (' +
             unassignedNamesPreview(references) +
             '). They will NOT be part of the pipeline. Continue anyway?';
-        showBanner(
+        global.mpbController.showBanner(
             'unassigned-bus',
             message,
             [
@@ -975,7 +976,7 @@
      */
     function confirmUnassignedGoBack() {
         pendingJumpTarget = null;
-        clearBanner('unassigned-bus');
+        global.mpbController.clearBanner('unassigned-bus');
     }
 
 
@@ -991,7 +992,7 @@
         clearStepError();
         // Leaving the step (backwards) drops any lingering unassigned-BUs confirmation, plus any
         // stashed stepper-jump target (defense-in-depth: Back must never resume a forward jump).
-        clearBanner('unassigned-bus');
+        global.mpbController.clearBanner('unassigned-bus');
         pendingJumpTarget = null;
         if (index > 0) {
             wizardStep = ids[index - 1];
@@ -1165,7 +1166,7 @@
                 return;
             }
         }
-        clearBanner('unassigned-bus');
+        global.mpbController.clearBanner('unassigned-bus');
         wizardStep = targetId;
         render();
     }
@@ -1567,8 +1568,8 @@
         if (view === 'wizard' && wizardStep) {
             parts.push('step=' + global.encodeURIComponent(wizardStep));
         }
-        if (HASH_SESSION_VIEWS.has(view) && persistence.currentId) {
-            parts.push('s=' + global.encodeURIComponent(persistence.currentId));
+        if (HASH_SESSION_VIEWS.has(view) && global.mpbController.persistence.currentId) {
+            parts.push('s=' + global.encodeURIComponent(global.mpbController.persistence.currentId));
         }
         return '#' + parts.join('&');
     }
@@ -1625,9 +1626,9 @@
         }
         // The hash names a session that isn't in this browser (e.g. a link shared from another device).
         // Don't crash and don't fabricate data — land on intake with a small, keyed explanation.
-        if (!readSaveBlob(parsed.sessionId)) {
+        if (!global.mpbController.readSaveBlob(parsed.sessionId)) {
             goToStep('intake');
-            showBanner(
+            global.mpbController.showBanner(
                 'deeplink',
                 'This shared link points at a saved session that isn\u{2019}t stored in this browser. ' +
                     'Import the matching .mcdevrc.json to continue.',
@@ -1638,12 +1639,12 @@
         }
         // The session exists locally: load it (this sets persistence.currentId + config + wizardState),
         // then override reopenSave's default `mode` landing with the view/step the hash asked for.
-        clearBanner('deeplink');
+        global.mpbController.clearBanner('deeplink');
         // reopenSave loads config + wizardState, acquires the lock, and restores the persisted mode
         // (Fix 1): a save made in wizard mode lands back on the wizard, older mode-less saves on the
         // `mode` picker. A deep link to `wizard` needs a mode to compute the visible sub-steps, so
         // the branch below only overrides the landing when a mode was restored.
-        reopenSave(parsed.sessionId);
+        global.mpbController.reopenSave(parsed.sessionId);
         if (parsed.view === 'wizard' && state.mode) {
             // Set the requested sub-step, then clamp it to the restored session's visible steps so a
             // step that no longer applies (e.g. lineage skipped) falls back to the nearest valid one.
@@ -1867,68 +1868,24 @@
     // ─────────────────────────── Chunk 3c: Diagramforce preview + handoff ───────────────────────────
 
     /**
-     * Diagramforce integration constants. The diagram JSON conforms to `DIAGRAM_JSON_SPEC.md`
-     * (`diagramType: 'process'`); the handoff uses the documented `postMessage` flow from
-     * `how-to-use/web-integration.md`. `DIAGRAMFORCE_APP_VERSION` matches the spec snapshot so a
-     * generated file does not trigger a compatibility notice.
+     * Diagramforce integration constants. The handoff uses the documented `postMessage` flow from
+     * `how-to-use/web-integration.md`. The diagram JSON itself (and its geometry/appVersion) is built
+     * by the pure `mcdev-pipeline-diagramforce.js` module; core only gathers the state-derived model.
      */
     const DIAGRAMFORCE_ORIGIN = 'https://diagramforce.com';
 
     const DIAGRAMFORCE_IMPORT_URL = DIAGRAMFORCE_ORIGIN + '/#import=postmessage';
 
-    const DIAGRAMFORCE_APP_VERSION = '1.23.1';
-
 
     // Position-locked environment bands (not by env name). First is a dedicated source-env green;
     // middle and last match `_sass/_variables.scss` color-purple and the Marketing / lineage accent.
+    // Kept in core (shared with the draw.io export path); the Diagramforce module receives the
+    // resolved band per column on its model.
     const DIAGRAM_BAND = {
         first: { fill: '#27ae60', stroke: '#1e8449' },
         middle: { fill: '#7C3AED', stroke: '#6D28D9' },
         last: { fill: '#F49825', stroke: '#C2410C' },
     };
-
-    const DIAGRAM_ENV_ICON = 'custom-marketing';
-
-    const DIAGRAM_PARENT_BU_ICON = 'custom-data';
-
-    const DIAGRAM_HEADER_ACCENT_HEIGHT = 48;
-
-
-    // Layout geometry, authored to the spec's "Container lanes" section so the diagram reads as a set
-    // of uniform lanes (not a bar chart). Every lane shares one top (`y: 50`) and one height; each BU
-    // task is embedded in its lane (`parent`/`embeds`) and the lane is pinned with `manualSize: true`
-    // so Diagramforce's content-hug (`fitParentToChildren`) leaves the uniform height intact on import
-    // and on the first card drag. Insets follow the spec: 40px header + 48px pad = 88px top inset, 48px
-    // bottom, 48px left/right (so lane width = task 220 + 2*48 = 316), 24px between rows.
-    const DIAGRAM_COLUMN_X = 48;
-
-    const DIAGRAM_COLUMN_STEP = 400;
-
-    const DIAGRAM_COLUMN_WIDTH = 316;
-
-    const DIAGRAM_TASK_WIDTH = 220;
-
-    const DIAGRAM_TASK_HEIGHT = 52;
-
-    const DIAGRAM_LANE_TOP_INSET = 88;
-
-    const DIAGRAM_LANE_BOTTOM_INSET = 48;
-
-    const DIAGRAM_LANE_SIDE_INSET = 48;
-
-    const DIAGRAM_ROW_GAP = 24;
-
-
-    /**
-     * The minimal icon href the app resolves to real artwork on load (see spec "Setting an icon").
-     * Naming an icon id keeps the payload small; the loader expands it via `refreshAllIconHrefs`.
-     *
-     * @param {string} iconId a `custom-*` / SLDS icon id from the spec's allowed set
-     * @returns {string} the `data:image/svg+xml,…` href
-     */
-    function diagramIconHref(iconId) {
-        return 'data:image/svg+xml,<svg data-icon-id="' + iconId + '"/>';
-    }
 
 
     /**
@@ -1951,592 +1908,51 @@
 
 
     /**
-     * The standard 4-port block every connectable process shape ships with. Emitted verbatim per the
-     * spec so links can attach and the user can wire new connections after import.
+     * Gather the pre-resolved Diagramforce model from the current wizard state: one column per
+     * environment (in `envOrder`) carrying its assigned buRefs, their display labels, their
+     * parent-BU flags, and the position-locked band, plus the child→parent lineage map, the diagram
+     * title, and a capture timestamp. Everything the pure `buildDiagramJSON(model)` reads is resolved
+     * here so that function stays a deterministic function of its input (no state / no `Date.now()`).
      *
-     * @returns {object} the JointJS `ports` config
+     * @returns {import('./mcdev-pipeline-diagramforce.js').DiagramforceModel} the resolved model
      */
-    function diagramPorts() {
-        const portAttributes = {
-            circle: {
-                r: 5,
-                magnet: true,
-                fill: 'var(--port-color, #1D73C9)',
-                stroke: '#FFFFFF',
-                strokeWidth: 1.5,
-            },
-        };
-        const markup = [{ tagName: 'circle', selector: 'circle' }];
-        const group = (name) => ({ position: { name: name }, attrs: portAttributes, markup: markup });
+    function buildDiagramforceModel() {
+        const environments = environmentNames();
+        const lineage = state.wizardState.lineage || {};
+        const columnCount = environments.length;
+        const columns = environments.map((environment, columnIndex) => {
+            const references = assignedBUReferences(environment);
+            return {
+                env: environment,
+                references: references,
+                labels: references.map((reference) => buDisplayLabel(reference)),
+                parentFlags: references.map((reference) => bareBUName(reference) === '_ParentBU_'),
+                band: diagramBand(columnIndex, columnCount),
+            };
+        });
         return {
-            groups: { top: group('top'), right: group('right'), bottom: group('bottom'), left: group('left') },
-            items: [
-                { id: 'port-top', group: 'top' },
-                { id: 'port-right', group: 'right' },
-                { id: 'port-bottom', group: 'bottom' },
-                { id: 'port-left', group: 'left' },
-            ],
+            columns: columns,
+            lineage: lineage,
+            title: diagramTitle(),
+            timestamp: Date.now(),
         };
     }
 
 
     /**
-     * Build one `sf.Container` cell for an environment column. Header accent and outline use the
-     * position-locked band; the body stays on Diagramforce's dark container tokens. The lane
-     * captures its BU tasks: their ids are listed in `embeds` and each task carries the matching
-     * `parent` (see the spec "Capture" section — the loader does not reconcile a half-declared
-     * embed). `manualSize: true` pins the authored geometry so the content-hug
-     * (`js/canvas/embedding.js` — `fitParentToChildren` early-returns on `manualSize`) does not
-     * shrink-wrap the lane to its own card count on import or on the first card drag, keeping every
-     * lane at the shared uniform height computed in `buildDiagramJSON`.
+     * Build the full Diagramforce diagram JSON for the current pipeline by gathering the resolved
+     * model (`buildDiagramforceModel`) and delegating to the pure `mcdev-pipeline-diagramforce.js`
+     * module. Thin state-reading wrapper so callers (and the geometry regression tests) keep the
+     * no-argument `buildDiagramJSON()` entry point while the diagram maths lives in the module.
      *
-     * @param {string} id the container cell id
-     * @param {string} name the environment name (header label)
-     * @param {number} x the column x position
-     * @param {number} height the shared lane height (identical for every lane)
-     * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
-     * @param {string[]} embeds the ids of the BU tasks captured by this lane
-     * @returns {object} the `sf.Container` cell
-     */
-    function diagramEnvironmentContainer(id, name, x, height, band, embeds) {
-        const headerMidY = Math.round(DIAGRAM_HEADER_ACCENT_HEIGHT / 2);
-        return {
-            id: id,
-            type: 'sf.Container',
-            position: { x: x, y: 50 },
-            size: { width: DIAGRAM_COLUMN_WIDTH, height: height },
-            z: 1000,
-            embeds: embeds,
-            manualSize: true,
-            attrs: {
-                body: {
-                    width: 'calc(w)',
-                    height: 'calc(h)',
-                    rx: 12,
-                    ry: 12,
-                    fill: 'var(--container-bg)',
-                    stroke: band.stroke,
-                    strokeWidth: 1.5,
-                },
-                accent: {
-                    x: 1,
-                    y: 1,
-                    width: 'calc(w - 2)',
-                    height: DIAGRAM_HEADER_ACCENT_HEIGHT,
-                    rx: 11,
-                    ry: 11,
-                    fill: band.fill,
-                },
-                accentFill: {
-                    x: 1,
-                    y: 20,
-                    width: 'calc(w - 2)',
-                    height: DIAGRAM_HEADER_ACCENT_HEIGHT - 19,
-                    fill: band.fill,
-                },
-                headerIcon: { x: 12, y: headerMidY - 12, width: 24, height: 24, href: diagramIconHref(DIAGRAM_ENV_ICON) },
-                headerLabel: {
-                    x: 44,
-                    y: headerMidY,
-                    textAnchor: 'start',
-                    textVerticalAnchor: 'middle',
-                    fontSize: 14,
-                    fontWeight: 'bold',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    fill: '#FFFFFF',
-                    text: name,
-                },
-            },
-        };
-    }
-
-
-    /**
-     * Build one `sf.BpmnTask` cell for a business unit. Fill/stroke follow the column band so the
-     * task matches its environment header. Regular BUs hide `taskIcon` (the `custom-*` placeholder
-     * renders as a broken image on `sf.BpmnTask`). A shared-DE parent BU still uses `custom-data`.
-     * The task is captured by its environment lane via `parent` (the lane also lists this id in its
-     * `embeds`); the lane carries `manualSize: true`, so the authored `position` / `size` survive
-     * import instead of being tucked/reflowed.
-     *
-     * @param {string} id the task cell id
-     * @param {string} label the BU display label
-     * @param {number} x the task x position
-     * @param {number} y the task y position
-     * @param {boolean} isParentBU whether this BU is a shared-DE parent BU
-     * @param {{fill: string, stroke: string}} band the column's first/middle/last colours
-     * @param {string} parent the id of the environment container that captures this task
-     * @returns {object} the `sf.BpmnTask` cell
-     */
-    function diagramBUTask(id, label, x, y, isParentBU, band, parent) {
-        const taskIcon = isParentBU
-            ? {
-                  x: 8,
-                  y: 8,
-                  width: 14,
-                  height: 14,
-                  href: diagramIconHref(DIAGRAM_PARENT_BU_ICON),
-              }
-            : { display: 'none', width: 0, height: 0, href: '' };
-        return {
-            id: id,
-            type: 'sf.BpmnTask',
-            position: { x: x, y: y },
-            size: { width: DIAGRAM_TASK_WIDTH, height: DIAGRAM_TASK_HEIGHT },
-            z: 2000,
-            parent: parent,
-            taskType: 'task',
-            attrs: {
-                body: {
-                    width: 'calc(w)',
-                    height: 'calc(h)',
-                    rx: 8,
-                    ry: 8,
-                    fill: band.fill,
-                    stroke: band.stroke,
-                    strokeWidth: isParentBU ? 2.5 : 1.5,
-                },
-                label: {
-                    x: 'calc(0.5 * w)',
-                    y: 'calc(0.5 * h)',
-                    textAnchor: 'middle',
-                    textVerticalAnchor: 'middle',
-                    fontSize: 12,
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    fill: '#FFFFFF',
-                    text: label,
-                    textWrap: { width: 'calc(w - 16)', maxLineCount: 4, ellipsis: true },
-                },
-                taskIcon: taskIcon,
-            },
-            ports: diagramPorts(),
-        };
-    }
-
-
-    /**
-     * Build one `standard.Link` deploy arrow between two BU tasks (source → target = upstream env →
-     * downstream env). `targetMarker` is omitted so the loader normalises it to the canonical arrow.
-     *
-     * @param {string} id the link cell id
-     * @param {string} sourceId the upstream BU-task id
-     * @param {string} targetId the downstream BU-task id
-     * @returns {object} the `standard.Link` cell
-     */
-    function diagramDeployLink(id, sourceId, targetId) {
-        return {
-            id: id,
-            type: 'standard.Link',
-            z: 3001,
-            source: { id: sourceId, port: 'port-right' },
-            target: { id: targetId, port: 'port-left' },
-            attrs: { line: { stroke: '#74797F', strokeWidth: 2 } },
-            router: { name: 'sfManhattan' },
-            connector: { name: 'rounded', args: { radius: 8 } },
-        };
-    }
-
-
-    /**
-     * Plan the vertical placement of every lane's cards, porting Diagramforce's "Match Container
-     * Height" (layout-core.js `planLaneNormalisation`) to the pipeline's simpler world: every card
-     * shares one height (`DIAGRAM_TASK_HEIGHT`) and lanes are already ordered left-to-right. Only the
-     * REFERENCE lane (the one with the most cards) is evenly spread; every OTHER lane is placed by
-     * BARYCENTRE — each card sits at the mean centre of the cards it actually links to — walked
-     * outward from the reference across lane adjacency. A one-to-one link therefore reads as a flat
-     * connector; a fan reads as a symmetric block.
-     *
-     * Deliberate deviation from the app: a fan of cards sharing ONE source (identical barycentre) is
-     * centred symmetrically on that shared centre, not stacked downward from it.
-     *
-     * @param {Array<{id: string, cards: Array<{id: string}>}>} columns one entry per env (envOrder
-     *        order); each carries its container id and its ordered cards' task ids.
-     * @param {Array<{source: string, target: string}>} links upstream→downstream deploy links (task
-     *        id → task id); same-lane and dangling links are ignored.
-     * @returns {{top: number, height: number, ysByColumn: number[][]}} the shared lane top and
-     *          height, plus `ysByColumn[i]` = the top-`y` per card of column `i`, in card order.
-     */
-    function diagramLanePlacement(columns, links) {
-        const taskH = DIAGRAM_TASK_HEIGHT;
-        const rowGap = DIAGRAM_ROW_GAP;
-        const cols = Array.isArray(columns) ? columns : [];
-
-        // No columns → nothing to place; return the empty plan at the shared lane top base (50).
-        if (cols.length === 0) {
-            return { top: 50, height: 0, ysByColumn: [] };
-        }
-
-        // ── Shared geometry: one height for the whole diagram — the deepest lane's need — so columns
-        // read as uniform lanes. `n` is floored at 1 so an empty lane still reserves one row.
-        const laneNeed = (n) => {
-            const count = Math.max(n, 1);
-            return (
-                DIAGRAM_LANE_TOP_INSET +
-                count * taskH +
-                (count - 1) * rowGap +
-                DIAGRAM_LANE_BOTTOM_INSET
-            );
-        };
-        const top = 50;
-        const height = cols.reduce((tallest, column) => Math.max(tallest, laneNeed(column.cards.length)), 0);
-        const innerTop = top + DIAGRAM_LANE_TOP_INSET;
-        const innerBottom = top + height - DIAGRAM_LANE_BOTTOM_INSET;
-        const innerHeight = innerBottom - innerTop;
-
-        // ── Reference lane: most cards, tie-break to the leftmost (lowest index) for determinism.
-        // The app's "tallest" tie-break tier is intentionally omitted: every card shares one uniform
-        // DIAGRAM_TASK_HEIGHT, so lane height is a pure function of card count and that tier is vacuous.
-        let referenceIndex = 0;
-        for (let index = 1; index < cols.length; index += 1) {
-            if (cols[index].cards.length > cols[referenceIndex].cards.length) {
-                referenceIndex = index;
-            }
-        }
-
-        /**
-         * Spread `n` cards evenly down the inner box (equal gaps), returning their top-`y` in order.
-         * A single card is centred; otherwise the gap is floored at `rowGap`.
-         *
-         * @param {number} n the number of cards
-         * @returns {number[]} the top-`y` per card, top to bottom
-         */
-        const spread = (n) => {
-            if (n <= 1) {
-                return [Math.round(innerTop + Math.max(0, (innerHeight - taskH) / 2))];
-            }
-            const gap = Math.max(rowGap, (innerHeight - n * taskH) / (n - 1));
-            const ys = [];
-            let y = innerTop;
-            for (let index = 0; index < n; index += 1) {
-                ys.push(Math.round(y));
-                y += taskH + gap;
-            }
-            return ys;
-        };
-
-        /**
-         * Place cards at desired CENTRE `targetCentres` (index-aligned to `cards`), de-overlapped and
-         * clamped into the box, then apply the centred shared-source fan deviation. Returns top-`y`
-         * per card in ORIGINAL card order.
-         *
-         * @param {Array<{id: string}>} cards the lane's cards in card order
-         * @param {number[]} targetCentres the desired centre-`y` per card (index-aligned)
-         * @returns {number[]} the top-`y` per card, in original card order
-         */
-        const place = (cards, targetCentres) => {
-            // Sort by desired centre, de-overlap with a downward cursor, remembering original order.
-            const order = cards.map((card, index) => ({
-                index: index,
-                desired: targetCentres[index],
-                y: 0,
-            }));
-            order.sort((left, right) => left.desired - right.desired);
-            let cursor = innerTop;
-            for (const entry of order) {
-                entry.y = Math.max(entry.desired - taskH / 2, cursor);
-                cursor = entry.y + taskH + rowGap;
-            }
-            // Overflow → slide the whole stack up by the excess, then clamp each top to the box.
-            const overflow = cursor - rowGap - innerBottom;
-            if (overflow > 0) {
-                for (const entry of order) {
-                    entry.y = Math.max(innerTop, entry.y - overflow);
-                }
-            }
-
-            // Centred shared-source fan (deviation): each maximal run of EQUAL desired centres is a
-            // fan from one shared source; shift it up so the block straddles that centre symmetrically
-            // instead of hanging below it. Re-clamp to the box and never overlap the cards just
-            // outside the run.
-            let runStart = 0;
-            while (runStart < order.length) {
-                let runEnd = runStart;
-                while (
-                    runEnd + 1 < order.length &&
-                    order[runEnd + 1].desired === order[runStart].desired
-                ) {
-                    runEnd += 1;
-                }
-                const runCount = runEnd - runStart + 1;
-                if (runCount >= 2) {
-                    const shift = ((runCount - 1) * (taskH + rowGap)) / 2;
-                    // Upper bound: stay below the card above (min-gap) and inside the box top.
-                    const minTop = runStart > 0 ? order[runStart - 1].y + taskH + rowGap : innerTop;
-                    // Lower bound for the LAST card in the run: stay above the card below and the box.
-                    const maxBottomTop =
-                        (runEnd + 1 < order.length ? order[runEnd + 1].y - rowGap : innerBottom) - taskH;
-                    for (let position = 0; position < runCount; position += 1) {
-                        const entry = order[runStart + position];
-                        let newTop = entry.y - shift;
-                        // Clamp the whole run so its first card clears the neighbour above / box top…
-                        newTop = Math.max(newTop, minTop + position * (taskH + rowGap));
-                        // …and its last card clears the neighbour below / box bottom.
-                        newTop = Math.min(
-                            newTop,
-                            maxBottomTop - (runCount - 1 - position) * (taskH + rowGap)
-                        );
-                        entry.y = newTop;
-                    }
-                }
-                runStart = runEnd + 1;
-            }
-
-            // Re-project into original card order.
-            const ys = Array.from({length: cards.length});
-            for (const entry of order) {
-                ys[entry.index] = Math.round(entry.y);
-            }
-            return ys;
-        };
-
-        // ── Card → column index and adjacency (both directions), skipping same-lane/dangling links.
-        const columnOf = new Map();
-        for (const [index, column] of cols.entries()) {
-            for (const card of column.cards) {
-                columnOf.set(card.id, index);
-            }
-        }
-        const neighbours = new Map();
-        const linkList = links || [];
-        for (const link of linkList) {
-            if (!columnOf.has(link.source) || !columnOf.has(link.target)) {
-                continue;
-            }
-            if (columnOf.get(link.source) === columnOf.get(link.target)) {
-                continue;
-            }
-            if (!neighbours.has(link.source)) {
-                neighbours.set(link.source, []);
-            }
-            if (!neighbours.has(link.target)) {
-                neighbours.set(link.target, []);
-            }
-            neighbours.get(link.source).push(link.target);
-            neighbours.get(link.target).push(link.source);
-        }
-
-        // ── Commit helper: record top-`y` for a column and remember each card's centre for the walk.
-        const ysByColumn = Array.from({length: cols.length});
-        const placedCentre = new Map();
-        const commit = (columnIndex, ys) => {
-            ysByColumn[columnIndex] = ys;
-            const committedCards = cols[columnIndex].cards;
-            for (const [row, card] of committedCards.entries()) {
-                placedCentre.set(card.id, ys[row] + taskH / 2);
-            }
-        };
-
-        // Reference lane: even spread.
-        if (cols.length > 0) {
-            commit(referenceIndex, spread(cols[referenceIndex].cards.length));
-        }
-
-        // ── BFS across lane adjacency ("some card here links to some card there"), reaching left AND
-        // right of the reference. A `seen` set makes cycles harmless.
-        const laneNeighbours = (columnIndex) => {
-            const out = new Set();
-            const laneCards = cols[columnIndex].cards;
-            for (const card of laneCards) {
-                const linked = neighbours.get(card.id) || [];
-                for (const other of linked) {
-                    out.add(columnOf.get(other));
-                }
-            }
-            out.delete(columnIndex);
-            return [...out];
-        };
-        const seen = new Set([referenceIndex]);
-        const queue = laneNeighbours(referenceIndex);
-        while (queue.length) {
-            const columnIndex = queue.shift();
-            if (seen.has(columnIndex)) {
-                continue;
-            }
-            seen.add(columnIndex);
-            const cards = cols[columnIndex].cards;
-            const n = cards.length;
-            // Each card's target = mean centre of its already-placed linked neighbours. A dangling card
-            // (no placed neighbour) keeps its rank mapped into the box so it can't sort to the top.
-            const targets = cards.map((card, rank) => {
-                const linked = (neighbours.get(card.id) || []).filter((other) => placedCentre.has(other));
-                if (linked.length) {
-                    let sum = 0;
-                    for (const other of linked) {
-                        sum += placedCentre.get(other);
-                    }
-                    return sum / linked.length;
-                }
-                if (n <= 1) {
-                    return innerTop + Math.max(0, (innerHeight - taskH) / 2) + taskH / 2;
-                }
-                return innerTop + (rank / (n - 1)) * (innerHeight - taskH) + taskH / 2;
-            });
-            commit(columnIndex, place(cards, targets));
-            for (const nextIndex of laneNeighbours(columnIndex)) {
-                if (!seen.has(nextIndex)) {
-                    queue.push(nextIndex);
-                }
-            }
-        }
-
-        // ── Lanes never reached (no link path to the reference) get the same even spread.
-        for (const [index, col] of cols.entries()) {
-            if (ysByColumn[index] === undefined) {
-                commit(index, spread(col.cards.length));
-            }
-        }
-
-        return { top: top, height: height, ysByColumn: ysByColumn };
-    }
-
-
-    /**
-     * The vertical centre-to-top offsets for `count` cards evenly spread inside a lane's inner box —
-     * a thin shim exposing the same even-spread maths `diagramLanePlacement`'s internal `spread` uses
-     * (a single card centres; otherwise the gap is floored at `rowGap`). Retained for its direct unit
-     * test and any legacy callers. The even-spread maths is unchanged.
-     *
-     * @param {number} count the number of cards in the lane (floored at 1 by the caller)
-     * @param {number} laneHeight the shared lane height
-     * @returns {number[]} the task `y` (top) positions, top to bottom
-     */
-    function diagramCardYs(count, laneHeight) {
-        const n = Math.max(count, 1);
-        const innerTop = 50 + DIAGRAM_LANE_TOP_INSET;
-        const innerBottom = 50 + laneHeight - DIAGRAM_LANE_BOTTOM_INSET;
-        const innerHeight = innerBottom - innerTop;
-        if (n <= 1) {
-            return [Math.round(innerTop + Math.max(0, (innerHeight - DIAGRAM_TASK_HEIGHT) / 2))];
-        }
-        const gap = Math.max(DIAGRAM_ROW_GAP, (innerHeight - n * DIAGRAM_TASK_HEIGHT) / (n - 1));
-        const ys = [];
-        let y = innerTop;
-        for (let index = 0; index < n; index += 1) {
-            ys.push(Math.round(y));
-            y += DIAGRAM_TASK_HEIGHT + gap;
-        }
-        return ys;
-    }
-
-
-    /**
-     * Build the full Diagramforce diagram JSON for the current pipeline: each environment (in
-     * `envOrder`) becomes a band-coloured `sf.Container` lane, each assigned BU a `sf.BpmnTask`
-     * captured by that lane (`parent` on the task, id in the lane's `embeds`), and deploy arrows
-     * connect each BU to its upstream counterpart (via `lineage` when set, else the same-index BU of
-     * the previous environment). All lanes share one top (`y: 50`) and one height — the deepest
-     * lane's need — and carry `manualSize: true`, so they read as uniform lanes and stay put on
-     * import (see the spec "Container lanes"). Column colours are locked by position (first / middle
-     * / last), not by environment name. Shared-DE parent BUs use the `custom-data` icon. Returns a
-     * spec-conformant object (never mutates state).
-     *
-     * @returns {object} the diagram JSON envelope
+     * @returns {object} the diagram JSON envelope (empty envelope if the module failed to load)
      */
     function buildDiagramJSON() {
-        const wizardState = state.wizardState;
-        const environments = environmentNames();
-        const lineage = wizardState.lineage || {};
-        const cells = [];
-
-        let cellCounter = 0;
-        const nextId = (prefix) => prefix + '-' + String((cellCounter += 1));
-        const columnCount = environments.length;
-
-        // ── Pass A — model + ids. Assign a stable task id per buRef-in-env (a BU can appear in
-        // several envs) and collect the per-column card lists the placement pass reads. `columnMap`
-        // (buRef → taskId) lets the link pass resolve upstream counterparts by reference.
-        const taskIdByColumn = [];
-        const columns = [];
-        const columnBands = [];
-        const columnReferences = [];
-        for (const [columnIndex, environment] of environments.entries()) {
-            const references = assignedBUReferences(environment);
-            const containerId = nextId('env');
-            const columnMap = {};
-            const cards = [];
-            for (const reference of references) {
-                const taskId = nextId('bu');
-                columnMap[reference] = taskId;
-                cards.push({ id: taskId });
-            }
-            columns.push({ id: containerId, cards: cards });
-            columnBands.push(diagramBand(columnIndex, columnCount));
-            columnReferences.push(references);
-            taskIdByColumn.push(columnMap);
+        const model = buildDiagramforceModel();
+        if (!global.mpbDiagramforce) {
+            return { version: 1, timestamp: model.timestamp, title: model.title, diagramType: 'process', graph: { cells: [] } };
         }
-
-        // ── Pass B — links FIRST (placement needs the deploy graph). Connect each BU to its upstream
-        // BU in the previous column: prefer the explicit lineage parent (child buRef → parent buRef),
-        // else fall back to the same-index BU (or the first). Emit each as a deploy-arrow cell AND
-        // collect it for `diagramLanePlacement`.
-        const links = [];
-        for (let columnIndex = 1; columnIndex < environments.length; columnIndex += 1) {
-            const previousMap = taskIdByColumn[columnIndex - 1];
-            const references = columnReferences[columnIndex];
-            const previousReferences = columnReferences[columnIndex - 1];
-            for (const [rowIndex, reference] of references.entries()) {
-                const parentReference = lineage[reference];
-                let sourceId = parentReference ? previousMap[parentReference] : undefined;
-                if (!sourceId) {
-                    const fallbackReference = previousReferences[rowIndex] || previousReferences[0];
-                    sourceId = fallbackReference ? previousMap[fallbackReference] : undefined;
-                }
-                const targetId = taskIdByColumn[columnIndex][reference];
-                if (sourceId && targetId) {
-                    links.push({ source: sourceId, target: targetId });
-                    cells.push(diagramDeployLink(nextId('link'), sourceId, targetId));
-                }
-            }
-        }
-
-        // ── Pass C — placement + emit. Plan every lane's card Ys from the model + graph (reference
-        // lane spread, others by barycentre), then emit each BU task at its planned `y` and each lane
-        // container at the shared top/height. Embeds/parent wiring and `manualSize` are unchanged.
-        const placement = diagramLanePlacement(columns, links);
-        for (const [columnIndex, environment] of environments.entries()) {
-            const references = columnReferences[columnIndex];
-            const columnX = DIAGRAM_COLUMN_X + columnIndex * DIAGRAM_COLUMN_STEP;
-            const taskX = columnX + DIAGRAM_LANE_SIDE_INSET;
-            const containerId = columns[columnIndex].id;
-            const band = columnBands[columnIndex];
-            const cardYs = placement.ysByColumn[columnIndex];
-            const embeds = [];
-            for (const [rowIndex, reference] of references.entries()) {
-                const taskId = columns[columnIndex].cards[rowIndex].id;
-                const isParentBU = bareBUName(reference) === '_ParentBU_';
-                cells.push(
-                    diagramBUTask(
-                        taskId,
-                        buDisplayLabel(reference),
-                        taskX,
-                        cardYs[rowIndex],
-                        isParentBU,
-                        band,
-                        containerId
-                    )
-                );
-                embeds.push(taskId);
-            }
-            cells.push(
-                diagramEnvironmentContainer(
-                    containerId,
-                    environment,
-                    columnX,
-                    placement.height,
-                    band,
-                    embeds
-                )
-            );
-        }
-
-        return {
-            version: 1,
-            appVersion: DIAGRAMFORCE_APP_VERSION,
-            timestamp: Date.now(),
-            title: diagramTitle(),
-            diagramType: 'process',
-            graph: { cells: cells },
-        };
+        return global.mpbDiagramforce.buildDiagramJSON(model);
     }
 
 
@@ -2669,8 +2085,6 @@
             return;
         }
         const json = jsonPretty(buildDiagramJSON());
-        // eslint-disable-next-line no-console
-        console.log('diagramforce debug', json);
         const opened = openInDiagramforce(json);
         if (opened) {
             return;
@@ -2721,157 +2135,13 @@
      * @returns {string} the config display name
      */
     function currentConfigDisplayName() {
-        const blob = persistence.currentId ? readSaveBlob(persistence.currentId) : null;
+        const blob = global.mpbController.persistence.currentId
+            ? global.mpbController.readSaveBlob(global.mpbController.persistence.currentId)
+            : null;
         if (blob && blob.name) {
             return blob.name;
         }
-        return deriveConfigName(state.config);
-    }
-
-
-    /**
-     * The single currently-open builder dropdown panel (Open or Download share this slot — only one
-     * may be open at a time) plus the document listeners wired while it is open, so they can be torn
-     * down before every header rebuild (listeners never accumulate).
-     *
-     * @type {{button: Element, panel: Element, onDocClick: (event: Event) => void, onKeydown: (event: KeyboardEvent) => void}|null}
-     */
-    let openBuilderPanel = null;
-
-
-    /**
-     * Close the open builder dropdown (if any): hide the panel, sync `aria-expanded`, and remove the
-     * document listeners. Safe to call when nothing is open.
-     *
-     * @returns {void}
-     */
-    function closeBuilderOpenPanel() {
-        if (!openBuilderPanel) {
-            return;
-        }
-        const { button, panel, onDocClick, onKeydown } = openBuilderPanel;
-        panel.hidden = true;
-        button.setAttribute('aria-expanded', 'false');
-        // Capture-phase for the click, matching how it was added, so removal actually detaches it.
-        document_.removeEventListener('click', onDocClick, true);
-        document_.removeEventListener('keydown', onKeydown, true);
-        openBuilderPanel = null;
-    }
-
-
-    /**
-     * Open a builder dropdown panel: reveal it, sync `aria-expanded`, focus the first enabled menu
-     * item, and wire click-outside (capture phase, so the button's own bubble handler can toggle
-     * closed without an immediate reopen) + Escape-to-close (refocusing the button). Only one panel
-     * is ever open — any previously-open one is closed first.
-     *
-     * @param {Element} button the toggle button
-     * @param {Element} panel the panel element to reveal
-     * @returns {void}
-     */
-    function openBuilderOpenPanel(button, panel) {
-        closeBuilderOpenPanel();
-        panel.hidden = false;
-        button.setAttribute('aria-expanded', 'true');
-        const onDocumentClick = (event) => {
-            // A click anywhere outside this dropdown wrapper closes it. Clicks on the button itself
-            // are handled by its own (bubble-phase) toggle so we don't reopen what it just closed.
-            if (!panel.contains(event.target) && !button.contains(event.target)) {
-                closeBuilderOpenPanel();
-            }
-        };
-        const onKeydown = (event) => {
-            if (event.key !== 'Escape') {
-            	return;
-            }
-
-            closeBuilderOpenPanel();
-            button.focus();
-        };
-        document_.addEventListener('click', onDocumentClick, {capture: true});
-        document_.addEventListener('keydown', onKeydown, {capture: true});
-        openBuilderPanel = { button: button, panel: panel, onDocClick: onDocumentClick, onKeydown: onKeydown };
-        const first = panel.querySelector('[role="menuitem"]:not([disabled])');
-        if (first) {
-            first.focus();
-        }
-    }
-
-
-    /**
-     * Build a dropdown wrapper (toggle button + downward panel) sharing the single-open machinery.
-     * The panel is populated by `fillPanel`. The button toggles open/closed on click.
-     *
-     * @param {string} label the toggle button label (a ` ▾` caret is appended)
-     * @param {boolean} leftAligned whether the panel is left-aligned (Open) vs. right (Download)
-     * @param {(panel: HTMLElement) => void} fillPanel populates the panel with menu items
-     * @returns {HTMLElement} the dropdown wrapper element
-     */
-    function buildBuilderDropdown(label, leftAligned, fillPanel) {
-        const wrapper = makeElement('div', { class: 'mpb-builder-open' });
-        const button = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: label + ' \u{25BE}',
-            attrs: { 'aria-haspopup': 'menu', 'aria-expanded': 'false' },
-        });
-        const panelClass = leftAligned
-            ? 'mpb-builder-open-panel mpb-builder-open-panel--left'
-            : 'mpb-builder-open-panel';
-        const panel = makeElement('div', { class: panelClass, attrs: { role: 'menu' } });
-        panel.hidden = true;
-        fillPanel(panel);
-        button.addEventListener('click', () => {
-            // Toggle: if this exact panel is already open, close it; otherwise open it.
-            if (openBuilderPanel && openBuilderPanel.panel === panel) {
-                closeBuilderOpenPanel();
-            } else {
-                openBuilderOpenPanel(button, panel);
-            }
-        });
-        wrapper.append(button, panel);
-        return wrapper;
-    }
-
-
-    /**
-     * Build the "Open ▾" dropdown: every other saved config (excluding the one currently open),
-     * each row reopening its session. Shows an empty-state note when there is nothing else to open.
-     *
-     * @returns {HTMLElement} the Open dropdown wrapper
-     */
-    function buildBuilderOpenDropdown() {
-        return buildBuilderDropdown('Open', true, (panel) => {
-            const others = listSaves().filter((save) => save.id !== persistence.currentId);
-            if (others.length === 0) {
-                panel.append(
-                    makeElement('div', {
-                        class: 'mpb-builder-open-empty',
-                        text: 'No other saved configs.',
-                    })
-                );
-                return;
-            }
-            for (const save of others) {
-                const row = makeElement('button', {
-                    type: 'button',
-                    class: 'mpb-builder-open-row',
-                    attrs: { role: 'menuitem' },
-                });
-                row.append(makeElement('span', { class: 'mpb-builder-open-row-name', text: save.name }));
-                row.append(
-                    makeElement('span', {
-                        class: 'mpb-builder-open-row-meta',
-                        text: formatTimestamp(save.timestamp),
-                    })
-                );
-                row.addEventListener('click', () => {
-                    closeBuilderOpenPanel();
-                    reopenSave(save.id);
-                });
-                panel.append(row);
-            }
-        });
+        return global.mpbController.deriveConfigName(state.config);
     }
 
 
@@ -2886,1397 +2156,6 @@
         return state.mode !== 'validations';
     }
 
-
-    /**
-     * Descriptor for the header Download Diagramforce row, or `null` when omitted (validations-only).
-     * Full mode always returns a row: enabled when drawable, otherwise disabled with a tooltip.
-     * Test seam — no DOM required.
-     *
-     * @returns {({text: string, disabled: boolean, title: (string|null)}|null)} menuitem spec
-     */
-    function diagramforceMenuItemSpec() {
-        if (!shouldShowDiagramforceMenuItem()) {
-            return null;
-        }
-        const isDrawable = isDiagramDrawable();
-        return {
-            text: 'Open in Diagramforce',
-            disabled: !isDrawable,
-            title: isDrawable ? null : 'Finish environment order, BU assignment, and lineage first.',
-        };
-    }
-
-
-    /**
-     * Append the Diagramforce Download-menu row (or omit it). `buildBuilderDownloadDropdown` is the
-     * live caller; tests can pass a stub `{ append }` collector. No-op when the row is omitted.
-     *
-     * @param {{append: (node: object) => void}} panel the menu panel (live or stub)
-     * @returns {void}
-     */
-    function fillBuilderDownloadDiagramItem(panel) {
-        const spec = diagramforceMenuItemSpec();
-        if (!spec || !panel) {
-            return;
-        }
-        const canCreate = document_ && typeof document_.createElement === 'function';
-        if (!canCreate) {
-            panel.append({
-                role: 'menuitem',
-                textContent: spec.text,
-                disabled: spec.disabled,
-                title: spec.title,
-            });
-            return;
-        }
-        const diagramItem = makeElement('button', {
-            type: 'button',
-            class: 'mpb-builder-open-row',
-            text: spec.text,
-            attrs: { role: 'menuitem' },
-        });
-        if (spec.disabled) {
-            diagramItem.disabled = true;
-            diagramItem.setAttribute('title', spec.title);
-        } else {
-            diagramItem.addEventListener('click', () => {
-                closeBuilderOpenPanel();
-                openDiagramOrFallback(diagramItem);
-            });
-        }
-        panel.append(diagramItem);
-    }
-
-
-    /**
-     * Build the plain draw.io model for the current pipeline, independent of `buildDiagramJSON`
-     * (the Diagramforce path is left untouched). Mirrors that function's Pass-A/Pass-B loop but
-     * owns its own stable cell ids: one swimlane column per environment, one BU box per assigned
-     * reference, and a deploy link per BU resolved as lineage-parent -> same-index -> first.
-     *
-     * @returns {import('./mcdev-pipeline-drawio.js').DrawioModel} the draw.io model
-     */
-    function buildDrawioModel() {
-        const wizardState = state.wizardState;
-        const environments = environmentNames();
-        const lineage = wizardState.lineage || {};
-        const columnCount = environments.length;
-
-        // Pass A — columns + stable cell ids (one per buRef-in-env), and a per-column ref->cellId map.
-        const columns = [];
-        const cellIdByColumn = [];
-        const columnReferences = [];
-        for (const [columnIndex, environment] of environments.entries()) {
-            const references = assignedBUReferences(environment);
-            const idMap = {};
-            const bus = [];
-            for (const [rowIndex, reference] of references.entries()) {
-                const cellId = 'bu-' + String(columnIndex + 1) + '-' + String(rowIndex + 1);
-                idMap[reference] = cellId;
-                bus.push({
-                    cellId: cellId,
-                    label: buDisplayLabel(reference),
-                    isParentBU: bareBUName(reference) === '_ParentBU_',
-                });
-            }
-            columns.push({
-                env: environment,
-                band: diagramBand(columnIndex, columnCount),
-                bus: bus,
-            });
-            cellIdByColumn.push(idMap);
-            columnReferences.push(references);
-        }
-
-        // Pass B — links to the upstream BU: prefer the explicit lineage parent, else the same-index
-        // BU (or the first) in the previous column. References the model's own cell ids.
-        const links = [];
-        for (let columnIndex = 1; columnIndex < environments.length; columnIndex += 1) {
-            const previousMap = cellIdByColumn[columnIndex - 1];
-            const references = columnReferences[columnIndex];
-            const previousReferences = columnReferences[columnIndex - 1];
-            for (const [rowIndex, reference] of references.entries()) {
-                const parentReference = lineage[reference];
-                let sourceCellId = parentReference ? previousMap[parentReference] : undefined;
-                if (!sourceCellId) {
-                    const fallbackReference = previousReferences[rowIndex] || previousReferences[0];
-                    sourceCellId = fallbackReference ? previousMap[fallbackReference] : undefined;
-                }
-                const targetCellId = cellIdByColumn[columnIndex][reference];
-                if (sourceCellId && targetCellId) {
-                    links.push({ sourceCellId: sourceCellId, targetCellId: targetCellId });
-                }
-            }
-        }
-
-        return { title: diagramTitle(), columns: columns, links: links };
-    }
-
-
-    /**
-     * Host hooks passed into the draw.io module so it stays DOM-free: the real window `open` and
-     * the core's `downloadText`. Kept as a helper so both draw.io rows share one wiring.
-     *
-     * @returns {{open: (url: string, target: string, features: string) => unknown, downloadText: (filename: string, text: string, mimeType: string) => void}} the io hooks
-     */
-    function drawioIo() {
-        return {
-            open: (url, target, features) => global.open(url, target, features),
-            downloadText: downloadText,
-        };
-    }
-
-
-    /**
-     * Build the pipeline's mxGraph XML from the current model and hand it off to app.diagrams.net
-     * (the `#R<xml>` open path), falling back to a `pipeline.drawio` file download when the URL
-     * would exceed the module's length cap. Shared by the Download-dropdown row and the output
-     * step's draw.io tile so both trigger the identical open/fallback behaviour.
-     *
-     * @returns {('open'|'download'|undefined)} which branch the draw.io module took, if available
-     */
-    function openDrawioOrDownload() {
-        if (!global.mpbDrawio) {
-            return;
-        }
-        const model = buildDrawioModel();
-        const xml = global.mpbDrawio.buildMxGraphXml(model);
-        return global.mpbDrawio.openInDrawioOrDownload(xml, model.title, 'pipeline.drawio', drawioIo());
-    }
-
-
-    /**
-     * Append the "Open in draw.io" Download row, gated by `isDiagramDrawable()`. Hands off via the
-     * shared `openDrawioOrDownload()` (URL, else download) on click.
-     *
-     * @param {{append: (node: unknown) => void}} panel the dropdown panel
-     * @returns {void}
-     */
-    function fillBuilderDrawioMxItem(panel) {
-        if (!panel || !isDiagramDrawable()) {
-            return;
-        }
-        const canCreate = document_ && typeof document_.createElement === 'function';
-        if (!canCreate) {
-            panel.append({ role: 'menuitem', textContent: 'Open in draw.io' });
-            return;
-        }
-        const item = makeElement('button', {
-            type: 'button',
-            class: 'mpb-builder-open-row',
-            text: 'Open in draw.io',
-            attrs: { role: 'menuitem' },
-        });
-        item.addEventListener('click', () => {
-            closeBuilderOpenPanel();
-            openDrawioOrDownload();
-        });
-        panel.append(item);
-    }
-
-
-    /**
-     * Build the "Download ▾" dropdown: the `.mcdevrc.json` item (full mode + complete pipeline only,
-     * disabled with a tooltip otherwise), the always-present `.mcdev-validations.js` item, and an
-     * "Open in Diagramforce" row gated by `isDiagramDrawable()` only (file rows keep
-     * `outputBlockers()` / `isConfigDownloadAvailable`). Hard-omitted in validations-only.
-     *
-     * @returns {HTMLElement} the Download dropdown wrapper
-     */
-    function buildBuilderDownloadDropdown() {
-        return buildBuilderDropdown('Download', false, (panel) => {
-            const blockers = outputBlockers();
-            const isConfigOk = isConfigDownloadAvailable(state.mode, blockers);
-            // Chromium strips a leading dot from the `download` filename; warn the user to re-add it.
-            panel.append(
-                makeElement('p', {
-                    class: 'mpb-dl-hint',
-                    text: 'Some browsers save these without the leading dot — re-add it after downloading.',
-                })
-            );
-            // `.mcdevrc.json` — omitted entirely in validations mode; disabled when incomplete.
-            if (state.mode !== 'validations') {
-                const configItem = makeElement('button', {
-                    type: 'button',
-                    class: 'mpb-builder-open-row',
-                    text: 'Download .mcdevrc.json',
-                    attrs: { role: 'menuitem' },
-                });
-                if (isConfigOk) {
-                    configItem.addEventListener('click', () => {
-                        closeBuilderOpenPanel();
-                        const configObject = global.mpbConfigBuilder.buildConfig(state.wizardState, state.config);
-                        downloadText('.mcdevrc.json', jsonPretty(configObject), 'application/json');
-                    });
-                } else {
-                    configItem.disabled = true;
-                    configItem.setAttribute('title', 'Finish the wizard before downloading the config.');
-                }
-                panel.append(configItem);
-            }
-            // `.mcdev-validations.js` — always available.
-            const validationsItem = makeElement('button', {
-                type: 'button',
-                class: 'mpb-builder-open-row',
-                text: 'Download .mcdev-validations.js',
-                attrs: { role: 'menuitem' },
-            });
-            validationsItem.addEventListener('click', () => {
-                closeBuilderOpenPanel();
-                const validationsSource = global.mpbValidationsBuilder.buildValidations(typeof hooks.deriveValidationsState === 'function' ? hooks.deriveValidationsState() : {});
-                downloadText('.mcdev-validations.js', validationsSource, 'text/javascript');
-            });
-            panel.append(validationsItem);
-            // Divider between the download-file rows above and the open-in-tool rows below.
-            panel.append(
-                makeElement('hr', {
-                    class: 'mpb-builder-open-divider',
-                    attrs: { role: 'separator' },
-                })
-            );
-            fillBuilderDownloadDiagramItem(panel);
-            fillBuilderDrawioMxItem(panel);
-        });
-    }
-
-
-    /**
-     * Fill the header name slot with the config display name plus an inline "Rename" affordance that
-     * swaps in an `<input>` + Save/Cancel. Commit trims, ignores empty, persists via `renameSave`,
-     * then re-renders the header and the intake saved-list. Enter commits, Escape cancels.
-     *
-     * @returns {void}
-     */
-    function renderBuilderHeaderName() {
-        const slot = dom.builderHeaderName;
-        slot.replaceChildren();
-        slot.append(
-            makeElement('span', { class: 'mpb-builder-header-name-label', text: currentConfigDisplayName() })
-        );
-        // Rename is only meaningful when a save is actually open.
-        if (!persistence.currentId) {
-            return;
-        }
-        const renameButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: 'Rename',
-        });
-        renameButton.addEventListener('click', () => startBuilderHeaderRename());
-        slot.append(renameButton);
-    }
-
-
-    /**
-     * Swap the header name label for an inline rename input + Save/Cancel. Commit persists a trimmed,
-     * non-empty name and re-renders the header + intake saved-list; Cancel/Escape restores the label.
-     *
-     * @returns {void}
-     */
-    function startBuilderHeaderRename() {
-        const slot = dom.builderHeaderName;
-        const id = persistence.currentId;
-        if (!slot || !id) {
-            return;
-        }
-        slot.replaceChildren();
-        const input = makeElement('input', {
-            type: 'text',
-            class: 'mpb-builder-header-rename-input',
-            value: currentConfigDisplayName(),
-            attrs: { 'aria-label': 'New name for this config' },
-        });
-        const saveButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: 'Save',
-        });
-        const cancelButton = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: 'Cancel',
-        });
-        const commit = () => {
-            const next = input.value.trim();
-            if (next) {
-                renameSave(id, next);
-            }
-            renderBuilderHeader();
-            renderSavedList();
-        };
-        saveButton.addEventListener('click', commit);
-        cancelButton.addEventListener('click', () => renderBuilderHeader());
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                commit();
-            } else if (event.key === 'Escape') {
-                event.preventDefault();
-                renderBuilderHeader();
-            }
-        });
-        slot.append(input, saveButton, cancelButton);
-        input.focus();
-        input.select();
-    }
-
-
-    /**
-     * Fill the header actions slot with the four builder actions, in order: Open ▾, New version,
-     * Upload new, Download ▾.
-     *
-     * @returns {void}
-     */
-    function renderBuilderHeaderActions() {
-        const slot = dom.builderHeaderActions;
-        slot.replaceChildren();
-
-        // Open ▾ — reopen any other saved config.
-        slot.append(buildBuilderOpenDropdown());
-
-        // New version — clone the current config AND switch the active session to the clone.
-        const newVersion = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: 'New version',
-        });
-        newVersion.addEventListener('click', () => {
-            const cloneId = cloneSave(persistence.currentId);
-            if (cloneId) {
-                reopenSave(cloneId);
-            }
-        });
-        slot.append(newVersion);
-
-        // Upload new — return to intake to load a different config.
-        const uploadNew = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--ghost',
-            text: 'Upload new',
-        });
-        uploadNew.addEventListener('click', () => goToStep('intake'));
-        slot.append(uploadNew);
-
-        // Download ▾ — the config + validations files (same guards as the output step).
-        slot.append(buildBuilderDownloadDropdown());
-    }
-
-
-    /**
-     * Hydrate the sticky builder sub-header: (re)fill the name + actions slots. Called at the end of
-     * every render and after rename/clone. Tears down any open dropdown first so its document
-     * listeners never accumulate across rebuilds. Early-returns under the headless stub (no slots).
-     *
-     * @returns {void}
-     */
-    function renderBuilderHeader() {
-        closeBuilderOpenPanel();
-        if (!dom.builderHeaderName || !dom.builderHeaderActions) {
-            return;
-        }
-        renderBuilderHeaderName();
-        renderBuilderHeaderActions();
-    }
-
-
-    // ─────────────────────────── Chunk 3b: localStorage persistence ───────────────────────────
-
-    /**
-     * localStorage key scheme. Saved configs live under `mcdevpipe::save::<id>`; the single-tab
-     * editing lease for a config lives under `mcdevpipe::lock::<id>`. Ids are `crypto.randomUUID()`.
-     */
-    const SAVE_PREFIX = 'mcdevpipe::save::';
-
-    const LOCK_PREFIX = 'mcdevpipe::lock::';
-    const SAVE_VERSION = 1;
-    const AUTOSAVE_DELAY_MS = 300;
-    const LOCK_HEARTBEAT_MS = 4000;
-    const LOCK_STALE_MS = 10_000;
-    const STORAGE_WARNING_BYTES = 4_000_000;
-
-
-    /**
-     * A collision-resistant id — `crypto.randomUUID()` when available, else a random+time fallback.
-     *
-     * @returns {string} a fresh id
-     */
-    function newId() {
-        if (global.crypto && typeof global.crypto.randomUUID === 'function') {
-            return global.crypto.randomUUID();
-        }
-        return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    }
-
-
-    /**
-     * This tab's identity for the lock lease (distinguishes our own writes from other tabs').
-     */
-    const TAB_ID = newId();
-
-
-    /**
-     * Persistence runtime state (module-scope, not part of the builder-facing `wizardState`):
-     * the active save id, the debounce + heartbeat timers, the in-memory fallback store used when
-     * localStorage is blocked, and whether the current config is opened read-only (another tab holds
-     * the lock and the user hasn't taken over).
-     */
-    const persistence = {
-        available: null, // null until probed; then true/false
-        currentId: null, // id of the save being edited
-        autosaveTimer: null,
-        heartbeatTimer: null,
-        memoryStore: {}, // id -> blob, used only when localStorage is unavailable
-        readOnly: false, // true when another tab owns the lock and we haven't taken over
-    };
-
-
-    /**
-     * Probe whether localStorage is usable (private mode / enterprise lockdown can throw on write).
-     * Cached after the first call. When unavailable we fall back to an in-memory store and show a
-     * persistent "download-only" banner so the rest of the tool keeps working.
-     *
-     * @returns {boolean} true when localStorage can be written and read
-     */
-    function storageAvailable() {
-        if (persistence.available !== null) {
-            return persistence.available;
-        }
-        persistence.available = false;
-        try {
-            const probe = '__mcdevpipe_probe__';
-            global.localStorage.setItem(probe, '1');
-            global.localStorage.removeItem(probe);
-            persistence.available = true;
-        } catch {
-            persistence.available = false;
-        }
-        return persistence.available;
-    }
-
-
-    /**
-     * True when an error looks like a storage quota overflow. Browsers disagree on the exact shape
-     * (name vs. legacy numeric code 22, Firefox's 1014), so we cast a wide net.
-     *
-     * @param {(Error|{name?: string, code?: number, message?: string}|null)} error a caught error
-     * @returns {boolean} true when it is a quota-exceeded error
-     */
-    function isQuotaError(error) {
-        if (!error) {
-            return false;
-        }
-        return (
-            error.name === 'QuotaExceededError' ||
-            error.code === 22 ||
-            error.code === 1014 ||
-            /quota/i.test(error.message || '')
-        );
-    }
-
-
-    /**
-     * Read a raw save blob by id (localStorage or the in-memory fallback), or null when missing/corrupt.
-     *
-     * @param {string} id the save id
-     * @returns {(object|null)} the parsed blob, or null
-     */
-    function readSaveBlob(id) {
-        if (!storageAvailable()) {
-            return persistence.memoryStore[id] || null;
-        }
-        try {
-            const raw = global.localStorage.getItem(SAVE_PREFIX + id);
-            return raw ? JSON.parse(raw) : null;
-        } catch {
-            return null;
-        }
-    }
-
-
-    /**
-     * Write a save blob by id. Returns `{ ok }` — on a quota overflow `ok` is false and the caller
-     * surfaces the "storage full" banner instead of throwing.
-     *
-     * @param {string} id the save id
-     * @param {object} blob the entry `{ id, name, version, timestamp, config, wizardState }`
-     * @returns {{ok: boolean, quota: boolean}} write outcome
-     */
-    function writeSaveBlob(id, blob) {
-        if (!storageAvailable()) {
-            persistence.memoryStore[id] = blob;
-            return { ok: true, quota: false };
-        }
-        try {
-            global.localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(blob));
-            return { ok: true, quota: false };
-        } catch (ex) {
-            return { ok: false, quota: isQuotaError(ex) };
-        }
-    }
-
-
-    /**
-     * List all saved configs, newest first. Corrupt entries are skipped (never crash the intake list).
-     *
-     * @returns {{id: string, name: string, version: number, timestamp: number, bytes: number}[]} saves
-     */
-    function listSaves() {
-        const saves = [];
-        if (!storageAvailable()) {
-            for (const [id, blob] of Object.entries(persistence.memoryStore)) {
-                if (blob) {
-                    saves.push({
-                        id: id,
-                        name: blob.name || id,
-                        version: blob.version || 0,
-                        timestamp: blob.timestamp || 0,
-                        bytes: JSON.stringify(blob).length * 2,
-                    });
-                }
-            }
-            return saves.toSorted((a, b) => b.timestamp - a.timestamp);
-        }
-        for (let index = 0; index < global.localStorage.length; index++) {
-            const key = global.localStorage.key(index);
-            if (!key || key.indexOf(SAVE_PREFIX) !== 0) {
-                continue;
-            }
-            try {
-                const raw = global.localStorage.getItem(key) || '';
-                const blob = JSON.parse(raw);
-                saves.push({
-                    id: blob.id || key.slice(SAVE_PREFIX.length),
-                    name: blob.name || key.slice(SAVE_PREFIX.length),
-                    version: blob.version || 0,
-                    timestamp: blob.timestamp || 0,
-                    bytes: (key.length + raw.length) * 2,
-                });
-            } catch {
-                // Skip a corrupt entry rather than break the whole list.
-            }
-        }
-        return saves.toSorted((a, b) => b.timestamp - a.timestamp);
-    }
-
-
-    /**
-     * Delete a saved config (and its lock) by id, from whichever store is in use.
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function deleteSave(id) {
-        if (!storageAvailable()) {
-            delete persistence.memoryStore[id];
-            return;
-        }
-        try {
-            global.localStorage.removeItem(SAVE_PREFIX + id);
-            global.localStorage.removeItem(LOCK_PREFIX + id);
-        } catch {
-            // Best-effort removal.
-        }
-    }
-
-
-    /**
-     * Approximate bytes consumed by this origin's localStorage (UTF-16, so char count × 2). O(keys),
-     * cheap enough to call after each autosave. Returns 0 when storage is unavailable.
-     *
-     * @returns {number} approximate bytes used
-     */
-    function storageFootprint() {
-        if (!storageAvailable()) {
-            return 0;
-        }
-        let bytes = 0;
-        for (let index = 0; index < global.localStorage.length; index++) {
-            const key = global.localStorage.key(index);
-            if (key == null) {
-                continue;
-            }
-            const value = global.localStorage.getItem(key) || '';
-            bytes += (key.length + value.length) * 2;
-        }
-        return bytes;
-    }
-
-
-    /**
-     * Derive the default config label from the FIRST credential entry: `"<credName> (<eid>)"`
-     * (e.g. `cred (510004860)`). Multiple credentials is an edge case — the first entry always names
-     * it. The stored name becomes authoritative once the user renames it.
-     *
-     * @param {object} config the parsed `.mcdevrc.json`
-     * @returns {string} the derived default name
-     */
-    function deriveConfigName(config) {
-        const credentials = (config && config.credentials) || {};
-        const names = Object.keys(credentials);
-        if (names.length === 0) {
-            return 'Untitled pipeline';
-        }
-        const first = names[0];
-        const eid = credentials[first] && credentials[first].eid;
-        return eid == null ? first : first + ' (' + eid + ')';
-    }
-
-
-    /**
-     * The next free ` v2` / ` v3` / … name for a clone: strip any trailing ` vN`, then scan existing
-     * saves sharing that base and return base + the highest-in-use suffix incremented (min ` v2`).
-     *
-     * @param {string} name the source config name
-     * @returns {string} a unique versioned clone name
-     */
-    function nextVersionName(name) {
-        const base = String(name || 'Untitled pipeline').replace(/ v\d+$/, '');
-        let highest = 1;
-        for (const save of listSaves()) {
-            if (save.name === base) {
-                highest = Math.max(highest, 1);
-                continue;
-            }
-            const match = /^(.*) v(\d+)$/.exec(save.name);
-            if (match && match[1] === base) {
-                highest = Math.max(highest, Number(match[2]));
-            }
-        }
-        return base + ' v' + (highest + 1);
-    }
-
-
-    /**
-     * Build a fresh save blob from the current app state.
-     *
-     * @param {string} id the save id
-     * @param {string} name the config name
-     * @returns {{id: string, name: string, version: number, timestamp: number, config: object, wizardState: WizardState}} the blob
-     */
-    function buildSaveBlob(id, name) {
-        return {
-            id: id,
-            name: name,
-            version: SAVE_VERSION,
-            timestamp: Date.now(),
-            config: state.config,
-            wizardState: state.wizardState,
-        };
-    }
-
-
-    /**
-     * Create a new save for a freshly-accepted config and make it the active one. Called from the
-     * intake success path so every accepted config is immediately persisted and resumable.
-     *
-     * @param {object} config the parsed, validated config
-     * @returns {void}
-     */
-    function createSaveForConfig(config) {
-        // Accepting a fresh config clears any stale cross-device "shared link not in this browser"
-        // notice from a leftover `?s=`/hash deep link (no-op when it isn't showing).
-        clearBanner('deeplink');
-        const id = newId();
-        persistence.currentId = id;
-        persistence.readOnly = false;
-        const blob = buildSaveBlob(id, deriveConfigName(config));
-        const result = writeSaveBlob(id, blob);
-        if (!result.ok && result.quota) {
-            showQuotaBanner();
-        }
-        acquireLock(id);
-    }
-
-
-    /**
-     * Persist the current state under the active save id (autosave target). No-op when read-only or
-     * when there is no active id. On a quota overflow the "storage full" banner is shown.
-     *
-     * @returns {void}
-     */
-    function persistCurrent() {
-        if (!persistence.currentId || persistence.readOnly) {
-            return;
-        }
-        const existing = readSaveBlob(persistence.currentId);
-        const name = existing && existing.name ? existing.name : deriveConfigName(state.config);
-        const result = writeSaveBlob(persistence.currentId, buildSaveBlob(persistence.currentId, name));
-        if (!result.ok && result.quota) {
-            showQuotaBanner();
-        }
-        renderStorageGauge();
-    }
-
-
-    /**
-     * Schedule a debounced autosave. Called on every state-changing render so a reopened config
-     * resumes exactly where the user left off.
-     *
-     * @returns {void}
-     */
-    function scheduleAutosave() {
-        if (!persistence.currentId || persistence.readOnly) {
-            return;
-        }
-        if (persistence.autosaveTimer) {
-            global.clearTimeout(persistence.autosaveTimer);
-        }
-        persistence.autosaveTimer = global.setTimeout(() => {
-            persistence.autosaveTimer = null;
-            persistCurrent();
-        }, AUTOSAVE_DELAY_MS);
-    }
-
-
-    /**
-     * Flush any pending autosave immediately (on tab hide / unload) so no in-flight edit is lost.
-     *
-     * @returns {void}
-     */
-    function flushAutosave() {
-        if (persistence.autosaveTimer) {
-            global.clearTimeout(persistence.autosaveTimer);
-            persistence.autosaveTimer = null;
-        }
-        persistCurrent();
-    }
-
-
-    // ── Single-tab editing lock ────────────────────────────────────────────────
-
-    /**
-     * Read the current lock lease for a save id, or null when none/stale/corrupt.
-     *
-     * @param {string} id the save id
-     * @returns {({tabId: string, ts: number}|null)} the live lease, or null
-     */
-    function readLock(id) {
-        if (!storageAvailable()) {
-            return null;
-        }
-        try {
-            const raw = global.localStorage.getItem(LOCK_PREFIX + id);
-            if (!raw) {
-                return null;
-            }
-            const lock = JSON.parse(raw);
-            if (!lock || Date.now() - (lock.ts || 0) > LOCK_STALE_MS) {
-                return null;
-            }
-            return lock;
-        } catch {
-            return null;
-        }
-    }
-
-
-    /**
-     * Write/refresh this tab's lock lease for a save id.
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function writeLock(id) {
-        if (!storageAvailable()) {
-            return;
-        }
-        try {
-            global.localStorage.setItem(LOCK_PREFIX + id, JSON.stringify({ tabId: TAB_ID, ts: Date.now() }));
-        } catch {
-            // A lock write failing (e.g. quota) must never block editing.
-        }
-    }
-
-
-    /**
-     * Acquire (or take over) the editing lock for a save id and start the heartbeat. When another tab
-     * holds a live lease we open read-only and offer a "Take over" banner rather than clobbering it.
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function acquireLock(id) {
-        stopHeartbeat();
-        const existing = readLock(id);
-        if (existing && existing.tabId !== TAB_ID) {
-            persistence.readOnly = true;
-            showLockedBanner(id);
-            return;
-        }
-        persistence.readOnly = false;
-        clearBanner('locked');
-        writeLock(id);
-        persistence.heartbeatTimer = global.setInterval(() => {
-            if (persistence.currentId && !persistence.readOnly) {
-                writeLock(persistence.currentId);
-            }
-        }, LOCK_HEARTBEAT_MS);
-    }
-
-
-    /**
-     * Take over editing after the config was opened read-only (another tab's lease). Claims the lock,
-     * clears the read-only banner, and re-renders.
-     *
-     * @returns {void}
-     */
-    function takeOverLock() {
-        if (!persistence.currentId) {
-            return;
-        }
-        persistence.readOnly = false;
-        clearBanner('locked');
-        acquireLock(persistence.currentId);
-        render();
-    }
-
-
-    /**
-     * Stop the lock heartbeat timer.
-     *
-     * @returns {void}
-     */
-    function stopHeartbeat() {
-        if (!persistence.heartbeatTimer) {
-        	return;
-        }
-
-        global.clearInterval(persistence.heartbeatTimer);
-        persistence.heartbeatTimer = null;
-    }
-
-
-    /**
-     * Release the active lock (on unload) so another tab can pick the config up immediately.
-     *
-     * @returns {void}
-     */
-    function releaseLock() {
-        stopHeartbeat();
-        if (!persistence.currentId || persistence.readOnly || !storageAvailable()) {
-            return;
-        }
-        try {
-            const existing = readLock(persistence.currentId);
-            if (existing && existing.tabId === TAB_ID) {
-                global.localStorage.removeItem(LOCK_PREFIX + persistence.currentId);
-            }
-        } catch {
-            // Best-effort release.
-        }
-    }
-
-
-    /**
-     * Handle a cross-tab `storage` event. Two cases matter for the config we are editing:
-     * another tab wrote a newer SAVE for it (offer Reload), or another tab claimed its LOCK
-     * (we became read-only — offer Take over).
-     *
-     * @param {StorageEvent} event the storage event
-     * @returns {void}
-     */
-    function onStorageEvent(event) {
-        if (!event || !persistence.currentId || !event.key) {
-            return;
-        }
-        if (event.key === SAVE_PREFIX + persistence.currentId && event.newValue && !persistence.readOnly) {
-            // Another tab saved a newer version of the config we're editing — never silently clobber.
-            showExternalChangeBanner(persistence.currentId);
-        } else if (event.key === LOCK_PREFIX + persistence.currentId && event.newValue) {
-            try {
-                const lock = JSON.parse(event.newValue);
-                if (lock && lock.tabId && lock.tabId !== TAB_ID) {
-                    persistence.readOnly = true;
-                    stopHeartbeat();
-                    showLockedBanner(persistence.currentId);
-                    render();
-                }
-            } catch {
-                // Ignore an unparseable lock write.
-            }
-        }
-    }
-
-
-    // ── Restore / reopen ───────────────────────────────────────────────────────
-
-    /**
-     * Reopen a saved config: version-guard the blob, load it into state, acquire its lock, and jump
-     * to the mode step (or output when a mode was already chosen). A version mismatch or missing
-     * required field falls back to intake with a banner rather than crashing.
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function reopenSave(id) {
-        const blob = readSaveBlob(id);
-        if (!blob || blob.version !== SAVE_VERSION || !blob.config || !blob.wizardState) {
-            deriveRestoreFailure();
-            return;
-        }
-        clearBanner('restore');
-        // A newly-opened session supersedes any cross-device "shared link not in this browser"
-        // notice, so drop the deeplink banner too (no-op when it isn't showing).
-        clearBanner('deeplink');
-        persistence.currentId = id;
-        state.config = blob.config;
-        state.wizardState = Object.assign(emptyWizardState(), blob.wizardState);
-        // Restore the persisted mode so a deep link / reload lands on the wizard rather than the
-        // mode picker (Fix 1). Older saves have no persisted mode → null keeps the original
-        // mode-picker landing (backward compatible). `applyHashDescriptor`'s `state.mode` guard then
-        // correctly navigates a `#view=wizard&step=…` deep link to the requested step (Download is
-        // `step=output` on the wizard view).
-        state.mode =
-            state.wizardState.mode === 'full' || state.wizardState.mode === 'validations'
-                ? state.wizardState.mode
-                : null;
-        acquireLock(id);
-        // With a restored mode, land on the wizard step it implies; otherwise keep the mode picker.
-        if (state.mode) {
-            const steps = clampWizardStep();
-            wizardStep = steps.length > 0 ? steps[0].id : null;
-            goToStep('wizard');
-            return;
-        }
-        goToStep('mode');
-    }
-
-
-    /**
-     * Surface a non-crashing "couldn't restore" banner and stay on intake.
-     *
-     * @returns {void}
-     */
-    function deriveRestoreFailure() {
-        showBanner(
-            'restore',
-            "Couldn't restore this saved session (it was made by a different version of this tool). " +
-                'Please re-import your .mcdevrc.json to continue.',
-            [],
-            'danger'
-        );
-    }
-
-
-    // ── Banners ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Show (or replace) a keyed status banner in `#mpb-banners`. Keyed so each concern
-     * (storage-disabled / quota / locked / external-change / restore) owns exactly one banner and
-     * repeated calls update rather than stack. Built with `makeElement`/`setText` only.
-     *
-     * @param {string} key the banner key (dedupe id)
-     * @param {string} message the banner text
-     * @param {{label: string, onClick: () => void}[]} [actions] optional action buttons
-     * @param {('warning'|'danger'|'')} [variant] optional visual tone
-     * @returns {void}
-     */
-    function showBanner(key, message, actions, variant) {
-        if (!dom.banners) {
-            return;
-        }
-        clearBanner(key);
-        const className = variant ? 'mpb-banner mpb-banner--' + variant : 'mpb-banner';
-        const banner = makeElement('div', {
-            class: className,
-            attrs: { 'data-banner': key, role: variant === 'danger' ? 'alert' : 'status' },
-        });
-        banner.append(makeElement('span', { class: 'mpb-banner-msg', text: message }));
-        const actionList = actions || [];
-        if (actionList.length > 0) {
-            const actionsWrap = makeElement('div', { class: 'mpb-banner-actions' });
-            for (const action of actionList) {
-                const button = makeElement('button', {
-                    type: 'button',
-                    class: 'mpb-btn mpb-btn--secondary',
-                    text: action.label,
-                });
-                button.addEventListener('click', action.onClick);
-                actionsWrap.append(button);
-            }
-            banner.append(actionsWrap);
-        }
-        dom.banners.append(banner);
-    }
-
-
-    /**
-     * Remove a keyed banner if present.
-     *
-     * @param {string} key the banner key
-     * @returns {void}
-     */
-    function clearBanner(key) {
-        if (!dom.banners) {
-            return;
-        }
-        const existing = dom.banners.querySelector('[data-banner="' + key + '"]');
-        if (existing) {
-            existing.remove();
-        }
-    }
-
-
-    /**
-     * Persistent "storage disabled" banner shown when localStorage is unavailable. Everything still
-     * works, but nothing is saved — the user must download their files before closing.
-     *
-     * @returns {void}
-     */
-    function showStorageDisabledBanner() {
-        showBanner(
-            'storage',
-            'Browser storage is disabled here, so your work won\u{2019}t be saved between visits. ' +
-                'Download your files before closing this tab.',
-            [],
-            'warning'
-        );
-    }
-
-
-    /**
-     * "Storage full" banner (on a quota overflow) with actionable recovery advice.
-     *
-     * @returns {void}
-     */
-    function showQuotaBanner() {
-        showBanner(
-            'quota',
-            'Browser storage is full — download your generated files, then delete old saved configs below.',
-            [],
-            'danger'
-        );
-    }
-
-
-    /**
-     * Read-only banner shown when the config is already open in another tab, with a "Take over" action.
-     *
-     * @param {string} id the save id (unused directly; take-over uses the active id)
-     * @returns {void}
-     */
-    function showLockedBanner(id) {
-        void id;
-        showBanner(
-            'locked',
-            'This config is open in another tab, so it\u{2019}s read-only here to avoid conflicting edits.',
-            [{ label: 'Take over editing', onClick: takeOverLock }],
-            'warning'
-        );
-    }
-
-
-    /**
-     * Non-destructive "changed in another tab" banner with a Reload action (loads their version).
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function showExternalChangeBanner(id) {
-        showBanner(
-            'external',
-            'This config was changed in another tab. Reload to see those changes (your unsaved edits here will be replaced).',
-            [
-                {
-                    label: 'Reload',
-                    onClick: () => {
-                        clearBanner('external');
-                        reopenSave(id);
-                    },
-                },
-            ],
-            'warning'
-        );
-    }
-
-
-    // ── Saved-list + gauge UI ────────────────────────────────────────────────────
-
-    /**
-     * Format a timestamp for the saved-list rows (locale date + time, or a dash when absent).
-     *
-     * @param {number} ts epoch ms
-     * @returns {string} a human-readable date/time
-     */
-    function formatTimestamp(ts) {
-        if (!ts) {
-            return '—';
-        }
-        try {
-            return new Date(ts).toLocaleString();
-        } catch {
-            return '—';
-        }
-    }
-
-
-    /**
-     * Render the multi-config saved list into `#mpb-saved-list`: each row shows the name + timestamp
-     * and offers Reopen / Rename (inline) / New version (clone) / Delete. Rebuilt with
-     * `makeElement`/`setText` only. Shows a designed empty state when there are no saves.
-     *
-     * @returns {void}
-     */
-    function renderSavedList() {
-        if (!dom.savedList) {
-            return;
-        }
-        setText(dom.savedList, '');
-        // Rows mount directly under `.mpb-saved-list`; the designed empty state is the SCSS
-        // `.mpb-saved-list:empty::before` rule, so an empty list needs no explicit placeholder node.
-        for (const save of listSaves()) {
-            dom.savedList.append(savedRow(save));
-        }
-        renderStorageGauge();
-    }
-
-
-    /**
-     * Build a single saved-config row (name + timestamp + the four per-row actions).
-     *
-     * @param {{id: string, name: string, timestamp: number}} save a saved-config summary
-     * @returns {HTMLElement} the row element
-     */
-    function savedRow(save) {
-        const row = makeElement('div', { class: 'mpb-saved-row', attrs: { 'data-save-id': save.id } });
-
-        const name = makeElement('span', { class: 'mpb-saved-name', text: save.name });
-        row.append(name);
-        row.append(
-            makeElement('span', { class: 'mpb-saved-meta', text: formatTimestamp(save.timestamp) })
-        );
-
-        const actions = makeElement('div', { class: 'mpb-saved-actions' });
-
-        const reopen = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Reopen',
-        });
-        reopen.addEventListener('click', () => {
-            reopenSave(save.id);
-        });
-        actions.append(reopen);
-
-        const rename = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Rename',
-        });
-        rename.addEventListener('click', () => {
-            startRename(row, save);
-        });
-        actions.append(rename);
-
-        const clone = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'New version',
-        });
-        clone.addEventListener('click', () => {
-            cloneSave(save.id);
-        });
-        actions.append(clone);
-
-        const remove = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Delete',
-        });
-        remove.addEventListener('click', () => {
-            removeSave(save.id);
-        });
-        actions.append(remove);
-
-        row.append(actions);
-        return row;
-    }
-
-
-    /**
-     * Swap a row's name label for an inline text input + Save/Cancel to rename a saved config. The
-     * stored name becomes authoritative once renamed.
-     *
-     * @param {HTMLElement} row the row element
-     * @param {{id: string, name: string}} save the saved-config summary
-     * @returns {void}
-     */
-    function startRename(row, save) {
-        const nameElement = row.querySelector('.mpb-saved-name');
-        const actions = row.querySelector('.mpb-saved-actions');
-        if (!nameElement || !actions) {
-            return;
-        }
-        const input = makeElement('input', {
-            type: 'text',
-            class: 'mpb-saved-name mpb-saved-rename',
-            value: save.name,
-            attrs: { 'aria-label': 'New name for this saved config' },
-        });
-        const save_ = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Save',
-        });
-        const cancel = makeElement('button', {
-            type: 'button',
-            class: 'mpb-btn mpb-btn--secondary',
-            text: 'Cancel',
-        });
-        const commit = () => {
-            const next = input.value.trim();
-            if (next) {
-                renameSave(save.id, next);
-            }
-            renderSavedList();
-        };
-        save_.addEventListener('click', commit);
-        cancel.addEventListener('click', renderSavedList);
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                commit();
-            } else if (event.key === 'Escape') {
-                event.preventDefault();
-                renderSavedList();
-            }
-        });
-        nameElement.replaceWith(input);
-        setText(actions, '');
-        actions.append(save_);
-        actions.append(cancel);
-        input.focus();
-        input.select();
-    }
-
-
-    /**
-     * Rename a saved config in place (name becomes authoritative). No-op when the blob is gone.
-     *
-     * @param {string} id the save id
-     * @param {string} name the new name
-     * @returns {void}
-     */
-    function renameSave(id, name) {
-        const blob = readSaveBlob(id);
-        if (!blob) {
-            return;
-        }
-        blob.name = name;
-        blob.timestamp = Date.now();
-        const result = writeSaveBlob(id, blob);
-        if (!result.ok && result.quota) {
-            showQuotaBanner();
-        }
-    }
-
-
-    /**
-     * Deep-clone a saved config under a fresh id with the next free ` vN` name suffix.
-     *
-     * @param {string} id the source save id
-     * @returns {(string|null)} the new clone's id, or null when the source is missing
-     */
-    function cloneSave(id) {
-        const blob = readSaveBlob(id);
-        if (!blob) {
-            return null;
-        }
-        const cloneId = newId();
-        const clonedBlob = global.structuredClone(blob);
-        clonedBlob.id = cloneId;
-        clonedBlob.name = nextVersionName(blob.name || deriveConfigName(blob.config));
-        clonedBlob.version = SAVE_VERSION;
-        clonedBlob.timestamp = Date.now();
-        const result = writeSaveBlob(cloneId, clonedBlob);
-        if (!result.ok && result.quota) {
-            showQuotaBanner();
-        }
-        renderSavedList();
-        return cloneId;
-    }
-
-
-    /**
-     * Delete a saved config. If it was the active config, clear the active id (and its lock).
-     *
-     * @param {string} id the save id
-     * @returns {void}
-     */
-    function removeSave(id) {
-        deleteSave(id);
-        if (persistence.currentId === id) {
-            stopHeartbeat();
-            persistence.currentId = null;
-            persistence.readOnly = false;
-        }
-        renderSavedList();
-    }
-
-
-    /**
-     * Render the storage-footprint gauge into `#mpb-storage-gauge`: approximate KB/MB used, with a
-     * warning class once past the pressure threshold. Hidden entirely when storage is unavailable.
-     *
-     * @returns {void}
-     */
-    function renderStorageGauge() {
-        if (!dom.storageGauge) {
-            return;
-        }
-        setText(dom.storageGauge, '');
-        if (!storageAvailable()) {
-            dom.storageGauge.hidden = true;
-            return;
-        }
-        dom.storageGauge.hidden = false;
-        const bytes = storageFootprint();
-        const readable =
-            bytes >= 1_000_000
-                ? (bytes / 1_000_000).toFixed(1) + ' MB'
-                : Math.max(1, Math.round(bytes / 1000)) + ' KB';
-        const isNear = bytes >= STORAGE_WARNING_BYTES;
-        dom.storageGauge.className = isNear ? 'mpb-storage-gauge is-warning' : 'mpb-storage-gauge';
-        const label = isNear
-            ? 'Browser storage used: ' + readable + ' — download your files and delete old configs to free space.'
-            : 'Browser storage used: ' + readable;
-        dom.storageGauge.append(makeElement('span', { class: 'mpb-gauge-label', text: label }));
-        // A thin fill bar, capped at the warning threshold so it visibly fills as pressure rises.
-        const percent = Math.min(100, Math.round((bytes / STORAGE_WARNING_BYTES) * 100));
-        const bar = makeElement('div', { class: 'mpb-gauge-bar' });
-        bar.append(
-            makeElement('div', { class: 'mpb-gauge-fill', attrs: { style: 'width:' + percent + '%' } })
-        );
-        dom.storageGauge.append(bar);
-    }
-
-
-    /**
-     * Boot the persistence layer: probe storage (banner when disabled), paint the saved list + gauge,
-     * and wire the cross-tab `storage` event + exit-flush/lock-release handlers.
-     *
-     * @returns {void}
-     */
-    function initPersistence() {
-        if (!storageAvailable()) {
-            showStorageDisabledBanner();
-        }
-        // The saved list + gauge are painted by wireEvents() (the Chunk-3b marker), which runs just
-        // before this in init(); re-render here only if storage is unavailable so the gauge hides.
-        if (!storageAvailable()) {
-            renderStorageGauge();
-        }
-        global.addEventListener('storage', onStorageEvent);
-        document_.addEventListener('visibilitychange', () => {
-            if (document_.visibilityState === 'hidden') {
-                flushAutosave();
-            }
-        });
-        global.addEventListener('beforeunload', () => {
-            flushAutosave();
-            releaseLock();
-        });
-    }
 
     global.mpbController = {
         state: state,
@@ -4299,6 +2178,9 @@
         setBeforeWizardStepRender: setBeforeWizardStepRender,
         setOnSharedDEsChange: setOnSharedDEsChange,
         setDeriveValidationsState: setDeriveValidationsState,
+        getDeriveValidationsState: function getDeriveValidationsState() {
+            return hooks.deriveValidationsState;
+        },
         showStepError: showStepError,
         clearStepError: clearStepError,
         updateNavGate: updateNavGate,
@@ -4313,18 +2195,11 @@
         suffixFieldErrors: suffixFieldErrors,
         seedSuffixes: seedSuffixes,
         suffixSlug: suffixSlug,
-        deriveRestoreFailure: deriveRestoreFailure,
         setSharedDEs: setSharedDEs,
         renderEnvironmentColumns: renderEnvironmentColumns,
         showOnly: showOnly,
-        createSaveForConfig: createSaveForConfig,
-        showBanner: showBanner,
-        clearBanner: clearBanner,
-        scheduleAutosave: scheduleAutosave,
-        initPersistence: initPersistence,
         restoreFromHash: restoreFromHash,
         onHashChange: onHashChange,
-        renderBuilderHeader: renderBuilderHeader,
         syncHashToState: syncHashToState,
         renderStepper: renderStepper,
         outputBlockers: outputBlockers,
@@ -4339,16 +2214,11 @@
         setBuilderHeaderDom: setBuilderHeaderDom,
         isConfigDownloadAvailable: isConfigDownloadAvailable,
         currentConfigDisplayName: currentConfigDisplayName,
-        cloneSave: cloneSave,
         parseHash: parseHash,
         hashFromLocation: hashFromLocation,
         applyHashDescriptor: applyHashDescriptor,
-        persistence: persistence,
         setWizardStep: function (id) {
             wizardStep = id;
-        },
-        setCurrentId: function (id) {
-            persistence.currentId = id;
         },
         renderWizardStep: renderWizardStep,
         canProceed: canProceed,
@@ -4365,19 +2235,18 @@
             return pendingJumpTarget;
         },
         buildDiagramJSON: buildDiagramJSON,
-        diagramCardYs: diagramCardYs,
-        diagramLanePlacement: diagramLanePlacement,
+        buildDiagramforceModel: buildDiagramforceModel,
+        // Re-exported from the pure Diagramforce module (loaded before core); the tests read these
+        // geometry helpers off the controller. Falls back to `undefined` if the module is absent.
+        diagramCardYs: global.mpbDiagramforce && global.mpbDiagramforce.diagramCardYs,
+        diagramLanePlacement: global.mpbDiagramforce && global.mpbDiagramforce.diagramLanePlacement,
         DIAGRAM_BAND: DIAGRAM_BAND,
         diagramBand: diagramBand,
+        buDisplayLabel: buDisplayLabel,
+        diagramTitle: diagramTitle,
         isDiagramDrawable: isDiagramDrawable,
         isDiagramOffered: isDiagramOffered,
         shouldShowDiagramforceMenuItem: shouldShowDiagramforceMenuItem,
-        diagramforceMenuItemSpec: diagramforceMenuItemSpec,
-        fillBuilderDownloadDiagramItem: fillBuilderDownloadDiagramItem,
-        buildBuilderDownloadDropdown: buildBuilderDownloadDropdown,
-        buildDrawioModel: buildDrawioModel,
-        openDrawioOrDownload: openDrawioOrDownload,
-        fillBuilderDrawioMxItem: fillBuilderDrawioMxItem,
         downloadText: downloadText,
         assignBUToEnvironment: assignBUToEnvironment,
         unassignedBUReferences: unassignedBUReferences,
@@ -4386,8 +2255,6 @@
         setUnassignedConfirmed: function (value) {
             hasConfirmedUnassigned = value;
         },
-        renderSavedList: renderSavedList,
-        reopenSave: reopenSave,
     };
 
 })(typeof globalThis === 'undefined' ? new Function('return this')() : globalThis);

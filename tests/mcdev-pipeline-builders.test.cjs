@@ -22,9 +22,11 @@ const vm = require('node:vm');
 require('../assets/js/mcdev-pipeline-config-builder.js');
 require('../assets/js/mcdev-pipeline-validations-builder.js');
 require('../assets/js/mcdev-pipeline-drawio.js');
+require('../assets/js/mcdev-pipeline-diagramforce.js');
 const { buildConfig } = globalThis.mpbConfigBuilder;
 const { buildValidations } = globalThis.mpbValidationsBuilder;
 const mpbDrawio = globalThis.mpbDrawio;
+const mpbDiagramforce = globalThis.mpbDiagramforce;
 
 const SAMPLE_PATH = path.join(__dirname, '..', '..', 'mcdev-ssjs-validation', '.mcdevrc.json');
 const sampleConfig = JSON.parse(fs.readFileSync(SAMPLE_PATH, 'utf8'));
@@ -969,6 +971,8 @@ Object.defineProperty(globalThis, 'document', {
   },
 });
 require('../assets/js/mcdev-pipeline-core.js');
+require('../assets/js/mcdev-pipeline-persistence.js');
+require('../assets/js/mcdev-pipeline-builder-header.js');
 require('../assets/js/mcdev-pipeline-step-environment-order.js');
 require('../assets/js/mcdev-pipeline-step-production-confirm.js');
 require('../assets/js/mcdev-pipeline-step-market-vars.js');
@@ -2167,6 +2171,51 @@ test('buildDiagramJSON advertises the diagramforce appVersion that ships manualS
     '1.23.1',
     'appVersion matches the live manualSize-capable release',
   );
+});
+
+test('mpbDiagramforce.buildDiagramJSON is pure: same model in → identical envelope out', () => {
+  // The extracted module is a deterministic function of its pre-resolved model — no state, no
+  // Date.now(). A minimal two-lane model with one BU each must yield a stable envelope: the passed
+  // timestamp/title verbatim, one container + one task per column, and one deploy link between them.
+  const model = {
+    columns: [
+      {
+        env: 'DEV',
+        references: ['DEV_a'],
+        labels: ['DEV a'],
+        parentFlags: [false],
+        band: { fill: '#27ae60', stroke: '#1e8449' },
+      },
+      {
+        env: 'Prod',
+        references: ['PRD_a'],
+        labels: ['PRD a'],
+        parentFlags: [false],
+        band: { fill: '#F49825', stroke: '#C2410C' },
+      },
+    ],
+    lineage: {},
+    title: 'Pipeline · DEV → Prod',
+    timestamp: 1_700_000_000_000,
+  };
+  const first = mpbDiagramforce.buildDiagramJSON(model);
+  const second = mpbDiagramforce.buildDiagramJSON(model);
+  assert.deepEqual(first, second, 'identical model yields byte-identical output');
+  assert.equal(first.timestamp, 1_700_000_000_000, 'timestamp is taken verbatim from the model');
+  assert.equal(first.title, 'Pipeline · DEV → Prod', 'title is taken verbatim from the model');
+  assert.equal(first.diagramType, 'process', 'envelope is a process diagram');
+  const containers = first.graph.cells.filter((cell) => cell.type === 'sf.Container');
+  const tasks = first.graph.cells.filter((cell) => cell.type === 'sf.BpmnTask');
+  const links = first.graph.cells.filter((cell) => cell.type === 'standard.Link');
+  assert.equal(containers.length, 2, 'one lane container per environment');
+  assert.equal(tasks.length, 2, 'one BU task per assigned reference');
+  assert.equal(links.length, 1, 'one deploy link between the two BUs');
+  assert.equal(tasks[0].attrs.label.text, 'DEV a', 'first task uses the model display label');
+  // Core exposes the state-gathering counterpart that feeds this pure function.
+  seedDiagramEnvironments(['DEV', 'Prod']);
+  const coreModel = controller.buildDiagramforceModel();
+  assert.equal(coreModel.columns.length, 2, 'core model gathers one column per seeded env');
+  assert.equal(typeof coreModel.timestamp, 'number', 'core model carries a capture timestamp');
 });
 
 test('diagramCardYs spreads cards evenly inside the lane insets', () => {
@@ -4908,7 +4957,10 @@ test('script-order lock: index.md pipeline srcs match the test require() list', 
     'mcdev-pipeline-config-builder.js',
     'mcdev-pipeline-validations-builder.js',
     'mcdev-pipeline-drawio.js',
+    'mcdev-pipeline-diagramforce.js',
     'mcdev-pipeline-core.js',
+    'mcdev-pipeline-persistence.js',
+    'mcdev-pipeline-builder-header.js',
     'mcdev-pipeline-step-environment-order.js',
     'mcdev-pipeline-step-production-confirm.js',
     'mcdev-pipeline-step-market-vars.js',
