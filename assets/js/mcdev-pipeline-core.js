@@ -283,6 +283,14 @@
             // old saved configs lacking it restore fine via this default (see intake restore), so
             // `version` MUST stay 1 (bumping it makes every prior config unrestorable).
             marketVariables: {},
+            // Market-list adoption detected from a vanilla config (Tier 2): { byBU, marketOf, … }
+            // when a config's 1:1 BU→market marketLists were detected, else empty. Lives at
+            // state.wizardState.marketAdoption (never state.marketAdoption). Additive: old saves
+            // lacking it restore fine via this default, so `version` MUST stay 1.
+            marketAdoption: {},
+            // The market-variable KEY the user picked to act as the suffix source when a config
+            // carries no literal `suffix` field (Decision A). `null` = not chosen yet. Additive.
+            suffixKey: null,
             prodBUs: [],
             selectedRules: [],
             // Chunk-3a mini-wizard inputs, consumed by the validations builder via
@@ -1815,14 +1823,54 @@
         if (clipboard && typeof clipboard.writeText === 'function') {
             try {
                 await clipboard.writeText(text);
-                setText(note, 'Copied to clipboard.');
+                flashCopyNote(note, 'Copied to clipboard.', true);
                 return;
             } catch {
                 // fall through to the textarea fallback below
             }
         }
         const isOk = copyViaTextarea(text);
-        setText(note, isOk ? 'Copied to clipboard.' : 'Copy failed — select the text below and copy manually.');
+        flashCopyNote(
+            note,
+            isOk ? 'Copied to clipboard.' : 'Copy failed — select the text below and copy manually.',
+            isOk
+        );
+    }
+
+
+    /**
+     * Show a transient copy-status message in the note as a toast: fill the text, force the toast
+     * visible (even if a prior message is still fading), then auto-hide after a short delay so the
+     * user always gets fresh visible confirmation on every COPY click. Failures stay visible longer.
+     *
+     * @param {(Element|null)} note the copy-status note element
+     * @param {string} message the message to show
+     * @param {boolean} isOk whether the copy succeeded (styles + hide delay differ for failures)
+     * @returns {void}
+     */
+    function flashCopyNote(note, message, isOk) {
+        if (!note) {
+            return;
+        }
+        setText(note, message);
+        note.classList.remove('mpb-copy-note--error');
+        if (!isOk) {
+            note.classList.add('mpb-copy-note--error');
+        }
+        // Restart the reveal animation even on a rapid second click: drop the class, force a reflow,
+        // then re-add it so the toast re-appears and re-runs its fade rather than staying stale.
+        note.classList.remove('mpb-copy-note--show');
+        void note.offsetWidth;
+        note.classList.add('mpb-copy-note--show');
+        if (note._mpbCopyTimer) {
+            global.clearTimeout(note._mpbCopyTimer);
+        }
+        note._mpbCopyTimer = global.setTimeout(
+            () => {
+                note.classList.remove('mpb-copy-note--show');
+            },
+            isOk ? 2400 : 6000
+        );
     }
 
 

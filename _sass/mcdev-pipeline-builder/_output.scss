@@ -64,3 +64,74 @@
 .mpb-output-grid > .mpb-diagram-cta { margin-top: 0; }
 
 .mpb-diagram-fallback { margin-top: $space-3; }
+
+// ── Output-config options (strip-foreign + adopt-existing pro) ──────────────
+// Stacked opt-in checkboxes shown under the Download/Copy actions in the config card.
+.mpb-output-options {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-3;
+  font-size: $text-sm;
+
+  label {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    color: $text-secondary;
+  }
+
+  input[type="checkbox"]:disabled + * ,
+  input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+  }
+
+  code { font-size: inherit; }
+}
+
+// ── Copy confirmation toast ─────────────────────────────────────────────────
+// Appended to an output card by `ensureCopyNote`; `flashCopyNote` toggles `--show` on every
+// COPY click so the user always gets a fresh, visible confirmation that auto-vanishes.
+.mpb-copy-note {
+  margin: $space-2 0 0;
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: 600;
+  color: #ffffff;
+  background: $color-success;
+  box-shadow: $shadow-md;
+
+  // Hidden by default; revealed with `--show` and faded out via opacity/transform.
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+
+  &--show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &--error {
+    background: $color-danger;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpb-copy-note { transition: none; }
+}
+
+// The "why is this disabled?" panel listing the unmet coverage requirements.
+#mpb-adopt-missing {
+  margin: 0 0 0 $space-5;
+  font-size: $text-xs;
+  color: $text-muted;
+
+  summary { cursor: pointer; }
+
+  ul {
+    margin: $space-1 0 0;
+    padding-left: $space-4;
+  }
+}

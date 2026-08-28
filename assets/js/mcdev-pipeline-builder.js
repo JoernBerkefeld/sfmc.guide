@@ -84,6 +84,11 @@
         dom.dlConfig = document_.querySelector('#mpb-dl-config');
         dom.copyConfig = document_.querySelector('#mpb-copy-config');
         dom.configFallback = document_.querySelector('#mpb-config-fallback');
+        // ── output-config options (Chunk 4): strip-foreign + adopt-existing (pro) + missing panel ──
+        dom.optAdoptExisting = document_.querySelector('#mpb-opt-adopt-existing');
+        dom.optStripForeign = document_.querySelector('#mpb-opt-strip-foreign');
+        dom.adoptMissing = document_.querySelector('#mpb-adopt-missing');
+        dom.adoptMissingList = document_.querySelector('#mpb-adopt-missing-list');
         dom.outputValidations = document_.querySelector('#mpb-output-validations');
         dom.dlValidations = document_.querySelector('#mpb-dl-validations');
         dom.copyValidations = document_.querySelector('#mpb-copy-validations');

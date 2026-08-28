@@ -47,7 +47,7 @@ function sampleWizardState() {
       SIT: ['SIT'],
       QA: ['EUN_QA', 'EUS_QA'],
       UAT: ['EUN_UAT', 'EUS_UAT'],
-      Prod: ['Randstad_EUN', 'Randstad_EUS'],
+      Prod: ['BrandX_EUN', 'BrandX_EUS'],
     },
     // Real per-hop lineage mirroring the gold config's structure: each target BU points at the
     // upstream (source) BU it deploys from. Single-BU hops (DEV->SIT, SIT->QA) stay single-source;
@@ -58,8 +58,8 @@ function sampleWizardState() {
       EUS_QA: 'SIT',
       EUN_UAT: 'EUN_QA',
       EUS_UAT: 'EUS_QA',
-      Randstad_EUN: 'EUN_UAT',
-      Randstad_EUS: 'EUS_UAT',
+      BrandX_EUN: 'EUN_UAT',
+      BrandX_EUS: 'EUS_UAT',
     },
     separator: '_',
     suffixes: {
@@ -69,10 +69,10 @@ function sampleWizardState() {
       EUS_QA: '_QAS',
       EUN_UAT: '_UATN',
       EUS_UAT: '_UATS',
-      Randstad_EUN: '_RSN',
-      Randstad_EUS: '_RSS',
+      BrandX_EUN: '_RSN',
+      BrandX_EUS: '_RSS',
     },
-    prodBUs: ['Randstad_EUN', 'Randstad_EUS'],
+    prodBUs: ['BrandX_EUN', 'BrandX_EUS'],
     sharedDEs: true,
   };
 }
@@ -583,15 +583,7 @@ function abcWizardState() {
       SIT: ['SIT', 'SIT_Regional'],
       QA: ['EUN_QA', 'EUS_QA', 'QA_Regional'],
       UAT: ['EUN_UAT', 'EUS_UAT', 'UAT_Regional'],
-      Prod: [
-        'Randstad_EUN',
-        'TempoTeam_EUN',
-        'Randstad_EUS',
-        'NL_RS',
-        'NL_TT',
-        'EMEA_RS',
-        'EMEA_TT',
-      ],
+      Prod: ['BrandX_EUN', 'BrandY_EUN', 'BrandX_EUS', 'NL_RS', 'NL_TT', 'EMEA_RS', 'EMEA_TT'],
     },
     lineage: {
       SIT: 'DEV',
@@ -602,9 +594,9 @@ function abcWizardState() {
       EUN_UAT: 'EUN_QA',
       EUS_UAT: 'EUS_QA',
       UAT_Regional: 'QA_Regional',
-      Randstad_EUN: 'EUN_UAT',
-      TempoTeam_EUN: 'EUN_UAT',
-      Randstad_EUS: 'EUS_UAT',
+      BrandX_EUN: 'EUN_UAT',
+      BrandY_EUN: 'EUN_UAT',
+      BrandX_EUS: 'EUS_UAT',
       NL_RS: 'UAT_Regional',
       NL_TT: 'UAT_Regional',
       EMEA_RS: 'UAT_Regional',
@@ -622,23 +614,15 @@ function abcWizardState() {
       EUN_UAT: '_UAT',
       EUS_UAT: '_UAS',
       UAT_Regional: '_RUAT',
-      Randstad_EUN: '_RS',
-      TempoTeam_EUN: '_TT',
-      Randstad_EUS: '_RSS',
+      BrandX_EUN: '_RS',
+      BrandY_EUN: '_TT',
+      BrandX_EUS: '_RSS',
       NL_RS: '_NL_RS',
       NL_TT: '_NL_TT',
       EMEA_RS: '_ERS',
       EMEA_TT: '_ETT',
     },
-    prodBUs: [
-      'Randstad_EUN',
-      'TempoTeam_EUN',
-      'Randstad_EUS',
-      'NL_RS',
-      'NL_TT',
-      'EMEA_RS',
-      'EMEA_TT',
-    ],
+    prodBUs: ['BrandX_EUN', 'BrandY_EUN', 'BrandX_EUS', 'NL_RS', 'NL_TT', 'EMEA_RS', 'EMEA_TT'],
     sharedDEs: true,
   };
 }
@@ -703,12 +687,12 @@ test('buildConfig parent pairs mirror child lineage groups (A/B/C hop shape)', (
 
   // UAT→PROD mirrors child groups: 2-market array, string, 4-market array.
   assert.deepEqual(out.marketList['mpb_deployment-prod-EUN_UAT-parent-target'][parentKey], [
-    'mpb_Prod_Randstad_EUN',
-    'mpb_Prod_TempoTeam_EUN',
+    'mpb_Prod_BrandX_EUN',
+    'mpb_Prod_BrandY_EUN',
   ]);
   assert.equal(
     out.marketList['mpb_deployment-prod-EUS_UAT-parent-target'][parentKey],
-    'mpb_Prod_Randstad_EUS',
+    'mpb_Prod_BrandX_EUS',
   );
   assert.deepEqual(out.marketList['mpb_deployment-prod-UAT_Regional-parent-target'][parentKey], [
     'mpb_Prod_NL_RS',
@@ -819,7 +803,7 @@ test('buildValidations carries no client brand names or the sample client MID', 
   // the sample .mcdev-validations.js client MID must never appear
   assert.ok(!source.includes('510004860'));
   // no client brand names from the sample repo
-  for (const brand of ['randstad', 'tempoteam']) {
+  for (const brand of ['brandx', 'brandy']) {
     assert.ok(!source.includes(brand), `emitted source must not contain "${brand}"`);
   }
 });
@@ -985,6 +969,58 @@ require('../assets/js/mcdev-pipeline-mode.js');
 require('../assets/js/mcdev-pipeline-output.js');
 require('../assets/js/mcdev-pipeline-builder.js');
 const controller = globalThis.mpbController;
+
+// ─── output: mutually-exclusive option toggles (resolveOptionExclusion) ───
+//
+// The two output options (adopt-existing pro, strip-foreign) are mutually exclusive but neither
+// disables the other — the user may switch between them or leave both off. Checking one unchecks the
+// other (last click wins); unchecking never touches the sibling.
+
+test('resolveOptionExclusion: checking adopt unchecks strip', () => {
+  assert.deepEqual(controller.resolveOptionExclusion('adopt', true, true), {
+    adopt: true,
+    strip: false,
+  });
+  assert.deepEqual(controller.resolveOptionExclusion('adopt', true, false), {
+    adopt: true,
+    strip: false,
+  });
+});
+
+test('resolveOptionExclusion: checking strip unchecks adopt (symmetric)', () => {
+  assert.deepEqual(controller.resolveOptionExclusion('strip', true, true), {
+    adopt: false,
+    strip: true,
+  });
+  assert.deepEqual(controller.resolveOptionExclusion('strip', false, true), {
+    adopt: false,
+    strip: true,
+  });
+});
+
+test('resolveOptionExclusion: unchecking a box leaves the sibling untouched', () => {
+  // Unchecking adopt while strip is off → both off (strip never force-changed).
+  assert.deepEqual(controller.resolveOptionExclusion('adopt', false, false), {
+    adopt: false,
+    strip: false,
+  });
+  // Unchecking strip while adopt is on → adopt stays on.
+  assert.deepEqual(controller.resolveOptionExclusion('strip', true, false), {
+    adopt: true,
+    strip: false,
+  });
+});
+
+test('resolveOptionExclusion: both unchecked is a valid resting state', () => {
+  assert.deepEqual(controller.resolveOptionExclusion('adopt', false, false), {
+    adopt: false,
+    strip: false,
+  });
+  assert.deepEqual(controller.resolveOptionExclusion('strip', false, false), {
+    adopt: false,
+    strip: false,
+  });
+});
 
 // ─── controller: intake parse gate (classifyIntake) ───
 //
@@ -1627,11 +1663,11 @@ test('skipped lineage leaves wizardState.lineage empty; buildConfig still emits 
     version: 1,
     multiCred: false,
     envOrder: ['DEV', 'SIT', 'Prod'],
-    envBUs: { DEV: ['DEV'], SIT: ['SIT'], Prod: ['Randstad_EUN'] },
+    envBUs: { DEV: ['DEV'], SIT: ['SIT'], Prod: ['BrandX_EUN'] },
     lineage: {},
     separator: '_',
-    suffixes: { DEV: '_DEV', SIT: '_SIT', Randstad_EUN: '_RSN' },
-    prodBUs: ['Randstad_EUN'],
+    suffixes: { DEV: '_DEV', SIT: '_SIT', BrandX_EUN: '_RSN' },
+    prodBUs: ['BrandX_EUN'],
     selectedRules: [],
     prefixBlacklist: {},
     retention: {},
@@ -1656,7 +1692,7 @@ test('skipped lineage leaves wizardState.lineage empty; buildConfig still emits 
   assert.deepEqual(out.marketList['mpb_deployment-sit-target'], { 'ssjs/SIT': 'mpb_SIT' });
   assert.deepEqual(out.marketList['mpb_deployment-prod-source'], { 'ssjs/SIT': 'mpb_SIT' });
   assert.deepEqual(out.marketList['mpb_deployment-prod-target'], {
-    'ssjs/Randstad_EUN': 'mpb_Prod',
+    'ssjs/BrandX_EUN': 'mpb_Prod',
   });
 });
 
@@ -4556,7 +4592,7 @@ function seedProductionConfirmState() {
     version: 1,
     multiCred: false,
     envOrder: ['DEV', 'Prod'],
-    envBUs: { DEV: ['DEV'], Prod: ['Randstad_EUN', 'Randstad_EUS'] },
+    envBUs: { DEV: ['DEV'], Prod: ['BrandX_EUN', 'BrandX_EUS'] },
     lineage: {},
     separator: '_',
     suffixes: {},
@@ -4574,10 +4610,10 @@ test('isEnvironmentAllProduction reflects the all/some/none states of an env’s
   // None of Prod's BUs are production yet → not all-production.
   assert.equal(isEnvironmentAllProduction('Prod'), false, 'none selected → false');
   // Only one of two → still not all-production.
-  wizardState.prodBUs = ['Randstad_EUN'];
+  wizardState.prodBUs = ['BrandX_EUN'];
   assert.equal(isEnvironmentAllProduction('Prod'), false, 'some-but-not-all → false');
   // Both selected → all-production.
-  wizardState.prodBUs = ['Randstad_EUN', 'Randstad_EUS'];
+  wizardState.prodBUs = ['BrandX_EUN', 'BrandX_EUS'];
   assert.equal(isEnvironmentAllProduction('Prod'), true, 'all selected → true');
   // A single-BU env: selecting its only BU makes it all-production.
   wizardState.prodBUs = ['DEV'];
@@ -4608,7 +4644,7 @@ test('setEnvironmentProduction bulk-marks then clears every BU in an env (column
   controller.setEnvironmentProduction('Prod', true);
   assert.deepEqual(
     wizardState.prodBUs.toSorted((a, b) => a.localeCompare(b)),
-    ['Randstad_EUN', 'Randstad_EUS'],
+    ['BrandX_EUN', 'BrandX_EUS'],
     'checking select-all marks all env BUs production',
   );
   assert.equal(
@@ -4633,8 +4669,8 @@ test('setEnvironmentProduction leaves other environments’ production selection
   wizardState.prodBUs = ['DEV'];
   controller.setEnvironmentProduction('Prod', true);
   assert.ok(wizardState.prodBUs.includes('DEV'), 'DEV stays production while Prod is bulk-marked');
-  assert.ok(wizardState.prodBUs.includes('Randstad_EUN'));
-  assert.ok(wizardState.prodBUs.includes('Randstad_EUS'));
+  assert.ok(wizardState.prodBUs.includes('BrandX_EUN'));
+  assert.ok(wizardState.prodBUs.includes('BrandX_EUS'));
   // Clearing Prod must not remove DEV.
   controller.setEnvironmentProduction('Prod', false);
   assert.deepEqual(wizardState.prodBUs, ['DEV'], 'clearing Prod leaves DEV production');
@@ -4644,20 +4680,20 @@ test('checking the last unchecked BU makes the env all-production (column box au
   seedProductionConfirmState();
   const wizardState = controller.state.wizardState;
   // Toggle the two Prod BUs on individually (the per-BU checkbox path).
-  controller.toggleProductionBU('Randstad_EUN', true);
+  controller.toggleProductionBU('BrandX_EUN', true);
   assert.equal(
     controller.isEnvironmentAllProduction('Prod', wizardState),
     false,
     'one of two on → column box not yet all-checked',
   );
-  controller.toggleProductionBU('Randstad_EUS', true);
+  controller.toggleProductionBU('BrandX_EUS', true);
   assert.equal(
     controller.isEnvironmentAllProduction('Prod', wizardState),
     true,
     'checking the last BU flips the column box to all-checked',
   );
   // Unchecking any one BU un-checks the column box again.
-  controller.toggleProductionBU('Randstad_EUN', false);
+  controller.toggleProductionBU('BrandX_EUN', false);
   assert.equal(
     controller.isEnvironmentAllProduction('Prod', wizardState),
     false,
@@ -4672,7 +4708,7 @@ test('seedProductionBUs still auto-selects the LAST environment’s BUs by defau
   controller.seedProductionBUs();
   assert.deepEqual(
     controller.state.wizardState.prodBUs.toSorted((a, b) => a.localeCompare(b)),
-    ['Randstad_EUN', 'Randstad_EUS'],
+    ['BrandX_EUN', 'BrandX_EUS'],
     'the last environment’s BUs are the default production set',
   );
   // The default therefore reports the last env as all-production.
@@ -4689,7 +4725,7 @@ test('canProceed("prod-confirm") fails when prodBUs is empty and passes with at 
   const empty = controller.canProceed('prod-confirm');
   assert.equal(empty.ok, false, 'zero production BUs cannot proceed');
   assert.match(empty.reason, /production/i);
-  controller.state.wizardState.prodBUs = ['Randstad_EUN'];
+  controller.state.wizardState.prodBUs = ['BrandX_EUN'];
   assert.equal(
     controller.canProceed('prod-confirm').ok,
     true,
@@ -4699,17 +4735,24 @@ test('canProceed("prod-confirm") fails when prodBUs is empty and passes with at 
 
 // ─── controller: WS4 vanilla reverse-inference (inferWizardStateFromVanilla) ───
 
-// A real gold-standard vanilla config with a full hand-built multi-BU pipeline and NO mpb_pipeline
+// A gold-standard vanilla config with a full hand-built multi-BU pipeline and NO mpb_pipeline
 // block. We load it once and strip the tool block so inference works from the raw pipeline shape.
-const GOLD_PATH = path.join(__dirname, '..', '..', 'tmp-date-ns', 'mcdevrc.json');
+// The on-disk fixture is pre-sanitized synthetic data (client brand names, MIDs and tenant URLs
+// are already replaced with placeholders). It lives in the workspace-root repo's `test-fixtures/`
+// folder (a sibling of the sfmc.guide repo), NOT inside sfmc.guide, so these derived-from-real
+// configs never ship with the published site repo.
+const GOLD_PATH = path.join(__dirname, '..', '..', 'test-fixtures', 'gold-mcdevrc.json');
 
 /**
  * The gold vanilla config with its `mpb_pipeline` block removed (deep-cloned per call so a test can
- * mutate its copy freely).
+ * mutate its copy freely). The on-disk fixture is already sanitized synthetic data (`BrandX`/`BrandY`
+ * placeholders, remapped MIDs, `*.example` tenant hosts), so it is read as-is with no brand rewriting.
  *
  * @returns {object} the stripped gold config
  */
 function strippedGoldConfig() {
+  // The on-disk fixture is pre-sanitized synthetic data, so read it straight through — no read-time
+  // brand rewriting is required (the synthetic `BrandX`/`BrandY` tokens are baked into the fixture).
   const gold = JSON.parse(fs.readFileSync(GOLD_PATH, 'utf8'));
   delete gold.options.deployment.mpb_pipeline;
   return gold;
@@ -4733,9 +4776,9 @@ test('inferWizardStateFromVanilla reconstructs the gold multi-BU pipeline', () =
     'EUN_UAT',
     'EUS_UAT',
     'UAT_Regional',
-    'Randstad_EUN',
-    'Randstad_EUS',
-    'TempoTeam_EUN',
+    'BrandX_EUN',
+    'BrandX_EUS',
+    'BrandY_EUN',
     'NL_RS',
     'NL_TT',
     'EMEA_RS',
@@ -4868,6 +4911,155 @@ test('wizardStateFromConfig infers a vanilla config (no mpb_pipeline block)', ()
   const state = controller.wizardStateFromConfig(strippedGoldConfig());
   assert.ok(state.envOrder.length > 1, 'a vanilla config produces a real multi-env wizard state');
   assert.equal(state.lineage.SIT, 'DEV', 'the inferred lineage reaches the wizard state');
+});
+
+// ─── controller: sanitized real-world vanilla fixtures (intake coverage) ───
+//
+// Five synthetic fixtures derived from real-world .mcdevrc.json shapes (all client identifiers —
+// brand tokens, MIDs/eids, Salesforce record IDs, tenant subdomains — obfuscated to stable synthetic
+// values). They broaden intake coverage beyond the single hand-authored gold config: a large
+// country-market single-credential shape, two small vanilla shapes, a MULTI-CREDENTIAL shape, and a
+// large single-credential BU-map shape. Each is exercised through the same intake surface the gold
+// tests use (inferWizardStateFromVanilla + detectMarketListAdoption) plus a buildConfig smoke pass.
+
+/**
+ * Load a sanitized fixture by base name from the workspace-root `test-fixtures/` folder (a sibling of
+ * the sfmc.guide repo — these derived-from-real configs are deliberately kept out of sfmc.guide).
+ *
+ * @param {string} name - fixture base name (no extension)
+ * @returns {object} parsed config
+ */
+function loadSanitizedFixture(name) {
+  return JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', '..', 'test-fixtures', `${name}.json`), 'utf8'),
+  );
+}
+
+/**
+ * Flatten a wizard state's per-env BU lists into one sorted array.
+ *
+ * @param {object} state - inferred wizard state
+ * @returns {string[]} every assignable BU reference, sorted
+ */
+function allBUsOf(state) {
+  return Object.values(state.envBUs)
+    .flat()
+    .toSorted((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Shared intake assertions every sanitized vanilla fixture must satisfy: it parses, infers a usable
+ * state with a non-empty _ParentBU_-free BU set and internally consistent envOrder/envBUs, exposes
+ * the 5-field marketList-adoption shape, and survives a buildConfig smoke pass without throwing.
+ *
+ * @param {string} name - fixture base name
+ * @returns {{state: object, allBUs: string[]}} the inferred state + flattened BU set (for callers that assert more)
+ */
+function assertSanitizedFixtureIntake(name) {
+  const config = loadSanitizedFixture(name);
+
+  // Tier 1 — reverse-infer the wizard state from a vanilla (no mpb_pipeline) config.
+  const { state, warnings } = controller.inferWizardStateFromVanilla(config);
+  assert.ok(
+    Array.isArray(state.envOrder) && state.envOrder.length >= 1,
+    `${name}: at least one environment`,
+  );
+  assert.ok(Array.isArray(warnings), `${name}: warnings is an array`);
+  const allBUs = allBUsOf(state);
+  assert.ok(allBUs.length > 0, `${name}: at least one assignable BU`);
+  assert.ok(
+    allBUs.every((bu) => !bu.includes('_ParentBU_')),
+    `${name}: the reserved _ParentBU_ sentinel is never assignable`,
+  );
+  // envOrder/envBUs are internally consistent: every env in the order has a (possibly empty) BU list,
+  // and every BU list belongs to an env named in the order.
+  for (const environment of state.envOrder) {
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(state.envBUs, environment),
+      `${name}: envBUs has ${environment} from envOrder`,
+    );
+  }
+  for (const environment of Object.keys(state.envBUs)) {
+    assert.ok(
+      state.envOrder.includes(environment),
+      `${name}: envOrder lists ${environment} from envBUs`,
+    );
+  }
+
+  // Tier 2 — marketList adoption scan returns its documented 5-field shape.
+  const adoption = controller.detectMarketListAdoption(config);
+  assert.deepEqual(
+    Object.keys(adoption).toSorted((a, b) => a.localeCompare(b)),
+    ['byBU', 'detected', 'marketOf', 'needsSuffixKey', 'suffixKeyCandidates'],
+    `${name}: detectMarketListAdoption exposes exactly its 5 fields`,
+  );
+  assert.equal(typeof adoption.detected, 'boolean', `${name}: adoption.detected is boolean`);
+  assert.equal(typeof adoption.byBU, 'object', `${name}: adoption.byBU is a map`);
+  assert.equal(typeof adoption.marketOf, 'object', `${name}: adoption.marketOf is a map`);
+  assert.equal(
+    typeof adoption.needsSuffixKey,
+    'boolean',
+    `${name}: adoption.needsSuffixKey is boolean`,
+  );
+  assert.ok(
+    Array.isArray(adoption.suffixKeyCandidates),
+    `${name}: adoption.suffixKeyCandidates is an array`,
+  );
+
+  // buildConfig smoke pass — the inferred state round-trips into a config object without throwing.
+  let built;
+  assert.doesNotThrow(() => {
+    built = buildConfig(state, config);
+  }, `${name}: buildConfig must not throw on an inferred state`);
+  assert.equal(typeof built.marketList, 'object', `${name}: buildConfig emits a marketList block`);
+  assert.equal(typeof built.markets, 'object', `${name}: buildConfig emits a markets block`);
+
+  return { state, allBUs };
+}
+
+test('inferWizardStateFromVanilla handles a large single-credential country-market shape (gold-mcdevrc-2)', () => {
+  const { state } = assertSanitizedFixtureIntake('gold-mcdevrc-2');
+  assert.equal(state.multiCred, false, 'single-credential fixture is not multiCred');
+});
+
+test('inferWizardStateFromVanilla handles a small vanilla shape with a segmentation BU (gold-mcdevrc-3)', () => {
+  const { state } = assertSanitizedFixtureIntake('gold-mcdevrc-3');
+  assert.equal(state.multiCred, false, 'single-credential fixture is not multiCred');
+});
+
+test('inferWizardStateFromVanilla handles a minimal three-BU vanilla shape (gold-mcdevrc-4)', () => {
+  const { state } = assertSanitizedFixtureIntake('gold-mcdevrc-4');
+  assert.equal(state.multiCred, false, 'single-credential fixture is not multiCred');
+});
+
+test('inferWizardStateFromVanilla handles a MULTI-CREDENTIAL shape (gold-mcdevrc-5)', () => {
+  const { state, allBUs } = assertSanitizedFixtureIntake('gold-mcdevrc-5');
+  // The sole fixture exercising the two-credential branch: BUs are split across two accounts, each
+  // with its own _ParentBU_ sentinel, so every assignable BU must carry a <cred>/<BU> reference form.
+  assert.equal(state.multiCred, true, 'the two-account fixture sets multiCred');
+  assert.ok(
+    allBUs.every((bu) => bu.startsWith('BrandD-Sandbox/') || bu.startsWith('BrandD-PROD/')),
+    'every assignable BU is <cred>/<BU>-qualified across both credential accounts',
+  );
+  // Both credential accounts contribute at least one assignable BU.
+  assert.ok(
+    allBUs.some((bu) => bu.startsWith('BrandD-Sandbox/')),
+    'the sandbox credential contributes assignable BUs',
+  );
+  assert.ok(
+    allBUs.some((bu) => bu.startsWith('BrandD-PROD/')),
+    'the prod credential contributes assignable BUs',
+  );
+  // Neither account's _ParentBU_ sentinel leaks into the assignable set.
+  assert.ok(
+    allBUs.every((bu) => !bu.endsWith('/_ParentBU_')),
+    'neither credential account exposes its _ParentBU_ as assignable',
+  );
+});
+
+test('inferWizardStateFromVanilla handles a large single-credential BU-map shape (gold-mcdevrc-6)', () => {
+  const { state } = assertSanitizedFixtureIntake('gold-mcdevrc-6');
+  assert.equal(state.multiCred, false, 'single-credential fixture is not multiCred');
 });
 
 test('downloadText keeps a leading-dot filename on the anchor download attribute', () => {
@@ -5448,4 +5640,767 @@ test('filledBUCountFor: counts BUs with a non-empty stored value (whitespace cou
   // All-empty → 0.
   controller.state.wizardState.marketVariables = { DEV: { varA: '' }, SIT: {}, QA: { varA: '  ' } };
   assert.equal(controller.filledBUCountFor(references, 'varA'), 0);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHUNK 6 — output-config options, market-list adoption & tiering (all synthetic).
+//
+// Every fixture below is built from hand-authored placeholder names (bu_dev_a,
+// MarketA, ml_dev_children, suffixes _A/_B, keys ISO/countryCode) — NEVER from the
+// bundled real .mcdevrc.json (sampleConfig) — to keep confidential customer data
+// out of the suite. These cover the CHUNK 1/2/5 features:
+//   1. buildConfig options {stripForeign, adoptExisting} + back-compat
+//   2. analyzeExistingCoverage covered/uncovered + marketNameByRef
+//   3. effectiveSuffix accessor
+//   4. isBranchMappingReliable
+//   5. detectMarketListAdoption
+//   6. resolveRichMarketForStub
+//   7. wizardStateFromConfig tiering (T1/T2/T3)
+//   8. Tier-2 acceptConfig banner
+//   9. marketAdoption round-trip through buildConfig / restore
+//   10. matchMarketsForPipeline
+// ─────────────────────────────────────────────────────────────────────────────
+
+const { effectiveSuffix, analyzeExistingCoverage } = globalThis.mpbConfigBuilder;
+
+/**
+ * A minimal synthetic base config: one credential (so refs are stored bare and
+ * `<cred>/<BU>` qualifies to `syn/<BU>`), a user-authored market and marketList,
+ * plus a user option to prove non-`mpb_` entries survive/round-trip.
+ *
+ * @returns {object} a fresh synthetic `.mcdevrc.json` object
+ */
+function synBaseConfig() {
+  return {
+    credentials: {
+      syn: {
+        businessUnits: { bu_dev_a: '111', bu_sit_a: '222' },
+      },
+    },
+    options: { formatOnSave: true, deployment: {} },
+    markets: {
+      UserMarket: { suffix: '_user', ISO: 'US' },
+    },
+    marketList: {
+      user_list: { 'syn/bu_dev_a': 'UserMarket' },
+    },
+  };
+}
+
+/**
+ * A small two-env (DEV→SIT) synthetic wizard state driving buildConfig. Single-BU
+ * envs so the hop keeps the short marketList names; no sharedDEs.
+ *
+ * @returns {object} a fresh synthetic wizard state
+ */
+function synWizardState() {
+  return {
+    version: 1,
+    multiCred: false,
+    envOrder: ['DEV', 'SIT'],
+    envBUs: { DEV: ['bu_dev_a'], SIT: ['bu_sit_a'] },
+    envBranches: {},
+    lineage: { bu_sit_a: 'bu_dev_a' },
+    separator: '_',
+    suffixes: { bu_dev_a: '_A', bu_sit_a: '_B' },
+    marketVariables: {},
+    prodBUs: ['bu_sit_a'],
+    sharedDEs: false,
+  };
+}
+
+// ── 1. buildConfig options ──────────────────────────────────────────────────
+
+test('buildConfig: no-arg call is byte-identical to passing {} (back-compat)', () => {
+  const noArgument = buildConfig(synWizardState(), synBaseConfig());
+  const emptyOptions = buildConfig(synWizardState(), synBaseConfig(), {});
+  assert.deepEqual(emptyOptions, noArgument, 'passing {} must not change the output');
+  // Idempotency: running twice over its own output is stable.
+  const twice = buildConfig(synWizardState(), noArgument);
+  assert.deepEqual(twice, noArgument, 'buildConfig must be idempotent');
+});
+
+test('buildConfig: stripForeign drops non-mpb_ markets & marketLists, keeps mpb_ + mpb_pipeline', () => {
+  const out = buildConfig(synWizardState(), synBaseConfig(), { stripForeign: true });
+  const marketNames = Object.keys(out.markets);
+  const listNames = Object.keys(out.marketList);
+  // The user's market/list are gone; only tool-generated mpb_ entries remain.
+  assert.ok(!marketNames.includes('UserMarket'), 'user market stripped');
+  assert.ok(!listNames.includes('user_list'), 'user marketList stripped');
+  assert.ok(
+    marketNames.every((name) => name.startsWith('mpb_')),
+    'only mpb_ markets remain',
+  );
+  assert.ok(
+    listNames.every((name) => name.startsWith('mpb_')),
+    'only mpb_ marketLists remain',
+  );
+  assert.ok(marketNames.includes('mpb_DEV'), 'generated markets are still present');
+  // The round-trip block survives (it lives under options.deployment, not markets).
+  assert.ok(out.options.deployment.mpb_pipeline, 'mpb_pipeline block retained');
+});
+
+test('buildConfig: stripForeign also drops non-mpb_ sourceTargetMapping + branchSourceTargetMapping entries', () => {
+  // Seed foreign deployment mappings that must be removed alongside foreign markets/marketLists.
+  const base = synBaseConfig();
+  base.options.deployment = {
+    sourceTargetMapping: { foreign_src: 'foreign_tgt' },
+    branchSourceTargetMapping: {
+      legacy: { foreign_src: 'foreign_tgt' },
+      main: { another_src: 'another_tgt' },
+    },
+  };
+  const out = buildConfig(synWizardState(), base, { stripForeign: true });
+  const deployment = out.options.deployment;
+  // Foreign sourceTargetMapping keys are gone; only mpb_ ones remain.
+  assert.ok(
+    Object.keys(deployment.sourceTargetMapping).every((k) => k.startsWith('mpb_')),
+    'only mpb_ sourceTargetMapping entries remain',
+  );
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(deployment.sourceTargetMapping, 'foreign_src'),
+    'foreign sourceTargetMapping entry stripped',
+  );
+  // Foreign branches are dropped entirely (no mpb_ entries left in them).
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(deployment.branchSourceTargetMapping, 'legacy'),
+    'foreign-only branch dropped',
+  );
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(deployment.branchSourceTargetMapping, 'main'),
+    'second foreign-only branch dropped',
+  );
+  // Every surviving branch keeps only mpb_ source->target pairs.
+  for (const pairs of Object.values(deployment.branchSourceTargetMapping)) {
+    assert.ok(
+      Object.keys(pairs).every((k) => k.startsWith('mpb_')),
+      'only mpb_ branch pairs remain',
+    );
+  }
+});
+
+test('buildConfig: adoptExisting skips mpb_ market/marketList/mapping generation but keeps user + mpb_pipeline', () => {
+  const out = buildConfig(synWizardState(), synBaseConfig(), { adoptExisting: true });
+  const marketNames = Object.keys(out.markets);
+  const listNames = Object.keys(out.marketList);
+  // No generated mpb_ markets / marketLists / branch mappings.
+  assert.ok(
+    marketNames.every((name) => !name.startsWith('mpb_')),
+    'no mpb_ markets generated',
+  );
+  assert.ok(
+    listNames.every((name) => !name.startsWith('mpb_')),
+    'no mpb_ marketLists generated',
+  );
+  assert.deepEqual(
+    out.options.deployment.branchSourceTargetMapping,
+    {},
+    'no branch mapping generated',
+  );
+  // User entries retained.
+  assert.ok(marketNames.includes('UserMarket'), 'user market kept');
+  assert.ok(listNames.includes('user_list'), 'user marketList kept');
+  // The mpb_pipeline round-trip block is still written so a reopen restores state.
+  assert.ok(out.options.deployment.mpb_pipeline, 'mpb_pipeline block written');
+  assert.deepEqual(out.options.deployment.mpb_pipeline.envOrder, ['DEV', 'SIT']);
+});
+
+// ── 2. analyzeExistingCoverage ──────────────────────────────────────────────
+
+test('analyzeExistingCoverage: a config whose existing markets + lists cover every hop → covered', () => {
+  const state = synWizardState();
+  // suffixKey resolves the effective suffix from the ISO var (no literal suffix field), and the
+  // ISO key must be present on every covering market too (structural key-set check). The suffix
+  // step seeds state.suffixes to the effective (ISO) value, so the user-override matches.
+  state.suffixKey = 'ISO';
+  state.suffixes = { bu_dev_a: 'US', bu_sit_a: 'GB' };
+  state.marketVariables = {
+    bu_dev_a: { ISO: 'US' },
+    bu_sit_a: { ISO: 'GB' },
+  };
+  const config = synBaseConfig();
+  // Existing (non-mpb_) markets whose effective suffix (= ISO under suffixKey) + keys cover each BU.
+  config.markets = {
+    bu_dev_a: { ISO: 'US' },
+    bu_sit_a: { ISO: 'GB' },
+  };
+  // Existing user marketLists carrying every hop's source + target ref.
+  config.marketList = {
+    src: { 'syn/bu_dev_a': 'bu_dev_a' },
+    tgt: { 'syn/bu_sit_a': 'bu_sit_a' },
+  };
+  const result = analyzeExistingCoverage(state, config);
+  assert.equal(result.covered, true, 'fully covered');
+  assert.deepEqual(result.missing, []);
+  // marketNameByRef maps each BU to the existing market that covers it (name == BU wins).
+  assert.equal(result.marketNameByRef.bu_dev_a, 'bu_dev_a');
+  assert.equal(result.marketNameByRef.bu_sit_a, 'bu_sit_a');
+});
+
+test('analyzeExistingCoverage: a config missing a market and a hop list → uncovered with reasons', () => {
+  const state = synWizardState();
+  state.suffixKey = 'ISO';
+  state.suffixes = { bu_dev_a: 'US', bu_sit_a: 'GB' };
+  state.marketVariables = { bu_dev_a: { ISO: 'US' }, bu_sit_a: { ISO: 'GB' } };
+  const config = synBaseConfig();
+  // Only bu_dev_a is covered; bu_sit_a has no matching market, and no hop lists exist.
+  config.markets = { bu_dev_a: { ISO: 'US' } };
+  config.marketList = {};
+  const result = analyzeExistingCoverage(state, config);
+  assert.equal(result.covered, false);
+  // The covered BU is still recorded.
+  assert.equal(result.marketNameByRef.bu_dev_a, 'bu_dev_a');
+  assert.equal(result.marketNameByRef.bu_sit_a, undefined, 'uncovered BU has no market');
+  // Expected missing reasons: the missing sit market + both hop lists.
+  assert.ok(
+    result.missing.some((m) => m.includes('Missing market for bu_sit_a')),
+    'flags the missing market',
+  );
+  assert.ok(
+    result.missing.some((m) => m.includes('Missing source market list for bu_dev_a')),
+    'flags the missing source list',
+  );
+  assert.ok(
+    result.missing.some((m) => m.includes('Missing target market list for bu_sit_a')),
+    'flags the missing target list',
+  );
+});
+
+test('analyzeExistingCoverage: a suffix set in the suffix step (state.suffixes) satisfies coverage even with no literal suffix field / suffixKey', () => {
+  // Repro of the "Suffix not yet selected" false report: the config carries no literal `suffix`
+  // field and no suffixKey, but the user typed a suffix per BU in the suffix step. That user
+  // override (state.suffixes) is the source of truth and must be honored — matching how buildConfig
+  // generates markets — so coverage must NOT report "Suffix not yet selected".
+  const state = synWizardState();
+  state.suffixKey = null;
+  state.suffixes = { bu_dev_a: '_A', bu_sit_a: '_B' };
+  state.marketVariables = {};
+  const config = synBaseConfig();
+  config.markets = {
+    bu_dev_a: { suffix: '_A' },
+    bu_sit_a: { suffix: '_B' },
+  };
+  config.marketList = {
+    src: { 'syn/bu_dev_a': 'bu_dev_a' },
+    tgt: { 'syn/bu_sit_a': 'bu_sit_a' },
+  };
+  const result = analyzeExistingCoverage(state, config);
+  assert.ok(
+    result.missing.every((m) => !m.startsWith('Suffix not yet selected')),
+    'never reports "Suffix not yet selected" once the suffix step set state.suffixes',
+  );
+  assert.equal(result.covered, true, 'fully covered via the user-set suffixes');
+  assert.equal(result.marketNameByRef.bu_dev_a, 'bu_dev_a');
+  assert.equal(result.marketNameByRef.bu_sit_a, 'bu_sit_a');
+});
+
+test('analyzeExistingCoverage: still reports "Suffix not yet selected" when neither state.suffixes nor a literal/suffixKey suffix exists', () => {
+  // The gate is preserved for the genuinely-unresolved case: no suffix step value, no literal
+  // suffix field, and no suffixKey chosen → the pipeline is not yet coverable.
+  const state = synWizardState();
+  state.suffixKey = null;
+  state.suffixes = {};
+  state.marketVariables = { bu_dev_a: { ISO: 'US' }, bu_sit_a: { ISO: 'GB' } };
+  const config = synBaseConfig();
+  config.markets = { bu_dev_a: { ISO: 'US' }, bu_sit_a: { ISO: 'GB' } };
+  const result = analyzeExistingCoverage(state, config);
+  assert.equal(result.covered, false);
+  assert.ok(
+    result.missing.includes('Suffix not yet selected for bu_dev_a'),
+    'still surfaces the unresolved-suffix reason',
+  );
+});
+
+test('analyzeExistingCoverage: an existing marketList mapping covers a BU even when the market suffix disagrees with the chosen suffix', () => {
+  // Real regional-BU repro: the pipeline chose suffix `_RDEV` (state.suffixes) for a regional BU, but
+  // the existing market named after that BU carries the DUPLICATED non-regional `suffix: "_DEV"` (its
+  // distinguishing suffix lives in a fully-custom key). The user's existing marketLists already map
+  // the BU to that market, and only `suffix` is a known attribute — every other key is custom — so
+  // coverage must TRUST the list mapping, not reject on the suffix mismatch.
+  const state = synWizardState();
+  state.suffixKey = null;
+  // Chosen suffix intentionally disagrees with the market's literal `suffix` field.
+  state.suffixes = { bu_dev_a: '_RDEV', bu_sit_a: '_RSIT' };
+  state.marketVariables = {
+    bu_dev_a: { regional_suffix: '_RDEV' },
+    bu_sit_a: { regional_suffix: '_RSIT' },
+  };
+  const config = synBaseConfig();
+  // Markets carry a `suffix` that does NOT equal the chosen suffix; the meaningful value is custom.
+  config.markets = {
+    bu_dev_a: { suffix: '_DEV', regional_suffix: '_RDEV' },
+    bu_sit_a: { suffix: '_SIT', regional_suffix: '_RSIT' },
+  };
+  // Existing user marketLists map each BU 1:1 to its market (the authoritative resolution) and also
+  // carry the hop source/target refs.
+  config.marketList = {
+    src: { 'syn/bu_dev_a': 'bu_dev_a' },
+    tgt: { 'syn/bu_sit_a': 'bu_sit_a' },
+  };
+  const result = analyzeExistingCoverage(state, config);
+  assert.equal(
+    result.covered,
+    true,
+    'covered via the existing marketList mapping despite the suffix mismatch',
+  );
+  assert.deepEqual(result.missing, []);
+  assert.equal(result.marketNameByRef.bu_dev_a, 'bu_dev_a');
+  assert.equal(result.marketNameByRef.bu_sit_a, 'bu_sit_a');
+});
+
+test('analyzeExistingCoverage: a marketList entry pointing at a non-existent market does NOT resolve — falls back to the suffix heuristic', () => {
+  // Junk tolerance: a list entry whose referenced market is absent must not be trusted. With no
+  // covering market either, the BU stays uncovered (the fallback heuristic then reports it).
+  const state = synWizardState();
+  state.suffixKey = null;
+  state.suffixes = { bu_dev_a: '_A', bu_sit_a: '_B' };
+  state.marketVariables = {};
+  const config = synBaseConfig();
+  // bu_dev_a has a real market; bu_sit_a's list points at a market that does not exist.
+  config.markets = { bu_dev_a: { suffix: '_A' } };
+  config.marketList = {
+    src: { 'syn/bu_dev_a': 'bu_dev_a' },
+    tgt: { 'syn/bu_sit_a': 'ghost_market' },
+  };
+  const result = analyzeExistingCoverage(state, config);
+  assert.equal(result.marketNameByRef.bu_dev_a, 'bu_dev_a', 'valid list entry resolves');
+  assert.equal(result.marketNameByRef.bu_sit_a, undefined, 'junk list entry does not resolve');
+  assert.ok(
+    result.missing.includes('Missing market for bu_sit_a (suffix _B)'),
+    'falls back to the suffix heuristic and reports the missing market',
+  );
+});
+
+// ── 3. effectiveSuffix accessor ─────────────────────────────────────────────
+
+test('effectiveSuffix: real suffix field wins; else suffixKey value; else empty string', () => {
+  // (a) real `suffix` field always wins, even when a suffixKey is also present.
+  assert.equal(effectiveSuffix({ suffix: '_A', ISO: 'US' }, 'ISO'), '_A');
+  // (b) no suffix field → the value of the chosen suffixKey.
+  assert.equal(effectiveSuffix({ ISO: 'US' }, 'ISO'), 'US');
+  // (c) no suffix field and no (or empty) suffixKey → ''.
+  assert.equal(effectiveSuffix({ ISO: 'US' }, null), '');
+  assert.equal(effectiveSuffix({ ISO: '' }, 'ISO'), '', 'empty suffixKey value → empty');
+  assert.equal(effectiveSuffix({}, 'ISO'), '');
+  assert.equal(effectiveSuffix(null, 'ISO'), '');
+});
+
+// ── 4. isBranchMappingReliable ──────────────────────────────────────────────
+
+test('isBranchMappingReliable: a mapping whose lists all resolve to ≥1 BU → true', () => {
+  const marketLists = {
+    ml_src: { 'syn/bu_dev_a': 'MarketA' },
+    ml_tgt: { 'syn/bu_sit_a': 'MarketB' },
+  };
+  const branchMapping = { sit: { ml_src: 'ml_tgt' } };
+  assert.equal(controller.isBranchMappingReliable(branchMapping, marketLists), true);
+});
+
+test('isBranchMappingReliable: empty mapping → false (nothing to trust)', () => {
+  assert.equal(controller.isBranchMappingReliable({}, {}), false);
+  assert.equal(controller.isBranchMappingReliable({ sit: {} }, {}), false);
+});
+
+test('isBranchMappingReliable: a pair whose lists do not resolve → false', () => {
+  const marketLists = { ml_src: { 'syn/bu_dev_a': 'MarketA' } };
+  // ml_tgt is missing entirely → target side resolves to no BU → unreliable.
+  const branchMapping = { sit: { ml_src: 'ml_tgt' } };
+  assert.equal(controller.isBranchMappingReliable(branchMapping, marketLists), false);
+});
+
+test('isBranchMappingReliable: a _ParentBU_-only pair is exempt from the known-BU rule → true', () => {
+  const marketLists = {
+    parent_src: { filter: {}, 'syn/_ParentBU_': 'MarketA' },
+    parent_tgt: { 'syn/_ParentBU_': 'MarketB' },
+  };
+  const branchMapping = { sit: { parent_src: 'parent_tgt' } };
+  assert.equal(controller.isBranchMappingReliable(branchMapping, marketLists), true);
+});
+
+// ── 5. detectMarketListAdoption ─────────────────────────────────────────────
+
+/**
+ * A synthetic vanilla config with 1:1 child marketLists (per-BU list → a single
+ * market NAME that exists in `markets`), no `mpb_pipeline`, plus junk entries the
+ * scan must tolerate: a `TODO` string value whose market does not exist, an
+ * array-valued entry, and a `_ParentBU_`-named list.
+ *
+ * @param {boolean} withSuffix true to give the markets a real `suffix` field
+ * @returns {object} a fresh synthetic vanilla config
+ */
+function synAdoptionConfig(withSuffix) {
+  const marketA = withSuffix
+    ? { suffix: '_A', ISO: 'US', countryCode: '1' }
+    : { ISO: 'US', countryCode: '1' };
+  const marketB = withSuffix
+    ? { suffix: '_B', ISO: 'GB', countryCode: '44' }
+    : { ISO: 'GB', countryCode: '44' };
+  return {
+    credentials: { syn: { businessUnits: { bu_dev_a: '111', bu_sit_a: '222' } } },
+    markets: { MarketA: marketA, MarketB: marketB },
+    marketList: {
+      ml_dev_a: { 'syn/bu_dev_a': 'MarketA' },
+      ml_sit_a: { 'syn/bu_sit_a': 'MarketB' },
+      // Junk the scan must skip without throwing:
+      ml_junk_missing: { 'syn/bu_x': 'NoSuchMarket' },
+      ml_junk_array: { 'syn/bu_y': ['MarketA', 'MarketB'] },
+      ml_ParentBU_list: { 'syn/_ParentBU_': 'MarketA' },
+      ml_meta: { filter: { include: {} }, description: 'note', 'syn/bu_dev_a': 'MarketA' },
+    },
+  };
+}
+
+test('detectMarketListAdoption: 1:1 child lists → detected with byBU + marketOf', () => {
+  const result = controller.detectMarketListAdoption(synAdoptionConfig(true));
+  assert.equal(result.detected, true);
+  // byBU maps each qualified child ref to its market.
+  assert.equal(result.byBU['syn/bu_dev_a'], 'MarketA');
+  assert.equal(result.byBU['syn/bu_sit_a'], 'MarketB');
+  // marketOf carries the effective suffix, non-reserved keys (sorted, excl. suffix/description), and vars.
+  assert.equal(result.marketOf.MarketA.suffix, '_A');
+  // Keys are sorted via localeCompare → lowercase-leading 'countryCode' sorts before 'ISO'.
+  assert.deepEqual(result.marketOf.MarketA.keys, ['countryCode', 'ISO']);
+  assert.deepEqual(result.marketOf.MarketA.vars, { ISO: 'US', countryCode: '1' });
+  assert.equal(result.marketOf.MarketA.adoptedFrom, null);
+  // A real suffix field was present → no suffix-key needed.
+  assert.equal(result.needsSuffixKey, false);
+});
+
+test('detectMarketListAdoption: junk entries (missing market / array / _ParentBU_) are tolerated', () => {
+  const result = controller.detectMarketListAdoption(synAdoptionConfig(true));
+  // The junk refs never make it into byBU.
+  assert.equal(result.byBU['syn/bu_x'], undefined, 'missing-market ref skipped');
+  assert.equal(result.byBU['syn/bu_y'], undefined, 'array-valued entry skipped');
+  assert.equal(
+    Object.keys(result.byBU).some((reference) => reference.includes('_ParentBU_')),
+    false,
+    'no _ParentBU_ ref adopted',
+  );
+  // A wholly-junk config still returns the 5-field shape without throwing.
+  const junkOnly = controller.detectMarketListAdoption({
+    markets: {},
+    marketList: { x: { 'syn/bu': 'Nope' }, y: 'not-an-object', z: [1, 2, 3] },
+  });
+  assert.equal(junkOnly.detected, false);
+  assert.deepEqual(junkOnly.byBU, {});
+  assert.deepEqual(junkOnly.suffixKeyCandidates, []);
+});
+
+test('detectMarketListAdoption: no real suffix field → needsSuffixKey + sorted suffixKeyCandidates', () => {
+  const result = controller.detectMarketListAdoption(synAdoptionConfig(false));
+  assert.equal(result.detected, true);
+  assert.equal(result.needsSuffixKey, true, 'no suffix field → the user must pick a key');
+  // Candidate keys are the union of non-reserved market keys, sorted (localeCompare).
+  assert.deepEqual(result.suffixKeyCandidates, ['countryCode', 'ISO']);
+  // With no suffix field and no chosen key, the effective suffix is ''.
+  assert.equal(result.marketOf.MarketA.suffix, '');
+});
+
+// ── 6. resolveRichMarketForStub ─────────────────────────────────────────────
+
+test('resolveRichMarketForStub: a near-empty stub adopts a richer same-buName market', () => {
+  const config = {
+    markets: {
+      StubA: { buName: 'bu_dev_a', description: 'placeholder' },
+      RichA: { buName: 'bu_dev_a', ISO: 'US', mid: '111' },
+    },
+  };
+  const result = controller.resolveRichMarketForStub('StubA', config, {});
+  assert.equal(result.name, 'RichA', 'the richer same-BU market is adopted');
+  assert.equal(result.adoptedFrom, 'StubA', 'adoptedFrom records the original stub');
+});
+
+test('resolveRichMarketForStub: no richer same-BU market → the stub itself with adoptedFrom null', () => {
+  const config = {
+    markets: {
+      StubA: { buName: 'bu_dev_a', description: 'placeholder' },
+      RichOther: { buName: 'bu_other', ISO: 'GB' },
+    },
+  };
+  const result = controller.resolveRichMarketForStub('StubA', config, {});
+  assert.equal(result.name, 'StubA', 'no matching richer market → keep the stub');
+  assert.equal(result.adoptedFrom, null);
+});
+
+// ── 7. wizardStateFromConfig tiering ────────────────────────────────────────
+
+test('wizardStateFromConfig T1: a reliable branch mapping reconstructs envs + lineage', () => {
+  // A vanilla config (no mpb_pipeline) whose branchSourceTargetMapping resolves cleanly.
+  const config = {
+    credentials: { syn: { businessUnits: { bu_dev_a: '111', bu_sit_a: '222' } } },
+    markets: {
+      MarketDev: { suffix: '_A' },
+      MarketSit: { suffix: '_B' },
+    },
+    marketList: {
+      ml_src: { 'syn/bu_dev_a': 'MarketDev' },
+      ml_tgt: { 'syn/bu_sit_a': 'MarketSit' },
+    },
+    options: {
+      deployment: { branchSourceTargetMapping: { sit: { ml_src: 'ml_tgt' } } },
+    },
+  };
+  const state = controller.wizardStateFromConfig(config);
+  // Envs + lineage were reconstructed from the hop graph.
+  assert.ok(state.envOrder.length >= 2, 'at least a source + target env');
+  assert.equal(state.lineage.bu_sit_a, 'bu_dev_a', 'lineage links target BU to source BU');
+  const allReferences = new Set(Object.values(state.envBUs).flat());
+  assert.ok(allReferences.has('bu_dev_a') && allReferences.has('bu_sit_a'), 'both BUs placed');
+  // T1 does not populate marketAdoption.
+  assert.deepEqual(state.marketAdoption, {});
+});
+
+test('wizardStateFromConfig T2: no reliable mapping but 1:1 lists → seeded blank state with marketAdoption', () => {
+  const state = controller.wizardStateFromConfig(synAdoptionConfig(true));
+  // Blank-but-seeded: no envs / lineage inferred.
+  assert.deepEqual(state.envOrder, []);
+  assert.deepEqual(state.lineage, {});
+  // marketAdoption is populated from detectMarketListAdoption.
+  assert.equal(state.marketAdoption.byBU['syn/bu_dev_a'], 'MarketA');
+  assert.equal(state.marketAdoption.byBU['syn/bu_sit_a'], 'MarketB');
+  assert.equal(state.marketAdoption.needsSuffixKey, false);
+});
+
+test('wizardStateFromConfig T3: nothing reliable/detected → an empty wizard state', () => {
+  // A config with credentials/BUs but no mapping and no adoptable 1:1 lists.
+  const config = {
+    credentials: { syn: { businessUnits: { bu_dev_a: '111' } } },
+    markets: {},
+    marketList: {},
+    options: { deployment: {} },
+  };
+  const state = controller.wizardStateFromConfig(config);
+  assert.deepEqual(state.envOrder, []);
+  assert.deepEqual(state.lineage, {});
+  assert.deepEqual(state.marketAdoption, {});
+  assert.equal(state.suffixKey, null);
+});
+
+// ── 8. Tier-2 acceptConfig banner ───────────────────────────────────────────
+
+/**
+ * The rendered text of a banner's message span (the first appended child), read from the
+ * FakeBannerNode's own child list so no real DOM traversal API is needed.
+ *
+ * @param {object} banner a FakeBannerNode banner div
+ * @returns {string} the banner message text
+ */
+function bannerMessageText(banner) {
+  const span = banner.children.at(0);
+  return span ? span.textContent : '';
+}
+
+test('acceptConfig: fires the marketAdoption warning banner when byBU is non-empty', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    controller.acceptConfig(synAdoptionConfig(true));
+    const banner = banners.banners.querySelector('[data-banner="marketAdoption"]');
+    assert.ok(banner, 'the marketAdoption banner is shown');
+    // variant 'warning' → class carries the modifier; role is status (not alert).
+    assert.match(banner.className, /mpb-banner--warning/);
+    assert.equal(banner.attrs.role, 'status');
+    // The message names the market picker; no suffix-key sentence when a real suffix exists.
+    const message = bannerMessageText(banner);
+    assert.match(message, /market picker/i);
+    assert.doesNotMatch(
+      message,
+      /suffix field was found/i,
+      'no suffix-key sentence when suffix present',
+    );
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+test('acceptConfig: appends the suffix-key sentence when needsSuffixKey is set', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    controller.acceptConfig(synAdoptionConfig(false));
+    const banner = banners.banners.querySelector('[data-banner="marketAdoption"]');
+    assert.ok(banner, 'the marketAdoption banner is shown');
+    assert.match(bannerMessageText(banner), /suffix field was found/i);
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+test('acceptConfig: does NOT fire the marketAdoption banner when no 1:1 lists are detected', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    // A plain config with BUs but nothing adoptable.
+    controller.acceptConfig({
+      credentials: { syn: { businessUnits: { bu_dev_a: '111' } } },
+      markets: {},
+      marketList: {},
+      options: { deployment: {} },
+    });
+    assert.equal(
+      banners.banners.querySelector('[data-banner="marketAdoption"]'),
+      null,
+      'no banner when byBU is empty',
+    );
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+// ── 9. marketAdoption round-trip through buildConfig / restore ───────────────
+
+test('buildConfig: non-empty marketAdoption + suffixKey are emitted into mpb_pipeline and restore', () => {
+  const state = synWizardState();
+  state.suffixKey = 'ISO';
+  state.marketAdoption = {
+    byBU: { 'syn/bu_dev_a': 'MarketA' },
+    marketOf: { MarketA: { suffix: '', keys: ['ISO'], vars: { ISO: 'US' }, adoptedFrom: null } },
+    needsSuffixKey: true,
+    suffixKeyCandidates: ['ISO'],
+  };
+  const out = buildConfig(state, synBaseConfig());
+  // Emitted into the round-trip block.
+  assert.deepEqual(out.options.deployment.mpb_pipeline.marketAdoption, state.marketAdoption);
+  assert.equal(out.options.deployment.mpb_pipeline.suffixKey, 'ISO');
+  // Restore path (wizardStateFromConfig reads the block back) reproduces them.
+  const restored = controller.wizardStateFromConfig(out);
+  assert.deepEqual(restored.marketAdoption, state.marketAdoption);
+  assert.equal(restored.suffixKey, 'ISO');
+});
+
+test('buildConfig: empty marketAdoption + null suffixKey are NOT emitted (byte-identity preserved)', () => {
+  const withDefaults = buildConfig(synWizardState(), synBaseConfig());
+  assert.ok(
+    !Object.hasOwn(withDefaults.options.deployment.mpb_pipeline, 'marketAdoption'),
+    'empty marketAdoption is omitted',
+  );
+  assert.ok(
+    !Object.hasOwn(withDefaults.options.deployment.mpb_pipeline, 'suffixKey'),
+    'null suffixKey is omitted',
+  );
+  // Explicit empty/null on the state must also stay omitted.
+  const state = synWizardState();
+  state.marketAdoption = {};
+  state.suffixKey = null;
+  const out = buildConfig(state, synBaseConfig());
+  assert.deepEqual(out, withDefaults, 'empty adoption state is byte-identical to defaults');
+});
+
+// ── 10. matchMarketsForPipeline ─────────────────────────────────────────────
+
+/**
+ * Seed the controller with a synthetic pipeline + adoption map for the matcher tests.
+ * Three child BUs share the source key set except `bu_mismatch` (extra key) and
+ * `bu_absent` (no byBU entry). Returns the pipeline refs and the adoption map.
+ *
+ * @param {?string} suffixKey the wizardState.suffixKey to set (or null)
+ * @returns {{references: string[], adoption: object}} pipeline refs + adoption map
+ */
+function seedMatcher(suffixKey) {
+  controller.state.mode = 'full';
+  controller.state.wizardState = sampleWizardState();
+  controller.state.wizardState.separator = '_';
+  controller.state.wizardState.suffixKey = suffixKey;
+  controller.state.wizardState.marketVariables = {};
+  controller.state.wizardState.suffixes = {};
+  const adoption = {
+    byBU: {
+      bu_source: 'MarketSource',
+      bu_match: 'MarketMatch',
+      bu_suffixfield: 'MarketSuffixField',
+      bu_mismatch: 'MarketMismatch',
+      // bu_absent intentionally has no byBU entry.
+    },
+    marketOf: {
+      // Source + match + suffixField all share the {ISO, countryCode} key set. With suffixKey
+      // 'ISO', the detector bakes the resolved separator-LESS suffix body into `entry.suffix`.
+      MarketSource: {
+        suffix: 'US',
+        keys: ['ISO', 'countryCode'],
+        vars: { ISO: 'US', countryCode: '1' },
+        adoptedFrom: null,
+      },
+      MarketMatch: {
+        suffix: 'GB',
+        keys: ['ISO', 'countryCode'],
+        vars: { ISO: 'GB', countryCode: '44' },
+        adoptedFrom: null,
+      },
+      // Mirrors real `detectMarketListAdoption` output: a real `.suffix` field yields a
+      // separator-INCLUDED effective suffix on the entry, and `vars` never carries `suffix`.
+      // The matcher must use this pre-computed `entry.suffix`, not recompute from `vars`.
+      MarketSuffixField: {
+        suffix: '_DE',
+        keys: ['ISO', 'countryCode'],
+        vars: { ISO: 'DE', countryCode: '49' },
+        adoptedFrom: null,
+      },
+      // Extra key → key set differs → mismatch (left unmatched; suffix never written).
+      MarketMismatch: {
+        suffix: 'FR',
+        keys: ['ISO', 'countryCode', 'extra'],
+        vars: { ISO: 'FR' },
+        adoptedFrom: null,
+      },
+    },
+  };
+  const references = ['bu_source', 'bu_match', 'bu_suffixfield', 'bu_mismatch', 'bu_absent'];
+  return { references, adoption };
+}
+
+test('matchMarketsForPipeline: fills key-set-matching BUs, skips source, leaves others unmatched', () => {
+  const { references, adoption } = seedMatcher('ISO');
+  const result = controller.matchMarketsForPipeline(references, 'MarketSource', adoption);
+  // (a) key-set-matching non-source BUs are filled.
+  assert.deepEqual(
+    result.matched.toSorted((a, b) => a.localeCompare(b)),
+    ['bu_match', 'bu_suffixfield'],
+  );
+  // (b) mismatched + absent BUs are untouched and returned unmatched.
+  assert.deepEqual(
+    result.unmatched.toSorted((a, b) => a.localeCompare(b)),
+    ['bu_absent', 'bu_mismatch'],
+  );
+  const mv = controller.state.wizardState.marketVariables;
+  const suffixes = controller.state.wizardState.suffixes;
+  // (c) the source BU is skipped (not self-filled).
+  assert.equal(mv.bu_source, undefined, 'source BU not filled');
+  // (a cont.) matched BU vars overwritten with the market's vars.
+  assert.deepEqual(mv.bu_match, { ISO: 'GB', countryCode: '44' });
+  // (d) suffix respects suffixKey ('ISO') → separator-prefixed effective suffix.
+  assert.equal(suffixes.bu_match, '_GB');
+  // (d cont.) a real `suffix` field wins over the suffixKey value: the detector's pre-computed
+  // separator-included `entry.suffix` is stored verbatim (not recomputed from the stripped vars).
+  assert.equal(suffixes.bu_suffixfield, '_DE');
+  // (b cont.) mismatched / absent BUs got no vars or suffixes written.
+  assert.equal(mv.bu_mismatch, undefined);
+  assert.equal(mv.bu_absent, undefined);
+  assert.equal(suffixes.bu_mismatch, undefined);
+});
+
+test('matchMarketsForPipeline: an unknown sourceMarketName leaves everything unmatched with no writes', () => {
+  const { references, adoption } = seedMatcher('ISO');
+  const result = controller.matchMarketsForPipeline(references, 'NoSuchMarket', adoption);
+  assert.deepEqual(result.matched, []);
+  // Unknown source name → its key set is null, so NOTHING matches. The self-skip only fires for a
+  // BU whose byBU market EQUALS the requested source name; with an unknown name every BU (incl.
+  // bu_source, which no longer self-matches) falls through to unmatched.
+  assert.deepEqual(
+    result.unmatched.toSorted((a, b) => a.localeCompare(b)),
+    ['bu_absent', 'bu_match', 'bu_mismatch', 'bu_source', 'bu_suffixfield'],
+  );
+  assert.deepEqual(controller.state.wizardState.marketVariables, {}, 'no vars written');
+  assert.deepEqual(controller.state.wizardState.suffixes, {}, 'no suffixes written');
 });

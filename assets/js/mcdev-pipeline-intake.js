@@ -221,6 +221,11 @@
         // Surface the heuristic-reconstruction banner when a vanilla config was inferred (never for a
         // clean tool-generated round-trip, which stashes no warnings).
         surfaceReconstructionBanner();
+        // Tier-2 market-list adoption banner: fired right after the reconstruction banner when a
+        // vanilla config had per-BU 1:1 marketLists detected (byBU non-empty). Distinct from the
+        // reconstruction banner (whose headline hard-codes "reconstructed heuristically"). REUSES
+        // the existing 'warning' variant — variant is the 4th positional arg (empty actions in slot 3).
+        surfaceMarketAdoptionBanner();
         // Persist immediately so every accepted config is resumable, and take its editing lock.
         createSaveForConfig(config);
         goToStep('mode');
@@ -258,6 +263,36 @@
     }
 
     /**
+     * Fire the Tier-2 market-list adoption banner when the accepted config had per-BU 1:1
+     * marketLists detected (`state.wizardState.marketAdoption.byBU` non-empty). Uses the existing
+     * `'warning'` variant (amber advisory tone) — no new SCSS. When the detection also flagged
+     * `needsSuffixKey`, the message gains a sentence about the missing `suffix` field.
+     *
+     * HARD RULE: `showBanner(key, message, actions, variant)` — variant is the 4th arg. The 3rd
+     * arg is an empty actions array; never pass the variant as the 3rd positional arg.
+     *
+     * @returns {void}
+     */
+    function surfaceMarketAdoptionBanner() {
+        clearBanner('marketAdoption');
+        const adoption = state.wizardState && state.wizardState.marketAdoption;
+        const byBU = adoption && adoption.byBU;
+        if (!byBU || Object.keys(byBU).length === 0) {
+            return;
+        }
+        let message =
+            'Detected per-BU market lists; use the market picker on the Market Variables step to ' +
+            'auto-fill suffixes and variables.';
+        // When no market carried a real `suffix` field, point the user at the suffix-key picker too.
+        if (adoption.needsSuffixKey) {
+            message +=
+                ' No suffix field was found, so pick which market variable acts as the suffix on the ' +
+                'Market Variables step.';
+        }
+        showBanner('marketAdoption', message, [], 'warning');
+    }
+
+    /**
      * Rebuild the wizard state from a config's persisted `options.deployment.mpb_pipeline` block
      * (written by the config builder for GUI round-tripping). When the block is present, its version
      * matches the current save version, and every required field is present, its fields are merged
@@ -279,13 +314,50 @@
         lastReconstructionWarnings = [];
         const block = config && config.options && config.options.deployment && config.options.deployment.mpb_pipeline;
         if (!block || typeof block !== 'object') {
-            // Vanilla config: ambitiously reconstruct the wizard state from the raw pipeline shape.
-            const inferred = inferWizardStateFromVanilla(config);
-            if (inferred && inferred.state && inferred.state.envOrder.some((environment) => (inferred.state.envBUs[environment] || []).length > 0)) {
-                lastReconstructionWarnings = inferred.warnings;
-                return inferred.state;
+            // Vanilla config: three-tier decision (§9).
+            const config_ = config && typeof config === 'object' ? config : {};
+            const deployment =
+                config_.options && typeof config_.options.deployment === 'object'
+                    ? config_.options.deployment
+                    : {};
+            const branchMapping =
+                deployment.branchSourceTargetMapping && typeof deployment.branchSourceTargetMapping === 'object'
+                    ? deployment.branchSourceTargetMapping
+                    : {};
+            const marketLists =
+                config_.marketList && typeof config_.marketList === 'object'
+                    ? config_.marketList
+                    : {};
+
+            // ── Tier 1: reliable branchSourceTargetMapping → full heuristic pre-map. ──
+            if (isBranchMappingReliable(branchMapping, marketLists)) {
+                const inferred = inferWizardStateFromVanilla(config);
+                if (
+                    inferred &&
+                    inferred.state &&
+                    inferred.state.envOrder.some((environment) => (inferred.state.envBUs[environment] || []).length > 0)
+                ) {
+                    lastReconstructionWarnings = inferred.warnings;
+                    return inferred.state;
+                }
+                // Mapping looked reliable but inference yielded no envs — fall through to Tier 2/3.
             }
-            // Nothing usable could be inferred — behave as before (blank wizard, no banner).
+
+            // ── Tier 2: unreliable/absent mapping BUT 1:1 marketLists detected → seed BUs only,
+            // mark adoption on the returned wizardState so acceptConfig can fire the banner. ──
+            const adoption = detectMarketListAdoption(config);
+            if (adoption.detected) {
+                const seeded = emptyWizardState();
+                seeded.marketAdoption = {
+                    byBU: adoption.byBU,
+                    marketOf: adoption.marketOf,
+                    needsSuffixKey: adoption.needsSuffixKey,
+                    suffixKeyCandidates: adoption.suffixKeyCandidates,
+                };
+                return seeded;
+            }
+
+            // ── Tier 3: nothing reliable/detected → blank wizard (BUs come from credentials). ──
             return emptyWizardState();
         }
         // Required fields the config builder always persists; a block missing any of these (or with a
@@ -383,6 +455,287 @@
             });
         }
         return result;
+    }
+
+    // Market-variable keys that are never treated as pipeline "variables" for key-set/adoption
+    // purposes (mirrors config-builder's RESERVED_MARKET_KEYS). `suffix` is the effective-suffix
+    // source and `description` is human metadata; both are excluded from `marketOf[].keys`/`vars`.
+    const RESERVED_MARKET_KEYS = new Set(['suffix', 'description']);
+
+    /**
+     * Read the shared effective-suffix accessor from config-builder (loaded first). Defensive `|| {}`
+     * guards the headless test block, where config-builder is required before intake so the export
+     * is always present in practice. Single source of truth — never duplicate the body here.
+     *
+     * @param {object} marketVariables a market's variable object
+     * @param {string|null} [suffixKey] the variable key the user picked as the suffix source
+     * @returns {string} the effective suffix, or `''` when none is available
+     */
+    function effectiveSuffixOf(marketVariables, suffixKey) {
+        const accessor = (global.mpbConfigBuilder || {}).effectiveSuffix;
+        return typeof accessor === 'function' ? accessor(marketVariables, suffixKey) : '';
+    }
+
+    /**
+     * The non-reserved variable-key set of a market's variables (excludes `suffix`/`description`),
+     * sorted for a stable comparison.
+     *
+     * @param {object} marketVariables a market's variable object
+     * @returns {string[]} sorted non-reserved keys
+     */
+    function nonReservedMarketKeys(marketVariables) {
+        if (!marketVariables || typeof marketVariables !== 'object') {
+            return [];
+        }
+        return Object.keys(marketVariables)
+            .filter((key) => !RESERVED_MARKET_KEYS.has(key))
+            .toSorted((a, b) => a.localeCompare(b));
+    }
+
+    /**
+     * True when a `branchSourceTargetMapping` is RELIABLE enough to drive the full heuristic pre-map
+     * (Tier 1). Every `{sourceMl: targetMl}` pair must name marketLists that (a) EXIST in
+     * `marketLists` and (b) `parseMarketListBUs(...)` yields ≥1 known BU for both sides — UNLESS the
+     * pair is a `_ParentBU_`/parent pair (legitimately no child BU), which is exempt. Any pair that
+     * is neither a satisfied child pair nor a parent pair → the whole mapping is unreliable. An empty
+     * mapping is unreliable (nothing to trust). Pure.
+     *
+     * @param {object} branchMapping config.options.deployment.branchSourceTargetMapping
+     * @param {object} marketLists config.marketList
+     * @returns {boolean} true when every pair is a satisfied child pair or a parent pair
+     */
+    function isBranchMappingReliable(branchMapping, marketLists) {
+        const mapping = branchMapping && typeof branchMapping === 'object' ? branchMapping : {};
+        const lists = marketLists && typeof marketLists === 'object' ? marketLists : {};
+        // Flatten every {sourceMl: targetMl} pair across all branches, then require every pair to be
+        // reliable and at least one pair to exist. A flat check keeps this out of a nested loop.
+        const pairs = [];
+        for (const branchValue of Object.values(mapping)) {
+            const branchPairs = branchValue && typeof branchValue === 'object' ? branchValue : {};
+            for (const pair of Object.entries(branchPairs)) {
+                pairs.push(pair);
+            }
+        }
+        return pairs.length > 0 && pairs.every(([sourceMlName, targetMlName]) => isReliablePair(sourceMlName, targetMlName, lists));
+    }
+
+    /**
+     * True when one `{sourceMl: targetMl}` deployment pair is reliable: it is a `_ParentBU_`/parent
+     * pair (exempt from the known-BU rule) OR both marketLists exist and resolve to ≥1 BU with a
+     * market name. Pure.
+     *
+     * @param {string} sourceMlName the source marketList name
+     * @param {string|string[]} targetMlName the target marketList name
+     * @param {object} lists config.marketList
+     * @returns {boolean} whether this pair is reliable
+     */
+    function isReliablePair(sourceMlName, targetMlName, lists) {
+        const sourceEntries = parseMarketListBUs(lists[sourceMlName]);
+        const targetEntries = parseMarketListBUs(typeof targetMlName === 'string' ? lists[targetMlName] : undefined);
+        // A parent pair (either side references _ParentBU_) is exempt from the known-BU requirement.
+        if (sourceEntries.some((entry) => entry.hasParent) || targetEntries.some((entry) => entry.hasParent)) {
+            return true;
+        }
+        // Otherwise both sides must resolve to ≥1 entry (a BU with a market name).
+        return (
+            sourceEntries.some((entry) => entry.market !== '') && targetEntries.some((entry) => entry.market !== '')
+        );
+    }
+
+    /**
+     * Scan a config's `marketList` for 1:1 child entries (a `<cred>/<BU>` ref → a single market NAME
+     * string whose market EXISTS in `config.markets`) and build a flat, lineage-independent adoption
+     * map (Tier 2). Existence is the ONLY qualifying gate — a market's `suffix` field is NOT required
+     * (§12b); the effective suffix is computed separately and may be `''` until the user picks a key.
+     * Tolerates junk (a ref whose market does not exist is ignored, no throw), skips array-valued
+     * entries and `_ParentBU_`-keyed lists/entries and `filter`/`description` meta keys.
+     *
+     * For each detected stub market, §13's `resolveRichMarketForStub` may substitute a richer same-BU
+     * market; `marketOf[name].adoptedFrom` records the original stub name when a substitution happened.
+     *
+     * @param {object} config the accepted vanilla `.mcdevrc.json`
+     * @returns {{detected: boolean, byBU: {[buRef: string]: string}, marketOf: {[marketName: string]: {suffix: string, keys: string[], vars: object, adoptedFrom: (string|null)}}, needsSuffixKey: boolean, suffixKeyCandidates: string[]}} the adoption map
+     */
+    function detectMarketListAdoption(config) {
+        const config_ = config && typeof config === 'object' ? config : {};
+        const markets = config_.markets && typeof config_.markets === 'object' ? config_.markets : {};
+        const marketLists =
+            config_.marketList && typeof config_.marketList === 'object' ? config_.marketList : {};
+        const credentials =
+            config_.credentials && typeof config_.credentials === 'object' ? config_.credentials : {};
+        // A vanilla `.mcdevrc.json` carries no top-level `suffixKey` (it lives under `mpb_pipeline`,
+        // absent on this path), so the effective suffix here is derived only from a real `.suffix` field.
+        const suffixKey = null;
+
+        // Shared accumulators the per-entry processor writes into (keeps the scan out of a nested loop).
+        const accumulator = { byBU: {}, marketOf: {}, hasRealSuffix: false, candidateKeys: new Set() };
+        const scanContext = { markets: markets, credentials: credentials, suffixKey: suffixKey, accumulator: accumulator };
+
+        for (const [listName, list] of Object.entries(marketLists)) {
+            // Skip _ParentBU_-named lists and non-object lists entirely.
+            if (typeof listName === 'string' && listName.includes(PARENT_BU)) {
+                continue;
+            }
+            if (!list || typeof list !== 'object') {
+                continue;
+            }
+            processAdoptionList(list, scanContext);
+        }
+
+        const isDetected = Object.keys(accumulator.byBU).length > 0;
+        // needsSuffixKey: adoption detected, no market carries a real `suffix`, and no key chosen yet.
+        const isNeedsSuffixKey = isDetected && !accumulator.hasRealSuffix && !suffixKey;
+        const suffixKeyCandidates = [...accumulator.candidateKeys].toSorted((a, b) => a.localeCompare(b));
+        return {
+            detected: isDetected,
+            byBU: accumulator.byBU,
+            marketOf: accumulator.marketOf,
+            needsSuffixKey: isNeedsSuffixKey,
+            suffixKeyCandidates: suffixKeyCandidates,
+        };
+    }
+
+    /**
+     * Process one marketList's entries into the adoption accumulator: for each 1:1 `<cred>/<BU> →
+     * marketName` entry whose market exists, resolve a richer same-BU market (§13) and record it in
+     * `byBU`/`marketOf`. Skips meta keys, array-valued entries, `_ParentBU_` entries, and refs whose
+     * market does not exist (junk tolerance). Pure (mutates the accumulator in `context`).
+     *
+     * @param {object} list a single marketList object
+     * @param {{markets: object, credentials: object, suffixKey: (string|null), accumulator: {byBU: object, marketOf: object, hasRealSuffix: boolean, candidateKeys: Set<string>}}} context shared scan state
+     * @returns {void}
+     */
+    function processAdoptionList(list, context) {
+        const { markets, credentials, suffixKey, accumulator } = context;
+        for (const [entryKey, entryValue] of Object.entries(list)) {
+            // Skip meta keys, array-valued entries, and _ParentBU_ entries.
+            if (entryKey === 'filter' || entryKey === 'description') {
+                continue;
+            }
+            if (typeof entryValue !== 'string' || Array.isArray(entryValue)) {
+                continue;
+            }
+            if (bareBUFromEntryKey(entryKey) === PARENT_BU) {
+                continue;
+            }
+            // Junk tolerance: the referenced market must exist, else ignore the entry.
+            if (!Object.hasOwn(markets, entryValue)) {
+                continue;
+            }
+            // §13: adopt a richer same-BU market for a near-empty stub when one exists.
+            const resolved = resolveRichMarketForStub(entryValue, { markets: markets }, credentials);
+            const marketName = resolved.name;
+            const marketVariables = markets[marketName] || {};
+            accumulator.byBU[entryKey] = marketName;
+            if (Object.hasOwn(accumulator.marketOf, marketName)) {
+                continue;
+            }
+            const keys = nonReservedMarketKeys(marketVariables);
+            const variables = {};
+            for (const key of keys) {
+                variables[key] = marketVariables[key];
+                accumulator.candidateKeys.add(key);
+            }
+            if (typeof marketVariables.suffix === 'string' && marketVariables.suffix !== '') {
+                accumulator.hasRealSuffix = true;
+            }
+            accumulator.marketOf[marketName] = {
+                suffix: effectiveSuffixOf(marketVariables, suffixKey),
+                keys: keys,
+                vars: variables,
+                adoptedFrom: resolved.adoptedFrom,
+            };
+        }
+    }
+
+    /**
+     * Resolve the numeric business-unit `mid` for a bare BU name from `credentials.*.businessUnits`
+     * (first match wins). Returns `null` when unknown. Pure.
+     *
+     * @param {string} buName the bare BU name
+     * @param {object} credentials config.credentials
+     * @returns {(string|null)} the mid as a string, or null
+     */
+    function midForBUName(buName, credentials) {
+        const creds = Object.values(credentials || {});
+        for (const cred of creds) {
+            const businessUnits = cred && typeof cred === 'object' && cred.businessUnits;
+            if (businessUnits && typeof businessUnits === 'object' && Object.hasOwn(businessUnits, buName)) {
+                return String(businessUnits[buName]);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * True when a market is "richer" than a bare stub: it carries a variable key beyond
+     * `{buName, description}`, OR it carries any of `env` / `mid` / `marketId`. Pure.
+     *
+     * @param {object} market a market's variable object
+     * @returns {boolean} whether the market qualifies as rich
+     */
+    function isRicherMarket(market) {
+        if (!market || typeof market !== 'object') {
+            return false;
+        }
+        if (market.env != null || market.mid != null || market.marketId != null) {
+            return true;
+        }
+        return Object.keys(market).some((key) => key !== 'buName' && key !== 'description');
+    }
+
+    /**
+     * §13a. Given a stub market NAME that a marketList references, adopt a RICHER same-BU market when
+     * one exists. Exact-match-only precedence (no fuzzy): (1) equal `buName`, (2) equal `mid` (from
+     * `credentials.*.businessUnits`), (3) equal ISO-like code. The FIRST precedence tier that yields
+     * ≥1 richer candidate wins; tie-break = most non-reserved keys, then alphabetical name. Falls
+     * back to the stub itself when no richer same-BU market is found. Pure.
+     *
+     * @param {string} stubName the market name a marketList references
+     * @param {object} config the accepted `.mcdevrc.json`
+     * @param {object} credentials config.credentials (for mid resolution)
+     * @returns {{name: string, adoptedFrom: (string|null)}} the resolved market name; `adoptedFrom`
+     *   is the stub name when a different rich market was chosen, else `null`
+     */
+    function resolveRichMarketForStub(stubName, config, credentials) {
+        const config_ = config && typeof config === 'object' ? config : {};
+        const markets = config_.markets && typeof config_.markets === 'object' ? config_.markets : {};
+        const stub = markets[stubName];
+        if (!stub || typeof stub !== 'object') {
+            return { name: stubName, adoptedFrom: null };
+        }
+        const stubBUName = typeof stub.buName === 'string' ? stub.buName : null;
+        const stubMid = stubBUName ? midForBUName(stubBUName, credentials) : null;
+        const stubIso = typeof stub.ISO === 'string' ? stub.ISO : null;
+
+        // Candidate markets: every OTHER market that qualifies as richer.
+        const richCandidates = Object.keys(markets).filter(
+            (name) => name !== stubName && isRicherMarket(markets[name])
+        );
+
+        // Exact-match precedence tiers, first non-empty wins.
+        const tiers = [
+            // (1) same buName.
+            (name) => stubBUName != null && markets[name].buName === stubBUName,
+            // (2) same mid (from credentials for the stub's BU).
+            (name) => stubMid != null && markets[name].mid != null && String(markets[name].mid) === stubMid,
+            // (3) same ISO-like code.
+            (name) => stubIso != null && typeof markets[name].ISO === 'string' && markets[name].ISO === stubIso,
+        ];
+        for (const matches of tiers) {
+            const matched = richCandidates.filter(matches);
+            if (matched.length === 0) {
+                continue;
+            }
+            // Tie-break: most non-reserved keys, then alphabetical name.
+            const best = matched.toSorted((a, b) => {
+                const diff = nonReservedMarketKeys(markets[b]).length - nonReservedMarketKeys(markets[a]).length;
+                return diff === 0 ? a.localeCompare(b) : diff;
+            })[0];
+            return { name: best, adoptedFrom: best === stubName ? null : stubName };
+        }
+        // No richer same-BU market — adopt the stub as-is.
+        return { name: stubName, adoptedFrom: null };
     }
 
     /**
@@ -956,8 +1309,12 @@
         classifyIntake: classifyIntake,
         looksLikeAuthFile: looksLikeAuthFile,
         isAuthFileName: isAuthFileName,
+        acceptConfig: acceptConfig,
         wizardStateFromConfig: wizardStateFromConfig,
         inferWizardStateFromVanilla: inferWizardStateFromVanilla,
+        isBranchMappingReliable: isBranchMappingReliable,
+        detectMarketListAdoption: detectMarketListAdoption,
+        resolveRichMarketForStub: resolveRichMarketForStub,
         renderIntake: renderIntake,
         wireIntake: wireIntake,
     });

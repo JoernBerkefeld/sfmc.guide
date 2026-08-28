@@ -51,6 +51,90 @@
     const render = C.render;
 
     /**
+     * The current market-adoption map off wizard state, always a well-formed object (never null), so
+     * callers can read `byBU`/`marketOf`/`needsSuffixKey`/`suffixKeyCandidates` without guarding. Read
+     * straight from persisted state (via `mpb_pipeline`) — never reconstructed here.
+     *
+     * @returns {{byBU: object, marketOf: object, needsSuffixKey: boolean, suffixKeyCandidates: string[]}}
+     *   the adoption map with defaulted fields
+     */
+    function marketAdoptionState() {
+        const adoption = state.wizardState.marketAdoption;
+        const safe = adoption && typeof adoption === 'object' ? adoption : {};
+        return {
+            byBU: safe.byBU && typeof safe.byBU === 'object' ? safe.byBU : {},
+            marketOf: safe.marketOf && typeof safe.marketOf === 'object' ? safe.marketOf : {},
+            needsSuffixKey: safe.needsSuffixKey === true,
+            suffixKeyCandidates: Array.isArray(safe.suffixKeyCandidates) ? safe.suffixKeyCandidates : [],
+        };
+    }
+
+    /**
+     * The sorted non-reserved variable-KEY set of an adopted market, read from `marketOf[name].keys`.
+     * Returns `null` when the market is unknown so callers can distinguish "absent" from "empty set".
+     *
+     * @param {object} marketOf the adoption `marketOf` map
+     * @param {string} marketName the market name
+     * @returns {?string[]} the sorted keys, or `null` when the market is absent
+     */
+    function marketKeySet(marketOf, marketName) {
+        const entry = marketName && Object.hasOwn(marketOf, marketName) ? marketOf[marketName] : null;
+        if (!entry) {
+            return null;
+        }
+        return Array.isArray(entry.keys) ? [...entry.keys].toSorted((a, b) => a.localeCompare(b)) : [];
+    }
+
+    /**
+     * Whether two variable-KEY sets are equal as unordered sets (same length + same members).
+     *
+     * @param {?string[]} a the first key set (or null)
+     * @param {?string[]} b the second key set (or null)
+     * @returns {boolean} true when both are non-null and hold exactly the same keys
+     */
+    function keySetsEqual(a, b) {
+        if (!a || !b || a.length !== b.length) {
+            return false;
+        }
+        const set = new Set(a);
+        return b.every((key) => set.has(key));
+    }
+
+    /**
+     * The BU refs of a pipeline that would NOT be filled by adopting `sourceMarketName`, using the
+     * SAME key-set-equality + source-skip + parent-exclusion logic as `matchMarketsForPipeline`: a ref
+     * mapped to the source market is skipped (never self-filled); every other ref is "unmatched" when
+     * it has no adopted market or its key set differs from the source's. PURE (no state / DOM); shared
+     * by the matcher's `unmatched` accumulation and the picker's read-only inline preview so the two
+     * cannot drift. Parent BUs are excluded implicitly — they never appear in `pipelineReferences`.
+     *
+     * @param {string[]} pipelineReferences the pipeline's child buRefs
+     * @param {string} sourceMarketName the chosen source market name
+     * @param {{byBU: object, marketOf: object}} adoption the adoption map (byBU + marketOf)
+     * @returns {string[]} the unmatched buRefs (input order preserved)
+     */
+    function unmatchedFor(pipelineReferences, sourceMarketName, adoption) {
+        const safe = adoption && typeof adoption === 'object' ? adoption : {};
+        const byBU = safe.byBU && typeof safe.byBU === 'object' ? safe.byBU : {};
+        const marketOf = safe.marketOf && typeof safe.marketOf === 'object' ? safe.marketOf : {};
+        const sourceKeys = marketKeySet(marketOf, sourceMarketName);
+        const unmatched = [];
+        for (const reference of pipelineReferences) {
+            // The source BU(s) — those mapped to the chosen source market — are not self-filled.
+            if (byBU[reference] === sourceMarketName) {
+                continue;
+            }
+            const marketName = Object.hasOwn(byBU, reference) ? byBU[reference] : null;
+            const entry = marketName && Object.hasOwn(marketOf, marketName) ? marketOf[marketName] : null;
+            const otherKeys = marketKeySet(marketOf, marketName);
+            if (!entry || !keySetsEqual(sourceKeys, otherKeys)) {
+                unmatched.push(reference);
+            }
+        }
+        return unmatched;
+    }
+
+    /**
      * The stored variable value for a BU/var, or `''` when unset. `suffix` is NOT stored in
      * `marketVariables` — the `suffix` row reads `wizardState.suffixes` directly.
      *
@@ -246,6 +330,67 @@
      */
     function filledBUCountFor(pipelineReferences, name) {
         return pipelineReferences.filter((reference) => variableValueOf(reference, name).trim() !== '').length;
+    }
+
+    /**
+     * Auto-fill sibling market variables + suffixes for a pipeline from a chosen SOURCE market
+     * (the source-market picker's action). PURE state transform (no DOM / render) so it can be
+     * unit-tested headlessly via `controller.matchMarketsForPipeline(...)`.
+     *
+     * Semantics (per plan §10): compute the source market's non-reserved variable-KEY set
+     * (`marketOf[sourceMarketName].keys`, excluding `suffix`/`description`). For every OTHER BU ref in
+     * the pipeline that has a `byBU[buRef]` market whose key set EQUALS the source set, OVERWRITE
+     * `state.wizardState.marketVariables[buRef]` with that BU market's `{key:value}` vars and
+     * `state.wizardState.suffixes[buRef]` with that market's effective suffix (the detector's
+     * pre-computed `marketOf[...].suffix`, normalised to be separator-prefixed exactly once to match
+     * the wizard's storage convention). BUs with no `byBU` market
+     * or a mismatched key set are left untouched and collected for the caller's inline "unmatched"
+     * note. Parent BUs are implicitly excluded — they never appear in `childBUReferences()` /
+     * `pipelineReferences`, and their key sets differ regardless.
+     *
+     * When `sourceMarketName` is unknown (no `marketOf` entry), nothing is written and every non-source
+     * BU is reported as unmatched.
+     *
+     * @param {string[]} pipelineReferences the pipeline's child buRefs
+     * @param {string} sourceMarketName the chosen source market name
+     * @param {{byBU: object, marketOf: object}} marketAdoption the adoption map (byBU + marketOf)
+     * @returns {{matched: string[], unmatched: string[]}} the BUs filled vs. left untouched
+     */
+    function matchMarketsForPipeline(pipelineReferences, sourceMarketName, marketAdoption) {
+        const adoption = marketAdoption && typeof marketAdoption === 'object' ? marketAdoption : {};
+        const byBU = adoption.byBU && typeof adoption.byBU === 'object' ? adoption.byBU : {};
+        const marketOf = adoption.marketOf && typeof adoption.marketOf === 'object' ? adoption.marketOf : {};
+
+        const separator = state.wizardState.separator || '_';
+        const nextVariables = { ...state.wizardState.marketVariables };
+        const nextSuffixes = { ...state.wizardState.suffixes };
+        const matched = [];
+        // Single source of truth for the mismatch/absent set (shared with the picker's inline preview
+        // via `unmatchedFor`) so the two can never drift.
+        const unmatched = unmatchedFor(pipelineReferences, sourceMarketName, adoption);
+        const unmatchedSet = new Set(unmatched);
+
+        for (const reference of pipelineReferences) {
+            // Skip the source BU(s) (never self-filled) and anything `unmatchedFor` left out.
+            if (byBU[reference] === sourceMarketName || unmatchedSet.has(reference)) {
+                continue;
+            }
+            const marketName = byBU[reference];
+            const entry = Object.hasOwn(marketOf, marketName) ? marketOf[marketName] : null;
+            // Key sets match: overwrite this BU's variables (values as-is) and its effective suffix.
+            const vars = entry.vars && typeof entry.vars === 'object' ? entry.vars : {};
+            nextVariables[reference] = { ...vars };
+            // Use the detector's pre-computed effective suffix (`entry.suffix`); `vars` never carries
+            // `suffix` (stripped by the detector), so recomputing from it would drop real `.suffix`
+            // values. Normalise so both sources land separator-prefixed exactly once.
+            const body = typeof entry.suffix === 'string' ? entry.suffix : '';
+            nextSuffixes[reference] = body === '' ? '' : body.startsWith(separator) ? body : separator + body;
+            matched.push(reference);
+        }
+
+        state.wizardState.marketVariables = nextVariables;
+        state.wizardState.suffixes = nextSuffixes;
+        return { matched: matched, unmatched: unmatched };
     }
 
     /**
@@ -699,6 +844,193 @@
     }
 
     /**
+     * Build the suffix-key selector block, shown at the top of the step when the adopted configuration
+     * carries no real `suffix` field (`marketAdoption.needsSuffixKey`) OR a `suffixKey` is already
+     * chosen (so it can be changed). Lets the user designate which market-variable KEY acts as the
+     * suffix source; on change it sets `state.wizardState.suffixKey` and re-renders so effective
+     * suffixes derive from that key. The selection persists via `mpb_pipeline` (no separate path).
+     * Returns `null` when neither condition holds (nothing to show).
+     *
+     * @returns {?HTMLElement} the selector block, or `null` when not applicable
+     */
+    function suffixKeySelector() {
+        const adoption = marketAdoptionState();
+        const chosenKey = state.wizardState.suffixKey || null;
+        const candidates = adoption.suffixKeyCandidates;
+        // Show when the config needs a key, or when one is set (so it can be changed). Never with no
+        // candidates to offer.
+        if (candidates.length === 0 || (!chosenKey && !adoption.needsSuffixKey)) {
+            return null;
+        }
+
+        const block = makeElement('div', { class: 'mpb-mv-suffix-key' });
+        block.append(
+            makeElement('p', {
+                class: 'mpb-mv-suffix-key-note',
+                text: chosenKey
+                    ? 'No suffix field was found in the adopted configuration. The selected market variable below is used as each market\u{2019}s suffix; change it if a different variable holds the suffix.'
+                    : 'No suffix field was found in the adopted configuration. Pick which market variable acts as the suffix source so per-BU suffixes can be derived.',
+            })
+        );
+
+        const selectId = 'mpb-mv-suffix-key-select';
+        const label = makeElement('label', {
+            class: 'mpb-mv-suffix-key-label',
+            text: 'Suffix source variable',
+            attrs: { for: selectId },
+        });
+        const select = makeElement('select', { id: selectId, class: 'mpb-mv-suffix-key-input' });
+        const placeholder = makeElement('option', {
+            text: 'Select which variable is the suffix',
+            value: '',
+        });
+        placeholder.disabled = true;
+        if (!chosenKey) {
+            placeholder.selected = true;
+        }
+        select.append(placeholder);
+        for (const key of candidates) {
+            const option = makeElement('option', { text: key, value: key });
+            if (key === chosenKey) {
+                option.selected = true;
+            }
+            select.append(option);
+        }
+        select.addEventListener('change', () => {
+            const value = select.value;
+            if (!value) {
+                return;
+            }
+            state.wizardState.suffixKey = value;
+            scheduleAutosave();
+            render();
+        });
+
+        block.append(label, select);
+        return block;
+    }
+
+    /**
+     * Build the per-pipeline source-market picker control, or `null` when the pipeline is not covered
+     * by adoption data. Eligibility (per plan §10): the pipeline's SOURCE-env BU(s) —
+     * `pipelineColumns(pipelineReferences)[0].references`, the FIRST env column — must include at least
+     * one BU with a `byBU` market, AND at least one OTHER BU in the pipeline must also have one.
+     *
+     * The picker offers the distinct markets mapped (via `byBU`) to the source-env BUs. With exactly
+     * one candidate market the `<select>` is hidden and just an "Apply market variables" button (plus a
+     * label naming the market) is shown. On Apply it calls `matchMarketsForPipeline(...)`, autosaves,
+     * and re-renders; the inline "unmatched" note is rebuilt from the fresh match on the next render.
+     *
+     * @param {string[]} pipelineReferences the pipeline's child buRefs
+     * @param {number} pipelineNumber the 1-based render-order pipeline number (for id uniqueness)
+     * @returns {?HTMLElement} the picker control, or `null` when the pipeline is not eligible
+     */
+    function sourceMarketPicker(pipelineReferences, pipelineNumber) {
+        const adoption = marketAdoptionState();
+        const byBU = adoption.byBU;
+        const columns = pipelineColumns(pipelineReferences);
+        const sourceReferences = columns.length > 0 ? columns[0].references : [];
+
+        // Source-env markets: distinct markets mapped to the FIRST env column's BUs.
+        const sourceMarkets = [];
+        const seenMarkets = new Set();
+        let hasSourceMarket = false;
+        for (const reference of sourceReferences) {
+            const marketName = Object.hasOwn(byBU, reference) ? byBU[reference] : null;
+            if (!marketName) {
+                continue;
+            }
+            hasSourceMarket = true;
+            if (!seenMarkets.has(marketName)) {
+                seenMarkets.add(marketName);
+                sourceMarkets.push(marketName);
+            }
+        }
+
+        // Eligibility: a source-env BU has a market AND >=1 OTHER pipeline BU also has one.
+        const sourceSet = new Set(sourceReferences);
+        const hasOtherMarket = pipelineReferences.some((reference) => {
+            const marketName = Object.hasOwn(byBU, reference) ? byBU[reference] : null;
+            return !sourceSet.has(reference) && Boolean(marketName);
+        });
+        if (!hasSourceMarket || !hasOtherMarket || sourceMarkets.length === 0) {
+            return null;
+        }
+
+        const control = makeElement('div', { class: 'mpb-mv-adopt' });
+        control.append(
+            makeElement('p', {
+                class: 'mpb-mv-adopt-note',
+                text: 'Detected per-BU market lists for this pipeline. Pick the source market to auto-fill matching business units\u{2019} variables and suffixes.',
+            })
+        );
+
+        const isSingle = sourceMarkets.length === 1;
+        const selectId = 'mpb-mv-adopt-select-' + pipelineNumber;
+        let getChosenMarket;
+
+        if (isSingle) {
+            // Single candidate: hide the <select>, name the market, show just the Apply button.
+            const only = sourceMarkets[0];
+            control.append(
+                makeElement('span', {
+                    class: 'mpb-mv-adopt-market',
+                    text: 'Source market: ' + only,
+                })
+            );
+            getChosenMarket = () => only;
+        } else {
+            const label = makeElement('label', {
+                class: 'mpb-mv-adopt-label',
+                text: 'Source market',
+                attrs: { for: selectId },
+            });
+            const select = makeElement('select', { id: selectId, class: 'mpb-mv-adopt-input' });
+            for (const marketName of sourceMarkets) {
+                select.append(makeElement('option', { text: marketName, value: marketName }));
+            }
+            control.append(label, select);
+            getChosenMarket = () => select.value;
+        }
+
+        const applyButton = makeElement('button', {
+            type: 'button',
+            class: 'mpb-btn mpb-btn--secondary mpb-mv-adopt-apply',
+            text: 'Apply market variables',
+        });
+        applyButton.addEventListener('click', () => {
+            const chosen = getChosenMarket();
+            if (!chosen) {
+                return;
+            }
+            matchMarketsForPipeline(pipelineReferences, chosen, marketAdoptionState());
+            scheduleAutosave();
+            render();
+        });
+        control.append(applyButton);
+
+        // Inline unmatched note: read-only preview of which pipeline BUs the matcher would leave
+        // unchanged, so the user sees ahead of applying which BUs need manual attention. Uses the
+        // shared `unmatchedFor` helper — the SAME source-skip + key-set-equality the matcher applies —
+        // so this note can never drift from `matchMarketsForPipeline`'s actual `unmatched` result.
+        const preview = getChosenMarket();
+        const unmatched = unmatchedFor(pipelineReferences, preview, adoption);
+        if (unmatched.length > 0) {
+            control.append(
+                makeElement('p', {
+                    class: 'mpb-mv-adopt-unmatched',
+                    text:
+                        'These business units have no matching market and will be left unchanged: ' +
+                        unmatched.map((reference) => bareBUName(reference) || reference).join(', ') +
+                        '.',
+                })
+            );
+        }
+
+        return control;
+    }
+
+    /**
      * The `market-vars` step render. Builds one `<table>` per pipeline (grouped by lineage root):
      * variables down the rows (`suffix` first, then alpha), one input column per BU under environment
      * column-group headers, a name column (static for suffix, inline-rename input otherwise), and an
@@ -723,6 +1055,13 @@
                 makeElement('p', { class: 'text-muted', text: 'Assign BUs to environments first.' })
             );
             return;
+        }
+
+        // Suffix-key selector (top of step): shown when the adopted config has no real `suffix` field
+        // (needsSuffixKey) or a key is already chosen. Feeds effective suffixes for the picker/matcher.
+        const suffixKeyBlock = suffixKeySelector();
+        if (suffixKeyBlock) {
+            panel.append(suffixKeyBlock);
         }
 
         // Every value cell across every pipeline, so a value edit can refresh all borders/warnings and
@@ -800,6 +1139,12 @@
             const columns = pipelineColumns(pipelineReferences);
             const variableNames = variableNamesFor(pipelineReferences);
             const buColumnCount = columns.reduce((sum, column) => sum + column.references.length, 0);
+
+            // Per-pipeline source-market picker (only when this pipeline is covered by adoption data).
+            const picker = sourceMarketPicker(pipelineReferences, pipelineNumber);
+            if (picker) {
+                panel.append(picker);
+            }
 
             const scroll = makeElement('div', { class: 'mpb-mv-scroll' });
             const table = makeElement('table', { class: 'mpb-mv-table' });
@@ -905,4 +1250,5 @@
     C.renameVariable = renameVariable;
     C.addVariable = addVariable;
     C.filledBUCountFor = filledBUCountFor;
+    C.matchMarketsForPipeline = matchMarketsForPipeline;
 })(typeof globalThis === 'undefined' ? new Function('return this')() : globalThis);

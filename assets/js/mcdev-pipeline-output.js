@@ -166,6 +166,27 @@
     }
 
     /**
+     * Resolve the mutually-exclusive checked-state of the two output options after the user toggles
+     * one of them. The two options (adopt-existing pro, strip-foreign) are mutually exclusive but
+     * neither disables the other, so the user can switch freely or leave both off. Checking one box
+     * unchecks the other (last click wins); unchecking a box never touches the sibling. Pure.
+     *
+     * @param {('adopt'|'strip')} changed which box the user just toggled
+     * @param {boolean} adoptChecked the adopt box's checked state after the toggle
+     * @param {boolean} stripChecked the strip box's checked state after the toggle
+     * @returns {{adopt: boolean, strip: boolean}} the reconciled checked states
+     */
+    function resolveOptionExclusion(changed, adoptChecked, stripChecked) {
+        if (changed === 'adopt' && adoptChecked) {
+            return { adopt: true, strip: false };
+        }
+        if (changed === 'strip' && stripChecked) {
+            return { adopt: false, strip: true };
+        }
+        return { adopt: !!adoptChecked, strip: !!stripChecked };
+    }
+
+    /**
      * Render the output step: run the download-guard, and when the wizard is complete build both
      * files, fill the textarea fallbacks, and wire the download + copy buttons. In validations-only
      * mode only the `.mcdev-validations.js` file is emitted (the config card is hidden).
@@ -226,12 +247,85 @@
 
         // ── build the config file (full mode only). ──
         if (!isValidationsOnly) {
-            const configObject = global.mpbConfigBuilder.buildConfig(state.wizardState, state.config);
-            const configText = jsonPretty(configObject);
-            fillFallback(dom.configFallback, configText);
-            wireDownload(dom.dlConfig, '.mcdevrc.json', configText, 'application/json');
-            wireCopy(dom.copyConfig, configText, dom.outputConfig);
+            renderConfigOutput();
         }
+    }
+
+    /**
+     * Build the `.mcdevrc.json` output honouring the two output-config options (strip-foreign,
+     * adopt-existing pro). Reads existing-coverage to enable/disable the adopt checkbox and populate
+     * its "why is this disabled?" panel, enforces the adopt↔strip conflict, passes the resulting
+     * `{ stripForeign, adoptExisting }` options to `buildConfig`, then refills the textarea and
+     * re-wires download/copy so they serve the current text. Bound once as the checkboxes' `onchange`
+     * so re-running is idempotent (no stacked listeners).
+     *
+     * @returns {void}
+     */
+    function renderConfigOutput() {
+        const adoptBox = dom.optAdoptExisting;
+        const stripBox = dom.optStripForeign;
+
+        // ── coverage: can the user's existing markets/marketLists already express the pipeline? ──
+        const coverage = global.mpbConfigBuilder.analyzeExistingCoverage(state.wizardState, state.config);
+        if (adoptBox) {
+            adoptBox.disabled = !coverage.covered;
+            if (!coverage.covered) {
+                // Force-uncheck a now-disabled adopt box and list what is missing.
+                adoptBox.checked = false;
+            }
+        }
+        if (dom.adoptMissing) {
+            dom.adoptMissing.hidden = coverage.covered;
+        }
+        if (dom.adoptMissingList) {
+            dom.adoptMissingList.replaceChildren();
+            if (!coverage.covered) {
+                for (const reason of coverage.missing) {
+                    dom.adoptMissingList.append(makeElement('li', { text: reason }));
+                }
+            }
+        }
+
+        // ── conflict rule: the two options are mutually exclusive, but neither disables the other, so
+        // the user can freely switch between them or leave both unchecked. Checking one simply unchecks
+        // the other — enforced in the per-box onchange handlers below (last click wins). Here we only
+        // read the resulting state (adopt takes precedence should both ever read as checked). ──
+        const isAdoptExisting = !!(adoptBox && adoptBox.checked && !adoptBox.disabled);
+        const isStripForeign = !isAdoptExisting && !!(stripBox && stripBox.checked && !stripBox.disabled);
+
+        // ── re-run this render live when either checkbox toggles (single-slot handlers, no stacking). ──
+        // Intentional single-slot `.onchange` assignment: re-invoking this render reassigns the same
+        // handlers, so they never stack across re-renders. Switching to `addEventListener` would
+        // reintroduce listener stacking (a fresh listener added on every render). Each handler first
+        // enforces the mutual-exclusion (checking itself unchecks the sibling) then re-renders.
+        if (adoptBox) {
+            adoptBox.onchange = () => {
+                const next = resolveOptionExclusion('adopt', adoptBox.checked, stripBox && stripBox.checked);
+                adoptBox.checked = next.adopt;
+                if (stripBox) {
+                    stripBox.checked = next.strip;
+                }
+                renderConfigOutput();
+            };
+        }
+        if (stripBox) {
+            stripBox.onchange = () => {
+                const next = resolveOptionExclusion('strip', adoptBox && adoptBox.checked, stripBox.checked);
+                if (adoptBox) {
+                    adoptBox.checked = next.adopt;
+                }
+                stripBox.checked = next.strip;
+                renderConfigOutput();
+            };
+        }
+
+        // ── build + fill + wire with the current option state. ──
+        const options = { stripForeign: isStripForeign, adoptExisting: isAdoptExisting };
+        const configObject = global.mpbConfigBuilder.buildConfig(state.wizardState, state.config, options);
+        const configText = jsonPretty(configObject);
+        fillFallback(dom.configFallback, configText);
+        wireDownload(dom.dlConfig, '.mcdevrc.json', configText, 'application/json');
+        wireCopy(dom.copyConfig, configText, dom.outputConfig);
     }
 
     /**
@@ -351,5 +445,6 @@
     Object.assign(C, {
         deriveValidationsState: deriveValidationsState,
         renderOutput: renderOutput,
+        resolveOptionExclusion: resolveOptionExclusion,
     });
 })(typeof globalThis === 'undefined' ? new Function('return this')() : globalThis);

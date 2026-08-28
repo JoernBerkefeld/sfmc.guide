@@ -26,7 +26,7 @@ platforms:
       <path d="m16 15 4 3-4 3" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <span class="mpb-builder-header-title">SFMC DevTools Pipeline Builder</span>
+    <button type="button" id="mpb-builder-header-home" class="mpb-builder-header-title" aria-label="Start over (return to intake)" title="Start over (return to intake)">SFMC DevTools Pipeline Builder</button>
   </div>
   <span id="mpb-builder-header-name" class="mpb-builder-header-name"></span>
   <div id="mpb-builder-header-actions" class="mpb-builder-header-actions"></div>
@@ -143,6 +143,20 @@ platforms:
           </button>
         </div>
         <p class="mpb-dl-hint">Some browsers save this without the leading dot — rename it to <code>.mcdevrc.json</code> if needed.</p>
+        <div class="mpb-output-options" id="mpb-config-options">
+          <label>
+            <input type="checkbox" id="mpb-opt-adopt-existing" disabled>
+            Reuse existing markets &amp; market lists — override the ones this tool would create when they already cover everything (pro)
+          </label>
+          <details id="mpb-adopt-missing" hidden>
+            <summary>Why is this disabled?</summary>
+            <ul id="mpb-adopt-missing-list"></ul>
+          </details>
+          <label>
+            <input type="checkbox" id="mpb-opt-strip-foreign">
+            Remove non-mpb created markets and market lists (only keep "mpb_" prefixed entries)
+          </label>
+        </div>
         <textarea id="mpb-config-fallback" class="mpb-code-fallback" rows="10" readonly
                   aria-label="Generated .mcdevrc.json"></textarea>
       </div>

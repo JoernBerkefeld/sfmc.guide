@@ -47,6 +47,15 @@
      */
     let openBuilderPanel = null;
 
+    /**
+     * Whether the static header title button has already had its back-to-intake click wired. The
+     * title lives in the page markup (not rebuilt per render), so it is wired exactly once —
+     * `renderBuilderHeader` runs on every render and would otherwise stack listeners.
+     *
+     * @type {boolean}
+     */
+    let isBuilderHeaderHomeWired = false;
+
 
     /**
      * Close the open builder dropdown (if any): hide the panel, sync `aria-expanded`, and remove the
@@ -460,7 +469,8 @@
         const renameButton = C.makeEl('button', {
             type: 'button',
             class: 'mpb-btn mpb-btn--ghost',
-            text: 'Rename',
+            text: '✎',
+            attrs: { 'aria-label': 'Rename this config', title: 'Rename' },
         });
         renameButton.addEventListener('click', () => startBuilderHeaderRename());
         slot.append(renameButton);
@@ -563,6 +573,26 @@
 
 
     /**
+     * Wire the static header title button as a "start over" affordance that returns to the intake
+     * view via `C.goToStep('intake')`. The button is authored in the page markup (not rebuilt per
+     * render), so the click is bound exactly once — guarded by `isBuilderHeaderHomeWired`.
+     *
+     * @returns {void}
+     */
+    function wireBuilderHeaderHome() {
+        if (isBuilderHeaderHomeWired || !document_ || typeof document_.querySelector !== 'function') {
+            return;
+        }
+        const home = document_.querySelector('#mpb-builder-header-home');
+        if (!home) {
+            return;
+        }
+        home.addEventListener('click', () => C.goToStep('intake'));
+        isBuilderHeaderHomeWired = true;
+    }
+
+
+    /**
      * Hydrate the sticky builder sub-header: (re)fill the name + actions slots. Called at the end of
      * every render and after rename/clone. Tears down any open dropdown first so its document
      * listeners never accumulate across rebuilds. Early-returns under the headless stub (no slots).
@@ -574,6 +604,7 @@
         if (!C.dom.builderHeaderName || !C.dom.builderHeaderActions) {
             return;
         }
+        wireBuilderHeaderHome();
         renderBuilderHeaderName();
         renderBuilderHeaderActions();
     }

@@ -217,6 +217,318 @@
         return structuredClone(value);
     }
 
+    // Keys that are never treated as pipeline "market variables" for coverage/key-set purposes.
+    const RESERVED_MARKET_KEYS = new Set(['suffix', 'description']);
+
+    /**
+     * The effective suffix of a market's variables: the real `suffix` field when present and
+     * non-empty, else the value of the user-designated `suffixKey` when that value is a non-empty
+     * string, else `''` (= no effective suffix yet). Never fabricates or derives a value.
+     *
+     * Lives in config-builder.js (loaded first) so `analyzeExistingCoverage` — exercised by the
+     * isolated top test block — can call it without depending on intake.js.
+     *
+     * @param {object} marketVariables a market's variable object (e.g. baseConfig.markets[name])
+     * @param {string|null} [suffixKey] the variable key the user picked to act as the suffix source
+     * @returns {string} the effective suffix, or `''` when none is available
+     */
+    function effectiveSuffix(marketVariables, suffixKey) {
+        if (marketVariables && typeof marketVariables.suffix === 'string' && marketVariables.suffix !== '') {
+            return marketVariables.suffix;
+        }
+        if (
+            suffixKey &&
+            marketVariables &&
+            typeof marketVariables[suffixKey] === 'string' &&
+            marketVariables[suffixKey] !== ''
+        ) {
+            return marketVariables[suffixKey];
+        }
+        return '';
+    }
+
+    /**
+     * The non-reserved variable-key set of a market's variables (excludes `suffix`/`description`).
+     * Used for the structural key-set presence check in coverage.
+     *
+     * @param {object} marketVariables a market's variable object
+     * @returns {string[]} sorted non-reserved keys
+     */
+    function nonReservedKeys(marketVariables) {
+        if (!marketVariables || typeof marketVariables !== 'object') {
+            return [];
+        }
+        return Object.keys(marketVariables)
+            .filter((key) => !RESERVED_MARKET_KEYS.has(key))
+            .toSorted((a, b) => a.localeCompare(b));
+    }
+
+    /**
+     * Compute child-BU refs grouped per pipeline from wizardState lineage/envBUs. Mirrors
+     * childBUReferences/pipelinesByRoot locally because the builder is DOM-free and cannot call
+     * core helpers. A "root" is a source BU that never appears as a lineage child; each pipeline
+     * is the transitive chain of children hanging off that root.
+     *
+     * @param {WizardState} state wizard state
+     * @returns {string[][]} array of pipelines, each an ordered list of BU refs (root first)
+     */
+    function pipelinesFromState(state) {
+        const lineage = state.lineage || {};
+        const environmentOrder = Array.isArray(state.envOrder) ? state.envOrder : [];
+        const environmentBUs = state.envBUs || {};
+        // All BU refs that appear in any env, in env order.
+        const allReferences = [];
+        for (const environment of environmentOrder) {
+            const references = environmentBUs[environment] || [];
+            for (const reference of references) {
+                allReferences.push(reference);
+            }
+        }
+        // Children -> parent (lineage). Roots are refs that are never a lineage key.
+        const childReferences = new Set(Object.keys(lineage));
+        const roots = allReferences.filter((reference) => !childReferences.has(reference));
+        // Build the downstream adjacency (parent -> [children]) preserving env order.
+        const childrenOf = new Map();
+        for (const [child, parent] of Object.entries(lineage)) {
+            if (!childrenOf.has(parent)) {
+                childrenOf.set(parent, []);
+            }
+            childrenOf.get(parent).push(child);
+        }
+        // Walk the chain from a root, following the downstream adjacency breadth-first.
+        const chainFromRoot = (root) => {
+            const chain = [];
+            const stack = [root];
+            const seen = new Set();
+            while (stack.length > 0) {
+                const reference = stack.shift();
+                if (!seen.has(reference)) {
+                    seen.add(reference);
+                    chain.push(reference);
+                    const children = childrenOf.get(reference) || [];
+                    for (const child of children) {
+                        stack.push(child);
+                    }
+                }
+            }
+            return chain;
+        };
+        return roots.map((root) => chainFromRoot(root));
+    }
+
+    /**
+     * Collect the ordered list of hop pairs (source env BUs -> target env BUs) across the pipeline
+     * env order, so coverage can verify a marketList exists for every hop.
+     *
+     * @param {WizardState} state wizard state
+     * @returns {Array<{sourceEnv: string, targetEnv: string, sourceRefs: string[], targetRefs: string[]}>} hops
+     */
+    function hopsFromState(state) {
+        const environmentOrder = Array.isArray(state.envOrder) ? state.envOrder : [];
+        const environmentBUs = state.envBUs || {};
+        const hops = [];
+        for (let index = 1; index < environmentOrder.length; index++) {
+            hops.push({
+                sourceEnv: environmentOrder[index - 1],
+                targetEnv: environmentOrder[index],
+                sourceRefs: environmentBUs[environmentOrder[index - 1]] || [],
+                targetRefs: environmentBUs[environmentOrder[index]] || [],
+            });
+        }
+        return hops;
+    }
+
+    /**
+     * True when a non-`mpb_` marketList in `marketLists` contains an entry for the qualified
+     * reference `qualified`. Meta keys (`filter`/`description`) are ignored.
+     *
+     * @param {object} marketLists baseConfig.marketList
+     * @param {string} qualified `<cred>/<BU>` reference to look for
+     * @returns {boolean} whether some existing marketList carries that ref
+     */
+    function someMarketListHasReference(marketLists, qualified) {
+        const entries = Object.entries(marketLists || {});
+        for (const [listName, list] of entries) {
+            const isUserList = list && typeof list === 'object' && listName.indexOf(MPB) !== 0;
+            if (isUserList && Object.prototype.hasOwnProperty.call(list, qualified)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resolve the covering market for a BU straight from the user's EXISTING (non-`mpb_`) marketLists
+     * — the authoritative `<cred>/<BU>: marketName` mapping the deployment pipeline already encodes.
+     * The suffix/market-var steps guarantee the resolved market is the correct one, so coverage trusts
+     * this mapping instead of re-guessing by suffix. Only string-valued 1:1 entries qualify (array /
+     * `_ParentBU_` fan-out entries are not a single-BU market resolution); the named market must exist.
+     * When several lists map the same ref, the FIRST existing market wins (stable object order).
+     *
+     * @param {object} marketLists baseConfig.marketList
+     * @param {object} markets baseConfig.markets (existence check for the referenced market)
+     * @param {string} qualified `<cred>/<BU>` reference to resolve
+     * @returns {(string|null)} the covering market name, or `null` when no list resolves the ref
+     */
+    function resolveMarketFromLists(marketLists, markets, qualified) {
+        const entries = Object.entries(marketLists || {});
+        for (const [listName, list] of entries) {
+            const isUserList = list && typeof list === 'object' && listName.indexOf(MPB) !== 0;
+            if (!isUserList || !Object.prototype.hasOwnProperty.call(list, qualified)) {
+                continue;
+            }
+            const value = list[qualified];
+            if (typeof value === 'string' && Object.prototype.hasOwnProperty.call(markets || {}, value)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find an existing non-`mpb_` market that covers a BU: matching effective suffix AND carrying the
+     * full needed variable-key set. A market named after the BU is preferred over any other match.
+     *
+     * @param {object} markets baseConfig.markets
+     * @param {string} bu bare BU name (preferred market name)
+     * @param {string} want the needed effective suffix
+     * @param {string[]} neededKeys the non-reserved variable keys that must all be present
+     * @param {string|null} suffixKey the user-designated suffix key (for effective-suffix resolution)
+     * @returns {string|null} the covering market name, or `null` when none matches
+     */
+    function findCoveringMarket(markets, bu, want, neededKeys, suffixKey) {
+        const candidateNames = Object.keys(markets).filter((name) => name.indexOf(MPB) !== 0);
+        // Prefer a market named after the BU, then a stable alphabetical order.
+        const ordered = candidateNames.toSorted((a, b) =>
+            a === bu ? -1 : b === bu ? 1 : a < b ? -1 : a > b ? 1 : 0
+        );
+        const matches = ordered.filter((name) => {
+            if (effectiveSuffix(markets[name], suffixKey) !== want) {
+                return false;
+            }
+            const haveKeys = nonReservedKeys(markets[name]);
+            return neededKeys.every((key) => haveKeys.includes(key));
+        });
+        return matches.length > 0 ? matches[0] : null;
+    }
+
+    /**
+     * Pure coverage analysis: can the user's EXISTING (non-`mpb_`) markets & marketLists already
+     * express the whole pipeline, so the tool could adopt them instead of generating `mpb_` entries?
+     *
+     * A BU's covering market is resolved in two tiers:
+     *   1. Preferred — the market the user's existing marketLists already map this BU to
+     *      (`<cred>/<BU>: marketName`). This is authoritative: only `suffix` is a known attribute, every
+     *      other market key is fully custom, so the pipeline's own list mapping — not a suffix guess —
+     *      is what the suffix/market-var steps enforce as correct. Coverage trusts it (market must exist).
+     *   2. Fallback (no list maps the BU) — the suffix + needed-variable-KEY-set heuristic
+     *      (`findCoveringMarket`): a matching effective suffix AND the full needed key-set present.
+     *
+     * @param {WizardState} wizardState collected wizard answers (reads suffixKey + marketVariables)
+     * @param {object} baseConfig uploaded `.mcdevrc.json`
+     * @returns {{covered: boolean, missing: string[], marketNameByRef: {[buRef: string]: string}}} result
+     */
+    function analyzeExistingCoverage(wizardState, baseConfig) {
+        const state = wizardState || {};
+        const config = baseConfig || {};
+        const suffixKey = state.suffixKey ?? null;
+        const marketVariables = state.marketVariables || {};
+        const suffixes = state.suffixes || {};
+        const markets = config.markets || {};
+        const marketLists = config.marketList || {};
+        const missing = [];
+        const marketNameByReference = {};
+
+        // Every child BU ref across all pipelines (roots are sources, not "covered by a market" targets,
+        // but we still resolve a market for each BU that participates in the pipeline).
+        const pipelines = pipelinesFromState(state);
+        const childReferences = [];
+        for (const pipeline of pipelines) {
+            for (const reference of pipeline) {
+                if (!childReferences.includes(reference)) {
+                    childReferences.push(reference);
+                }
+            }
+        }
+
+        // ── Per-BU market coverage. Preferred: the market the user's EXISTING marketLists already map
+        // this BU to (authoritative — the suffix/market-var steps enforce it). Fallback (no list maps
+        // the BU): the suffix + needed-key-set heuristic, which only then needs a resolved suffix. ──
+        for (const reference of childReferences) {
+            const bu = splitReference(reference).bu;
+            const qualified = qualifiedReference(reference, config);
+            const fromLists = resolveMarketFromLists(marketLists, markets, qualified);
+            if (fromLists) {
+                marketNameByReference[reference] = fromLists;
+                continue;
+            }
+            // No existing marketList resolves this BU → fall back to the suffix heuristic. The user's
+            // explicit suffix (suffix step) is the source of truth, matching how buildConfig generates
+            // markets; fall back to the market-variable-derived effective suffix.
+            const want =
+                typeof suffixes[reference] === 'string' && suffixes[reference] !== ''
+                    ? suffixes[reference]
+                    : effectiveSuffix(marketVariables[reference], suffixKey);
+            if (want === '') {
+                // No suffix chosen in the suffix step and no literal/suffixKey suffix — not coverable.
+                missing.push('Suffix not yet selected for ' + bu);
+                continue;
+            }
+            const neededKeys = nonReservedKeys(marketVariables[reference]);
+            const found = findCoveringMarket(markets, bu, want, neededKeys, suffixKey);
+            if (found) {
+                marketNameByReference[reference] = found;
+            } else {
+                missing.push('Missing market for ' + bu + ' (suffix ' + want + ')');
+            }
+        }
+
+        // ── Per-hop marketList coverage: source + target lists, incl. _ParentBU_ when sharedDEs. ──
+        const hops = hopsFromState(state);
+        for (const hop of hops) {
+            for (const reference of hop.sourceRefs) {
+                const qualified = qualifiedReference(reference, config);
+                if (!someMarketListHasReference(marketLists, qualified)) {
+                    missing.push(
+                        'Missing source market list for ' +
+                            splitReference(reference).bu +
+                            ' (' +
+                            hop.sourceEnv +
+                            ' → ' +
+                            hop.targetEnv +
+                            ')'
+                    );
+                }
+            }
+            for (const reference of hop.targetRefs) {
+                const qualified = qualifiedReference(reference, config);
+                if (!someMarketListHasReference(marketLists, qualified)) {
+                    missing.push(
+                        'Missing target market list for ' +
+                            splitReference(reference).bu +
+                            ' (' +
+                            hop.sourceEnv +
+                            ' → ' +
+                            hop.targetEnv +
+                            ')'
+                    );
+                }
+            }
+            // Shared-DE parent hops require a _ParentBU_ source + target marketList entry.
+            if (state.sharedDEs && hop.sourceRefs.length > 0) {
+                const cred = credOf(hop.sourceRefs[0], config);
+                const parentQualified = cred + '/_ParentBU_';
+                if (!someMarketListHasReference(marketLists, parentQualified)) {
+                    missing.push(
+                        'Missing parent market list for ' + hop.sourceEnv + ' → ' + hop.targetEnv + ' (shared DEs)'
+                    );
+                }
+            }
+        }
+
+        return { covered: missing.length === 0, missing: missing, marketNameByRef: marketNameByReference };
+    }
+
     /**
      * Build a single `BU: market` marketList entry for one env's BUs.
      *
@@ -296,11 +608,17 @@
      *
      * @param {WizardState} wizardState collected wizard answers
      * @param {object} baseConfig uploaded `.mcdevrc.json`
+     * @param {{stripForeign?: boolean, adoptExisting?: boolean}} [options] optional post-processing.
+     *   `adoptExisting`: skip all `mpb_` market/marketList/mapping generation (keep the user's entries
+     *   + the `mpb_pipeline` round-trip block). `stripForeign` (ignored when `adoptExisting`): after
+     *   generating `mpb_` entries, drop every non-`mpb_` market & marketList. Omitting `options`
+     *   (or passing `{}`) keeps the output byte-identical to the pre-options behavior.
      * @returns {object} merged config with regenerated `mpb_` entries
      */
-    function buildConfig(wizardState, baseConfig) {
+    function buildConfig(wizardState, baseConfig, options) {
         const config = deepClone(baseConfig || {});
         const state = wizardState || {};
+        const options_ = options || {};
         const separator = state.separator || '_';
         const environmentOrder = Array.isArray(state.envOrder) ? state.envOrder : [];
         const environmentBUs = state.envBUs || {};
@@ -323,6 +641,14 @@
         deployment.sourceTargetMapping = withoutMpb(deployment.sourceTargetMapping);
         delete deployment.mpb_pipeline;
         deployment.branchSourceTargetMapping = pruneBranchMap(deployment.branchSourceTargetMapping);
+
+        // ── adoptExisting: keep the user's existing markets/marketLists as the pipeline and skip
+        // generating any mpb_ markets/marketLists/mappings. Still write the mpb_pipeline round-trip
+        // block so the wizard state survives reopen. Return before the generation loops. ──
+        if (options_.adoptExisting) {
+            writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes);
+            return config;
+        }
 
         // Per-env BU-ref -> unique market name resolvers. Built once and reused by the markets loop
         // AND the per-hop marketList builders so a slug-collision disambiguation stays consistent
@@ -452,6 +778,35 @@
         }
 
         // ── persisted wizard-state block for GUI round-trip. ──
+        writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes);
+
+        // ── stripForeign (ignored when adoptExisting returned early above): drop every non-mpb_
+        // market, marketList, and deployment mapping so only the tool-generated pipeline remains. ──
+        if (options_.stripForeign) {
+            config.markets = keepOnlyMpb(config.markets);
+            config.marketList = keepOnlyMpb(config.marketList);
+            deployment.sourceTargetMapping = keepOnlyMpb(deployment.sourceTargetMapping);
+            deployment.branchSourceTargetMapping = keepOnlyMpbBranchMap(deployment.branchSourceTargetMapping);
+        }
+
+        return config;
+    }
+
+    /**
+     * Write the `deployment.mpb_pipeline` round-trip block. `marketAdoption` and `suffixKey` are
+     * emitted ONLY when non-empty/non-null so a fresh/default state keeps `buildConfig`'s output
+     * byte-identical to the pre-options behavior.
+     *
+     * @param {object} deployment config.options.deployment (mutated in place)
+     * @param {WizardState} state wizardState param of buildConfig
+     * @param {string[]} environmentOrder ordered env display names
+     * @param {object} environmentBUs env -> BU refs
+     * @param {object} environmentBranches env -> git branch
+     * @param {string} separator suffix separator
+     * @param {object} suffixes BU ref -> suffix
+     * @returns {void}
+     */
+    function writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes) {
         deployment.mpb_pipeline = {
             version: state.version || 1,
             envOrder: environmentOrder,
@@ -471,8 +826,32 @@
             prefixBlacklist: state.prefixBlacklist && typeof state.prefixBlacklist === 'object' ? state.prefixBlacklist : {},
             retention: state.retention && typeof state.retention === 'object' ? state.retention : {},
         };
+        // Conditional emit (byte-identity for fresh state): only add these keys when they carry data.
+        if (state.marketAdoption && Object.keys(state.marketAdoption).length) {
+            deployment.mpb_pipeline.marketAdoption = state.marketAdoption;
+        }
+        if (state.suffixKey != null) {
+            deployment.mpb_pipeline.suffixKey = state.suffixKey;
+        }
+    }
 
-        return config;
+    /**
+     * Return a shallow copy of an object keeping only `mpb_`-prefixed keys (inverse of withoutMpb).
+     *
+     * @param {object} object object to prune
+     * @returns {object} new object with only tool keys
+     */
+    function keepOnlyMpb(object) {
+        if (!object || typeof object !== 'object') {
+            return object;
+        }
+        const cleaned = {};
+        for (const [key, value] of Object.entries(object)) {
+            if (key.indexOf(MPB) === 0) {
+                cleaned[key] = value;
+            }
+        }
+        return cleaned;
     }
 
     /**
@@ -493,7 +872,30 @@
         return cleaned;
     }
 
-    const api = { buildConfig: buildConfig };
+    /**
+     * Rebuild the branchSourceTargetMapping keeping only `mpb_` entries, dropping empty branches
+     * (inverse of pruneBranchMap). Used by stripForeign to remove foreign branch mappings.
+     *
+     * @param {object} branchMapping existing branch -> {source: target} map
+     * @returns {object} pruned map with only tool entries
+     */
+    function keepOnlyMpbBranchMap(branchMapping) {
+        const cleaned = {};
+        const entries = Object.entries(branchMapping || {});
+        for (const [branch, value] of entries) {
+            const kept = keepOnlyMpb(value);
+            if (Object.keys(kept).length > 0) {
+                cleaned[branch] = kept;
+            }
+        }
+        return cleaned;
+    }
+
+    const api = {
+        buildConfig: buildConfig,
+        analyzeExistingCoverage: analyzeExistingCoverage,
+        effectiveSuffix: effectiveSuffix,
+    };
 
     // Browser global.
     global.mpbConfigBuilder = api;

@@ -95,6 +95,18 @@ html.mpb-builder-mode {
   font-weight: 700;
   font-size: $text-sm;
   white-space: nowrap;
+  // Rendered as a <button> (back-to-intake control) — strip default button chrome so it
+  // reads as the title, only adding a pointer + hover affordance to signal it is clickable.
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .mpb-builder-header-name {
