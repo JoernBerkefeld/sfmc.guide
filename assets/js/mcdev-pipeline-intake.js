@@ -30,7 +30,6 @@
     const showBanner = C.showBanner;
     const clearBanner = C.clearBanner;
     const deriveRestoreFailure = C.deriveRestoreFailure;
-    const goToStep = C.goToStep;
     const showOnly = C.showOnly;
 
     /**
@@ -204,7 +203,9 @@
     // ─────────────────────────── intake handling ───────────────────────────
 
     /**
-     * Accept a validated `.mcdevrc.json`: store it, derive creds/BUs, advance to the mode choice.
+     * Accept a validated `.mcdevrc.json`: store it, derive creds/BUs, enter full-pipeline mode and
+     * advance straight to the first wizard step. The former mode-picker view was removed — every
+     * accepted config goes into full-pipeline mode.
      *
      * @param {object} config the parsed, validated config
      * @returns {void}
@@ -228,7 +229,10 @@
         surfaceMarketAdoptionBanner();
         // Persist immediately so every accepted config is resumable, and take its editing lock.
         createSaveForConfig(config);
-        goToStep('mode');
+        // No mode picker anymore: always enter full-pipeline mode and land on its first wizard step.
+        // `selectMode` persists the mode, strips any leftover validations-pool env, computes the
+        // visible steps and navigates to the wizard.
+        C.selectMode('full');
     }
 
     /**

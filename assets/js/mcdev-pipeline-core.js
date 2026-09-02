@@ -568,14 +568,26 @@
      * deploy lineage is unambiguous (each env's single BU chains to the previous env's single BU),
      * so the manual lineage-linking step is skipped from `visibleSteps()`.
      *
-     * @returns {boolean} true when no environment has more than one BU
+     * A config that arrives with environments already populated (e.g. Tier-1 reconstruction) is
+     * judged on its real per-env BU counts. A config that arrives with NO environments yet is NOT
+     * treated as unambiguous: whether lineage will be needed is simply unknown until the user builds
+     * the environments, so returning `true` here would hide the lineage step on upload and then make
+     * it reappear the moment an env gains a second BU — a jarring step-count change mid-wizard. We
+     * therefore only collapse the "empty" case to one-BU-each when there are also no assignable BUs
+     * at all (a genuinely empty config, nothing to ever link).
+     *
+     * @returns {boolean} true when every defined environment holds exactly one BU (or the config has
+     *   no BUs to link at all)
      */
     function everyEnvironmentHasOneBU() {
         const environmentBUs = state.wizardState.envBUs || {};
         const environments = state.wizardState.envOrder || [];
-        // With no envs defined yet there is nothing ambiguous to link — treat as "one BU each".
+        // No envs defined yet: lineage ambiguity is unknown. Keep the step visible (return false) as
+        // long as there is more than one assignable BU that could later share an environment, so the
+        // step set stays stable from upload onward. Only a config with ≤1 assignable BU can never
+        // need lineage, so it stays collapsed.
         if (environments.length === 0) {
-            return true;
+            return pooledBUReferences().length <= 1;
         }
         return environments.every((environment) => {
             const bus = environmentBUs[environment];
@@ -989,7 +1001,7 @@
 
 
     /**
-     * Step back to the previous visible wizard step, or out to the mode choice from the first one.
+     * Step back to the previous visible wizard step, or out to intake from the first one.
      *
      * @returns {void}
      */
@@ -1007,8 +1019,8 @@
             render();
             return;
         }
-        // Before the first wizard step → return to the mode choice.
-        goToStep('mode');
+        // Before the first wizard step → return to intake (the mode picker was removed).
+        goToStep('intake');
     }
 
 
@@ -1646,12 +1658,11 @@
             return;
         }
         // The session exists locally: load it (this sets persistence.currentId + config + wizardState),
-        // then override reopenSave's default `mode` landing with the view/step the hash asked for.
+        // then honour the view/step the hash asked for. reopenSave always lands on the wizard now.
         global.mpbController.clearBanner('deeplink');
-        // reopenSave loads config + wizardState, acquires the lock, and restores the persisted mode
-        // (Fix 1): a save made in wizard mode lands back on the wizard, older mode-less saves on the
-        // `mode` picker. A deep link to `wizard` needs a mode to compute the visible sub-steps, so
-        // the branch below only overrides the landing when a mode was restored.
+        // reopenSave loads config + wizardState, acquires the lock, restores the mode (defaulting to
+        // full-pipeline for older mode-less saves), and lands on the first wizard step. A deep link to
+        // a specific `wizard` step overrides that landing below.
         global.mpbController.reopenSave(parsed.sessionId);
         if (parsed.view === 'wizard' && state.mode) {
             // Set the requested sub-step, then clamp it to the restored session's visible steps so a
@@ -1661,7 +1672,8 @@
             goToStep('wizard');
             return;
         }
-        // view === 'mode', or a deeper view without a resolved mode → reopenSave already landed on mode.
+        // A legacy `#view=mode` link (or a view without an explicit step) → reopenSave already landed
+        // on the first wizard step, so nothing more to do.
     }
 
 

@@ -572,24 +572,16 @@
         persistence.currentId = id;
         C.state.config = blob.config;
         C.state.wizardState = Object.assign(C.emptyWizardState(), blob.wizardState);
-        // Restore the persisted mode so a deep link / reload lands on the wizard rather than the
-        // mode picker (Fix 1). Older saves have no persisted mode → null keeps the original
-        // mode-picker landing (backward compatible). `applyHashDescriptor`'s `state.mode` guard then
-        // correctly navigates a `#view=wizard&step=…` deep link to the requested step (Download is
-        // `step=output` on the wizard view).
-        C.state.mode =
-            C.state.wizardState.mode === 'full' || C.state.wizardState.mode === 'validations'
-                ? C.state.wizardState.mode
-                : null;
+        // Restore the persisted mode so a deep link / reload lands on the right wizard steps. The
+        // mode-picker view was removed, so a save that persisted 'validations' still reopens in that
+        // mode; anything else (including older mode-less saves) defaults to full-pipeline mode.
+        C.state.mode = C.state.wizardState.mode === 'validations' ? 'validations' : 'full';
+        C.state.wizardState.mode = C.state.mode;
         acquireLock(id);
-        // With a restored mode, land on the wizard step it implies; otherwise keep the mode picker.
-        if (C.state.mode) {
-            const steps = C.clampWizardStep();
-            C.setWizardStep(steps.length > 0 ? steps[0].id : null);
-            C.goToStep('wizard');
-            return;
-        }
-        C.goToStep('mode');
+        // Land on the first wizard step the restored mode implies (the mode picker no longer exists).
+        const steps = C.clampWizardStep();
+        C.setWizardStep(steps.length > 0 ? steps[0].id : null);
+        C.goToStep('wizard');
     }
 
 

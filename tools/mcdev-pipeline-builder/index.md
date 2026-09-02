@@ -69,7 +69,7 @@ platforms:
 
 <!-- ════════════════════════ STEP: INTAKE ════════════════════════ -->
 <section id="mpb-step-intake" class="mpb-step" data-step="intake" aria-labelledby="mpb-intake-h">
-  <h2 id="mpb-intake-h">1. Load your <code>.mcdevrc.json</code></h2>
+  <h2 id="mpb-intake-h">Load your <code>.mcdevrc.json</code></h2>
 
   <div class="mpb-intake-grid">
     <div id="mpb-dropzone" class="mpb-dropzone" role="button" tabindex="0"
@@ -97,23 +97,6 @@ platforms:
   <h3>Saved sessions in this browser</h3>
   <div id="mpb-saved-list" class="mpb-saved-list" aria-label="Saved sessions"></div>
   <div id="mpb-storage-gauge" class="mpb-storage-gauge" aria-hidden="true"></div>
-</section>
-
-<!-- ════════════════════════ STEP: MODE ════════════════════════ -->
-<section id="mpb-step-mode" class="mpb-step" data-step="mode" hidden aria-labelledby="mpb-mode-h">
-  <h2 id="mpb-mode-h">2. What do you want to generate?</h2>
-  <div class="mpb-mode-grid">
-    <button type="button" class="mpb-mode-card" id="mpb-mode-full" data-mode="full">
-      <span class="mpb-mode-title">Full pipeline</span>
-      <span class="mpb-mode-desc">Markets, marketLists, mappings <em>and</em> validations —
-        the whole deployment setup.</span>
-    </button>
-    <button type="button" class="mpb-mode-card" id="mpb-mode-validations" data-mode="validations">
-      <span class="mpb-mode-title">Validations only</span>
-      <span class="mpb-mode-desc">Skip straight to the rule picker and emit just
-        <code>.mcdev-validations.js</code>.</span>
-    </button>
-  </div>
 </section>
 
 <!-- ════════════════════════ WIZARD SHELL (dynamic steps) ════════════════════════ -->

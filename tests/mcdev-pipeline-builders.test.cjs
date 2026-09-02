@@ -1926,14 +1926,10 @@ test('isDiagramDrawable offers a two-env graph without prod-confirm and rejects 
     'isDiagramOffered ignores isComplete and follows the drawable gate',
   );
 
-  // everyEnvironmentHasOneBU() is true when envOrder is empty — that must not be sufficient.
+  // An empty envOrder is never a drawable graph, regardless of everyEnvironmentHasOneBU().
   controller.state.wizardState.envOrder = [];
   controller.state.wizardState.envBUs = {};
-  assert.equal(
-    controller.isDiagramDrawable(),
-    false,
-    'empty envOrder is not drawable even though everyEnvironmentHasOneBU() is true',
-  );
+  assert.equal(controller.isDiagramDrawable(), false, 'empty envOrder is not drawable');
 
   // Two named envs with no assignments → not drawable.
   controller.state.wizardState.envOrder = ['DEV', 'SIT'];
@@ -3758,7 +3754,7 @@ test('persisted mode round-trips: a wizard-mode save reopens into the wizard (no
   }
 });
 
-test('backward compatible: a save with no persisted mode still reopens on the mode picker', () => {
+test('a save with no persisted mode reopens in full-pipeline mode on the first wizard step', () => {
   const restore = installMemoryLocalStorage();
   try {
     controller.persistence.available = null;
@@ -3788,13 +3784,15 @@ test('backward compatible: a save with no persisted mode still reopens on the mo
         },
       }),
     );
-    controller.state.mode = 'full';
+    controller.state.mode = null;
     controller.reopenSave(id);
-    assert.equal(controller.state.mode, null, 'a mode-less save restores a null mode');
+    // The mode picker was removed: a mode-less save now defaults to full-pipeline mode …
+    assert.equal(controller.state.mode, 'full', 'a mode-less save defaults to full-pipeline mode');
+    // … and lands directly on the wizard (never the removed mode view).
     assert.equal(
       controller.state.step,
-      'mode',
-      'a mode-less save keeps the original mode-picker landing',
+      'wizard',
+      'a mode-less save lands on the wizard, not the removed mode picker',
     );
   } finally {
     stopControllerTimers();
@@ -6257,6 +6255,84 @@ test('acceptConfig: does NOT fire the marketAdoption banner when no 1:1 lists ar
     restoreStorage();
     controller.persistence.available = null;
   }
+});
+
+test('acceptConfig: enters full-pipeline mode and lands on the first wizard step (no mode picker)', () => {
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    controller.state.mode = null;
+    controller.state.step = 'intake';
+    controller.acceptConfig(synAdoptionConfig(true));
+    // The mode picker view was removed: every accepted config enters full-pipeline mode …
+    assert.equal(controller.state.mode, 'full', 'accepted config enters full-pipeline mode');
+    assert.equal(
+      controller.state.wizardState.mode,
+      'full',
+      'the mode is persisted into wizardState',
+    );
+    // … and navigates straight to the wizard, never the removed mode step.
+    assert.equal(controller.state.step, 'wizard', 'accepted config lands on the wizard');
+    assert.notEqual(controller.state.step, 'mode', 'the removed mode view is never shown');
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+test('acceptConfig: a Tier-2 multi-BU config keeps the lineage step visible from the start', () => {
+  // Regression: a vanilla config that reconstructs via Tier-2 market-list adoption leaves envOrder
+  // empty, but it still holds >1 assignable BU that could later share an env. The lineage step must
+  // stay visible on upload so the step set does not change the moment an env gains a second BU.
+  const restoreStorage = installMemoryLocalStorage();
+  const banners = installFakeBanners();
+  try {
+    controller.persistence.available = null;
+    controller.acceptConfig(synAdoptionConfig(true));
+    assert.deepEqual(
+      controller.state.wizardState.envOrder,
+      [],
+      'sanity: Tier-2 adoption leaves envOrder empty',
+    );
+    const ids = controller.visibleSteps().map((step) => step.id);
+    assert.ok(
+      ids.includes('lineage'),
+      'lineage stays visible for a multi-BU config even with an empty envOrder',
+    );
+  } finally {
+    stopControllerTimers();
+    banners.restore();
+    restoreStorage();
+    controller.persistence.available = null;
+  }
+});
+
+test('everyEnvironmentHasOneBU: empty envOrder with >1 pooled BU keeps lineage visible', () => {
+  // With no envs defined yet, lineage ambiguity is unknown. A config with >1 assignable BU must NOT
+  // collapse to "one BU each" (which would hide the lineage step); a config with ≤1 BU still does.
+  controller.state.mode = 'full';
+  controller.state.wizardState = controller.emptyWizardState();
+  controller.state.wizardState.envOrder = [];
+  controller.state.wizardState.envBUs = {};
+
+  controller.state.config = {
+    credentials: { syn: { businessUnits: { bu_a: '1', bu_b: '2' } } },
+  };
+  assert.ok(
+    controller.visibleSteps().some((step) => step.id === 'lineage'),
+    'empty envOrder + 2 pooled BUs keeps lineage visible',
+  );
+
+  controller.state.config = {
+    credentials: { syn: { businessUnits: { bu_a: '1' } } },
+  };
+  assert.ok(
+    controller.visibleSteps().every((step) => step.id !== 'lineage'),
+    'empty envOrder + a single pooled BU can never need lineage, so it stays hidden',
+  );
 });
 
 // ── 9. marketAdoption round-trip through buildConfig / restore ───────────────
