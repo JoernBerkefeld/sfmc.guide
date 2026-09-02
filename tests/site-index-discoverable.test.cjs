@@ -88,34 +88,31 @@ test('nav helper strips hash and hides only mapped paths', () => {
   assert.equal(isNavUrlDiscoverable('/tools/mcdev-pipeline-builder/', null), true);
 });
 
-test('pipeline builder page is undiscoverable and omitted from nav and Lunr', () => {
+test('pipeline builder page is discoverable and listed in nav and Lunr', () => {
   const page = fs.readFileSync(
     path.join(SITE, 'tools', 'mcdev-pipeline-builder', 'index.md'),
     'utf8',
   );
-  assert.match(page, /^discoverable:\s*false\s*$/m);
-  assert.doesNotMatch(page, /^robots:/m);
-  assert.doesNotMatch(page, /^sitemap:/m);
-  assert.doesNotMatch(page, /^published:/m);
-  assert.doesNotMatch(page, /^status:/m);
+  // The page was intentionally restored to the public site — it must NOT carry a discoverable: false
+  // (or any other hiding) flag, and it must appear in nav and the Lunr search index.
+  assert.doesNotMatch(page, /^discoverable:\s*false\s*$/m);
   assert.equal(
     shouldIndexPage({
       title: 'SFMC DevTools Pipeline Builder',
       permalink: '/tools/mcdev-pipeline-builder/',
-      discoverable: false,
     }),
-    false,
+    true,
   );
   const nav = fs.readFileSync(path.join(SITE, '_data', 'navigation.yml'), 'utf8');
-  assert.doesNotMatch(nav, /\/tools\/mcdev-pipeline-builder\//);
+  assert.match(nav, /\/tools\/mcdev-pipeline-builder\//);
   const lunr = fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8');
-  assert.doesNotMatch(lunr, /\/tools\/mcdev-pipeline-builder\//);
+  assert.match(lunr, /\/tools\/mcdev-pipeline-builder\//);
 });
 
-test('tools index omits the pipeline builder card', () => {
+test('tools index lists the pipeline builder card', () => {
   const index = fs.readFileSync(path.join(SITE, 'tools', 'index.md'), 'utf8');
-  assert.doesNotMatch(index, /href="\/tools\/mcdev-pipeline-builder\/"/);
-  assert.doesNotMatch(index, /SFMC DevTools Pipeline Builder/);
+  assert.match(index, /href="\/tools\/mcdev-pipeline-builder\/"/);
+  assert.match(index, /SFMC DevTools Pipeline Builder/);
 });
 
 test('sidebar and plugin honor the undiscoverable lookup', () => {

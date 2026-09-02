@@ -4570,6 +4570,47 @@ test('syncBuilderHeaderMount hoists the header into .layout-content in builder m
   }
 });
 
+test('render scrolls the view to the top on a step change but not on a same-step re-render', () => {
+  // Fake scroll container that records every scrollTo call so we can count them.
+  const layoutContent = new FakeNode();
+  let scrollCalls = 0;
+  layoutContent.scrollTo = () => {
+    scrollCalls += 1;
+  };
+  controller.setBuilderHeaderDom(null, layoutContent, null);
+  const previousStep = controller.state.step;
+  const previousWizardStep = controller.getWizardStep();
+  // No currentId → the autosave path in render() stays a no-op (never arms a timer).
+  controller.persistence.currentId = null;
+  try {
+    // Establish a known baseline key (intake) so the following wizard entry is a real change,
+    // regardless of what step a prior test left the tracker on.
+    controller.state.step = 'intake';
+    controller.render();
+    const baseline = scrollCalls;
+
+    // Land on the first wizard step: a genuine change from the prior key → one scroll.
+    controller.state.step = 'wizard';
+    controller.setWizardStep('env-order');
+    controller.render();
+    const afterFirst = scrollCalls;
+    assert.ok(afterFirst > baseline, 'entering a wizard step scrolls to the top');
+
+    // A re-render on the SAME step (as input events cause) must not scroll again.
+    controller.render();
+    assert.equal(scrollCalls, afterFirst, 'a same-step re-render does not scroll');
+
+    // Moving to another step is a real change → scrolls once more.
+    controller.setWizardStep('bu-assign');
+    controller.render();
+    assert.equal(scrollCalls, afterFirst + 1, 'a step change scrolls again');
+  } finally {
+    controller.setBuilderHeaderDom(null, null, null);
+    controller.setWizardStep(previousWizardStep);
+    controller.state.step = previousStep;
+  }
+});
+
 // ─── prod-confirm: per-environment "select all" production column logic ───
 //
 // The prod-confirm step now renders one column per environment (lineage visual) with a column

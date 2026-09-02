@@ -202,6 +202,9 @@
         // idempotent (only writes on a real change, via replaceState), so calling it from render() —
         // which also fires on input events — is safe.
         syncHashToState();
+        // On a genuine step change, scroll back to the top so the newly-shown form is in view (an
+        // upload lands on the first wizard step, which would otherwise stay scrolled off-screen).
+        scrollStepToTopOnChange();
     }
 
     /**
@@ -394,6 +397,17 @@
      * @type {(string|null)}
      */
     let wizardStep = null;
+
+
+    /**
+     * The `state.step`/`wizardStep` pair the last `render()` painted, used to scroll the view back to
+     * the top only on a genuine step change (upload → first step, Back/Next, deep-link) — never on the
+     * frequent input-driven re-renders that fire while the user fills a step's form. Starts null so
+     * the first render after a fresh load counts as a change.
+     *
+     * @type {(string|null)}
+     */
+    let lastRenderedStepKey = null;
 
 
     /**
@@ -1437,6 +1451,32 @@
             root.classList.toggle('mpb-builder-mode', isBuilderMode());
         }
         syncBuilderHeaderMount();
+    }
+
+
+    /**
+     * Scroll the view back to the top when the visible step changes, so a newly-shown step's form is
+     * in view from its first line rather than left scrolled to wherever the previous step ended. Only
+     * fires on a real step transition (intake → first wizard step, Back/Next, deep-link/reopen), not
+     * on the input-driven re-renders that happen while filling a form — those keep the `key` stable.
+     * Scrolls both the builder scroll container (`.layout-content`, which owns the scrollbar in
+     * builder mode) and the window, so it works regardless of which one is scrolled. No-ops safely
+     * under the headless document stub, where neither is present.
+     *
+     * @returns {void}
+     */
+    function scrollStepToTopOnChange() {
+        const key = state.step === 'wizard' ? 'wizard:' + String(wizardStep) : String(state.step);
+        if (key === lastRenderedStepKey) {
+            return;
+        }
+        lastRenderedStepKey = key;
+        if (dom.layoutContent && typeof dom.layoutContent.scrollTo === 'function') {
+            dom.layoutContent.scrollTo(0, 0);
+        }
+        if (global && typeof global.scrollTo === 'function') {
+            global.scrollTo(0, 0);
+        }
     }
 
 
