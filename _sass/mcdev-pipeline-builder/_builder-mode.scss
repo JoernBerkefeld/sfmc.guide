@@ -115,6 +115,12 @@ html.mpb-builder-mode {
   gap: $space-2;
   min-width: 0;
   flex: 1 1 auto;
+
+  // Inline rename / Save / Cancel buttons match the compact header-action buttons.
+  .mpb-btn {
+    padding: 0.35em 0.7em;
+    font-size: $text-xs;
+  }
 }
 
 .mpb-builder-header-name-label {
