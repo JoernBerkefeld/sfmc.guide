@@ -22,6 +22,9 @@
 #   ?b=re2n0   second argument as the number zero
 #   ?b=re2q    second argument as the quoted spelling of true
 #   ?b=re5     the fully specified five-argument form
+#   ?b=re5n0   fifth argument as the number zero
+#   ?b=re5qt   fifth argument as the quoted spelling of true
+#   ?b=re5q0   fifth argument as the quoted spelling of zero
 #   ?b=re0     no arguments
 #   ?b=re6     six arguments
 #   ?b=ctlabort  the control: an abort caused by something unrelated, whose
@@ -46,8 +49,8 @@ behaviour: |
       OutputLine(Concat("--- re1 done ---"))
     ENDIF
 
-    /* all three spellings of the flag are accepted and all reach the same
-       abort, so the parameter is not boolean-only */
+    /* CloudPage comparison only: all flag spellings reach an indistinguishable
+       abort here, so these gates do not by themselves prove type acceptance */
     IF @b == "re2t" THEN
       OutputLine(Concat("--- re2t start ---"))
       RaiseError("probe-msg-two-true", true)
@@ -82,6 +85,26 @@ behaviour: |
       OutputLine(Concat("--- re5 start ---"))
       RaiseError("probe-msg-five", true, "PROBECODE", 4321, true)
       OutputLine(Concat("--- re5 done ---"))
+    ENDIF
+
+    /* CloudPage regression gates for parameter 5; Email Preview's unique-message
+       errors, not these indistinguishable aborts, prove the accepted forms */
+    IF @b == "re5n0" THEN
+      OutputLine(Concat("--- re5n0 start ---"))
+      RaiseError("probe-msg-five-num-zero", 1, "PROBECODE", 4321, 0)
+      OutputLine(Concat("--- re5n0 done ---"))
+    ENDIF
+
+    IF @b == "re5qt" THEN
+      OutputLine(Concat("--- re5qt start ---"))
+      RaiseError("probe-msg-five-quoted-true", 1, "PROBECODE", 4321, "true")
+      OutputLine(Concat("--- re5qt done ---"))
+    ENDIF
+
+    IF @b == "re5q0" THEN
+      OutputLine(Concat("--- re5q0 start ---"))
+      RaiseError("probe-msg-five-quoted-zero", 1, "PROBECODE", 4321, "0")
+      OutputLine(Concat("--- re5q0 done ---"))
     ENDIF
 
     IF @b == "re0" THEN

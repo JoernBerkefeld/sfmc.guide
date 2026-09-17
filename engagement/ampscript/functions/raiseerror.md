@@ -29,7 +29,7 @@ differs_from_docs: false
 | `skipSubscriber` | string \| boolean \| number | No | Skip only the current subscriber and continue the job, rather than stopping it |
 | `apiErrorCode` | string | No | Custom API error code |
 | `apiErrorNumber` | number | No | Custom API error number |
-| `preserveDataExt` | boolean | No | Retain data extension writes made before the error, even when the subscriber is skipped |
+| `preserveDataExt` | string \| boolean \| number | No | Retain earlier data-extension writes; allowed values: `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -75,7 +75,9 @@ There is no closed set of sentinel values to test for; the function answers with
 
 **The caller never sees the message.** Four separate runs passed four distinct messages and none of them appeared anywhere in the response. Whatever you write there is for the send log, not for the visitor.
 
-**The second argument accepts three spellings interchangeably.** Unquoted `true`, unquoted `false`, the numbers `1` and `0`, and the quoted `"true"` were each run in isolation and all five produced the identical response. That is why the type is written as three alternatives rather than as a boolean.
+**The second argument accepts boolean, numeric and quoted boolean-like forms.** CloudPage runs with unquoted `true`/`false`, numeric `1`/`0`, and quoted `"true"` all produced the same abort response, but that response alone cannot prove type acceptance. Email Preview supplied the discriminator: bare `true`, numeric `1`, and quoted `"true"` each surfaced its unique error message, proving the three represented types.
+
+**The fifth argument is constrained to eight boolean-like literal forms.** In catalog order they are boolean `true` and `false`, numeric `1` and `0`, quoted `"true"` and `"false"`, and quoted `"1"` and `"0"`. Email Preview discriminated the numeric and quoted forms by surfacing each call's unique error message. Bare boolean tokens are parsed as field references in this preview context, so use `1`/`0` or a quoted representation when writing a literal there. This proves accepted value shapes, not whether earlier data-extension writes are ultimately preserved during a completed send.
 
 ### Telling it apart from an unrelated failure
 
@@ -94,7 +96,7 @@ So from outside the page the two cannot be distinguished. If you need a visitor-
 
 {% include callout.html type="info" title="Every gate in the script returns HTTP 422" text="That is the expected result here, not a broken deployment. The ungated control line renders at HTTP 200 on a plain request and proves the page itself is healthy — read the status code rather than the body." %}
 
-What a page cannot show is the documented purpose: stopping an email job, skipping a single subscriber while the job continues, and the fate of the API error code and number. All of those are properties of a send and were not exercised here. The official reference describes only send behaviour and makes no landing-page claim, so the abort above is undocumented territory rather than a contradiction.
+Email Preview proved that the second and fifth arguments accept the forms described above, but it cannot show the completed-send outcome: stopping an email job, skipping a single subscriber while the job continues, or whether earlier data-extension writes are retained. Those effects require a real send that reaches completion and were not exercised here. The official reference describes send behaviour and makes no landing-page claim, so the CloudPage abort above is undocumented territory rather than a contradiction.
 
 ## Availability
 
