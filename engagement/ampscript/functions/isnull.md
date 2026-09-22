@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IsNull"
-description: "Tests a value for a genuine null. Runtime-proven on a live Marketing Cloud Engagement CloudPage — where it returned False for every input a page variable can hold, including the unset variable the official example says returns true."
+description: "Tests a value for a genuine null. It returns False for every input a page variable can hold, including the unset variable the official example says returns true."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/isnull/
@@ -62,15 +62,15 @@ Only the `False` literal was observed. Every one of the sixteen inputs probed re
 
 **A non-string argument is accepted.** `IsNull(0)` and `IsNull(Now())` both rendered at HTTP 200 rather than aborting.
 
-**The community guide's framing matches what was observed:** the function answers a question about data extension field values, and reports false everywhere else.
+**Only use-case:** the function answers a question about data extension field values, and reports false everywhere else.
 
 ### The unset variable the official example promises
 
-The official reference's own usage example declares a variable with `VAR`, never assigns it, and states the result is true. That exact shape returned `False`. The gate printed its own start and done markers at HTTP 200 alongside a known-good control block, so the page ran to completion — this is a result, not a swallowed abort. See the [differs-from-docs card](/engagement/differs-from-docs/#isnull-unset-variable-not-null).
+The official reference's own usage example declares a variable with `VAR`, never assigns it, and states the result is true. That exact shape returns `False`, at HTTP 200, with the page running to completion rather than aborting. See the [differs-from-docs card](/engagement/differs-from-docs/#isnull-unset-variable-not-null).
 
 ### How the four Utility tests compare
 
-The same inputs put through all four functions, on one page, in one run:
+The same inputs compared across all four functions:
 
 | Input | `Empty` | `IsNull` | `IsNullDefault(x, "DEF")` | `IIf(x, "T", "F")` |
 |---|---|---|---|---|
@@ -102,4 +102,5 @@ The `IsNull` column is constant. That is the practical summary: for a missing-va
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the same null definition with a fallback value bolted on
 - [IIf](/engagement/ampscript/functions/iif/) — what usually consumes the boolean
 - [The unset variable is not reported as null](/engagement/differs-from-docs/#isnull-unset-variable-not-null)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-null.html) · [ampscript.guide](https://ampscript.guide/isnull/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-null.html)
+- [ampscript.guide](https://ampscript.guide/isnull/)

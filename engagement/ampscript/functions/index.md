@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AMPscript Function Reference"
-description: "Per-function AMPscript reference pages for Marketing Cloud Engagement. Every page is proven by running the function on a live Engagement CloudPage — signature, argument handling, edge cases, and the test script that produced the evidence."
+description: "Per-function AMPscript reference pages for Marketing Cloud Engagement, covering each function's signature, argument handling and edge cases."
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/ampscript/functions/

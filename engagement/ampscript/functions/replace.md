@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Replace"
-description: "Replaces all occurrences of a substring with a new value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including matching that ignores case and a single-pass scan that never revisits text it just inserted."
+description: "Replaces all occurrences of a substring with a new value. Covers matching that ignores case and a single-pass scan that never revisits text it just inserted."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/replace/
@@ -74,7 +74,7 @@ A source with no match comes back unchanged, and an empty source returns an empt
 
 **Numbers are accepted in all three positions and handled as their text form.** Replacing the digit `0` with `9` inside the numeric literal `101101` gives `191191`, a numeric search value matches inside a string, and a numeric replacement is inserted as its digits. Booleans are not usable in any position: a boolean source renders an empty string, and a boolean search value or replacement contributes nothing at all.
 
-**Replacement text is inserted verbatim, including non-ASCII.** In a source built as `caf` + `Char(233)` + `" time"`, which measures `9`, the accented letter is replaceable by a plain `e`, and inserting `Char(233)` back into an ASCII source produces the accented letter — confirmed by dumping the code points rather than reading the console.
+**Replacement text is inserted verbatim, including non-ASCII.** In a source built as `caf` + `Char(233)` + `" time"`, which measures `9`, the accented letter is replaceable by a plain `e`, and inserting `Char(233)` back into an ASCII source produces the accented letter at codepoint 233.
 
 ### Casing is ignored, and the source is scanned once
 
@@ -110,4 +110,5 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 - [Differs from official docs](/engagement/differs-from-docs/#replace-case-insensitive-single-pass) — the casing and single-pass findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — finds the text instead of rewriting it, and matches case the same way
 - [`Substring`](/engagement/ampscript/functions/substring/) — takes a portion of a string by position
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html) · [ampscript.guide](https://ampscript.guide/replace/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html)
+- [ampscript.guide](https://ampscript.guide/replace/)

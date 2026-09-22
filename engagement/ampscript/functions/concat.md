@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Concat"
-description: "Joins two or more values into a single string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the one-argument form the reference never mentions and the boolean values that vanish without a trace."
+description: "Joins two or more values into a single string. Covers the one-argument form the reference never mentions and the boolean values that vanish without a trace."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/concat/
@@ -61,9 +61,9 @@ The result is arbitrary text, so there is no closed set of sentinel values to te
 
 ## Behaviour
 
-**One argument is enough.** `Concat("only")` returns HTTP 200 and echoes the argument back unchanged. Our own catalog previously encoded a minimum of two arguments; it has been corrected to one. This is summarised on [Differs from official docs](/engagement/differs-from-docs/#concat-single-argument-accepted).
+**One argument is enough.** `Concat("only")` returns HTTP 200 and echoes the argument back unchanged. The minimum is one argument, not the two that most references list. This is summarised on [Differs from official docs](/engagement/differs-from-docs/#concat-single-argument-accepted).
 
-**Zero arguments abort the page.** A bare `Concat()` aborts the CloudPage with HTTP 422 — the surrounding marker line never renders. So the real minimum is one, not zero.
+**Zero arguments abort the page.** A bare `Concat()` aborts the CloudPage with HTTP 422 and renders nothing. So the real minimum is one, not zero.
 
 **Genuinely variadic.** Two, three, twelve and twenty arguments were all accepted and joined in order: `Concat("Hello", "World")` gives `HelloWorld`, and a twenty-argument call gives `abcdefghijklmnopqrst`.
 
@@ -89,6 +89,8 @@ The result is arbitrary text, so there is no closed set of sentinel values to te
 ## See also
 
 - [`Length`](/engagement/ampscript/functions/length/) — measures the joined result in UTF-16 code units
-- [`Lowercase`](/engagement/ampscript/functions/lowercase/) · [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the other verified String functions, which swallow booleans the same way
+- [`Lowercase`](/engagement/ampscript/functions/lowercase/)
+- [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the other verified String functions, which swallow booleans the same way
 - [Differs from official docs](/engagement/differs-from-docs/#concat-single-argument-accepted) — the one-argument form · [booleans swallowed](/engagement/differs-from-docs/#concat-booleans-swallowed)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-concat.html) · [ampscript.guide](https://ampscript.guide/concat/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-concat.html)
+- [ampscript.guide](https://ampscript.guide/concat/)

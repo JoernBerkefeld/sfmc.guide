@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "HTTPPostWithRetry"
-description: "Posts content to a URL with automatic retry logic and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the responseStatus argument that holds the response body rather than the status the docs describe."
+description: "Posts content to a URL with automatic retry logic and returns the HTTP status code. Covers the responseStatus argument that holds the response body rather than the status the docs describe."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/httppostwithretry/
@@ -27,8 +27,8 @@ differs_from_docs: true
 | `contentTypeHeader` | string | Yes | The Content-Type header for the request |
 | `content` | string | Yes | The content to send in the POST body |
 | `numRetries` | number | No | How many times the request can be retried (default 3) |
-| `reschedule` | boolean | No | When true, retry after 15 minutes if all retries fail (default false) |
-| `returnExceptionOnError` | boolean | No | When true, raise an exception on failure; when false, continue after an error |
+| `reschedule` | string \| boolean \| number | No | When truthy, retry after 15 minutes if all retries fail (default false). Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"`; because the retry is 15 minutes out, a single request cannot show the truthy and falsy spellings behaving differently |
+| `returnExceptionOnError` | string \| boolean \| number | No | When truthy, a failed request aborts the page; when falsy, the page continues and the status is available for inspection. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `responseStatus` | string | No | Output variable that receives the response body |
 | `responseContentRowset` | rowset | No | Output variable that receives the response headers as a rowset |
 | `headerName1` | string | No | Name of an additional request header |
@@ -63,9 +63,9 @@ Status %%=v(@status)=%%; header rows %%=v(RowCount(@headers))=%%
 
 ## Behaviour
 
-**The responseStatus argument holds the body, and a separate rowset holds the headers.** The official reference labels the argument as storing the request "status", but at runtime it receives the response body (289 characters of echoed JSON) while `responseContentRowset` receives the response headers as a rowset — 11 header rows in the proof. The layout matches [`HTTPPost2`](/engagement/ampscript/functions/httppost2/). See [the differs-from-docs note](/engagement/differs-from-docs/#httppostwithretry-response-arg-is-body).
+**The responseStatus argument holds the body, and a separate rowset holds the headers.** The official reference labels the argument as storing the request "status", but at runtime it receives the response body (289 characters of echoed JSON) while `responseContentRowset` receives the response headers as a rowset. The layout matches [`HTTPPost2`](/engagement/ampscript/functions/httppost2/). See [the differs-from-docs note](/engagement/differs-from-docs/#httppostwithretry-response-arg-is-body).
 
-**The retry controls are accepted at runtime.** `numRetries`, `reschedule` and `returnExceptionOnError` were all accepted (`2`, `false`, `true` in the proof) and the successful call returned `200`. Retry-on-failure itself is documented but cannot be observed against a healthy endpoint, so a probe confirms only that the arguments are accepted and a normal POST succeeds.
+**`returnExceptionOnError` decides a failed request; `reschedule` is not observable.** All eight boolean-like literals are accepted for `returnExceptionOnError`, and against a 404 endpoint a truthy value aborts with HTTP 422 while a falsy value continues at HTTP 200 with the response status captured as 404. A transport failure aborts the page regardless of the flag, so a 404 endpoint — not a host that does not resolve — is what tells a truthy value from a falsy one. `reschedule` accepts the same eight spellings, but its documented effect is a retry 15 minutes out, so a single request cannot distinguish the truthy from the falsy forms: read them as accepted spellings, never as interchangeable behaviour. A normal POST to a healthy endpoint still returns `200`.
 
 **The HTTP status code is the return value.** As with the other POST functions, the numeric status comes back as the function's own return value, not through an output variable.
 
@@ -85,4 +85,5 @@ Status %%=v(@status)=%%; header rows %%=v(RowCount(@headers))=%%
 - [`HTTPPost2`](/engagement/ampscript/functions/httppost2/) — the same body/headers split without retry
 - [`HTTPPost`](/engagement/ampscript/functions/httppost/) — the simplest POST
 - [Differs from docs: the responseStatus argument holds the body](/engagement/differs-from-docs/#httppostwithretry-response-arg-is-body)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post-with-retry.html) · [ampscript.guide](https://ampscript.guide/httppostwithretry/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post-with-retry.html)
+- [ampscript.guide](https://ampscript.guide/httppostwithretry/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "FormatNumber"
-description: "Formats a number with a .NET numeric pattern, optionally for a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
+description: "Formats a number with a .NET numeric pattern, optionally for a locale. Covers half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatnumber/
@@ -143,7 +143,7 @@ With a currency pattern the locale also supplies the symbol and its position: `C
 
 {% include test-script.html bundle="ampscript-functions--formatnumber" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of a gated behaviour harness and give each one its own deployment." %}
+{% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
 ## Availability
 
@@ -157,4 +157,5 @@ With a currency pattern the locale also supplies the symbol and its position: `C
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — the same locale machinery, with the symbol and its position chosen for you
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatNumber.html) · [ampscript.guide](https://ampscript.guide/formatnumber/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatNumber.html)
+- [ampscript.guide](https://ampscript.guide/formatnumber/)

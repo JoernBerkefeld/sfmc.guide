@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DateAdd"
-description: "Adds a whole number of intervals to a date. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that any unit outside the documented five destroys the page rather than returning a value."
+description: "Adds a whole number of intervals to a date. Notes that any unit outside the documented five destroys the page rather than returning a value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/dateadd/
@@ -67,7 +67,7 @@ There is no failure value to test for. Every rejected argument aborts the page w
 
 **The five units are the whole list, and they ignore case.** `Y`, `M`, `D`, `H` and `MI` each advance exactly one field and leave the rest alone. Capitalisation makes no difference anywhere: `y`, `m`, `d`, `h`, `mi`, `Mi` and `mI` all matched their upper-case spelling exactly.
 
-**Anything else costs you the entire page.** There is no seconds unit, no weeks unit, no quarters, no milliseconds, and no spelled-out long forms — the word for a day is rejected just as an unknown two-letter token is. Each of those returned HTTP 422 with no output at all, while a control call in the same deployment rendered normally. Since nothing is written when the page aborts, a bad unit is not something the caller can detect and recover from; validate it before the call. For seconds, adjust in minutes or use a different approach entirely.
+**Anything else costs you the entire page.** There is no seconds unit, no weeks unit, no quarters, no milliseconds, and no spelled-out long forms — the word for a day is rejected just as an unknown two-letter token is. Each of those returned HTTP 422 with no output at all. Since nothing is written when the page aborts, a bad unit is not something the caller can detect and recover from; validate it before the call. For seconds, adjust in minutes or use a different approach entirely.
 
 **The amount must be whole.** Negative subtracts, zero returns the date unchanged, and a large amount rolls the year over correctly. A numeric string is fine in either sign. A decimal is not — neither `1.5` nor `"1.5"` is rounded or truncated, and both abort, as does a non-numeric word.
 
@@ -102,4 +102,5 @@ The third row is the one that bites. Stepping forward a month and back again lan
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in as the first argument
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — formats the result, and swallows bad input where this function aborts
 - [The differs-from-docs cards](/engagement/differs-from-docs/#dateadd-unlisted-unit-aborts-the-page) — what the official reference leaves unsaid
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html) · [ampscript.guide](https://ampscript.guide/dateadd/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html)
+- [ampscript.guide](https://ampscript.guide/dateadd/)

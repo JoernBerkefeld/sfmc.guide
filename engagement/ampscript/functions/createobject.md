@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "CreateObject"
-description: "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/createobject/
@@ -57,7 +57,7 @@ A fuller build, assembling a retrieve request:
 
 ## Behaviour
 
-**Flat type names resolve; dotted and wrapper names do not.** The following types were confirmed at runtime: `DataExtension`, `DataExtensionField`, `RetrieveRequest`, `SimpleFilterPart`, `ExecuteRequest`, `QueryDefinition`. A dotted name such as `DataExtension.Field` and the SSJS-style `PerformRequest` wrapper do **not** resolve — calling `CreateObject` with them aborts the CloudPage with HTTP 422. Use the flat `DataExtensionField`, and pass the definition object itself (not a `PerformRequest`) to [`InvokePerform`](/engagement/ampscript/functions/invokeperform/).
+**Flat type names resolve; dotted and wrapper names do not.** The following types resolve: `DataExtension`, `DataExtensionField`, `RetrieveRequest`, `SimpleFilterPart`, `ExecuteRequest`, `QueryDefinition`. A dotted name such as `DataExtension.Field` and the SSJS-style `PerformRequest` wrapper do **not** resolve — calling `CreateObject` with them aborts the CloudPage with HTTP 422. Use the flat `DataExtensionField`, and pass the definition object itself (not a `PerformRequest`) to [`InvokePerform`](/engagement/ampscript/functions/invokeperform/).
 
 {% include test-script.html bundle="ampscript-functions--createobject" chapter="behaviour" %}
 
@@ -71,6 +71,13 @@ A fuller build, assembling a retrieve request:
 ## See also
 
 - SSJS Platform function [`CreateObject`](https://ssjs.guide/platform-functions/createobject/) — the same-named 1:1 SSJS counterpart of this AMPscript function
-- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) · [`AddObjectArrayItem`](/engagement/ampscript/functions/addobjectarrayitem/) — populate the handle
-- [`InvokeCreate`](/engagement/ampscript/functions/invokecreate/) · [`InvokeRetrieve`](/engagement/ampscript/functions/invokeretrieve/) · [`InvokeUpdate`](/engagement/ampscript/functions/invokeupdate/) · [`InvokeDelete`](/engagement/ampscript/functions/invokedelete/) · [`InvokeExecute`](/engagement/ampscript/functions/invokeexecute/) · [`InvokePerform`](/engagement/ampscript/functions/invokeperform/) — execute the handle
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-create-object.html) · [ampscript.guide](https://ampscript.guide/createobject/)
+- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/)
+- [`AddObjectArrayItem`](/engagement/ampscript/functions/addobjectarrayitem/) — populate the handle
+- [`InvokeCreate`](/engagement/ampscript/functions/invokecreate/)
+- [`InvokeRetrieve`](/engagement/ampscript/functions/invokeretrieve/)
+- [`InvokeUpdate`](/engagement/ampscript/functions/invokeupdate/)
+- [`InvokeDelete`](/engagement/ampscript/functions/invokedelete/)
+- [`InvokeExecute`](/engagement/ampscript/functions/invokeexecute/)
+- [`InvokePerform`](/engagement/ampscript/functions/invokeperform/) — execute the handle
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-create-object.html)
+- [ampscript.guide](https://ampscript.guide/createobject/)

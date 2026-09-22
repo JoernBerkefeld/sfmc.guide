@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RedirectTo"
-description: "Marks a URL held in a variable or field as a tracked email link. Runtime-proven on a live Marketing Cloud Engagement CloudPage — despite the name it emits no redirect, never halts the script, and hands the value straight back."
+description: "Marks a URL held in a variable or field as a tracked email link. Despite the name it emits no redirect, never halts the script, and hands the value straight back."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/redirectto/
@@ -77,11 +77,9 @@ The value domain is open, so there is no set of sentinel values to test for. An 
 
 **Nothing is validated.** A word that is not a URL comes back unchanged, an empty string comes back empty, and a bare number comes back as its decimal digits.
 
-**Exactly one argument.** A zero-argument call and a two-argument call each abort the request with HTTP 422.
-
 {% include test-script.html bundle="ampscript-functions--redirectto" chapter="behaviour" %}
 
-What a page cannot show is the function's actual purpose — producing the tracked target inside a send, where clicks are attributed to a subscriber. That needs a real send and is untested here. The official reference never claims a redirect happens at render time, so the pass-through is a limit of the test context rather than a contradiction.
+What a page cannot show is the function's actual purpose — producing the tracked target inside a send, where clicks are attributed to a subscriber. That needs a real send. The official reference never claims a redirect happens at render time, so the pass-through is a limit of what a page can show rather than a contradiction.
 
 ## Availability
 
@@ -94,4 +92,5 @@ What a page cannot show is the function's actual purpose — producing the track
 
 - [WrapLongURL](/engagement/ampscript/functions/wraplongurl/) — the other send-context link function, likewise a pass-through on a page
 - [v](/engagement/ampscript/functions/v/) — outputs the result inline
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-redirect-to.html) · [ampscript.guide](https://ampscript.guide/redirectto/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-redirect-to.html)
+- [ampscript.guide](https://ampscript.guide/redirectto/)

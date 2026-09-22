@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LookupOrderedRows"
-description: "Returns a sorted, row-limited rowset of matching rows from a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sort direction and the row limit."
+description: "Returns a sorted, row-limited rowset of matching rows from a data extension. Covers the sort direction and the row limit."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuporderedrows/
@@ -86,5 +86,7 @@ A no-match returns an empty rowset; guard with `RowCount`.
 
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — unordered matching rows
 - [`LookupOrderedRowsCS`](/engagement/ampscript/functions/lookuporderedrowscs/) — the case-sensitive counterpart
-- [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-ordered-rows.html) · [ampscript.guide](https://ampscript.guide/lookuporderedrows/)
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-ordered-rows.html)
+- [ampscript.guide](https://ampscript.guide/lookuporderedrows/)

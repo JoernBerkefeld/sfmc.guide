@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedEmployeeID"
-description: "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
+description: "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedemployeeid/
@@ -33,7 +33,7 @@ This function takes no parameters.
 User: %%=v(@employeeId)=%%
 ```
 
-Renders a nine-digit numeric ID — on the business unit tested, the same value on every request, including anonymous ones.
+Renders a nine-digit numeric ID — the same value on every request, including anonymous ones.
 
 The value is an ordinary string, so it composes normally:
 
@@ -77,10 +77,11 @@ Because a value always comes back, a page cannot infer from a non-empty result t
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | No |
 
-The official reference scopes this function to microsites using sender authenticated redirection and states it is not for CloudPages. That authenticated path was **not** exercised here — a public CloudPage cannot supply such a session — so everything on this page describes the unauthenticated CloudPage context only, and no claim is made about whose identity the returned ID represents.
+The official reference scopes this function to microsites using sender authenticated redirection and states it is not for CloudPages. That authenticated path needs a session a public CloudPage cannot supply, so this page describes the unauthenticated CloudPage context only, and makes no claim about whose identity the returned ID represents.
 
 ## See also
 
 - [Differs from docs: a value without a session](/engagement/differs-from-docs/#authenticatedemployeeid-value-without-a-session)
 - [AttributeValue](/engagement/ampscript/functions/attributevalue/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-id.html) · [ampscript.guide](https://ampscript.guide/authenticatedemployeeid/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-id.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedemployeeid/)

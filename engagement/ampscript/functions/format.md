@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Format"
-description: "Formats a number, a date or a string with a .NET pattern. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
+description: "Formats a number, a date or a string with a .NET pattern. Notes that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/format/
@@ -106,7 +106,7 @@ The fourth parameter changes month and day names, not just the separators: `D` w
 
 {% include test-script.html bundle="ampscript-functions--format" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of a gated behaviour harness and give each one its own deployment." %}
+{% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
 ## Availability
 
@@ -120,4 +120,5 @@ The fourth parameter changes month and day names, not just the separators: `D` w
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — numbers only, without the third-parameter trap
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — currency, with the symbol chosen for you
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only; compare the minutes before choosing it
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-format.html) · [ampscript.guide](https://ampscript.guide/format/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-format.html)
+- [ampscript.guide](https://ampscript.guide/format/)

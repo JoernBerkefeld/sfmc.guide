@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IsEmailAddress"
-description: "Checks a value against email address syntax only. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
+description: "Checks a value against email address syntax only. Covers a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/isemailaddress/
@@ -101,4 +101,5 @@ The official reference lists an address whose domain is a single label — no `.
 - [Domain](/engagement/ampscript/functions/domain/) — extracts the domain from an address, and performs no validation of its own
 - [IsPhoneNumber](/engagement/ampscript/functions/isphonenumber/) — the sibling format check for telephone numbers
 - [The single-label domain the docs accept](/engagement/differs-from-docs/#isemailaddress-single-label-domain-rejected)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-email-address.html) · [ampscript.guide](https://ampscript.guide/isemailaddress/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-email-address.html)
+- [ampscript.guide](https://ampscript.guide/isemailaddress/)

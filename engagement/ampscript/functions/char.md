@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Char"
-description: "Returns the character for a numeric character code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the code domain is not capped at 255."
+description: "Returns the character for a numeric character code. Notes that the code domain is not capped at 255."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/char/
@@ -60,11 +60,11 @@ The value domain is open: any code that resolves produces its character, and a r
 
 **Numeric strings are accepted for both parameters.** `Char("65")` gives the same `A` as the numeric literal, and `Char(65,"3")` gives the same `AAA`.
 
-**Extended-ASCII codes resolve to their Latin-1 character.** `Char(190)` and `Char(255)` each render a single character, confirmed by dumping the response codepoints as 190 and 255 rather than a multi-byte misread.
+**Extended-ASCII codes resolve to their Latin-1 character.** `Char(190)` and `Char(255)` each render a single character, at codepoint 190 and 255 respectively rather than as a multi-byte sequence.
 
 **Control codes are produced verbatim.** `Char(0)`, `Char(9)`, `Char(10)`, `Char(13)` and `Char(32)` each return one character — including the NUL byte, which renders as codepoint 0 in the response and measures `Length` `1`. They are invisible in rendered output, so measure them rather than looking at them.
 
-**A decimal code, a decimal repeat count, a negative repeat count, a boolean, and a non-numeric string all abort the page.** `Char(65.7)`, `Char(65,2.5)`, `Char(65,-1)`, `Char(true)` and `Char("abc")` each returned HTTP 422 with no start marker rendered, so nothing on the page survives. There is no error value to test for — guard the arguments before the call.
+**A decimal code, a decimal repeat count, a negative repeat count, a boolean, and a non-numeric string all abort the page.** `Char(65.7)`, `Char(65,2.5)`, `Char(65,-1)`, `Char(true)` and `Char("abc")` each aborted the page with HTTP 422, so nothing on the page survives. There is no error value to test for — guard the arguments before the call.
 
 ### The code domain is not capped at 255
 
@@ -80,7 +80,7 @@ This is the load-bearing finding, and the official reference frames the domain a
 
 Codes are treated as 16-bit code-unit values, not as bytes and not as full Unicode codepoints. Anything at or above 65536 wraps: `65601` is `65601 - 65536 = 65`, which is why it renders `A`, and a code in the astral range collapses to a single unrelated code unit instead of the emoji a caller might expect. Every one of these returned `Length` `1`, so the function never produces a surrogate pair.
 
-Each literal above was read from a per-character codepoint dump of the response rather than from a console, because an extended-ASCII character and a mis-decoded multi-byte sequence are indistinguishable by eye.
+Each literal above occupies a single codepoint in the response, which is what distinguishes the intended character from a mis-decoded multi-byte sequence.
 
 The capability is catalogued on [Differs from official docs](/engagement/differs-from-docs/#char-codes-above-255-work). The docs are silent here rather than wrong, so the entry is not flagged as contradicting them — but a code outside 0–255 has no documented contract, so do not lean on it for portability.
 
@@ -102,4 +102,5 @@ The capability is catalogued on [Differs from official docs](/engagement/differs
 - [Differs from official docs](/engagement/differs-from-docs/#char-codes-above-255-work) — the uncapped code domain in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — joins the characters you build with `Char`
 - [`Length`](/engagement/ampscript/functions/length/) — how the resulting characters are counted
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-char.html) · [ampscript.guide](https://ampscript.guide/char/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-char.html)
+- [ampscript.guide](https://ampscript.guide/char/)

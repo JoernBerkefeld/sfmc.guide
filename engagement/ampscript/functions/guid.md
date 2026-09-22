@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "GUID"
-description: "Generates a new globally unique identifier. Runtime-proven on a live Marketing Cloud Engagement CloudPage — 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
+description: "Generates a new globally unique identifier. The result is 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/guid/
@@ -78,4 +78,5 @@ The value is an open domain, so there is no set of tokens to test against. What 
 ## See also
 
 - [Output](/engagement/ampscript/functions/output/) — writing a generated value into the content
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-guid.html) · [ampscript.guide](https://ampscript.guide/guid/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-guid.html)
+- [ampscript.guide](https://ampscript.guide/guid/)

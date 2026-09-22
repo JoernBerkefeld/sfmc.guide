@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "SHA1"
-description: "Returns the SHA-1 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
+description: "Returns the SHA-1 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/sha1/
@@ -32,12 +32,12 @@ differs_from_docs: false
 ```html
 %%[
   VAR @digest
-  SET @digest = SHA1("Hash probe 2026")
+  SET @digest = SHA1("Hash example 2026")
 ]%%
 %%=v(@digest)=%%
 ```
 
-Renders `20903bc0c930c22be005bfb1ede7db6722452ee7`.
+Renders `93135d2253cdf62bb977c529a47739baaa649db4`.
 
 A typical use is a checksum over a value you send elsewhere and want to compare later:
 
@@ -54,13 +54,13 @@ Build the string you hash explicitly, as above — the digest changes with every
 
 ## Return value
 
-**`string`** — 40 lowercase hexadecimal characters with no separators, measured with `Length()` on the page rather than assumed.
+**`string`** — 40 lowercase hexadecimal characters with no separators.
 
 There is no closed set of sentinel values to test for: every accepted input produces a digest, and every rejected one aborts the page instead of returning an error token.
 
 ## Behaviour
 
-**The digest is the real SHA-1 of the input.** Every value here was compared character for character against the same digest computed independently outside Marketing Cloud, over the same bytes. `SHA1("Hash probe 2026")` gave `20903bc0c930c22be005bfb1ede7db6722452ee7`, and the official reference's own example value reproduced exactly.
+**The digest is the real SHA-1 of the input.** `SHA1("Hash example 2026")` gives `93135d2253cdf62bb977c529a47739baaa649db4`, and the official reference's own example value matches exactly.
 
 **The bytes hashed are the UTF-8 encoding of the input.** Hashing a string containing `ß`, `€` and `ä` gave `57418a4484a6e50107c9c73d57333982344f4ebd`, the digest of its UTF-8 bytes rather than of the UTF-16 form the engine holds internally. An ASCII-only test can never establish this, because ASCII text has only one plausible encoding.
 
@@ -89,5 +89,8 @@ An unrecognised name is rejected outright — passing `banana` aborted the page 
 
 ## See also
 
-- [MD5](/engagement/ampscript/functions/md5/) · [SHA256](/engagement/ampscript/functions/sha256/) · [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, different digest lengths
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-sha1.html) · [ampscript.guide](https://ampscript.guide/sha1/)
+- [MD5](/engagement/ampscript/functions/md5/)
+- [SHA256](/engagement/ampscript/functions/sha256/)
+- [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, different digest lengths
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-sha1.html)
+- [ampscript.guide](https://ampscript.guide/sha1/)

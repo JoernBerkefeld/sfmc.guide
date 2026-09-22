@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Lookup"
-description: "Returns a single field value from the first matching row of a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic name/value criteria and what a no-match returns."
+description: "Returns a single field value from the first matching row of a data extension. Covers the variadic name/value criteria and what a no-match returns."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookup/
@@ -82,5 +82,7 @@ A no-match returns an empty string, not a null or an error: `Lookup("AMP_VERIFY_
 ## See also
 
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — returns every matching row as a rowset
-- [`Field`](/engagement/ampscript/functions/field/) · [`Row`](/engagement/ampscript/functions/row/) — read a column from a rowset row
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup.html) · [ampscript.guide](https://ampscript.guide/lookup/)
+- [`Field`](/engagement/ampscript/functions/field/)
+- [`Row`](/engagement/ampscript/functions/row/) — read a column from a rowset row
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup.html)
+- [ampscript.guide](https://ampscript.guide/lookup/)

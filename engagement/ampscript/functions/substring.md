@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Substring"
-description: "Extracts a portion of a string starting at the given index for the specified length. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a start position below 1 that clamps silently while a negative length aborts the page."
+description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 that clamps silently while a negative length aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/substring/
@@ -106,4 +106,5 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#substr
 - [Differs from official docs](/engagement/differs-from-docs/#substring-negative-arguments-disagree) — the negative-argument asymmetry in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — locates the position to start at
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit positions and lengths use
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-substring.html) · [ampscript.guide](https://ampscript.guide/substring/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-substring.html)
+- [ampscript.guide](https://ampscript.guide/substring/)

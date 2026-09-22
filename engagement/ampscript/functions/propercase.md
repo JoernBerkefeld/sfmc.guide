@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ProperCase"
-description: "Converts a value to proper (title) case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that every letter after the first of a word is forced to lower case."
+description: "Converts a value to proper (title) case. Covers that every letter after the first of a word is forced to lower case."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/propercase/
@@ -102,6 +102,8 @@ The behaviour is catalogued on [Differs from official docs](/engagement/differs-
 ## See also
 
 - [Differs from official docs](/engagement/differs-from-docs/#propercase-lowercases-the-rest) — the destructive lower-casing in full
-- [`Uppercase`](/engagement/ampscript/functions/uppercase/) · [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the non-destructive whole-string conversions
+- [`Uppercase`](/engagement/ampscript/functions/uppercase/)
+- [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the non-destructive whole-string conversions
 - [`Trim`](/engagement/ampscript/functions/trim/) — remove padding before casing a field
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-propercase.html) · [ampscript.guide](https://ampscript.guide/propercase/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-propercase.html)
+- [ampscript.guide](https://ampscript.guide/propercase/)

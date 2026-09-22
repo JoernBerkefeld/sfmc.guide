@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "InvokeExecute"
-description: "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/invokeexecute/
@@ -68,6 +68,8 @@ For an unknown verb this renders `rowCount=[1] st=[Error] req=[<guid>]`, and row
 ## See also
 
 - SSJS Platform function [`InvokeExecute`](https://ssjs.guide/platform-functions/invokeexecute/) — the same-named 1:1 SSJS counterpart of this AMPscript function
-- [`CreateObject`](/engagement/ampscript/functions/createobject/) · [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the request
+- [`CreateObject`](/engagement/ampscript/functions/createobject/)
+- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the request
 - [`InvokeRetrieve`](/engagement/ampscript/functions/invokeretrieve/) — the other rowset-returning executor
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-execute.html) · [ampscript.guide](https://ampscript.guide/invokeexecute/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-execute.html)
+- [ampscript.guide](https://ampscript.guide/invokeexecute/)

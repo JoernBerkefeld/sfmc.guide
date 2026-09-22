@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AddObjectArrayItem"
-description: "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/addobjectarrayitem/
@@ -82,4 +82,5 @@ Two calls append two column names to the request's `Properties` array. To build 
 - SSJS Platform function [`AddObjectArrayItem`](https://ssjs.guide/platform-functions/addobjectarrayitem/) — the same-named 1:1 SSJS counterpart of this AMPscript function
 - [`CreateObject`](/engagement/ampscript/functions/createobject/) — creates the handle and the items
 - [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — the scalar-property counterpart
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-add-object-array.html) · [ampscript.guide](https://ampscript.guide/addobjectarrayitem/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-add-object-array.html)
+- [ampscript.guide](https://ampscript.guide/addobjectarrayitem/)

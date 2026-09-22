@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AMPscript Differs from Official Docs (Engagement)"
-description: "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry is proven on a live Engagement CloudPage."
+description: "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry reflects how the engine actually behaves on Marketing Cloud Engagement."
 parent: Engagement
 parent_url: /engagement/
 permalink: /engagement/differs-from-docs/
@@ -9,7 +9,7 @@ platforms:
   - engagement
 ---
 
-The official AMPscript documentation is not always right. Return types can be wrong, arguments described as optional turn out to be mandatory, and some functions behave differently than the reference page claims. This page collects those cases for **Marketing Cloud Engagement** — every entry here is proven by running the function on a live Engagement CloudPage, not inferred from reading the docs.
+The official AMPscript documentation is not always right. Return types can be wrong, arguments described as optional turn out to be mandatory, and some functions behave differently than the reference page claims. This page collects those cases for **Marketing Cloud Engagement** — every entry here reflects how the engine actually behaves, not just what the documentation states.
 
 {% include callout.html type="note" title="AMPscript only — SSJS quirks live elsewhere" content="This page tracks **AMPscript** discrepancies. Server-Side JavaScript engine and runtime quirks are documented separately at [ssjs.guide/engine-limitations/differs-from-docs](https://ssjs.guide/engine-limitations/differs-from-docs/)." %}
 

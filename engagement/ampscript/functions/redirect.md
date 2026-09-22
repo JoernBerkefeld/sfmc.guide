@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Redirect"
-description: "Ends the request with an HTTP redirect to the supplied address. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a real 302 with the value passed straight into the Location header, and nothing like the similarly named RedirectTo."
+description: "Ends the request with an HTTP redirect to the supplied address. Covers that it is a real 302 with the value passed straight into the Location header, and nothing like the similarly named RedirectTo."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/redirect/
@@ -55,19 +55,17 @@ The `Location` header of the response carries exactly `https://example.com/offer
 
 ## Behaviour
 
-**A genuine HTTP 302.** Fetched with automatic redirect following switched off, the response line is `302 Found` and the `Location` header holds the supplied address character for character, ampersand included. No rewriting, no tracking wrapper.
+**A genuine HTTP 302.** The response line is `302 Found` and the `Location` header holds the supplied address character for character, ampersand included. No rewriting, no tracking wrapper.
 
-**Everything written before the call is discarded.** Marker lines written immediately before the call — and a control line at the very top of the page that renders on every other request — were all absent from the response body. The body is only the short generated redirect notice.
+**Everything written before the call is discarded.** The response body is only the short generated redirect notice — nothing written before the call appears in it.
 
-**Nothing after the call runs.** The marker placed after the call never appeared.
+**Nothing after the call runs.** Nothing written after the call is delivered either.
 
 **The value is not validated as a URL.** A bare number is accepted and lands in `Location` as a relative path. An empty argument is the one input that is not usable: it aborts the request with HTTP 422 instead of redirecting.
 
-**Exactly one argument.** A zero-argument call and a two-argument call each abort the request with HTTP 422, while every other branch of the same deployment still answered 302.
-
 ### How this differs from RedirectTo
 
-Both were pointed at the same address in the same deployment and fetched the same way. They have nothing in common beyond the name:
+Despite the similar name, they have nothing in common:
 
 | | Redirect | RedirectTo |
 |---|---|---|
@@ -86,7 +84,7 @@ So they are trivially distinguishable from outside. If you want a visitor moved 
 
 ### Email/send context: rejected in sendable content
 
-Landing pages are the only context. Rendered through the Email Preview API against a seeded sendable row, an isolated `%%[ Redirect("https://sfmc.guide/robots.txt") ]%%` was rejected with HTTP 400, errorcode 10005: *"Redirect Function is not valid in content. This function is only allowed in in content with an HTTP context."* A sendable email has no HTTP response to redirect, so `Redirect` cannot be used there — use it only on CloudPages / landing pages. (By contrast, `RedirectTo` is *not* rejected in email content: it renders as a no-op, since it emits no redirect at all.)
+Landing pages are the only context. Used in sendable email content, an isolated `%%[ Redirect("https://sfmc.guide/robots.txt") ]%%` is rejected with HTTP 400, errorcode 10005: *"Redirect Function is not valid in content. This function is only allowed in content with an HTTP context."* A sendable email has no HTTP response to redirect, so `Redirect` cannot be used there — use it only on CloudPages / landing pages. (By contrast, `RedirectTo` is *not* rejected in email content: it renders as a no-op, since it emits no redirect at all.)
 
 ## Availability
 
@@ -99,4 +97,5 @@ Landing pages are the only context. Rendered through the Email Preview API again
 
 - [RedirectTo](/engagement/ampscript/functions/redirectto/) — the confusingly similar name that emits no redirect at all
 - [RaiseError](/engagement/ampscript/functions/raiseerror/) — the other page-terminating Utility function, which ends the request with a failure instead
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-redirect.html) · [ampscript.guide](https://ampscript.guide/redirect/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-redirect.html)
+- [ampscript.guide](https://ampscript.guide/redirect/)

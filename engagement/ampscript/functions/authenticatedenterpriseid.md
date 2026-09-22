@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedEnterpriseID"
-description: "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
+description: "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. A public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedenterpriseid/
@@ -66,11 +66,11 @@ The value domain is open: an account ID is account-scoped and varies per Marketi
 
 ### It is the account MID, not the business unit's
 
-The page under test was published on a **child** business unit. The returned value nevertheless matched the account's **parent** (enterprise) MID exactly, and did **not** match the child business unit's own MID. Both comparisons ran in the same render against the two real MIDs configured for the account, so the answer is not an artefact of a made-up identifier.
+Even when the page runs on a **child** business unit, the returned value is the account's **parent** (enterprise) MID — not the child business unit's own MID.
 
 Read the result as an account-level identifier. If what you actually need is the MID of the business unit executing the code, this is not that function.
 
-It is also not the employee identifier: called in the same render, [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/) came back a different, longer digit string, and `IndexOf` answered `0` — its not-found result — in **both** directions, so neither value is a substring of the other.
+It is also not the employee identifier: [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/) returns a different, longer digit string, and `IndexOf` answers `0` — its not-found result — in **both** directions, so neither value is a substring of the other.
 
 ### Do not use it as an authentication check
 
@@ -87,11 +87,12 @@ Because a value always comes back, a page cannot infer from a non-empty result t
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | No |
 
-The official reference scopes this function to microsites using sender authenticated redirection and states it is not for CloudPages. That authenticated path was **not** exercised here — a public CloudPage cannot supply such a session — so everything on this page describes the unauthenticated CloudPage context only, and no claim is made about whose account the returned ID represents.
+The official reference scopes this function to microsites using sender authenticated redirection and states it is not for CloudPages. That authenticated path needs a session a public CloudPage cannot supply, so this page describes the unauthenticated CloudPage context only, and makes no claim about whose account the returned ID represents.
 
 ## See also
 
 - [Differs from docs: the parent MID without a session](/engagement/differs-from-docs/#authenticatedenterpriseid-parent-mid-without-a-session)
 - [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/)
 - [AuthenticatedMemberID](/engagement/ampscript/functions/authenticatedmemberid/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-enterprise-id.html) · [ampscript.guide](https://ampscript.guide/authenticatedenterpriseid/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-enterprise-id.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedenterpriseid/)

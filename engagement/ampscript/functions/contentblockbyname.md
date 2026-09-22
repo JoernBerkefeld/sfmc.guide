@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ContentBlockByName"
-description: "Retrieves and renders a Content Builder content block by its full Name/path. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+description: "Retrieves and renders a Content Builder content block by its full Name/path. Covers the missing-block default path and that default content is emitted literally."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/contentblockbyname/
@@ -27,7 +27,7 @@ differs_from_docs: false
 |---|---|---|---|
 | `contentBlockName` | string | Yes | Full Name/path of the content block to retrieve (for example `Content Builder\My Folder\My Block`) |
 | `impressionRegionName` | string | No | Impression region name to associate with the block |
-| `errorOnMissingContentBlock` | boolean | No | When true (the default), a missing block aborts; set to 0 to fall back to the default content |
+| `errorOnMissingContentBlock` | string \| boolean \| number | No | When truthy (the default), a missing block aborts; when falsy, the page continues and the status variable is set to -1. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `errorMessage` | string | No | Default content returned when the block is missing — emitted literally |
 | `statusCode` | number | No | Output variable set to 0 on success or -1 when no content was found |
 
@@ -65,6 +65,8 @@ Renders `Block unavailable` and sets `@sc` to `-1`.
 
 **The full five-argument signature works.** All optional arguments are honoured — unlike the SSJS binding of the same name, which only reads the first argument.
 
+**All eight boolean-like literals are accepted for `errorOnMissingContentBlock`.** `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` are interchangeable: when the block is missing, a truthy value aborts the page with HTTP 422 while a falsy value lets it continue at HTTP 200 and sets the status variable to -1.
+
 {% include test-script.html bundle="ampscript-functions--contentblockbyname" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
@@ -80,5 +82,7 @@ Renders `Block unavailable` and sets `@sc` to `-1`.
 
 - [`ContentBlockByID`](/engagement/ampscript/functions/contentblockbyid/) — retrieve the same block by its numeric ID
 - [`ContentBlockByKey`](/engagement/ampscript/functions/contentblockbykey/) — retrieve the same block by its customer key
-- [`ContentArea`](/engagement/ampscript/functions/contentarea/) · [`ContentAreaByName`](/engagement/ampscript/functions/contentareabyname/) — the retired Classic-content equivalents
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-name.html) · [ampscript.guide](https://ampscript.guide/contentblockbyname/)
+- [`ContentArea`](/engagement/ampscript/functions/contentarea/)
+- [`ContentAreaByName`](/engagement/ampscript/functions/contentareabyname/) — the retired Classic-content equivalents
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-name.html)
+- [ampscript.guide](https://ampscript.guide/contentblockbyname/)

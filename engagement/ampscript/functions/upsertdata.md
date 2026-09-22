@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "UpsertData"
-description: "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/upsertdata/
@@ -74,5 +74,8 @@ The `1` after the data extension is the **search-pair count** — here one pair 
 ## See also
 
 - [`UpsertDE`](/engagement/ampscript/functions/upsertde/) — the email-context twin; same arguments, returns an empty string
-- [`InsertData`](/engagement/ampscript/functions/insertdata/) · [`UpdateData`](/engagement/ampscript/functions/updatedata/) · [`DeleteData`](/engagement/ampscript/functions/deletedata/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-upsert-data.html) · [ampscript.guide](https://ampscript.guide/upsertdata/)
+- [`InsertData`](/engagement/ampscript/functions/insertdata/)
+- [`UpdateData`](/engagement/ampscript/functions/updatedata/)
+- [`DeleteData`](/engagement/ampscript/functions/deletedata/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-upsert-data.html)
+- [ampscript.guide](https://ampscript.guide/upsertdata/)

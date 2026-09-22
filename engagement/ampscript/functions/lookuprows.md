@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LookupRows"
-description: "Returns every matching row of a data extension as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic criteria and what a no-match returns."
+description: "Returns every matching row of a data extension as a rowset. Covers the variadic criteria and what a no-match returns."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuprows/
@@ -82,5 +82,8 @@ A no-match returns an empty rowset, not a null or an error: `RowCount(LookupRows
 ## See also
 
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — returns a single scalar from the first match
-- [`RowCount`](/engagement/ampscript/functions/rowcount/) · [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows.html) · [ampscript.guide](https://ampscript.guide/lookuprows/)
+- [`RowCount`](/engagement/ampscript/functions/rowcount/)
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows.html)
+- [ampscript.guide](https://ampscript.guide/lookuprows/)

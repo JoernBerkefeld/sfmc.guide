@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Add"
-description: "Computes the sum of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+description: "Computes the sum of two numeric values. Covers which argument types are accepted and which abort the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/add/
@@ -79,5 +79,7 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 ## See also
 
 - [`Subtract`](/engagement/ampscript/functions/subtract/) — the inverse operation
-- [`Multiply`](/engagement/ampscript/functions/multiply/) · [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-add.html) · [ampscript.guide](https://ampscript.guide/add/)
+- [`Multiply`](/engagement/ampscript/functions/multiply/)
+- [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-add.html)
+- [ampscript.guide](https://ampscript.guide/add/)

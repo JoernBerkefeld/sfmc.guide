@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "BuildRowSetFromString"
-description: "Splits a delimited string into a single-column rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the unnamed column and the empty separator that splits nothing."
+description: "Splits a delimited string into a single-column rowset. Covers the unnamed column and the empty separator that splits nothing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/buildrowsetfromstring/
@@ -87,5 +87,7 @@ There is no closed set of sentinel values: an empty source string and an unset v
 ## See also
 
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromstring-edge-separators) — the separator edge cases in full
-- [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/) · [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same rowset shape for structured payloads
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-string.html) · [ampscript.guide](https://ampscript.guide/buildrowsetfromstring/)
+- [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/)
+- [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same rowset shape for structured payloads
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-string.html)
+- [ampscript.guide](https://ampscript.guide/buildrowsetfromstring/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Trim"
-description: "Removes leading and trailing whitespace from a value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that tabs, line breaks and the non-breaking space all count as whitespace."
+description: "Removes leading and trailing whitespace from a value. Covers that tabs, line breaks and the non-breaking space all count as whitespace."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/trim/
@@ -98,4 +98,5 @@ The non-breaking space matters most in practice: it survives most copy-paste cle
 - [`ProperCase`](/engagement/ampscript/functions/propercase/) — cases a value without trimming it
 - [`Length`](/engagement/ampscript/functions/length/) — how to measure whether a trim actually removed anything
 - [`Concat`](/engagement/ampscript/functions/concat/) — joins values without touching their padding
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-trim.html) · [ampscript.guide](https://ampscript.guide/trim/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-trim.html)
+- [ampscript.guide](https://ampscript.guide/trim/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LookupRowsCS"
-description: "Returns every matching row of a data extension using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupRows."
+description: "Returns every matching row of a data extension using a case-sensitive comparison. Covers the difference from the case-insensitive LookupRows."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuprowscs/
@@ -81,4 +81,5 @@ A no-match returns an empty rowset; guard with `RowCount`.
 
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — the case-insensitive counterpart
 - [`LookupOrderedRowsCS`](/engagement/ampscript/functions/lookuporderedrowscs/) — case-sensitive with ordering and a row limit
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows-cs.html) · [ampscript.guide](https://ampscript.guide/lookuprowscs/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows-cs.html)
+- [ampscript.guide](https://ampscript.guide/lookuprowscs/)

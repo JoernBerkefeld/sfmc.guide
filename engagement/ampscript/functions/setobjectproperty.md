@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "SetObjectProperty"
-description: "Sets a scalar (or nested-handle) property on a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Sets a scalar (or nested-handle) property on a CreateObject handle."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/setobjectproperty/
@@ -79,4 +79,5 @@ The property does not render anything on its own; it is read back only when the 
 - SSJS Platform function [`SetObjectProperty`](https://ssjs.guide/platform-functions/setobjectproperty/) — the same-named 1:1 SSJS counterpart of this AMPscript function
 - [`CreateObject`](/engagement/ampscript/functions/createobject/) — creates the handle
 - [`AddObjectArrayItem`](/engagement/ampscript/functions/addobjectarrayitem/) — the array-valued counterpart
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-set-object-property.html) · [ampscript.guide](https://ampscript.guide/setobjectproperty/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-set-object-property.html)
+- [ampscript.guide](https://ampscript.guide/setobjectproperty/)

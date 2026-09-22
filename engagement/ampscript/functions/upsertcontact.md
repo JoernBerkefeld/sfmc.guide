@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "UpsertContact"
-description: "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that both a create and an update return 0 and that an unknown attribute returns 1 without writing."
+description: "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Create and update return 0 and an unknown attribute returns 1 without writing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/upsertcontact/
@@ -51,7 +51,7 @@ Renders `Status: 0` — the upsert succeeded. The same call made a second time f
 
 **`number`** — a status code: `0` on success, `1` on error.
 
-The return is a closed two-value status code, not a count of records. `0` was proven for both creating a new contact and updating an existing one; `1` was proven for several error conditions.
+The return is a closed two-value status code, not a count of records: `0` for both creating a new contact and updating an existing one, and `1` for several error conditions.
 
 ## Behaviour
 
@@ -74,6 +74,8 @@ The return is a closed two-value status code, not a count of records. `0` was pr
 
 ## See also
 
-- [`InsertData`](/engagement/ampscript/functions/insertdata/) · [`UpsertData`](/engagement/ampscript/functions/upsertdata/) — write to a data extension instead of a contact
+- [`InsertData`](/engagement/ampscript/functions/insertdata/)
+- [`UpsertData`](/engagement/ampscript/functions/upsertdata/) — write to a data extension instead of a contact
 - [`IsPhoneNumber`](/engagement/ampscript/functions/isphonenumber/) — validate a phone number before upserting
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-contacts/mc-ampscript-reference-contacts-upsert-contact.html) · [ampscript.guide](https://ampscript.guide/upsertcontact/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-contacts/mc-ampscript-reference-contacts-upsert-contact.html)
+- [ampscript.guide](https://ampscript.guide/upsertcontact/)

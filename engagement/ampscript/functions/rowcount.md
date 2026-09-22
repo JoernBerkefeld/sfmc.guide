@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RowCount"
-description: "Returns the number of rows in a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it returns zero for an empty rowset and never aborts."
+description: "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/rowcount/
@@ -77,6 +77,8 @@ There is no sentinel: the result is a bare non-negative integer.
 ## See also
 
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset to count
-- [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) — read a counted rowset
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/) — read a counted rowset
 - [`DataExtensionRowCount`](/engagement/ampscript/functions/dataextensionrowcount/) — counts every row in a data extension by name
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-row-count.html) · [ampscript.guide](https://ampscript.guide/rowcount/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-row-count.html)
+- [ampscript.guide](https://ampscript.guide/rowcount/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "FormatDate"
-description: "Formats a date according to a date pattern, a time pattern and a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that mm in the date pattern renders the month, not the minutes."
+description: "Formats a date according to a date pattern, a time pattern and a locale. Notes that mm in the date pattern renders the month, not the minutes."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatdate/
@@ -107,10 +107,11 @@ Minutes are simply not addressable from the date pattern: `mm` and `MM` are the 
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
 
-Marketing Cloud Next uses a different pattern dialect — Java-style format strings rather than the .NET-style ones proven here — so a pattern written for Engagement is not portable as-is.
+Marketing Cloud Next uses a different pattern dialect — Java-style format strings rather than the .NET-style ones used on Engagement — so a pattern written for Engagement is not portable as-is.
 
 ## See also
 
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed into this function
 - [The differs-from-docs card](/engagement/differs-from-docs/#formatdate-date-pattern-tokens-mean-something-else) — what the official reference claims and what the runtime does
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html) · [ampscript.guide](https://ampscript.guide/formatdate/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html)
+- [ampscript.guide](https://ampscript.guide/formatdate/)

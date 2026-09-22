@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IsCHTMLBrowser"
-description: "Tests a user agent string for a compact HTML feature-phone browser. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the true path, which two feature-phone agent families still produce, while the empty string aborts the page."
+description: "Tests a user agent string for a compact HTML feature-phone browser. Covers the true path, which two feature-phone agent families still produce, while the empty string aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/ischtmlbrowser/
@@ -62,7 +62,7 @@ Both literals were produced in the same render, as the capitalised words `True` 
 
 **The word does not trigger it.** `IsCHTMLBrowser("chtml")` returns `False`, while agents that never contain that word return `True`.
 
-**The request's own user agent decides the live result.** The same deployed page, fetched twice without redeploying, returned `False` with a desktop `User-Agent` header and `True` with a feature-phone one.
+**The request's own user agent decides the live result.** The same page returns `False` with a desktop `User-Agent` header and `True` with a feature-phone one.
 
 **A number is harmless.** `IsCHTMLBrowser(0)` returns `False`.
 
@@ -89,9 +89,8 @@ Passing an empty value is the one input in this family that is not survivable: t
 
 ### Email/send context: not valid in sendable content
 
-This function is a CloudPage / landing-page feature only. Rendered through the
-Email Preview API against a seeded sendable row, an isolated
-`%%=IsCHTMLBrowser("DoCoMo/2.0 N905i")=%%` was rejected with HTTP 400,
+This function is a CloudPage / landing-page feature only. In a sendable email,
+an isolated `%%=IsCHTMLBrowser("DoCoMo/2.0 N905i")=%%` is rejected with HTTP 400,
 errorcode 10004: *"IsCHTMLBrowser Function is not valid in content. This
 function is only allowed in non sendable content."* It cannot be used inside a
 sendable email — which fits its purpose, since a user-agent is a request-time
@@ -108,4 +107,5 @@ value that does not exist at send time.
 
 - [Empty](/engagement/ampscript/functions/empty/) — how to guard the user agent value before calling
 - [IsEmailAddress](/engagement/ampscript/functions/isemailaddress/) — a sibling Utility predicate that tolerates the empty string
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-is-chtml-browser.html) · [ampscript.guide](https://ampscript.guide/ischtmlbrowser/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-is-chtml-browser.html)
+- [ampscript.guide](https://ampscript.guide/ischtmlbrowser/)

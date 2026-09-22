@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "EndImpressionRegion"
-description: "Marks the end of an impression tracking region. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the optional argument accepts boolean, string, and number truthy values to close all open regions."
+description: "Marks the end of an impression tracking region. The optional argument accepts boolean, string, and number truthy values to close all open regions."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/endimpressionregion/
@@ -50,7 +50,7 @@ Close all open regions at once with a truthy argument:
 
 ## Behaviour
 
-**It emits nothing on a CloudPage.** With zero or one argument the call renders an empty string; wrapped in marker text it shows `before--after`.
+**It emits nothing on a CloudPage.** With zero or one argument the call renders an empty string — text placed before and after it ends up adjacent (`before--after`).
 
 **Zero and one argument both render cleanly.** The no-argument form closes the most recent open region; a truthy argument closes every open region.
 
@@ -58,7 +58,7 @@ Close all open regions at once with a truthy argument:
 
 {% include test-script.html bundle="ampscript-functions--endimpressionregion" chapter="behaviour" %}
 
-Impression regions are an **email-send** feature. The distinction between ending one region and ending all of them affects impression tracking in a sent message, which cannot be observed from a CloudPage — there the call simply renders empty regardless of argument. This page proves only what a CloudPage can show.
+Impression regions are an **email-send** feature. The distinction between ending one region and ending all of them affects impression tracking in a sent message, which cannot be observed from a CloudPage — there the call simply renders empty regardless of argument.
 
 ## Availability
 
@@ -70,4 +70,5 @@ Impression regions are an **email-send** feature. The distinction between ending
 ## See also
 
 - [`BeginImpressionRegion`](/engagement/ampscript/functions/beginimpressionregion/) — opens the region this closes
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-end-impression-region.html) · [ampscript.guide](https://ampscript.guide/endimpressionregion/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-end-impression-region.html)
+- [ampscript.guide](https://ampscript.guide/endimpressionregion/)

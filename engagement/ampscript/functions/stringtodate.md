@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "StringToDate"
-description: "Converts a date string to a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that it produced character-for-character identical output to DateParse for every input tried, while accepting no second argument at all."
+description: "Converts a date string to a date value. It produces character-for-character identical output to DateParse for every input, while accepting no second argument at all."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/stringtodate/
@@ -62,7 +62,7 @@ Rendered on its own the value prints as a US short date followed by a 12-hour cl
 
 ### It behaves exactly like DateParse
 
-Both functions were called on the same line of the same render, against the same fixed inputs. Every pair matched character for character.
+Both functions produce identical output for the same input.
 
 | Call | `StringToDate` renders | `DateParse` renders |
 |---|---|---|
@@ -76,7 +76,7 @@ Both functions were called on the same line of the same render, against the same
 | `("March 4, 2026")` | `3/4/2026 12:00:00 AM` | `3/4/2026 12:00:00 AM` |
 | `("Wed, 04 Mar 2026 09:05:07 GMT")` | `3/4/2026 3:05:07 AM` | `3/4/2026 3:05:07 AM` |
 
-Measured rather than eyeballed: a `DateDiff` in hours between the two results over the same input returned `0`, and `Length()` over each returned `20`.
+A `DateDiff` in hours between the two results over the same input is `0`, and `Length()` over each is `20`.
 
 **The one real difference is arity.** `DateParse` takes an optional second argument that returns the instant in UTC. `StringToDate` accepts exactly one argument — passing that same flag shape aborts the page, and so does the `"UTF-8"` encoding argument some community references still list for it. Neither is ignored; both are rejected. The relationship is written up in [the differs-from-docs card](/engagement/differs-from-docs/#stringtodate-duplicate-of-dateparse).
 
@@ -107,12 +107,15 @@ Measured rather than eyeballed: a `DateDiff` in hours between the two results ov
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
 
-Everything on this page was proven on an Engagement CloudPage. The official reference states that on Marketing Cloud Next the function returns a locale-formatted string rather than a date value, which would break the chaining shown above; that claim was not tested here.
+The official reference states that on Marketing Cloud Next the function returns a locale-formatted string rather than a date value, which would break the chaining shown above.
 
 ## See also
 
 - [DateParse](/engagement/ampscript/functions/dateparse/) — same behaviour on one argument, plus an optional UTC flag this function does not have
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the usual next call, and the recommended alternative on Marketing Cloud Next
-- [DateAdd](/engagement/ampscript/functions/dateadd/) · [DateDiff](/engagement/ampscript/functions/datediff/) · [DatePart](/engagement/ampscript/functions/datepart/) — the functions that consume the parsed value
+- [DateAdd](/engagement/ampscript/functions/dateadd/)
+- [DateDiff](/engagement/ampscript/functions/datediff/)
+- [DatePart](/engagement/ampscript/functions/datepart/) — the functions that consume the parsed value
 - [The differs-from-docs card](/engagement/differs-from-docs/#stringtodate-duplicate-of-dateparse) — the duplication and the arity gap
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-string-to-date.html) · [ampscript.guide](https://ampscript.guide/stringtodate/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-string-to-date.html)
+- [ampscript.guide](https://ampscript.guide/stringtodate/)

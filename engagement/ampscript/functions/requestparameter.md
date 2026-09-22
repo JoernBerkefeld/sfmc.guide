@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RequestParameter"
-description: "Returns the value of a form post or query string parameter from the current request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
+description: "Returns the value of a form post or query string parameter from the current request. Covers that names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/requestparameter/
@@ -85,7 +85,7 @@ On a GET CloudPage, reading the same parameter with this function and with [`Que
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
 
-The bundled harness is shared by all three functions and is driven entirely by the query string, so one deploy covers every case — a POST body is not exercised, so the form-post path the official reference describes is untested here.
+The comparison above is stated for GET only; a form post is a different request shape.
 
 ## Availability
 
@@ -99,4 +99,5 @@ The bundled harness is shared by all three functions and is driven entirely by t
 - [QueryParameter](/engagement/ampscript/functions/queryparameter/) — the same function on a GET
 - [v](/engagement/ampscript/functions/v/) — outputs a value inline
 - [Differs from docs: case, duplicates and raw values](/engagement/differs-from-docs/#requestparameter-case-duplicates-and-raw-values)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-request-parameter.html) · [ampscript.guide](https://ampscript.guide/requestparameter/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-request-parameter.html)
+- [ampscript.guide](https://ampscript.guide/requestparameter/)

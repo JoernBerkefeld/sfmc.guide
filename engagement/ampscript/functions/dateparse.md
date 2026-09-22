@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DateParse"
-description: "Parses a date string into a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that a day-first date is silently read month-first while an unreadable one takes the whole page down."
+description: "Parses a date string into a date value. Notes that a day-first date is silently read month-first while an unreadable one takes the whole page down."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/dateparse/
@@ -26,7 +26,7 @@ differs_from_docs: false
 | Name | Type | Required | Description |
 |---|---|---|---|
 | `dateString` | string \| date | Yes | A date or timestamp string, or an existing date value |
-| `useUtc` | string \| boolean \| number | No | Whether to return the instant in UTC instead of the account time zone; defaults to off |
+| `useUtc` | string \| boolean \| number | No | Whether to return the instant in UTC instead of the account time zone; defaults to off. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -73,7 +73,7 @@ Rendered on its own the value prints as a US short date followed by a 12-hour cl
 
 ### Which input formats parse
 
-Fixed inputs, each proven in its own gate.
+Fixed inputs:
 
 | Call | Renders |
 |---|---|
@@ -93,6 +93,8 @@ An ordinal-suffixed day, a non-English month name, free text, an empty string, a
 
 `5/8/2026` meant as the 5th of August parsed cleanly and came back as `5/8/2026 12:00:00 AM` — the 8th of May. Nothing aborts and nothing signals the problem, so a European-formatted feed produces plausible dates that are months wrong. Normalise to `yyyy-MM-dd` before parsing. Full write-up in [the differs-from-docs card](/engagement/differs-from-docs/#dateparse-day-first-dates-are-silently-misread).
 
+**The second argument takes the same eight boolean-like literals as the other boolean flags** — `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"`. Unlike the flag on [Now](/engagement/ampscript/functions/now/), it is not inert on a CloudPage: every truthy spelling selects UTC and every falsy spelling the account zone, the same six-hour shift shown above.
+
 {% include test-script.html bundle="ampscript-functions--dateparse" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so the marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- safe start ---\"))` — even for a single argument." %}
@@ -106,12 +108,15 @@ An ordinal-suffixed day, a non-English month name, free text, an empty string, a
 | Marketing Cloud Engagement | Yes |
 | Marketing Cloud Next | Yes, from API 67.0 |
 
-Everything on this page was proven on an Engagement CloudPage. The official reference states that on Marketing Cloud Next the function returns a locale-formatted string rather than a date value, which would break the chaining shown above; that claim was not tested here.
+The official reference states that on Marketing Cloud Next the function returns a locale-formatted string rather than a date value, which would break the chaining shown above.
 
 ## See also
 
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the usual next call, and the recommended alternative on Marketing Cloud Next
-- [DateAdd](/engagement/ampscript/functions/dateadd/) · [DateDiff](/engagement/ampscript/functions/datediff/) · [DatePart](/engagement/ampscript/functions/datepart/) — the functions that consume the parsed value
+- [DateAdd](/engagement/ampscript/functions/dateadd/)
+- [DateDiff](/engagement/ampscript/functions/datediff/)
+- [DatePart](/engagement/ampscript/functions/datepart/) — the functions that consume the parsed value
 - [Now](/engagement/ampscript/functions/now/) — whose own optional flag, unlike this one, changes nothing on a CloudPage
 - [The differs-from-docs cards](/engagement/differs-from-docs/#dateparse-unsupported-input-aborts-the-page) — the page abort and the day-first misreading
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-parse.html) · [ampscript.guide](https://ampscript.guide/dateparse/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-parse.html)
+- [ampscript.guide](https://ampscript.guide/dateparse/)

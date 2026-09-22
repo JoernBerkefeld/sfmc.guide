@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "MicrositeURL"
-description: "Builds a Classic Content microsite URL. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the page reference and any extra name-value pairs are folded into one encrypted token, and every call produces a different token."
+description: "Builds a Classic Content microsite URL. Covers that the page reference and any extra name-value pairs are folded into one encrypted token, and every call produces a different token."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/micrositeurl/
@@ -56,15 +56,11 @@ The value domain is open, so there is no set of sentinel values to test for. Wha
 
 **An ID that does not exist is accepted.** A nine-digit ID matching no asset produced a well-formed URL of the same shape. The function builds the link without checking that the referenced page exists, so a typo in the ID fails only when someone opens the link.
 
-**The ID may be a number or a quoted string.** Both spellings of the same ID, and the ID passed through a variable, all produced valid URLs. Our own catalog previously typed it as a number only.
-
-**Exactly one required argument.** A zero-argument call aborts the request with HTTP 422, as does a call supplying a name without its value. The maximum is open, as the pairs repeat.
-
-The same calls were re-run on a parent business unit and behaved identically, so none of the above is an artefact of a child account.
+**The ID may be a number or a quoted string.** Both spellings of the same ID, and the ID passed through a variable, all produce valid URLs.
 
 {% include test-script.html bundle="ampscript-functions--micrositeurl" chapter="behaviour" %}
 
-One thing the harness cannot reach: what the token resolves to on the target page. That needs a real send with a real subscriber, so the personalisation the official reference describes is untested here — only the token's existence, its per-call variation and its absorption of extra pairs were proven.
+What the token resolves to on the target page needs a real send with a real subscriber, so the personalisation the official reference describes is not observable outside a send.
 
 ## Availability
 
@@ -77,4 +73,5 @@ One thing the harness cannot reach: what the token resolves to on the target pag
 
 - [CloudPagesURL](/engagement/ampscript/functions/cloudpagesurl/) — the CloudPages counterpart, which aborts the request on an ID that matches no page
 - [v](/engagement/ampscript/functions/v/) — outputs the built URL inline
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-microsite-url.html) · [ampscript.guide](https://ampscript.guide/micrositeurl/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-microsite-url.html)
+- [ampscript.guide](https://ampscript.guide/micrositeurl/)

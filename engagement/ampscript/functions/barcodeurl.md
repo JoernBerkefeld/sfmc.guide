@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "BarcodeURL"
-description: "Builds a URL that renders a barcode image from its inputs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the real minimum argument count and the empty value that takes the whole page down."
+description: "Builds a URL that renders a barcode image from its inputs."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/barcodeurl/
@@ -29,10 +29,10 @@ differs_from_docs: false
 | `width` | number | Yes | Image width in pixels |
 | `height` | number | Yes | Image height in pixels |
 | `checksumValue` | string | No | Checksum value for the barcode |
-| `showText` | boolean | No | Show the encoded value beneath the barcode |
+| `showText` | string \| boolean \| number | No | Show the encoded value as a text band beneath the barcode. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `altText` | string | No | Alternate text shown when `showText` is off |
 | `rotation` | number | No | Orientation in degrees: 0, 90, 180 or 270 |
-| `transparentBG` | boolean | No | Transparent instead of white background |
+| `transparentBG` | string \| boolean \| number | No | Transparent instead of white background. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -58,9 +58,7 @@ All nine arguments together select formatting options and still return a single 
 
 ## Behaviour
 
-**Four arguments are the minimum.** Value, symbology, width and height alone return a URL at HTTP 200. A three-argument call aborts the page with HTTP 422. Our own catalog previously encoded a minimum of nine arguments even though arguments five through nine were already flagged optional; it has been corrected to four.
-
-**The optional arguments are accepted and change the URL.** Supplying `checksumValue`, `showText`, `altText`, `rotation` and `transparentBG` each produces a distinct URL, up to the full nine-argument form.
+**The optional arguments are accepted and change the URL.** Supplying `checksumValue`, `showText`, `altText`, `rotation` and `transparentBG` each produces a distinct URL, up to the full nine-argument form. `showText` and `transparentBG` also change the rendered image: all eight boolean-like literals are accepted, a truthy value draws the encoded value as a text band beneath the barcode (or makes the background fully transparent), and a falsy value omits the band (or leaves an opaque white background). All four truthy spellings produce the same image, as do all four falsy spellings. The `qs` token in the returned URL varies from call to call, but that is an encoding artefact — the underlying image is identical, and a token remains usable with no observed expiry.
 
 **An empty value aborts the page.** Passing an empty string as `valueToConvert` aborts the CloudPage with HTTP 422 and discards everything rendered before it, rather than returning an empty string or a blank-barcode URL. Guard the value before calling — see [Differs from official docs](/engagement/differs-from-docs/#barcodeurl-empty-value-aborts). Note also the documented per-page limit: BarcodeURL may be called at most twice per message or landing page.
 
@@ -75,6 +73,8 @@ All nine arguments together select formatting options and still return a single 
 
 ## See also
 
-- [`ContentArea`](/engagement/ampscript/functions/contentarea/) · [`BuildOptionList`](/engagement/ampscript/functions/buildoptionlist/) — other Content functions
+- [`ContentArea`](/engagement/ampscript/functions/contentarea/)
+- [`BuildOptionList`](/engagement/ampscript/functions/buildoptionlist/) — other Content functions
 - [Differs from official docs](/engagement/differs-from-docs/#barcodeurl-empty-value-aborts) — the empty-value abort
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-barcode-url.html) · [ampscript.guide](https://ampscript.guide/barcodeurl/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-barcode-url.html)
+- [ampscript.guide](https://ampscript.guide/barcodeurl/)

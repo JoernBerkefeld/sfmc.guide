@@ -11,7 +11,7 @@ platforms:
 
 {% include callout.html type="note" title="Originally published" content="First published **2019-03-03** in the [SFMC Cookbook](https://joernberkefeld.github.io/SFMC-Cookbook/ampscript/). Ported here for sfmc.guide." %}
 
-{% include callout.html type="tip" title="Looking for a specific function?" content="This page collects general AMPscript authoring guidance. For per-function reference pages proven against a live CloudPage — signature, argument handling, edge cases, and the test script behind each claim — see the [AMPscript function reference](/engagement/ampscript/functions/)." %}
+{% include callout.html type="tip" title="Looking for a specific function?" content="This page collects general AMPscript authoring guidance. For per-function reference pages — signature, argument handling, edge cases, and the test script behind each claim — see the [AMPscript function reference](/engagement/ampscript/functions/)." %}
 
 ## Hide your code
 
@@ -35,7 +35,7 @@ _Why?_ Hiding the code shrinks the content block to its minimum height, making t
 
 ## Data Extension lookups
 
-The AMPscript `Lookup` family is documented individually, each proven against a live CloudPage:
+The AMPscript `Lookup` family is documented individually, each with its own reference page:
 
 - [Lookup](/engagement/ampscript/functions/lookup/) — single field of the first matching row, case-insensitive
 - [LookupRows](/engagement/ampscript/functions/lookuprows/) — full rows, case-insensitive

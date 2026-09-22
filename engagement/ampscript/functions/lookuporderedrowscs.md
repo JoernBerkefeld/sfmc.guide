@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LookupOrderedRowsCS"
-description: "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupOrderedRows."
+description: "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Covers the difference from the case-insensitive LookupOrderedRows."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuporderedrowscs/
@@ -83,5 +83,7 @@ A no-match returns an empty rowset; guard with `RowCount`.
 
 - [`LookupOrderedRows`](/engagement/ampscript/functions/lookuporderedrows/) — the case-insensitive counterpart
 - [`LookupRowsCS`](/engagement/ampscript/functions/lookuprowscs/) — case-sensitive without ordering
-- [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-ordered-rows-cs.html) · [ampscript.guide](https://ampscript.guide/lookuporderedrowscs/)
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/) — read the returned rowset
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-ordered-rows-cs.html)
+- [ampscript.guide](https://ampscript.guide/lookuporderedrowscs/)

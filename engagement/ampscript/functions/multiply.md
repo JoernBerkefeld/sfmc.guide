@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Multiply"
-description: "Computes the product of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+description: "Computes the product of two numeric values. Covers which argument types are accepted and which abort the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/multiply/
@@ -79,5 +79,7 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 ## See also
 
 - [`Divide`](/engagement/ampscript/functions/divide/) — the inverse operation, with an unusual zero-divisor result
-- [`Add`](/engagement/ampscript/functions/add/) · [`Subtract`](/engagement/ampscript/functions/subtract/) — the other two arithmetic functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-multiply.html) · [ampscript.guide](https://ampscript.guide/multiply/)
+- [`Add`](/engagement/ampscript/functions/add/)
+- [`Subtract`](/engagement/ampscript/functions/subtract/) — the other two arithmetic functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-multiply.html)
+- [ampscript.guide](https://ampscript.guide/multiply/)

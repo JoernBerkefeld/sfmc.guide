@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DecryptSymmetric"
-description: "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which cipher names work and why an arity mistake cannot be hidden behind a condition."
+description: "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Covers which cipher names work and why an arity mistake cannot be hidden behind a condition."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/decryptsymmetric/
@@ -80,9 +80,9 @@ There is no sentinel value to test for. A branch that renders nothing at all is 
 
 **All eight arguments are required, and a wrong count is a compile-time error.** Seven and nine arguments each abort the page, and — unlike a bad argument *value* — a wrong argument *count* takes down every branch of the page, including ones that are never selected. An arity mistake cannot be hidden behind a condition.
 
-**What happens on bad input is not established here.** Decrypting with a wrong passphrase, a wrong salt, or a malformed or truncated ciphertext could not be pinned down: those cases sat in a page that was already aborting for an unrelated compile-time reason, so their failures say nothing about the function. Treat the outcome as unknown and validate the input before you rely on it.
+**A wrong passphrase, a wrong salt, or a malformed or truncated ciphertext has no defined outcome.** Treat it as unknown and validate the input before you rely on it.
 
-**The named-key form is not covered here.** Supplying a Key Management customer key in the external-key positions requires a key configured in Setup, which was not available on the business unit used for these checks. Everything above was proven with inline values only.
+**The named-key form requires a Key Management customer key configured in Setup.** Everything above uses inline values only.
 
 {% include test-script.html bundle="ampscript-functions--decryptsymmetric" chapter="behaviour" %}
 
@@ -99,4 +99,5 @@ There is no sentinel value to test for. A branch that renders nothing at all is 
 
 - [EncryptSymmetric](/engagement/ampscript/functions/encryptsymmetric/) — the inverse; produces the Base64 ciphertext this function consumes
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — decoding, not decryption; needs no key at all
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-decrypt-symmetric.html) · [ampscript.guide](https://ampscript.guide/decryptsymmetric/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-decrypt-symmetric.html)
+- [ampscript.guide](https://ampscript.guide/decryptsymmetric/)

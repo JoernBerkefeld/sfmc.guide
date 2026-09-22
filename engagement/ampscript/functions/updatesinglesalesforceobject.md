@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "UpdateSingleSalesforceObject"
-description: "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
+description: "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Covers that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/updatesinglesalesforceobject/
@@ -80,4 +80,5 @@ Requires an active Marketing Cloud Connect integration to a Sales or Service Clo
 - [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/) — insert a record into the same connected org
 - [`RetrieveSalesforceObjects`](/engagement/ampscript/functions/retrievesalesforceobjects/) — read records back
 - [`LongSFID`](/engagement/ampscript/functions/longsfid/) — convert a 15-character ID for matching
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-update-single-object.html) · [ampscript.guide](https://ampscript.guide/updatesinglesalesforceobject/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-update-single-object.html)
+- [ampscript.guide](https://ampscript.guide/updatesinglesalesforceobject/)

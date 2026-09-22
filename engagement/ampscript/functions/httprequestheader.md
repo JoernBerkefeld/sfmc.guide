@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "HTTPRequestHeader"
-description: "Returns the value of a specified HTTP request header from the inbound request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that custom headers are returned even though the docs restrict it to standard headers."
+description: "Returns the value of a specified HTTP request header from the inbound request. Notes that custom headers are returned even though the docs restrict it to standard headers."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/httprequestheader/
@@ -60,7 +60,7 @@ Referrer: %%=v(@ref)=%%
 
 ### Email/send context: rejected in sendable content
 
-This function reads an **inbound HTTP request**, which only exists on a CloudPage / landing page. Rendered through the Email Preview API against a seeded sendable row, an isolated `%%=HTTPRequestHeader("User-Agent")=%%` was rejected with HTTP 400, errorcode 10004: *"HTTPRequestHeader Function is not valid in content. This function is only allowed in content with an HTTP context."* So it cannot be used inside a sendable email — request headers are a request-time value that does not exist at send time. See [Differs from official docs](/engagement/differs-from-docs/#httprequestheader-not-valid-in-sendable-email-content).
+This function reads an **inbound HTTP request**, which only exists on a CloudPage / landing page. In a sendable email, an isolated `%%=HTTPRequestHeader("User-Agent")=%%` is rejected with HTTP 400, errorcode 10004: *"HTTPRequestHeader Function is not valid in content. This function is only allowed in content with an HTTP context."* So it cannot be used inside a sendable email — request headers are a request-time value that does not exist at send time. See [Differs from official docs](/engagement/differs-from-docs/#httprequestheader-not-valid-in-sendable-email-content).
 
 {% include test-script.html bundle="ampscript-functions--httprequestheader" chapter="behaviour" %}
 
@@ -77,4 +77,5 @@ This function reads an **inbound HTTP request**, which only exists on a CloudPag
 
 - [`HTTPGet`](/engagement/ampscript/functions/httpget/) — other HTTP functions
 - [Differs from official docs](/engagement/differs-from-docs/#httprequestheader-custom-headers-returned) — custom headers are readable
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-request-header.html) · [ampscript.guide](https://ampscript.guide/httprequestheader/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-request-header.html)
+- [ampscript.guide](https://ampscript.guide/httprequestheader/)

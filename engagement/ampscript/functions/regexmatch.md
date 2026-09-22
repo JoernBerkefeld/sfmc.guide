@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RegExMatch"
-description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the case-sensitive matching that sets it apart from every other String function."
+description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Covers the case-sensitive matching that sets it apart from every other String function."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/regexmatch/
@@ -115,4 +115,5 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#regexm
 - [Differs from official docs](/engagement/differs-from-docs/#regexmatch-case-sensitive-and-variadic-options) — the casing and option-count findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — plain substring search, matching case-insensitively
 - [`Replace`](/engagement/ampscript/functions/replace/) — pair with it to rewrite what a pattern found
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-regex-match.html) · [ampscript.guide](https://ampscript.guide/regexmatch/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-regex-match.html)
+- [ampscript.guide](https://ampscript.guide/regexmatch/)

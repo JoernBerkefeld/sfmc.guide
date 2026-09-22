@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Base64Decode"
-description: "Decodes a Base64-encoded string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
+description: "Decodes a Base64-encoded string. Malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/base64decode/
@@ -26,7 +26,7 @@ differs_from_docs: false
 |---|---|---|---|
 | `encodedString` | string | Yes | Well-formed Base64 to decode; anything else aborts the page |
 | `encoding` | string | No | Name of the character encoding the decoded bytes are read as; defaults to UTF-8 |
-| `abortOnFailure` | number \| boolean | No | Send-time failure flag; accepted in every spelling and without effect on a successful decode |
+| `abortOnFailure` | string \| boolean \| number | No | Truthy aborts the page when the value cannot be decoded, falsy returns an empty string instead; only a failed decode is affected. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -67,7 +67,7 @@ There is no closed set of sentinel values to test for. In particular there is no
 
 **The decoded bytes are read as UTF-8 by default.** Decoding a UTF-16 payload without naming its encoding returns text with a NUL between every character, which renders as `S F M C   A M P s c r i p t   2 0 2 6`. Passing `UTF-16` for that same payload returns it correctly, so the second argument is a real character-encoding name and not a formality.
 
-**The third argument does not change the value.** All four spellings — `0`, `1`, `true`, `false` — were accepted and every one returned the identical decoded string. Its documented effect concerns aborting a send, which a CloudPage cannot exercise.
+**The third argument changes only a failed decode.** All eight boolean-like literals — `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` — are accepted. Given malformed input, a truthy value aborts the page with HTTP 422 while a falsy value returns HTTP 200 and the empty string, and a decode that succeeds returns the same text whatever the flag says. The flag is not a send-only switch: its whole effect is limited to decodes that fail.
 
 **The empty string decodes to the empty string.** It is the one malformed-looking input that is accepted rather than rejected.
 
@@ -101,4 +101,5 @@ The middle case is the one that bites: that is the correct payload for `Hello` w
 - [Base64Encode](/engagement/ampscript/functions/base64encode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — a reversible encoding whose malformed inputs cannot arise the same way
 - [Malformed input aborts the page](/engagement/differs-from-docs/#base64decode-malformed-input-aborts)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-decode.html) · [ampscript.guide](https://ampscript.guide/base64decode/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-decode.html)
+- [ampscript.guide](https://ampscript.guide/base64decode/)

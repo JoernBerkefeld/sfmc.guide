@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Lowercase"
-description: "Converts a value to lower case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
+description: "Converts a value to lower case. Covers the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lowercase/
@@ -88,6 +88,8 @@ The result is arbitrary transformed text, so there is no closed set of sentinel 
 ## See also
 
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the inverse conversion, which leaves the German sharp s alone
-- [`Concat`](/engagement/ampscript/functions/concat/) · [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions
+- [`Concat`](/engagement/ampscript/functions/concat/)
+- [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions
 - [Differs from official docs](/engagement/differs-from-docs/#concat-booleans-swallowed) — booleans are swallowed across the whole String family
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-lowercase.html) · [ampscript.guide](https://ampscript.guide/lowercase/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-lowercase.html)
+- [ampscript.guide](https://ampscript.guide/lowercase/)

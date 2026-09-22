@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DatePart"
-description: "Extracts a specific component from a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
+description: "Extracts a specific component from a date value. Notes that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/datepart/
@@ -69,7 +69,7 @@ Text does not mean the value needs converting first. `Add(DatePart(@when, "Y"), 
 
 **`monthName` is the only token with no abbreviation, and there is no day-name counterpart.** It returned `March` for a date in March; a `dayName` token aborts the page, so the naming pattern does not generalise.
 
-**Anything else costs you the entire page.** A seconds token in either spelling, a weeks token, a quarters token, a `dayName` token, an unknown two-letter token and an empty token string each returned HTTP 422 with no output at all, while a control call in the same deployment rendered normally. There is no seconds component available, so the finest resolution is the minute.
+**Anything else costs you the entire page.** A seconds token in either spelling, a weeks token, a quarters token, a `dayName` token, an unknown two-letter token and an empty token string each returned HTTP 422 with no output at all. There is no seconds component available, so the finest resolution is the minute.
 
 **A date string and a real date value are interchangeable.** ISO, ISO-T, US slash and spelled-out month forms all parsed, and the output of `Now()` and of `DateAdd` went straight in with no conversion. But an unparseable string, an empty string or a plain number aborts the page — the same unforgiving behaviour as `DateAdd` and `DateDiff`, and the opposite of [FormatDate](/engagement/ampscript/functions/formatdate/).
 
@@ -107,7 +107,9 @@ Unlike [Now](/engagement/ampscript/functions/now/), [DateAdd](/engagement/ampscr
 ## See also
 
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the way to get a 24-hour clock, a padded value, or a localised month name
-- [DateAdd](/engagement/ampscript/functions/dateadd/) · [DateDiff](/engagement/ampscript/functions/datediff/) — the sibling functions, whose token set is narrower
+- [DateAdd](/engagement/ampscript/functions/dateadd/)
+- [DateDiff](/engagement/ampscript/functions/datediff/) — the sibling functions, whose token set is narrower
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in
 - [The differs-from-docs cards](/engagement/differs-from-docs/#datepart-hour-is-a-12-hour-clock) — the 12-hour clock and the ragged padding
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-part.html) · [ampscript.guide](https://ampscript.guide/datepart/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-part.html)
+- [ampscript.guide](https://ampscript.guide/datepart/)

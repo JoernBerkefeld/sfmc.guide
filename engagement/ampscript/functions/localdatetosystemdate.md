@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LocalDateToSystemDate"
-description: "Converts a date in the account's configured time zone to the Marketing Cloud system date. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that a date with no time part lands on the previous day."
+description: "Converts a date in the account's configured time zone to the Marketing Cloud system date. Notes that a date with no time part lands on the previous day."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/localdatetosystemdate/
@@ -36,7 +36,7 @@ differs_from_docs: false
 %%=v(@system)=%%
 ```
 
-Renders `1/15/2026 2:30:00 AM` on the account this page was proven against — seven hours earlier than the input.
+Renders `1/15/2026 2:30:00 AM` — seven hours earlier than the input.
 
 The usual reason to convert is to compare a user-supplied time against something the platform stamped in system time:
 
@@ -88,9 +88,9 @@ Nothing aborts and nothing signals it, so code that formats only the date part a
 
 {% include test-script.html bundle="ampscript-functions--localdatetosystemdate" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so the marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- ctrl start ---\"))` — even for a single argument." %}
+{% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so the marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- safe start ---\"))` — even for a single argument." %}
 
-{% include callout.html type="warning" title="The minute counts depend on the account" content="The `-420` and `-480` figures come from one business unit's configured time zone. Re-running the script on another account gives different numbers; what stays true is the whole-hour shift and the one-hour gap between the winter and the summer measurement." %}
+{% include callout.html type="warning" title="The minute counts depend on the account" content="The `-420` and `-480` figures reflect one account's configured time zone. Another account gives different numbers; what stays true is the whole-hour shift and the one-hour gap between the winter and the summer values." %}
 
 ## Availability
 
@@ -102,7 +102,10 @@ Nothing aborts and nothing signals it, so code that formats only the date part a
 ## See also
 
 - [SystemDateToLocalDate](/engagement/ampscript/functions/systemdatetolocaldate/) — the inverse conversion
-- [DateParse](/engagement/ampscript/functions/dateparse/) · [FormatDate](/engagement/ampscript/functions/formatdate/) · [DatePart](/engagement/ampscript/functions/datepart/) — the functions that produce and consume the value
+- [DateParse](/engagement/ampscript/functions/dateparse/)
+- [FormatDate](/engagement/ampscript/functions/formatdate/)
+- [DatePart](/engagement/ampscript/functions/datepart/) — the functions that produce and consume the value
 - [Now](/engagement/ampscript/functions/now/) — the system-time value this converts toward
 - [The differs-from-docs card](/engagement/differs-from-docs/#localdatetosystemdate-seasonal-shift) — the seasonal shift and the date-only day shift
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-local-date-to-system-date.html) · [ampscript.guide](https://ampscript.guide/localdatetosystemdate/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-local-date-to-system-date.html)
+- [ampscript.guide](https://ampscript.guide/localdatetosystemdate/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Uppercase"
-description: "Converts a value to upper case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the German sharp s, which is returned untouched instead of expanding to a double S."
+description: "Converts a value to upper case. Covers the German sharp s, which is returned untouched instead of expanding to a double S."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/uppercase/
@@ -93,5 +93,7 @@ This is a specific gap rather than non-ASCII input being ignored wholesale: the 
 
 - [Differs from official docs](/engagement/differs-from-docs/#uppercase-sharp-s-not-expanded) — the sharp-s finding in full
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the inverse conversion
-- [`Concat`](/engagement/ampscript/functions/concat/) · [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-uppercase.html) · [ampscript.guide](https://ampscript.guide/uppercase/)
+- [`Concat`](/engagement/ampscript/functions/concat/)
+- [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-uppercase.html)
+- [ampscript.guide](https://ampscript.guide/uppercase/)

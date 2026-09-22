@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "UpdateData"
-description: "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/updatedata/
@@ -83,5 +83,7 @@ Here `2` search pairs (`Region`/`Status`) select the rows to update.
 
 - [`UpdateDE`](/engagement/ampscript/functions/updatede/) — the email-context twin; same arguments, returns an empty string
 - [`UpsertData`](/engagement/ampscript/functions/upsertdata/) — insert or update in one call
-- [`InsertData`](/engagement/ampscript/functions/insertdata/) · [`DeleteData`](/engagement/ampscript/functions/deletedata/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-update-data.html) · [ampscript.guide](https://ampscript.guide/updatedata/)
+- [`InsertData`](/engagement/ampscript/functions/insertdata/)
+- [`DeleteData`](/engagement/ampscript/functions/deletedata/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-update-data.html)
+- [ampscript.guide](https://ampscript.guide/updatedata/)

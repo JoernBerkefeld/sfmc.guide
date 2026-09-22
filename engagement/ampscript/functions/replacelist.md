@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ReplaceList"
-description: "Replaces several search values with one common replacement value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sequential passes that let a later search value rewrite what an earlier one inserted."
+description: "Replaces several search values with one common replacement value. Covers the sequential passes that let a later search value rewrite what an earlier one inserted."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/replacelist/
@@ -110,4 +110,5 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 - [Differs from official docs](/engagement/differs-from-docs/#replacelist-sequential-cascade) — the sequencing and casing findings in full
 - [`Replace`](/engagement/ampscript/functions/replace/) — one search value at a time, matching case the same way
 - [`Concat`](/engagement/ampscript/functions/concat/) — the other variadic String function
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html) · [ampscript.guide](https://ampscript.guide/replacelist/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html)
+- [ampscript.guide](https://ampscript.guide/replacelist/)

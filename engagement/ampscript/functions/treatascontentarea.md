@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "TreatAsContentArea"
-description: "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it renders the inline second argument rather than looking the key up."
+description: "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Covers that it renders the inline second argument rather than looking the key up."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/treatascontentarea/
@@ -79,4 +79,5 @@ The content store is scoped to a send and caps at 300 unique variations; beyond 
 
 - [`TreatAsContent`](/engagement/ampscript/functions/treatascontent/) — evaluates a string as content without the send-scoped key store
 - [`BeginImpressionRegion`](/engagement/ampscript/functions/beginimpressionregion/) — the impression region the third argument names
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-treat-as-content-area.html) · [ampscript.guide](https://ampscript.guide/treatascontentarea/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-treat-as-content-area.html)
+- [ampscript.guide](https://ampscript.guide/treatascontentarea/)

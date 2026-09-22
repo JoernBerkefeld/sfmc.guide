@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "GetJWT"
-description: "Generates a JSON Web Token signed with an inline secret. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
+description: "Generates a JSON Web Token signed with an inline secret. Notes that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/getjwt/
@@ -63,7 +63,7 @@ There is no closed set of sentinel values to test for. Every accepted call retur
 
 ## Behaviour
 
-**The token matches an independent implementation byte for byte.** For the payload `{"sub":"probe","n":7}` and the secret above, the page returned exactly the value computed outside Marketing Cloud with a standard HMAC-SHA256, 109 characters long. The same held for `HS384` and `HS512`.
+**The token matches an independent implementation byte for byte.** For the payload `{"sub":"probe","n":7}` and the secret above, the token is exactly what a standard HMAC-SHA256 implementation produces — 109 characters long. The same holds for `HS384` and `HS512`.
 
 **The header is generated from the algorithm argument and nothing else.** Decoding the first segment on the page gave `{"alg":"HS256","typ":"JWT"}` — no key id, no extra claims.
 
@@ -85,7 +85,7 @@ Passing the plain string `not json at all` produced a valid token whose middle s
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so the marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- safe start ---\"))` — even for a single argument." %}
 
-{% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of the gated behaviour harness and give each one its own deployment, or a whole run returns uninformative HTTP 422s." %}
+{% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
 {% include callout.html type="note" title="Keeping the secret out of the page" content="To avoid writing the secret into the page source, use [GetJWTByKeyName](/engagement/ampscript/functions/getjwtbykeyname/) and reference a Key Management key by its external key instead. That variant also unlocks the `RS*` RSA algorithms, which `GetJWT` does not support. Its page covers the Key Management provisioning traps — key type versus algorithm, the fussy asymmetric-key uploader (a gpg `.asc` keypair is accepted while an OpenSSL `.pfx` is rejected), and how to reproduce a token off-platform." %}
 
@@ -102,4 +102,5 @@ Passing the plain string `not json at all` produced a valid token whose middle s
 - [EncryptSymmetric](/engagement/ampscript/functions/encryptsymmetric/) — when the payload itself must stay unreadable; a token only proves it was not altered
 - [The algorithm name is case-insensitive](/engagement/differs-from-docs/#getjwt-case-insensitive-algorithm)
 - [The payload is not validated as JSON](/engagement/differs-from-docs/#getjwt-payload-not-validated)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt.html) · [ampscript.guide](https://ampscript.guide/getjwt/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt.html)
+- [ampscript.guide](https://ampscript.guide/getjwt/)

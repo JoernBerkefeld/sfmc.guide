@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DeleteDE"
-description: "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/deletede/
@@ -73,5 +73,8 @@ A realistic use removes a row inside a send:
 ## See also
 
 - [`DeleteData`](/engagement/ampscript/functions/deletedata/) — the CloudPage twin; same arguments, returns the deleted-row count
-- [`InsertDE`](/engagement/ampscript/functions/insertde/) · [`UpdateDE`](/engagement/ampscript/functions/updatede/) · [`UpsertDE`](/engagement/ampscript/functions/upsertde/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-delete-de.html) · [ampscript.guide](https://ampscript.guide/deletede/)
+- [`InsertDE`](/engagement/ampscript/functions/insertde/)
+- [`UpdateDE`](/engagement/ampscript/functions/updatede/)
+- [`UpsertDE`](/engagement/ampscript/functions/upsertde/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-delete-de.html)
+- [ampscript.guide](https://ampscript.guide/deletede/)

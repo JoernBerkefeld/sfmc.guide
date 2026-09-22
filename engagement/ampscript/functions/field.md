@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Field"
-description: "Reads a named column from a rowset row. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a missing column aborts the page unless the third argument is passed."
+description: "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/field/
@@ -27,7 +27,7 @@ differs_from_docs: false
 |---|---|---|---|
 | `row` | row | Yes | A row returned by `Row(rowset, index)` |
 | `fieldName` | string | Yes | Name of the column to read |
-| `exceptionIfNotFound` | boolean \| number | No | Pass `0` (or `false`) to get an empty string for a missing column instead of aborting; omit or `1`/`true` to abort |
+| `exceptionIfNotFound` | string \| boolean \| number | No | Pass a falsy value to get an empty string for a missing column instead of aborting; omit or pass a truthy value to abort. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -65,6 +65,8 @@ The third argument controls the missing-column path, not a default for an existi
 
 **The third argument suppresses that abort.** `Field(row, "NoSuchColumn", 0)` returns an empty string instead of aborting. The argument is *exception-if-not-found*, not a default value: it only governs whether a missing column raises, so prefer the three-argument form for any column that may be absent.
 
+**All eight boolean-like literals are accepted for `exceptionIfNotFound`, and the effect is real.** `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` are interchangeable: a truthy value aborts when the named column does not exist while a falsy value returns an empty string. An unrecognised string is coerced to the falsy branch rather than rejected.
+
 {% include test-script.html bundle="ampscript-functions--field" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
@@ -81,4 +83,5 @@ The third argument controls the missing-column path, not a default for an existi
 - [`Row`](/engagement/ampscript/functions/row/) — returns the row this reads from
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — a single scalar without a rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-field.html) · [ampscript.guide](https://ampscript.guide/field/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-field.html)
+- [ampscript.guide](https://ampscript.guide/field/)

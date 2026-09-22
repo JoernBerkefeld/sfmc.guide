@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "GetSocialPublishURL"
-description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
+description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Notes that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/getsocialpublishurl/
@@ -82,4 +82,5 @@ The URL is opaque and session-specific, so there is no closed set of sentinel va
 ## See also
 
 - [`GetSocialPublishURLByName`](/engagement/ampscript/functions/getsocialpublishurlbyname/) — the same URL by social network name plus a country code
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-social/mc-ampscript-reference-social-get-social-publish-url.html) · [ampscript.guide](https://ampscript.guide/getsocialpublishurl/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-social/mc-ampscript-reference-social-get-social-publish-url.html)
+- [ampscript.guide](https://ampscript.guide/getsocialpublishurl/)

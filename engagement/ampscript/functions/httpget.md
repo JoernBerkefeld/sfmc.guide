@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "HTTPGet"
-description: "Performs an HTTP GET request and returns the response body. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the status output variable that reports 0 on success and -2 on a failed request."
+description: "Performs an HTTP GET request and returns the response body. Covers the status output variable that reports 0 on success and -2 on a failed request."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/httpget/
@@ -25,7 +25,7 @@ differs_from_docs: false
 | Name | Type | Required | Description |
 |---|---|---|---|
 | `httpGetUrl` | string | Yes | The URL to fetch with the GET method |
-| `continueOnError` | boolean | No | When true, an error is ignored instead of stopping the process |
+| `continueOnError` | string \| boolean \| number | No | When truthy, a request error is swallowed and the empty string is returned; when falsy, the error aborts the page. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `emptyContentHandling` | number | No | How empty content is handled: 0 allows it, 1 returns an error, 2 skips the subscriber in a send |
 | `status` | number | No | Output variable that receives the status: 0 success, -1 not found, -2 request error, -3 empty content |
 
@@ -62,7 +62,7 @@ The content isn't available right now.
 
 **A failed request returns empty and sets the status to -2.** Fetching a URL that 404s, or a host that does not resolve, with `continueOnError` set to true returns the empty string and puts `-2` into the status variable, rather than aborting the page.
 
-**The empty-content and error options are accepted from a CloudPage.** `emptyContentHandling` accepts `0` and `continueOnError` accepts `true`/`false` without error. Their send-context effects — ending a send on error, skipping a subscriber on empty content — govern email and automation runs and cannot be observed from a CloudPage request.
+**`continueOnError` is the inverse of the POST-family flags.** All eight boolean-like literals are accepted, and against a 404 endpoint a truthy value returns HTTP 200 with the error swallowed (empty body, status `-2`) while a falsy value aborts the page with HTTP 422 — the opposite of `exceptionOnError` on the POST functions, where truthy aborts. An unrecognised string is coerced to falsy rather than rejected. `emptyContentHandling`'s send-context effects — ending a send on error, skipping a subscriber on empty content — govern email and automation runs and do not apply to a page request.
 
 {% include test-script.html bundle="ampscript-functions--httpget" chapter="behaviour" %}
 
@@ -78,4 +78,5 @@ The content isn't available right now.
 ## See also
 
 - [`HTTPRequestHeader`](/engagement/ampscript/functions/httprequestheader/) — other HTTP functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-get.html) · [ampscript.guide](https://ampscript.guide/httpget/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-get.html)
+- [ampscript.guide](https://ampscript.guide/httpget/)

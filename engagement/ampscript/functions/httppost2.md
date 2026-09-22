@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "HTTPPost2"
-description: "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the response argument that holds the body while a separate rowset argument holds the headers."
+description: "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Covers the response argument that holds the body while a separate rowset argument holds the headers."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/httppost2/
@@ -26,7 +26,7 @@ differs_from_docs: true
 | `url` | string | Yes | The URL to post the content to |
 | `contentType` | string | Yes | The Content-Type header for the request |
 | `contentToPost` | string | Yes | The content to send in the POST body |
-| `exceptionOnError` | boolean | No | When true, raise an exception on failure; when false, continue after an error |
+| `exceptionOnError` | string \| boolean \| number | No | When truthy, a failed request aborts the page; when falsy, the page continues and the status is available for inspection. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `response` | string | No | Output variable that receives the response body |
 | `responseRowSet` | string | No | Output variable that receives the response headers as a rowset |
 | `headerName1` | string | No | Name of an additional request header |
@@ -61,11 +61,13 @@ Header rows: %%=v(RowCount(@headers))=%%
 
 ## Behaviour
 
-**The response argument holds the body, and a separate rowset holds the headers.** The official reference labels the fifth argument as the request "status", but at runtime it receives the response body (289 characters of echoed JSON) while the sixth argument receives the response headers as a rowset — 11 header rows in the proof. This body/headers split is what HTTPPost2 adds over plain [`HTTPPost`](/engagement/ampscript/functions/httppost/). See [the differs-from-docs note](/engagement/differs-from-docs/#httppost2-response-arg-is-body).
+**The response argument holds the body, and a separate rowset holds the headers.** The official reference labels the fifth argument as the request "status", but at runtime it receives the response body (289 characters of echoed JSON) while the sixth argument receives the response headers as a rowset. This body/headers split is what HTTPPost2 adds over plain [`HTTPPost`](/engagement/ampscript/functions/httppost/). See [the differs-from-docs note](/engagement/differs-from-docs/#httppost2-response-arg-is-body).
 
 **The exception-on-error flag is accepted.** Passing `true` at the fourth position was accepted and the successful call returned `200`.
 
 **The HTTP status code is the return value.** As with `HTTPPost`, the numeric status comes back as the function's own return value, not through an output variable.
+
+**All eight boolean-like literals are accepted for `exceptionOnError`.** Against a 404 endpoint a truthy value aborts with HTTP 422 while a falsy value continues at HTTP 200 with the response status captured as 404. A transport failure — a host that does not resolve — aborts the page regardless of the flag, so a 404 endpoint rather than an unreachable one is what tells a truthy value from a falsy one.
 
 {% include test-script.html bundle="ampscript-functions--httppost2" chapter="behaviour" %}
 
@@ -83,4 +85,5 @@ Header rows: %%=v(RowCount(@headers))=%%
 - [`HTTPPost`](/engagement/ampscript/functions/httppost/) — the simpler POST without the header rowset
 - [`HTTPPostWithRetry`](/engagement/ampscript/functions/httppostwithretry/) — adds retry and rescheduling
 - [Differs from docs: the response argument holds the body](/engagement/differs-from-docs/#httppost2-response-arg-is-body)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post2.html) · [ampscript.guide](https://ampscript.guide/httppost2/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post2.html)
+- [ampscript.guide](https://ampscript.guide/httppost2/)

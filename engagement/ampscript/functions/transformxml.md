@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "TransformXML"
-description: "Transforms an XML document using an XSLT stylesheet. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the argument order and the way any bad input takes the whole page down."
+description: "Transforms an XML document using an XSLT stylesheet. Covers the argument order and the way any bad input takes the whole page down."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/transformxml/
@@ -71,5 +71,7 @@ The official reference notes the function was designed for XML and XSL stored as
 
 ## See also
 
-- [`BarcodeURL`](/engagement/ampscript/functions/barcodeurl/) · [`BuildOptionList`](/engagement/ampscript/functions/buildoptionlist/) — other Content functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-transform-xml.html) · [ampscript.guide](https://ampscript.guide/transformxml/)
+- [`BarcodeURL`](/engagement/ampscript/functions/barcodeurl/)
+- [`BuildOptionList`](/engagement/ampscript/functions/buildoptionlist/) — other Content functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-transform-xml.html)
+- [ampscript.guide](https://ampscript.guide/transformxml/)

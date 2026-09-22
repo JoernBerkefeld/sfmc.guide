@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "UpdateDE"
-description: "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/updatede/
@@ -79,5 +79,7 @@ A realistic use flips a status field inside a send:
 
 - [`UpdateData`](/engagement/ampscript/functions/updatedata/) — the CloudPage twin; same arguments, returns the updated-row count
 - [`UpsertDE`](/engagement/ampscript/functions/upsertde/) — insert or update in one call
-- [`InsertDE`](/engagement/ampscript/functions/insertde/) · [`DeleteDE`](/engagement/ampscript/functions/deletede/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-update-de.html) · [ampscript.guide](https://ampscript.guide/updatede/)
+- [`InsertDE`](/engagement/ampscript/functions/insertde/)
+- [`DeleteDE`](/engagement/ampscript/functions/deletede/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-update-de.html)
+- [ampscript.guide](https://ampscript.guide/updatede/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ExecuteFilterOrderedRows"
-description: "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/executefilterorderedrows/
@@ -82,5 +82,8 @@ Raise `numRows` and flip the direction to page a longer, ascending list:
 
 - [`ExecuteFilter`](/engagement/ampscript/functions/executefilter/) — same, without the sort column or row cap
 - [`LookupOrderedRows`](/engagement/ampscript/functions/lookuporderedrows/) — sort and cap an inline data-extension lookup without a saved filter
-- [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) · [`RowCount`](/engagement/ampscript/functions/rowcount/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter-ordered-rows.html) · [ampscript.guide](https://ampscript.guide/executefilterorderedrows/)
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/)
+- [`RowCount`](/engagement/ampscript/functions/rowcount/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter-ordered-rows.html)
+- [ampscript.guide](https://ampscript.guide/executefilterorderedrows/)

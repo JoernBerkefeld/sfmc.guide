@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ClaimRowValue"
-description: "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/claimrowvalue/
@@ -52,13 +52,13 @@ Each **distinct** `claimantValue` claims the next unclaimed row and returns that
 
 **Distinct claimants advance; a repeated claimant does not.** Claiming is keyed on `claimantValue`. A **new** value claims the next unclaimed row and advances; a value that already holds a row returns **that same row's value** without advancing — per-subscriber idempotency.
 
-**A claimable data extension needs the documented schema.** A text primary key, a claimant text column, a **required** non-nullable Boolean claim column defaulting to `False`, and (optionally) a nullable claimant date column. This schema was created via the API and advanced correctly.
+**A claimable data extension needs the documented schema.** A text primary key, a claimant text column, a **required** non-nullable Boolean claim column defaulting to `False`, and (optionally) a nullable claimant date column.
 
-**Exhaustion returns the fallback, matching the docs.** When no unclaimed rows remain, the fourth argument (`fallbackValue`) is returned. Proven on a CloudPage: four distinct claimants advanced through C1..C4, then a fifth distinct claimant received the fallback. This is the exact behaviour the official reference describes.
+**Exhaustion returns the fallback, matching the docs.** When no unclaimed rows remain, the fourth argument (`fallbackValue`) is returned. Four distinct claimants advanced through C1..C4; a fifth distinct claimant then received the fallback. This is the exact behaviour the official reference describes.
 
-**The first six arguments are all required — the claimant pair and fallback are not optional.** Some community references mark arguments 4–6 (`fallbackValue`, `claimantColumn`, `claimantValue`) as optional, but at runtime a three- or four-argument call aborts the page. Runtime-proven by arity bisection: a 3-argument and a 4-argument call each aborted the CloudPage (HTTP 422 at compile time), while the full 6-argument call rendered at HTTP 200. Only the trailing `additionalColumnNameN, additionalColumnValueN` pairs (argument 7 onward) are optional; each pair records a further column on the claimed row, and an 8-argument call (six required plus one extra pair) rendered correctly.
+**The first six arguments are all required — the claimant pair and fallback are not optional.** Some community references mark arguments 4–6 (`fallbackValue`, `claimantColumn`, `claimantValue`) as optional, but at runtime a three- or four-argument call aborts the page. Only the trailing `additionalColumnNameN, additionalColumnValueN` pairs (argument 7 onward) are optional; each pair records a further column on the claimed row, and an 8-argument call (six required plus one extra pair) rendered correctly.
 
-{% include callout.html type="warning" title="Drive advancement across separate renders" content="AMPscript caches data-extension reads within a single render. Prove advancement across **separate HTTP requests**, each passing a distinct claimant — a single render that claims repeatedly reads the cached state and appears not to advance." %}
+{% include callout.html type="warning" title="Drive advancement across separate renders" content="AMPscript caches data-extension reads within a single render. Drive advancement across **separate HTTP requests**, each passing a distinct claimant — a single render that claims repeatedly reads the cached state and appears not to advance." %}
 
 {% include test-script.html bundle="ampscript-functions--claimrowvalue" chapter="behaviour" %}
 
@@ -72,5 +72,7 @@ Each **distinct** `claimantValue` claims the next unclaimed row and returns that
 ## See also
 
 - [`ClaimRow`](/engagement/ampscript/functions/claimrow/) — the twin that returns the whole row (and an empty row on exhaustion)
-- [`Field`](/engagement/ampscript/functions/field/) · [`LookupRows`](/engagement/ampscript/functions/lookuprows/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-claim-row-value.html) · [ampscript.guide](https://ampscript.guide/claimrowvalue/)
+- [`Field`](/engagement/ampscript/functions/field/)
+- [`LookupRows`](/engagement/ampscript/functions/lookuprows/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-claim-row-value.html)
+- [ampscript.guide](https://ampscript.guide/claimrowvalue/)

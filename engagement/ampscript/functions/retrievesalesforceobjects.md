@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RetrieveSalesforceObjects"
-description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that an unknown object name aborts the page and an empty match returns a clean empty rowset."
+description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Covers that an unknown object name aborts the page and an empty match returns a clean empty rowset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/retrievesalesforceobjects/
@@ -93,6 +93,8 @@ Requires an active Marketing Cloud Connect integration to a Sales or Service Clo
 
 ## See also
 
-- [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/) · [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
+- [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/)
+- [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
 - [`LongSFID`](/engagement/ampscript/functions/longsfid/) — convert a 15-character ID for matching
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-retrieve-objects.html) · [ampscript.guide](https://ampscript.guide/retrievesalesforceobjects/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-retrieve-objects.html)
+- [ampscript.guide](https://ampscript.guide/retrievesalesforceobjects/)

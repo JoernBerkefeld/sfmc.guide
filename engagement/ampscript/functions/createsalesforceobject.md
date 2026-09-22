@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "CreateSalesforceObject"
-description: "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
+description: "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Notes that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/createsalesforceobject/
@@ -91,4 +91,5 @@ Requires an active Marketing Cloud Connect integration to a Sales or Service Clo
 - [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — update a record in the same connected org
 - [`RetrieveSalesforceObjects`](/engagement/ampscript/functions/retrievesalesforceobjects/) — read records back
 - [`LongSFID`](/engagement/ampscript/functions/longsfid/) — convert a 15-character ID for matching
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-create-object.html) · [ampscript.guide](https://ampscript.guide/createsalesforceobject/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-create-object.html)
+- [ampscript.guide](https://ampscript.guide/createsalesforceobject/)

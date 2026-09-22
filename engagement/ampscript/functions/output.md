@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Output"
-description: "Writes the result of a nested function call into the rendered content. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a string literal argument, which renders nothing at all rather than the error the official reference promises."
+description: "Writes the result of a nested function call into the rendered content. Covers a string literal argument, which renders nothing at all rather than the error the official reference promises."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/output/
@@ -66,7 +66,7 @@ There is no value to test for, and no closed set of sentinel values. Because not
 
 ### The literal argument that vanishes
 
-The official reference states that a value which is not a function call makes this function return an error. It does not. A string literal, a bare variable and a bare number each render **nothing**, at HTTP 200, with every surrounding marker printing normally:
+The official reference states that a value which is not a function call makes this function return an error. It does not. A string literal, a bare variable and a bare number each render **nothing**, at HTTP 200:
 
 | Call | Renders |
 |---|---|
@@ -80,12 +80,12 @@ A debugging line written this way disappears without any signal that something w
 
 ### Email/send context: not recognised in sendable email content
 
-`Output` is a CloudPage feature in practice. Rendered through the Email Preview
-API against a seeded sendable row, an isolated `%%=Output(Concat("O","K"))=%%`
-was rejected with HTTP 400, errorcode 19691: *"The function call uses an
+`Output` is a CloudPage feature in practice. Used in sendable email content, an isolated
+`%%=Output(Concat("O","K"))=%%` is rejected with HTTP 400, errorcode
+19691: *"The function call uses an
 unrecognized function name. Function Name: Output"* — while
 [OutputLine](/engagement/ampscript/functions/outputline/), with the identical
-footer in the same run, rendered normally. So to write a value into an **email**
+footer, renders normally. So to write a value into an **email**
 use `OutputLine`; keep `Output` to CloudPages / landing pages. See [the
 differs-from-docs card](/engagement/differs-from-docs/#output-not-available-in-sendable-email-content).
 
@@ -104,4 +104,5 @@ differs-from-docs card](/engagement/differs-from-docs/#output-not-available-in-s
 
 - [OutputLine](/engagement/ampscript/functions/outputline/) — the same, plus a carriage return and line feed
 - [Differs from docs: the literal argument](/engagement/differs-from-docs/#output-literal-renders-nothing)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html) · [ampscript.guide](https://ampscript.guide/output/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html)
+- [ampscript.guide](https://ampscript.guide/output/)

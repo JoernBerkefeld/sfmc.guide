@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "OutputLine"
-description: "Writes the result of a nested function call into the rendered content, followed by a line break. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
+description: "Writes the result of a nested function call into the rendered content, followed by a line break. Covers the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/outputline/
@@ -91,4 +91,5 @@ That matches what the official reference says, and it is the reason the lines co
 
 - [Output](/engagement/ampscript/functions/output/) — the same, without the line break
 - [Differs from docs: the undocumented argument counts](/engagement/differs-from-docs/#outputline-arity-and-empty-argument)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html) · [ampscript.guide](https://ampscript.guide/outputline/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html)
+- [ampscript.guide](https://ampscript.guide/outputline/)

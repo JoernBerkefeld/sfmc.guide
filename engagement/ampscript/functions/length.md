@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Length"
-description: "Measures the size of a string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the counting unit, which is UTF-16 code units rather than user-visible characters."
+description: "Measures the size of a string. Covers the counting unit, which is UTF-16 code units rather than user-visible characters."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/length/
@@ -82,9 +82,9 @@ This is the load-bearing finding for this function, and the official reference d
 | a six-letter German word containing the sharp s | `6` |
 | a single emoji from outside the Basic Multilingual Plane | `2` |
 
-The emoji is one user-visible character but two code units, and `Length` reports `2`. This was settled by dumping the codepoints of the *echoed* input alongside the returned count: the emoji echoed as the surrogate pair 55357/56832, the accented letter echoed as the single codepoint 233, so a mis-decoding console could not have manufactured the result.
+The emoji is one user-visible character but two code units, and `Length` reports `2`. The emoji is the surrogate pair 55357/56832, and the accented letter is the single codepoint 233.
 
-The practical consequence is truncation and validation. A limit enforced with `Length` accepts one fewer user-visible character as soon as an emoji is involved, and cutting a string at a code-unit position can split a surrogate pair. The finding is catalogued on [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units).
+The practical consequence is truncation and validation. A limit enforced with `Length` accepts one fewer user-visible character as soon as an emoji is involved, and cutting a string at a code-unit position can split a surrogate pair. See [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units) for the full write-up.
 
 {% include test-script.html bundle="ampscript-functions--length" chapter="behaviour" %}
 
@@ -104,4 +104,5 @@ The practical consequence is truncation and validation. A limit enforced with `L
 - [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units) — the counting-unit finding in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the string you are measuring
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the sharp s survives uppercasing, so the measured length does not change
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-length.html) · [ampscript.guide](https://ampscript.guide/length/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-length.html)
+- [ampscript.guide](https://ampscript.guide/length/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "SystemDateToLocalDate"
-description: "Converts a Marketing Cloud system date to the time zone configured on the account. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the shift is seasonal rather than a fixed offset."
+description: "Converts a Marketing Cloud system date to the time zone configured on the account. The shift is seasonal rather than a fixed offset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/systemdatetolocaldate/
@@ -36,7 +36,7 @@ differs_from_docs: false
 %%=v(@local)=%%
 ```
 
-Renders `1/15/2026 4:30:00 PM` on the account this page was proven against — seven hours later than the input.
+Renders `1/15/2026 4:30:00 PM` — seven hours later than the input.
 
 The result is a real date, so the usual pattern is to format it in the same expression rather than render it raw:
 
@@ -86,7 +86,10 @@ Rendered on its own the value prints as a US short date followed by a 12-hour cl
 ## See also
 
 - [LocalDateToSystemDate](/engagement/ampscript/functions/localdatetosystemdate/) — the inverse conversion, and the one with the date-only trap
-- [DateParse](/engagement/ampscript/functions/dateparse/) · [FormatDate](/engagement/ampscript/functions/formatdate/) · [DatePart](/engagement/ampscript/functions/datepart/) — the functions that produce and consume the value
+- [DateParse](/engagement/ampscript/functions/dateparse/)
+- [FormatDate](/engagement/ampscript/functions/formatdate/)
+- [DatePart](/engagement/ampscript/functions/datepart/) — the functions that produce and consume the value
 - [Now](/engagement/ampscript/functions/now/) — the system-time source this converts from
 - [The differs-from-docs card](/engagement/differs-from-docs/#systemdatetolocaldate-seasonal-shift) — the seasonal shift
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-system-date-to-local-date.html) · [ampscript.guide](https://ampscript.guide/systemdatetolocaldate/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-system-date-to-local-date.html)
+- [ampscript.guide](https://ampscript.guide/systemdatetolocaldate/)

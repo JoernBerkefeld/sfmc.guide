@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "FormatCurrency"
-description: "Formats a number as a currency amount for a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
+description: "Formats a number as a currency amount for a locale. Notes that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatcurrency/
@@ -106,7 +106,7 @@ The US form uses brackets and no minus sign at all. Code that looks for a leadin
 
 {% include test-script.html bundle="ampscript-functions--formatcurrency" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of a gated behaviour harness and give each one its own deployment." %}
+{% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
 ## Availability
 
@@ -120,4 +120,5 @@ The US form uses brackets and no minus sign at all. Code that looks for a leadin
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — same locale machinery, but you choose the pattern
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatCurrency.html) · [ampscript.guide](https://ampscript.guide/formatcurrency/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatCurrency.html)
+- [ampscript.guide](https://ampscript.guide/formatcurrency/)

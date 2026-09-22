@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IndexOf"
-description: "Returns the 1-based position of a substring, matching case-insensitively. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including an undocumented third argument that selects which occurrence to locate."
+description: "Returns the 1-based position of a substring, matching case-insensitively. Covers an undocumented third argument that selects which occurrence to locate."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/indexof/
@@ -74,8 +74,6 @@ The search ignores letter case, and a third argument can reach past the first ma
 
 **Positions count UTF-16 code units, the same unit [`Length`](/engagement/ampscript/functions/length/) counts.** In a source built as `caf` + `Char(233)` + `" time"`, which measures `9`, the accented letter is at `4` and the following word at `6`.
 
-**Argument counts outside two or three abort the page.** Zero, one and four arguments each returned HTTP 422 with nothing rendered — including the markers printed before the call — so there is no error value to test for.
-
 ### The search is case-insensitive
 
 This is the finding most likely to bite, because no source mentions it and every published example happens to search with matching case.
@@ -123,4 +121,5 @@ Both findings are catalogued on [Differs from official docs](/engagement/differs
 - [Differs from official docs](/engagement/differs-from-docs/#indexof-is-case-insensitive) — the case-insensitivity and the occurrence argument in full
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit the returned positions use
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the strings you search
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html) · [ampscript.guide](https://ampscript.guide/indexof/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html)
+- [ampscript.guide](https://ampscript.guide/indexof/)

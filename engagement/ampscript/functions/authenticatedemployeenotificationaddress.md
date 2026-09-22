@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedEmployeeNotificationAddress"
-description: "Returns the notification email address of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
+description: "Returns the notification email address of the Marketing Cloud user tied to the current context. A public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedemployeenotificationaddress/
@@ -33,7 +33,7 @@ This function takes no parameters.
 Notify: %%=v(@notifyAddress)=%%
 ```
 
-Renders an ordinary email address — on the business unit tested, a dotted local part, an `@`, then a registered corporate mail domain.
+Renders an ordinary email address — a dotted local part, an `@`, then a registered corporate mail domain.
 
 Because the value is a real, deliverable mailbox belonging to an account user, keep it out of anything a visitor can see and use it only where an internal address is wanted:
 
@@ -92,4 +92,5 @@ The official reference scopes this function to microsites using sender authentic
 - [Differs from docs: a real mailbox without a session](/engagement/differs-from-docs/#authenticatedemployeenotificationaddress-value-without-a-session)
 - [AuthenticatedEmployeeUserName](/engagement/ampscript/functions/authenticatedemployeeusername/)
 - [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-notification-address.html) · [ampscript.guide](https://ampscript.guide/authenticatedemployeenotificationaddress/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-notification-address.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedemployeenotificationaddress/)

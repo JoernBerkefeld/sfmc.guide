@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedMemberName"
-description: "Returns the display name of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
+description: "Returns the display name of the business unit the code runs on. A public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedmembername/
@@ -33,7 +33,7 @@ This function takes no parameters.
 Business unit: %%=v(@memberName)=%%
 ```
 
-Renders the business unit's display name as shown in the Marketing Cloud UI — on the business unit tested, a nineteen-character label containing a space and a punctuation separator.
+Renders the business unit's display name as shown in the Marketing Cloud UI — a nineteen-character label containing a space and a punctuation separator.
 
 Because the value is free text an administrator can change, it is safer as something you show than as something you branch on. When it is shown, it is worth guarding against an unexpected empty result:
 
@@ -66,7 +66,7 @@ The value domain is open: the name is free text chosen per business unit, so the
 
 ### It is the business unit's display name, not its configuration name
 
-The page under test was published on a **child** business unit, and what came back was that business unit's label as shown in the Marketing Cloud UI.
+The value is the running business unit's label as shown in the Marketing Cloud UI.
 
 That label is **not** the name your tooling uses. Compared in the same render against the business unit name held in the account's deployment configuration, a direct equality comparison answered **no**, and `IndexOf` answered `0` — its not-found result — in **both** directions. The two forms are recognisably the same business unit written differently: the UI label separates its words with spaces and punctuation where the configuration name uses underscores. A page that string-matches this value against a configured name will therefore silently never match.
 
@@ -98,4 +98,5 @@ The official reference scopes this function to microsites using sender authentic
 - [Differs from docs: the business unit name without a session](/engagement/differs-from-docs/#authenticatedmembername-business-unit-name-without-a-session)
 - [AuthenticatedMemberID](/engagement/ampscript/functions/authenticatedmemberid/)
 - [AuthenticatedEmployeeUserName](/engagement/ampscript/functions/authenticatedemployeeusername/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-name.html) · [ampscript.guide](https://ampscript.guide/authenticatedmembername/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-name.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedmembername/)

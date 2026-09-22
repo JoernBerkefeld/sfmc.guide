@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IIf"
-description: "Picks one of two values from a boolean expression. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
+description: "Picks one of two values from a boolean expression. Covers the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/iif/
@@ -69,15 +69,15 @@ The domain is whatever the caller passes, so there is no set of literals to test
 
 ### Only the selected branch is evaluated
 
-This is the most useful undocumented property of the function, and it needed a control to prove.
+This is the most useful undocumented property of the function.
 
-A call that reliably aborts the page was parked in the branch that should *not* be taken — in both directions. Both requests returned HTTP 200 with the other branch's value and both markers printed. On its own that only shows nothing bad happened; so the same deploy also called that aborting function directly in its own branch, and that request returned HTTP 422 with no output at all. The abort was reachable, and simply was never reached.
+A call that reliably aborts the page can sit in the branch that is *not* taken — in either direction. The page still returns HTTP 200 with the other branch's value: the unselected branch is never evaluated, so the aborting call simply never runs.
 
 Neither reference says anything about evaluation order, so this is undocumented rather than contradicted. Practically it means a `Lookup`, a `HTTPGet` or any other costly call can sit in a branch guarded by the condition, and it will not run unless it is the answer.
 
 ### How the four Utility tests compare
 
-The same inputs put through all four functions, on one page, in one run:
+The same inputs compared across all four functions:
 
 | Input | `Empty` | `IsNull` | `IsNullDefault(x, "DEF")` | `IIf(x, "T", "F")` |
 |---|---|---|---|---|
@@ -94,7 +94,7 @@ The last column is constant, which is the point: feed this function a value and 
 
 {% include test-script.html bundle="ampscript-functions--iif" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="Argument-count probes need their own deploy" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including the control block and branches that were never requested. Keep arity checks out of a gated behaviour harness and give each one its own deployment, or a whole run returns uninformative HTTP 422s." %}
+{% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
 ## Availability
 
@@ -108,4 +108,5 @@ The last column is constant, which is the point: feed this function a value and 
 - [Empty](/engagement/ampscript/functions/empty/) — the boolean this function is most often given
 - [IsNull](/engagement/ampscript/functions/isnull/) — returns a boolean too, but `False` for everything a page variable holds
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the fallback it looks like; pair `IIf` with `Empty` instead
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-iif.html) · [ampscript.guide](https://ampscript.guide/iif/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-iif.html)
+- [ampscript.guide](https://ampscript.guide/iif/)

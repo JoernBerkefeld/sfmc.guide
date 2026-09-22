@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ClaimRow"
-description: "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/claimrow/
@@ -50,13 +50,13 @@ Each **distinct** `claimantValue` claims the next unclaimed row: the first calle
 
 **Distinct claimants advance; a repeated claimant does not.** Claiming is keyed on `claimantValue`. Passing a **new** value claims the next unclaimed row and advances. Passing a value that already holds a row returns **that same row** without advancing — per-subscriber idempotency, so a subscriber re-opening an email keeps the same coupon.
 
-**A claimable data extension needs the documented schema.** A text primary key, a claimant text column, a **required** non-nullable Boolean claim column defaulting to `False`, and (optionally) a nullable claimant date column. This schema was created via the API and advanced correctly — no Contact Builder UI wizard was required.
+**A claimable data extension needs the documented schema.** A text primary key, a claimant text column, a **required** non-nullable Boolean claim column defaulting to `False`, and (optionally) a nullable claimant date column.
 
 **Exhaustion returns an empty row, not an exception.** The official reference says `ClaimRow` returns an exception when no unclaimed rows remain. At runtime it returns an **empty row** and the page keeps rendering, so `Empty()` on the result is `true` and nothing aborts. Guard with `Empty()` rather than expecting a raised error.
 
-**Optional trailing name/value pairs record extra columns on the claimed row.** Beyond the four required arguments you may append repeated `columnName, columnValue` pairs. Each pair is written to the claimed row alongside the claim, so `ClaimRow("Coupons", "IsClaimed", "EmailAddress", emailaddr, "Region", "Central")` records `Region = Central` on the row it claims. Runtime-proven: the returned row carried the extra column value and it persisted to the data extension. The pairs record additional context — they are **not** extra filter criteria for choosing which row to claim.
+**Optional trailing name/value pairs record extra columns on the claimed row.** Beyond the four required arguments you may append repeated `columnName, columnValue` pairs. Each pair is written to the claimed row alongside the claim, so `ClaimRow("Coupons", "IsClaimed", "EmailAddress", emailaddr, "Region", "Central")` records `Region = Central` on the row it claims. The returned row carries the extra column value, and it persists to the data extension. The pairs record additional context — they are **not** extra filter criteria for choosing which row to claim.
 
-{% include callout.html type="warning" title="Drive advancement across separate renders" content="AMPscript caches data-extension reads within a single render. Prove advancement across **separate HTTP requests**, each passing a distinct claimant — a single render that claims repeatedly reads the cached state and appears not to advance." %}
+{% include callout.html type="warning" title="Drive advancement across separate renders" content="AMPscript caches data-extension reads within a single render. Drive advancement across **separate HTTP requests**, each passing a distinct claimant — a single render that claims repeatedly reads the cached state and appears not to advance." %}
 
 {% include test-script.html bundle="ampscript-functions--claimrow" chapter="behaviour" %}
 
@@ -71,5 +71,7 @@ Each **distinct** `claimantValue` claims the next unclaimed row: the first calle
 
 - [`ClaimRowValue`](/engagement/ampscript/functions/claimrowvalue/) — the scalar twin; returns one column value plus a fallback when exhausted
 - [`Empty`](/engagement/ampscript/functions/empty/) — guard the exhausted-DE empty row
-- [`Field`](/engagement/ampscript/functions/field/) · [`LookupRows`](/engagement/ampscript/functions/lookuprows/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-claim-row.html) · [ampscript.guide](https://ampscript.guide/claimrow/)
+- [`Field`](/engagement/ampscript/functions/field/)
+- [`LookupRows`](/engagement/ampscript/functions/lookuprows/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-claim-row.html)
+- [ampscript.guide](https://ampscript.guide/claimrow/)

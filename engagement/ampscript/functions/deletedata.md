@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DeleteData"
-description: "Deletes matching rows from a data extension and returns the number of rows deleted. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the return value and what a no-match returns."
+description: "Deletes matching rows from a data extension and returns the number of rows deleted. Covers the return value and what a no-match returns."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/deletedata/
@@ -76,4 +76,5 @@ Delete on a composite criterion by adding more column/value pairs:
 
 - [`DeleteDE`](/engagement/ampscript/functions/deletede/) — the email-context twin; same arguments, returns an empty string
 - [`InsertData`](/engagement/ampscript/functions/insertdata/) · [`UpdateData`](/engagement/ampscript/functions/updatedata/) · [`UpsertData`](/engagement/ampscript/functions/upsertdata/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-delete-data.html) · [ampscript.guide](https://ampscript.guide/deletedata/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-delete-data.html)
+- [ampscript.guide](https://ampscript.guide/deletedata/)

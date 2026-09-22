@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ContentImageByKey"
-description: "Returns an HTML img tag for a Content Builder image asset by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
+description: "Returns an HTML img tag for a Content Builder image asset by its customer key. Covers the fallback-image path and that a missing image with no fallback aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/contentimagebykey/
@@ -67,4 +67,5 @@ The primary key does not exist, so the tag for the fallback asset (again, use a 
 ## See also
 
 - [`ContentImageByID`](/engagement/ampscript/functions/contentimagebyid/) — return the same image by its numeric ID
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-image-by-key.html) · [ampscript.guide](https://ampscript.guide/contentimagebykey/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-image-by-key.html)
+- [ampscript.guide](https://ampscript.guide/contentimagebykey/)

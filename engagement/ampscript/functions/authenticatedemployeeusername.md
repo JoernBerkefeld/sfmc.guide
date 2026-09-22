@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedEmployeeUserName"
-description: "Returns the login username of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
+description: "Returns the login username of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedemployeeusername/
@@ -33,7 +33,7 @@ This function takes no parameters.
 User: %%=v(@userName)=%%
 ```
 
-Renders an email-shaped username — on the business unit tested, a dotted name, an `@`, then a dotted suffix.
+Renders an email-shaped username — a dotted name, an `@`, then a dotted suffix.
 
 Because the value identifies an account user, keep it out of anything a visitor can see and use it only where an internal label is wanted:
 
@@ -66,7 +66,7 @@ The value domain is open: a username is account-scoped free text, so there is no
 
 The value is not a bare login name. `IndexOf` found a single `@` after a 16-character local part, a `.` earlier inside that local part, and no space anywhere; `IsEmailAddress()` accepted the whole value. Treat it as account-identifying data — it belongs in internal logic, not in rendered content.
 
-It also carries no relationship to the numeric ID from [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/). Called in the same render, the two values compared as not equal, the ID was 9 characters against the username's 39, and `IndexOf` of the ID inside the username answered `0` — its not-found result. Neither value can be derived from the other, so fetch whichever one you actually need.
+It also carries no relationship to the numeric ID from [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/). The two values are not equal, the ID is 9 characters against the username's 39, and `IndexOf` of the ID inside the username answers `0` — its not-found result. Neither value can be derived from the other, so fetch whichever one you actually need.
 
 ### Do not use it as an authentication check
 
@@ -89,4 +89,5 @@ The official reference scopes this function to microsites using sender authentic
 
 - [Differs from docs: a value without a session](/engagement/differs-from-docs/#authenticatedemployeeusername-value-without-a-session)
 - [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-username.html) · [ampscript.guide](https://ampscript.guide/authenticatedemployeeusername/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-employee-username.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedemployeeusername/)

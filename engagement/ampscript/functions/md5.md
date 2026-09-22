@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "MD5"
-description: "Returns the MD5 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
+description: "Returns the MD5 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/md5/
@@ -54,13 +54,11 @@ Normalise before hashing, as above — a digest of a differently-cased or space-
 
 ## Return value
 
-**`string`** — 32 lowercase hexadecimal characters with no separators, measured with `Length()` on the page rather than assumed.
+**`string`** — 32 lowercase hexadecimal characters with no separators.
 
 There is no closed set of sentinel values to test for: every input that is accepted produces a digest, and every input that is rejected aborts the page instead of returning an error token.
 
 ## Behaviour
-
-**The digest is the real MD5 of the input, not a look-alike.** Every value on this page was compared character for character against the same digest computed independently outside Marketing Cloud, over the same bytes. `MD5("Hash probe 2026")` gave `2bfdbd320b3b56c0d8c4be16462a96b7`, and the official reference's own example value reproduced exactly.
 
 **The bytes hashed are the UTF-8 encoding of the input.** That cannot be seen with an ASCII string, because ASCII text has only one plausible encoding. Hashing a string containing `ß`, `€` and `ä` gave `45e83c6ea8202aae452acf5f61f0d660`, which is the digest of its UTF-8 bytes and not of the UTF-16 form the engine uses internally.
 
@@ -91,5 +89,8 @@ An unrecognised name is not tolerated at all. `banana`, the dashless spelling `U
 
 ## See also
 
-- [SHA1](/engagement/ampscript/functions/sha1/) · [SHA256](/engagement/ampscript/functions/sha256/) · [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, longer digests
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-md5.html) · [ampscript.guide](https://ampscript.guide/md5/)
+- [SHA1](/engagement/ampscript/functions/sha1/)
+- [SHA256](/engagement/ampscript/functions/sha256/)
+- [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, longer digests
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-md5.html)
+- [ampscript.guide](https://ampscript.guide/md5/)

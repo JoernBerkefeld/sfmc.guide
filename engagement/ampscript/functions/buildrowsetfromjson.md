@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "BuildRowsetFromJSON"
-description: "Parses a JSON string and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the third argument, which works the opposite way round from the documented syntax."
+description: "Parses a JSON string and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/buildrowsetfromjson/
@@ -27,7 +27,7 @@ differs_from_docs: true
 |---|---|---|---|
 | `jsonData` | string | Yes | The JSON payload to parse |
 | `jsonPathExpression` | string | Yes | JSONPath expression selecting the nodes to turn into rows |
-| `returnEmptyOnError` | boolean \| number | Yes | Pass `1` or `true` for an empty rowset when the payload or path cannot be parsed |
+| `returnEmptyOnError` | string \| boolean \| number | Yes | Pass a truthy value for an empty rowset when the payload or path cannot be parsed, a falsy value to abort. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 ## Example
 
@@ -88,6 +88,8 @@ There is no closed set of sentinel values: an unparsable payload, an empty strin
 
 The boolean literal `true` behaves exactly like the number `1`. Read the argument as *return empty on error*: pass `1` (or `true`) for any payload you do not control, then branch on `RowCount`. The same page's Errors section already describes the runtime ordering, so the reference contradicts itself. The full finding is on [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromjson-error-flag-inverted), and the XML sibling behaves identically.
 
+**All eight boolean-like literals are accepted for the third argument.** `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` are interchangeable: a truthy value yields an empty rowset (`RowCount` 0) when the payload or path cannot be parsed, while a falsy value aborts the page with HTTP 422.
+
 {% include test-script.html bundle="ampscript-functions--buildrowsetfromjson" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
@@ -104,4 +106,5 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromjson-error-flag-inverted) — the inverted third argument in full
 - [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same shape for XML payloads, with the same inverted flag
 - [`BuildRowSetFromString`](/engagement/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html) · [ampscript.guide](https://ampscript.guide/buildrowsetfromjson/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html)
+- [ampscript.guide](https://ampscript.guide/buildrowsetfromjson/)

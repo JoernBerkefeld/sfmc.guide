@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "RetrieveSalesforceJobSources"
-description: "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a job ID with no matching sources returns a clean empty rowset rather than an error."
+description: "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Covers that a job ID with no matching sources returns a clean empty rowset rather than an error."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/retrievesalesforcejobsources/
@@ -84,5 +84,7 @@ Requires an active Marketing Cloud Connect integration to a Sales or Service Clo
 ## See also
 
 - [`RetrieveSalesforceObjects`](/engagement/ampscript/functions/retrievesalesforceobjects/) — query records from a connected Salesforce object
-- [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/) · [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-retrieve-job-sources.html) · [ampscript.guide](https://ampscript.guide/retrievesalesforcejobsources/)
+- [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/)
+- [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-retrieve-job-sources.html)
+- [ampscript.guide](https://ampscript.guide/retrievesalesforcejobsources/)

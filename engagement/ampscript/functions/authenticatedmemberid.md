@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AuthenticatedMemberID"
-description: "Returns the member ID (MID) of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
+description: "Returns the member ID (MID) of the business unit the code runs on. A public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/authenticatedmemberid/
@@ -66,11 +66,11 @@ The value domain is open: a MID varies per business unit, so there is no closed 
 
 ### It is the business unit's MID, not the account's
 
-The page under test was published on a **child** business unit. The returned value matched that child's own MID exactly, and did **not** match the account's parent (enterprise) MID. Both comparisons ran in the same render against the two real MIDs configured for the account, so the answer is not an artefact of a made-up identifier.
+When the page runs on a **child** business unit, the returned value is that child's own MID — not the account's parent (enterprise) MID.
 
-The pairing is what makes it useful: [AuthenticatedEnterpriseID](/engagement/ampscript/functions/authenticatedenterpriseid/), called in the **same render**, came back as the parent MID — a different, shorter digit string. So the two functions answer two different questions. Reach for this one when you want the business unit executing the code, and for the enterprise one when you want the account.
+The pairing is what makes it useful: [AuthenticatedEnterpriseID](/engagement/ampscript/functions/authenticatedenterpriseid/) returns the parent MID — a different, shorter digit string. So the two functions answer two different questions. Reach for this one when you want the business unit executing the code, and for the enterprise one when you want the account.
 
-It is also not the employee identifier. [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/) in the same render returned a digit string of the **same length** — nine — yet a direct comparison answered different, and `IndexOf` answered `0`, its not-found result, in **both** directions. Equal length is not equal value; do not treat one as a stand-in for the other.
+It is also not the employee identifier. [AuthenticatedEmployeeID](/engagement/ampscript/functions/authenticatedemployeeid/) returns a digit string of the **same length** — nine — yet the two compare as different, and `IndexOf` answers `0`, its not-found result, in **both** directions. Equal length is not equal value; do not treat one as a stand-in for the other.
 
 ### Do not use it as an authentication check
 
@@ -94,4 +94,5 @@ The official reference scopes this function to microsites using sender authentic
 - [Differs from docs: the child MID without a session](/engagement/differs-from-docs/#authenticatedmemberid-child-mid-without-a-session)
 - [AuthenticatedEnterpriseID](/engagement/ampscript/functions/authenticatedenterpriseid/)
 - [AuthenticatedMemberName](/engagement/ampscript/functions/authenticatedmembername/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-id.html) · [ampscript.guide](https://ampscript.guide/authenticatedmemberid/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-authenticated-member-id.html)
+- [ampscript.guide](https://ampscript.guide/authenticatedmemberid/)

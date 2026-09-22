@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Row"
-description: "Returns a single row from a rowset by its 1-based index. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that index 0 aborts the page."
+description: "Returns a single row from a rowset by its 1-based index. Covers that index 0 aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/row/
@@ -81,4 +81,5 @@ There is no empty-row sentinel: an out-of-range index aborts rather than returni
 - [`Field`](/engagement/ampscript/functions/field/) — reads a named column from the returned row
 - [`RowCount`](/engagement/ampscript/functions/rowcount/) — the guard that keeps `rowIndex` in range
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-row.html) · [ampscript.guide](https://ampscript.guide/row/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utility-row.html)
+- [ampscript.guide](https://ampscript.guide/row/)

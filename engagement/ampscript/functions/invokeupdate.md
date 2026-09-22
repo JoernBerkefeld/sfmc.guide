@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "InvokeUpdate"
-description: "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+description: "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/invokeupdate/
@@ -67,6 +67,9 @@ Renders `ret=[OK] msg=[Data Extension updated.] err=[0]`.
 ## See also
 
 - SSJS Platform function [`InvokeUpdate`](https://ssjs.guide/platform-functions/invokeupdate/) — the same-named 1:1 SSJS counterpart of this AMPscript function
-- [`CreateObject`](/engagement/ampscript/functions/createobject/) · [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the object
-- [`InvokeCreate`](/engagement/ampscript/functions/invokecreate/) · [`InvokeDelete`](/engagement/ampscript/functions/invokedelete/) — the rest of the write lifecycle
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-update.html) · [ampscript.guide](https://ampscript.guide/invokeupdate/)
+- [`CreateObject`](/engagement/ampscript/functions/createobject/)
+- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the object
+- [`InvokeCreate`](/engagement/ampscript/functions/invokecreate/)
+- [`InvokeDelete`](/engagement/ampscript/functions/invokedelete/) — the rest of the write lifecycle
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-update.html)
+- [ampscript.guide](https://ampscript.guide/invokeupdate/)

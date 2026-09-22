@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "URLEncode"
-description: "URL-encodes a string for safe inclusion in a URL. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the default that leaves a value which is not a URL completely unchanged."
+description: "URL-encodes a string for safe inclusion in a URL. Leaves a value which is not a URL completely unchanged."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/urlencode/
@@ -25,8 +25,8 @@ differs_from_docs: false
 | Name | Type | Required | Description |
 |---|---|---|---|
 | `urlToEncode` | string \| number | Yes | Value to make safe for use in a URL |
-| `encodeAllChars` | string \| boolean \| number | No | Switches on full encoding of the query string; off by default |
-| `encodeAllStrings` | string \| boolean \| number | No | Switches on encoding of the whole input, not just a query string; off by default |
+| `encodeAllChars` | string \| boolean \| number | No | Switches on full encoding of the query string; off by default. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
+| `encodeAllStrings` | string \| boolean \| number | No | Switches on encoding of the whole input, not just a query string; off by default. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 
 Each flag accepts `1`/`0`, `true`/`false`, or any of those four words quoted as a string.
 
@@ -84,9 +84,11 @@ Hex escapes are written in lower case (`%3d`, `%2c`). There is no closed set of 
 | `URLEncode(@promo, true, true)` | `spring+sale` |
 | `URLEncode(@promo, "1", "1")` | `spring+sale` |
 
-The integer form and the boolean form are not two behaviours — all four combinations of the two flags were run in both spellings over the same input and matched character for character. The quoted spellings reach the same code path, so a flag read out of a data extension field works without conversion. A value outside the two states is accepted rather than rejected: passing `2` for both flags rendered the input untouched, i.e. it behaved like the off state.
+The integer form and the boolean form are not two behaviours — all four combinations of the two flags produce the same output in both spellings. The quoted spellings reach the same code path, so a flag read out of a data extension field works without conversion. A value outside the two states is accepted rather than rejected: passing `2` for both flags rendered the input untouched, i.e. it behaved like the off state.
 
 Catalogued on [Differs from official docs](/engagement/differs-from-docs/#urlencode-flag-spellings-and-default-passthrough). The official page describes the flags as integers and the community reference as booleans; neither is contradicted by the runtime, both are simply incomplete, so the entry is not flagged as disagreeing with the docs.
+
+**Both flags take the same eight boolean-like literals as the other boolean flags** — `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"`. The boolean and numeric spellings are byte-identical, and the quoted spellings behave the same way.
 
 {% include test-script.html bundle="ampscript-functions--urlencode" chapter="behaviour" %}
 
@@ -103,4 +105,5 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#urlenc
 
 - [Differs from official docs](/engagement/differs-from-docs/#urlencode-flag-spellings-and-default-passthrough) — the flag spellings and the default pass-through in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — build the URL before encoding the part that needs it
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html) · [ampscript.guide](https://ampscript.guide/urlencode/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html)
+- [ampscript.guide](https://ampscript.guide/urlencode/)

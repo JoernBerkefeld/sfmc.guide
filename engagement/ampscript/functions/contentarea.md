@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ContentArea"
-description: "Inserts a Classic content area by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByID."
+description: "Inserts a Classic content area by its numeric ID. Covers the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByID."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/contentarea/
@@ -28,7 +28,7 @@ differs_from_docs: false
 |---|---|---|---|
 | `contentAreaId` | number \| string | Yes | ID of the Classic content area to retrieve |
 | `impressionRegionName` | string | No | Impression region name to associate with the content area |
-| `errorOnMissingContentArea` | boolean | No | When true (the default), a missing area aborts; set to 0 to fall back to the default content |
+| `errorOnMissingContentArea` | string \| boolean \| number | No | When truthy (the default), a missing area aborts; when falsy, the page continues and the status variable is set to -1. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `errorMessage` | string | No | Default content returned when the area is missing — emitted literally |
 | `statusCode` | number | No | Output variable set to 0 on success or -1 when no content was found |
 
@@ -62,6 +62,8 @@ When the ID does resolve, the bare form inserts the stored content area:
 
 **The function is still callable at runtime.** Even though Classic content is retired, the call itself resolves and follows the documented default-content path rather than raising an unknown-function error.
 
+**All eight boolean-like literals are accepted for `errorOnMissingContentArea`.** `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` are interchangeable: when the area is missing, a truthy value aborts the page with HTTP 422 while a falsy value lets it continue at HTTP 200 and sets the status variable to -1.
+
 {% include test-script.html bundle="ampscript-functions--contentarea" chapter="behaviour" %}
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
@@ -77,4 +79,5 @@ When the ID does resolve, the bare form inserts the stored content area:
 
 - [`ContentBlockByID`](/engagement/ampscript/functions/contentblockbyid/) — the Content Builder replacement
 - [`ContentAreaByName`](/engagement/ampscript/functions/contentareabyname/) — the same Classic lookup keyed by name/path
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-area.html) · [ampscript.guide](https://ampscript.guide/contentarea/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-area.html)
+- [ampscript.guide](https://ampscript.guide/contentarea/)

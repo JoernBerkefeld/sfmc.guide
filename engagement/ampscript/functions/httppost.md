@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "HTTPPost"
-description: "Performs an HTTP POST request and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fourth argument that receives the response body rather than the status the docs describe."
+description: "Performs an HTTP POST request and returns the HTTP status code. Covers the fourth argument that receives the response body rather than the status the docs describe."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/httppost/
@@ -81,4 +81,5 @@ Status %%=v(@status)=%%; response %%=v(@body)=%%
 - [`HTTPPost2`](/engagement/ampscript/functions/httppost2/) — adds response headers as a rowset
 - [`HTTPPostWithRetry`](/engagement/ampscript/functions/httppostwithretry/) — adds retry and rescheduling
 - [Differs from docs: the response argument holds the body](/engagement/differs-from-docs/#httppost-response-arg-is-body)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post.html) · [ampscript.guide](https://ampscript.guide/httppost/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-post.html)
+- [ampscript.guide](https://ampscript.guide/httppost/)

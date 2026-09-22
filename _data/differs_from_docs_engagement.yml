@@ -3,7 +3,7 @@
 # Rendered by /engagement/differs-from-docs/ via _includes/differs-from-docs-list.html
 #
 # This file intentionally ships EMPTY. Append one entry per proven finding.
-# A finding belongs here when it was proven on an Engagement CloudPage / email
+# A finding belongs here when it was confirmed on an Engagement CloudPage or an email
 # and the function is available on Engagement. Next-only behaviour goes in
 # differs_from_docs_next.yml instead.
 #
@@ -42,8 +42,6 @@
     calls and whole-number strings such as `Random("1", "2")` returned values
     normally.
 
-    The same decimal calls were redeployed to the parent business unit and
-    aborted there too, so this is not a limitation of the child QA account.
     Treat the bounds as integers only — round or truncate before the call.
   testScript: |
     %%[ VAR @b
@@ -141,8 +139,8 @@
   anchor: "mod-sign-follows-dividend"
   body: |
     The official page does not state which operand decides the sign of the
-    remainder, and languages disagree on this. Proven at runtime: the sign
-    always follows the **dividend** (the first argument). `Mod(-10, 3)` gives
+    remainder, and languages disagree on this. The sign always follows the
+    **dividend** (the first argument). `Mod(-10, 3)` gives
     `-1`, `Mod(10, -3)` gives `1`, and `Mod(-10, -3)` gives `-1`.
 
     That matches C-style truncated remainder semantics and JavaScript's `%`,
@@ -299,11 +297,11 @@
   anchor: "concat-single-argument-accepted"
   body: |
     The official reference presents the function as joining two or more values,
-    and our own catalog encoded that as a minimum of two. At runtime one
+    and the language catalog encoded that as a minimum of two. At runtime one
     argument is enough: `Concat("only")` returned HTTP 200 and echoed `only`
     back unchanged. Passing no argument at all *is* rejected — that call aborted
-    the page with HTTP 422 before the surrounding marker line rendered — so the
-    real minimum is one, not zero and not two.
+    the page with HTTP 422 and rendered nothing — so the real minimum is one,
+    not zero and not two.
 
     Treat this as an accepted form the documentation never mentions rather than
     as the documentation being wrong: an argument-count disagreement on its own
@@ -311,7 +309,7 @@
     here because callers can genuinely write the one-argument form and it will
     work, which is not something the reference lets you predict.
 
-    The catalog was corrected accordingly during this verification run: the
+    The catalog was corrected accordingly: the
     minimum argument count moved from two to one and the second parameter is now
     marked optional, so editor diagnostics no longer flag a valid call.
   testScript: |
@@ -696,7 +694,7 @@
   body: |
     **The two optional flags have four accepted spellings, all equivalent.** The
     official reference describes them as integers while the community reference
-    and our own catalog described them as booleans. Both are right: `0`/`1`,
+    and the language catalog described them as booleans. Both are right: `0`/`1`,
     `false`/`true`, and those same four words quoted as strings all reach the
     same code path. Encoding `spring sale` with the second flag on gave
     `spring%20sale` whether it was written `0, 1`, `false, true`, or `"0", "1"`,
@@ -1120,7 +1118,7 @@
     frozen.
 
     Two fixed inputs, same wall-clock time, six months apart, measured with
-    `DateDiff` in minutes on the account this was proven on:
+    `DateDiff` in minutes:
     `2026-01-15 09:30:00` moved forward `420` minutes, while
     `2026-07-15 09:30:00` moved forward `480`. Exactly one hour more in summer.
     [LocalDateToSystemDate](#localdatetosystemdate-seasonal-shift) mirrors it with
@@ -1155,8 +1153,8 @@
   body: |
     **The same seasonal shift as
     [SystemDateToLocalDate](#systemdatetolocaldate-seasonal-shift), with the sign
-    reversed — `-420` minutes in January and `-480` in July on the account this
-    was proven on — plus one consequence the reference does not mention at all.**
+    reversed — `-420` minutes in January and `-480` in July — plus one
+    consequence the reference does not mention at all.**
 
     A string carrying no time part is treated as midnight, and subtracting the
     offset from midnight lands on the day before. `LocalDateToSystemDate("2026-01-15")`
@@ -1507,11 +1505,9 @@
   body: |
     **The usage example on the official page declares a variable with `VAR`,
     never assigns it, and states the result is true. That shape returned
-    `False` on a live CloudPage.**
+    `False` on a CloudPage.**
 
-    The gate printed its own start and done markers at HTTP 200 next to a
-    known-good control block, so the page ran to completion — this is a result
-    rather than a swallowed abort.
+    The call returns `False` at HTTP 200; it does not abort the page.
 
     Sixteen further inputs gave the same answer: an undeclared variable, the
     empty string, whitespace, `0`, the string `"0"`, the string `"false"`, an
@@ -1601,9 +1597,8 @@
     label — no dot, no `.com` — as valid, with a note that such domains are
     rare but real. The engine returns `False` for that shape.**
 
-    `IsEmailAddress("tomas.q@example")` rendered `False` in a block that
-    printed its own start and done markers at HTTP 200, next to a known-good
-    control that rendered in the same response.
+    `IsEmailAddress("tomas.q@example")` returns `False` at HTTP 200: the call
+    completes normally rather than aborting the page.
 
     Every other row of the same table matched what the engine did: the
     missing at sign, the double at sign, the missing local part and the
@@ -1802,7 +1797,7 @@
 
     An argument that produces no text behaves the same way: the line-ending
     form still emits its break, which is why an empty call is the idiomatic
-    way to end a line in a probe harness.
+    way to end a line in a test script.
 
     None of this belongs in production code — the single-argument form is the
     one the docs support — but it does mean a stray extra argument fails

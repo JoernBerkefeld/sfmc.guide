@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "ExecuteFilter"
-description: "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including what an empty filter returns and its case-insensitive matching."
+description: "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Covers what an empty filter returns and its case-insensitive matching."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/executefilter/
@@ -82,5 +82,8 @@ Emits `F1: Alice` and `F3: Alice` — the Bob row is excluded.
 
 - [`ExecuteFilterOrderedRows`](/engagement/ampscript/functions/executefilterorderedrows/) — same, with a sort column and a row limit
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — filter a data extension inline without a saved data filter
-- [`Row`](/engagement/ampscript/functions/row/) · [`Field`](/engagement/ampscript/functions/field/) · [`RowCount`](/engagement/ampscript/functions/rowcount/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter.html) · [ampscript.guide](https://ampscript.guide/executefilter/)
+- [`Row`](/engagement/ampscript/functions/row/)
+- [`Field`](/engagement/ampscript/functions/field/)
+- [`RowCount`](/engagement/ampscript/functions/rowcount/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-execute-filter.html)
+- [ampscript.guide](https://ampscript.guide/executefilter/)

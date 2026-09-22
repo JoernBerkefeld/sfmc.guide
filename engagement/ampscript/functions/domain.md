@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Domain"
-description: "Returns everything after the first at sign of an email address. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
+description: "Returns everything after the first at sign of an email address. Covers multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/domain/
@@ -94,4 +94,5 @@ There is no closed set of sentinel values to test for. An input with no at sign,
 
 - [IsEmailAddress](/engagement/ampscript/functions/isemailaddress/) — validate the address before splitting it, since this function will not
 - [Empty](/engagement/ampscript/functions/empty/) — how to detect the empty result
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html) · [ampscript.guide](https://ampscript.guide/domain/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html)
+- [ampscript.guide](https://ampscript.guide/domain/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IsNullDefault"
-description: "Returns a value, or a fallback when it is null. Runtime-proven on a live Marketing Cloud Engagement CloudPage — where the fallback was never reached and every empty-ish input returned the empty string instead."
+description: "Returns a value, or a fallback when it is null. The fallback is never reached: every empty-ish input returns the empty string instead."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/isnulldefault/
@@ -63,7 +63,7 @@ The domain is whatever the caller passes, so there is no set of literals to test
 
 ### How the four Utility tests compare
 
-The same inputs put through all four functions, on one page, in one run:
+The same inputs compared across all four functions:
 
 | Input | `Empty` | `IsNull` | `IsNullDefault(x, "DEF")` | `IIf(x, "T", "F")` |
 |---|---|---|---|---|
@@ -94,4 +94,5 @@ The third column is a pass-through with an empty string where the fallback was e
 - [Empty](/engagement/ampscript/functions/empty/) — the test that actually separates missing from present on a page
 - [IsNull](/engagement/ampscript/functions/isnull/) — the same null definition without the fallback argument
 - [IIf](/engagement/ampscript/functions/iif/) — pair it with `Empty` to build the fallback this function does not deliver
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-is-null-default.html) · [ampscript.guide](https://ampscript.guide/isnulldefault/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-is-null-default.html)
+- [ampscript.guide](https://ampscript.guide/isnulldefault/)

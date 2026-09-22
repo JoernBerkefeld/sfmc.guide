@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "LongSFID"
-description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a non-15-character input is passed straight through unchanged instead of being validated."
+description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Notes that a non-15-character input is passed straight through unchanged instead of being validated."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/longsfid/
@@ -83,4 +83,5 @@ An already-18-character ID is returned as-is rather than transformed a second ti
 ## See also
 
 - [Differs from official docs](/engagement/differs-from-docs/#longsfid-non-15-char-passthrough) — the silent pass-through finding in full
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-long-sfid.html) · [ampscript.guide](https://ampscript.guide/longsfid/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-salesforce/mc-ampscript-reference-salesforce-long-sfid.html)
+- [ampscript.guide](https://ampscript.guide/longsfid/)

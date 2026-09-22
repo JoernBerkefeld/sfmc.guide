@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Subtract"
-description: "Computes the difference between two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+description: "Computes the difference between two numeric values. Covers which argument types are accepted and which abort the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/subtract/
@@ -77,5 +77,7 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 ## See also
 
 - [`Add`](/engagement/ampscript/functions/add/) — the inverse operation
-- [`Multiply`](/engagement/ampscript/functions/multiply/) · [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-subtract.html) · [ampscript.guide](https://ampscript.guide/subtract/)
+- [`Multiply`](/engagement/ampscript/functions/multiply/)
+- [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-subtract.html)
+- [ampscript.guide](https://ampscript.guide/subtract/)

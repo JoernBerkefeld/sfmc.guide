@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "InvokePerform"
-description: "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage without moving any data."
+description: "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/invokeperform/
@@ -67,6 +67,8 @@ For an invalid action this renders `ret=[Error] st=[notarealaction is not an act
 ## See also
 
 - SSJS Platform function [`InvokePerform`](https://ssjs.guide/platform-functions/invokeperform/) — the same-named 1:1 SSJS counterpart of this AMPscript function
-- [`CreateObject`](/engagement/ampscript/functions/createobject/) · [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the definition
+- [`CreateObject`](/engagement/ampscript/functions/createobject/)
+- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) — build the definition
 - [`InvokeExecute`](/engagement/ampscript/functions/invokeexecute/) — the Execute-verb counterpart
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-perform.html) · [ampscript.guide](https://ampscript.guide/invokeperform/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-perform.html)
+- [ampscript.guide](https://ampscript.guide/invokeperform/)

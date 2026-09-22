@@ -31,4 +31,4 @@ Each finding is a card with a severity (high / medium / low), a discrepancy-type
 
 ## Findings
 
-{% include differs-from-docs-list.html entries=site.data.differs_from_docs_next empty="No Marketing Cloud Next discrepancies have been recorded yet. Findings are added here as the AMPscript verification sweep proves them on Next." %}
+{% include differs-from-docs-list.html entries=site.data.differs_from_docs_next empty="No Marketing Cloud Next discrepancies have been recorded yet. Findings are added here as they are documented for Next." %}

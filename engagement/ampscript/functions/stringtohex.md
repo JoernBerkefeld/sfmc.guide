@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "StringToHex"
-description: "Converts a string to its hexadecimal representation. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that it renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
+description: "Converts a string to its hexadecimal representation. It renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/stringtohex/
@@ -59,7 +59,7 @@ There is no closed set of sentinel values to test for: every accepted input prod
 
 ## Behaviour
 
-**The output is lowercase and completely unseparated.** `StringToHex("SFMC AMPscript 2026")` gave `53464d4320414d507363726970742032303236` — 38 characters measured on the page for a 19-byte input. There is no `0x` prefix, no space and no delimiter of any kind, and the letters are lowercase: the `M` of `SFMC` is `4d`, never `4D`.
+**The output is lowercase and completely unseparated.** `StringToHex("SFMC AMPscript 2026")` gives `53464d4320414d507363726970742032303236` — 38 characters for a 19-byte input. There is no `0x` prefix, no space and no delimiter of any kind, and the letters are lowercase: the `M` of `SFMC` is `4d`, never `4D`.
 
 **The bytes rendered are the UTF-8 form of the input.** A string containing `é` and `€` gave `636166c3a9e282ac`, in which `é` occupies two bytes (`c3a9`) and `€` three (`e282ac`). The function renders bytes, not code points — `é` never appears as `e9` under the default.
 
@@ -97,7 +97,9 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 
 ## See also
 
-- [Base64Encode](/engagement/ampscript/functions/base64encode/) · [Base64Decode](/engagement/ampscript/functions/base64decode/) — the same bytes in a denser alphabet, and reversible
+- [Base64Encode](/engagement/ampscript/functions/base64encode/)
+- [Base64Decode](/engagement/ampscript/functions/base64decode/) — the same bytes in a denser alphabet, and reversible
 - [SHA256](/engagement/ampscript/functions/sha256/) — the same charSet domain, applied before hashing
 - [Encoding names are wider than documented](/engagement/differs-from-docs/#stringtohex-wider-charset-domain)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-to-hex.html) · [ampscript.guide](https://ampscript.guide/stringtohex/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-to-hex.html)
+- [ampscript.guide](https://ampscript.guide/stringtohex/)

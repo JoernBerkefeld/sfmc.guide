@@ -4,14 +4,14 @@
     "url": "/engagement/ampscript/functions/add/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Computes the sum of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+    "description": "Computes the sum of two numeric values. Covers which argument types are accepted and which abort the page."
   },
   {
     "name": "AddObjectArrayItem",
     "url": "/engagement/ampscript/functions/addobjectarrayitem/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle."
   },
   {
     "name": "AMPscript",
@@ -25,7 +25,7 @@
     "url": "/engagement/differs-from-docs/",
     "section": "Engagement",
     "type": "page",
-    "description": "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry is proven on a live Engagement CloudPage."
+    "description": "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry reflects how the engine actually behaves on Marketing Cloud Engagement."
   },
   {
     "name": "AMPscript Differs from Official Docs (Next)",
@@ -39,7 +39,7 @@
     "url": "/engagement/ampscript/functions/",
     "section": "Engagement",
     "type": "page",
-    "description": "Per-function AMPscript reference pages for Marketing Cloud Engagement. Every page is proven by running the function on a live Engagement CloudPage — signature, argument handling, edge cases, and the test script that produced the evidence."
+    "description": "Per-function AMPscript reference pages for Marketing Cloud Engagement, covering each function's signature, argument handling and edge cases."
   },
   {
     "name": "AMPscript Function Reference (Next)",
@@ -53,133 +53,133 @@
     "url": "/engagement/ampscript/functions/attributevalue/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Reads an attribute of the current message or page context by name. Runtime-proven on a live Marketing Cloud Engagement CloudPage — system attributes resolve there, the name is matched without regard to case, and an unknown name gives an empty value instead of failing."
+    "description": "Reads an attribute of the current message or page context by name. System attributes resolve there, the name is matched without regard to case, and an unknown name gives an empty value instead of failing."
   },
   {
     "name": "AuthenticatedEmployeeID",
     "url": "/engagement/ampscript/functions/authenticatedemployeeid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
+    "description": "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
   },
   {
     "name": "AuthenticatedEmployeeNotificationAddress",
     "url": "/engagement/ampscript/functions/authenticatedemployeenotificationaddress/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the notification email address of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
+    "description": "Returns the notification email address of the Marketing Cloud user tied to the current context. A public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
   },
   {
     "name": "AuthenticatedEmployeeUserName",
     "url": "/engagement/ampscript/functions/authenticatedemployeeusername/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the login username of the Marketing Cloud user tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
+    "description": "Returns the login username of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
   },
   {
     "name": "AuthenticatedEnterpriseID",
     "url": "/engagement/ampscript/functions/authenticatedenterpriseid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
+    "description": "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. A public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
   },
   {
     "name": "AuthenticatedMemberID",
     "url": "/engagement/ampscript/functions/authenticatedmemberid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the member ID (MID) of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
+    "description": "Returns the member ID (MID) of the business unit the code runs on. A public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
   },
   {
     "name": "AuthenticatedMemberName",
     "url": "/engagement/ampscript/functions/authenticatedmembername/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the display name of the business unit the code runs on. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
+    "description": "Returns the display name of the business unit the code runs on. A public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
   },
   {
     "name": "BarcodeURL",
     "url": "/engagement/ampscript/functions/barcodeurl/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Builds a URL that renders a barcode image from its inputs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the real minimum argument count and the empty value that takes the whole page down."
+    "description": "Builds a URL that renders a barcode image from its inputs."
   },
   {
     "name": "Base64Decode",
     "url": "/engagement/ampscript/functions/base64decode/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Decodes a Base64-encoded string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
+    "description": "Decodes a Base64-encoded string. Malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
   },
   {
     "name": "Base64Encode",
     "url": "/engagement/ampscript/functions/base64encode/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Encodes a value as a Base64 string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes encoded are the UTF-8 form of the input, and that the encoding argument accepts far more names than any source lists."
+    "description": "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 form of the input. The encoding argument accepts far more names than any source lists."
   },
   {
     "name": "BeginImpressionRegion",
     "url": "/engagement/ampscript/functions/beginimpressionregion/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Marks the start of an impression tracking region. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the region name must be a literal, and a variable argument aborts the page."
+    "description": "Marks the start of an impression tracking region. The region name must be a literal, and a variable argument aborts the page."
   },
   {
     "name": "BuildOptionList",
     "url": "/engagement/ampscript/functions/buildoptionlist/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Builds an HTML <option> list from literal value/text pairs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including exactly which pair is marked selected and what a non-matching default does."
+    "description": "Builds an HTML <option> list from literal value/text pairs. Covers exactly which pair is marked selected and what a non-matching default does."
   },
   {
     "name": "BuildRowsetFromJSON",
     "url": "/engagement/ampscript/functions/buildrowsetfromjson/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Parses a JSON string and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the third argument, which works the opposite way round from the documented syntax."
+    "description": "Parses a JSON string and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
     "name": "BuildRowSetFromString",
     "url": "/engagement/ampscript/functions/buildrowsetfromstring/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Splits a delimited string into a single-column rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the unnamed column and the empty separator that splits nothing."
+    "description": "Splits a delimited string into a single-column rowset. Covers the unnamed column and the empty separator that splits nothing."
   },
   {
     "name": "BuildRowSetFromXML",
     "url": "/engagement/ampscript/functions/buildrowsetfromxml/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Parses an XML string using an XPath expression and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the third argument, which works the opposite way round from the documented syntax."
+    "description": "Parses an XML string using an XPath expression and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
     "name": "Char",
     "url": "/engagement/ampscript/functions/char/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the character for a numeric character code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the code domain is not capped at 255."
+    "description": "Returns the character for a numeric character code. Notes that the code domain is not capped at 255."
   },
   {
     "name": "ClaimRow",
     "url": "/engagement/ampscript/functions/claimrow/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant."
   },
   {
     "name": "ClaimRowValue",
     "url": "/engagement/ampscript/functions/claimrowvalue/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain."
   },
   {
     "name": "CloudPagesURL",
     "url": "/engagement/ampscript/functions/cloudpagesurl/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Builds the published URL of a CloudPages landing page. Runtime-proven on a live Marketing Cloud Engagement CloudPage — extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
+    "description": "Builds the published URL of a CloudPages landing page. Extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
   },
   {
     "name": "Collect Code",
@@ -193,140 +193,140 @@
     "url": "/engagement/ampscript/functions/concat/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Joins two or more values into a single string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the one-argument form the reference never mentions and the boolean values that vanish without a trace."
+    "description": "Joins two or more values into a single string. Covers the one-argument form the reference never mentions and the boolean values that vanish without a trace."
   },
   {
     "name": "ContentArea",
     "url": "/engagement/ampscript/functions/contentarea/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a Classic content area by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByID."
+    "description": "Inserts a Classic content area by its numeric ID. Covers the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByID."
   },
   {
     "name": "ContentAreaByName",
     "url": "/engagement/ampscript/functions/contentareabyname/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a Classic content area by its folder path and name. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByName."
+    "description": "Inserts a Classic content area by its folder path and name. Covers the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByName."
   },
   {
     "name": "ContentBlockByID",
     "url": "/engagement/ampscript/functions/contentblockbyid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Retrieves and renders a Content Builder content block by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+    "description": "Retrieves and renders a Content Builder content block by its numeric ID. Covers the missing-block default path and that default content is emitted literally."
   },
   {
     "name": "ContentBlockByKey",
     "url": "/engagement/ampscript/functions/contentblockbykey/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Retrieves and renders a Content Builder content block by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+    "description": "Retrieves and renders a Content Builder content block by its customer key. Covers the missing-block default path and that default content is emitted literally."
   },
   {
     "name": "ContentBlockByName",
     "url": "/engagement/ampscript/functions/contentblockbyname/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Retrieves and renders a Content Builder content block by its full Name/path. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the missing-block default path and that default content is emitted literally."
+    "description": "Retrieves and renders a Content Builder content block by its full Name/path. Covers the missing-block default path and that default content is emitted literally."
   },
   {
     "name": "ContentImageByID",
     "url": "/engagement/ampscript/functions/contentimagebyid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns an HTML img tag for a Content Builder image asset by its numeric ID. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
+    "description": "Returns an HTML img tag for a Content Builder image asset by its numeric ID. Covers the fallback-image path and that a missing image with no fallback aborts the page."
   },
   {
     "name": "ContentImageByKey",
     "url": "/engagement/ampscript/functions/contentimagebykey/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns an HTML img tag for a Content Builder image asset by its customer key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fallback-image path and that a missing image with no fallback aborts the page."
+    "description": "Returns an HTML img tag for a Content Builder image asset by its customer key. Covers the fallback-image path and that a missing image with no fallback aborts the page."
   },
   {
     "name": "CreateObject",
     "url": "/engagement/ampscript/functions/createobject/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors."
   },
   {
     "name": "CreateSalesforceObject",
     "url": "/engagement/ampscript/functions/createsalesforceobject/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
+    "description": "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Notes that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
   },
   {
     "name": "DataExtensionRowCount",
     "url": "/engagement/ampscript/functions/dataextensionrowcount/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the total number of rows in a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Returns the total number of rows in a data extension."
   },
   {
     "name": "DateAdd",
     "url": "/engagement/ampscript/functions/dateadd/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Adds a whole number of intervals to a date. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that any unit outside the documented five destroys the page rather than returning a value."
+    "description": "Adds a whole number of intervals to a date. Notes that any unit outside the documented five destroys the page rather than returning a value."
   },
   {
     "name": "DateDiff",
     "url": "/engagement/ampscript/functions/datediff/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the difference between two dates in the requested unit. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that it counts unit boundaries rather than elapsed time, so one minute either side of midnight is a whole day apart."
+    "description": "Returns the difference between two dates in the requested unit. Notes that it counts unit boundaries rather than elapsed time, so one minute either side of midnight is a whole day apart."
   },
   {
     "name": "DateParse",
     "url": "/engagement/ampscript/functions/dateparse/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Parses a date string into a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that a day-first date is silently read month-first while an unreadable one takes the whole page down."
+    "description": "Parses a date string into a date value. Notes that a day-first date is silently read month-first while an unreadable one takes the whole page down."
   },
   {
     "name": "DatePart",
     "url": "/engagement/ampscript/functions/datepart/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Extracts a specific component from a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
+    "description": "Extracts a specific component from a date value. Notes that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
   },
   {
     "name": "DecryptSymmetric",
     "url": "/engagement/ampscript/functions/decryptsymmetric/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which cipher names work and why an arity mistake cannot be hidden behind a condition."
+    "description": "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Covers which cipher names work and why an arity mistake cannot be hidden behind a condition."
   },
   {
     "name": "DeleteData",
     "url": "/engagement/ampscript/functions/deletedata/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Deletes matching rows from a data extension and returns the number of rows deleted. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the return value and what a no-match returns."
+    "description": "Deletes matching rows from a data extension and returns the number of rows deleted. Covers the return value and what a no-match returns."
   },
   {
     "name": "DeleteDE",
     "url": "/engagement/ampscript/functions/deletede/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData."
   },
   {
     "name": "Divide",
     "url": "/engagement/ampscript/functions/divide/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Divides the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
+    "description": "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
   },
   {
     "name": "Domain",
     "url": "/engagement/ampscript/functions/domain/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns everything after the first at sign of an email address. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
+    "description": "Returns everything after the first at sign of an email address. Covers multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
   },
   {
     "name": "Einstein Email Recommendations",
@@ -361,7 +361,7 @@
     "url": "/engagement/ampscript/functions/empty/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Tests whether a value is missing or blank. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which inputs count as empty, and the exact literals True and False that the function renders."
+    "description": "Tests whether a value is missing or blank. Covers which inputs count as empty, and the exact literals True and False that the function renders."
   },
   {
     "name": "Encryption",
@@ -375,14 +375,14 @@
     "url": "/engagement/ampscript/functions/encryptsymmetric/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Encrypts a value with symmetric key encryption and returns Base64. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the ciphertext is deterministic, so equal plaintexts are linkable."
+    "description": "Encrypts a value with symmetric key encryption and returns Base64. Notes that the ciphertext is deterministic, so equal plaintexts are linkable."
   },
   {
     "name": "EndImpressionRegion",
     "url": "/engagement/ampscript/functions/endimpressionregion/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Marks the end of an impression tracking region. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the optional argument accepts boolean, string, and number truthy values to close all open regions."
+    "description": "Marks the end of an impression tracking region. The optional argument accepts boolean, string, and number truthy values to close all open regions."
   },
   {
     "name": "eslint-config-ssjs",
@@ -417,14 +417,14 @@
     "url": "/engagement/ampscript/functions/executefilter/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including what an empty filter returns and its case-insensitive matching."
+    "description": "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Covers what an empty filter returns and its case-insensitive matching."
   },
   {
     "name": "ExecuteFilterOrderedRows",
     "url": "/engagement/ampscript/functions/executefilterorderedrows/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count."
   },
   {
     "name": "FAQ",
@@ -438,35 +438,35 @@
     "url": "/engagement/ampscript/functions/field/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Reads a named column from a rowset row. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a missing column aborts the page unless the third argument is passed."
+    "description": "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
   },
   {
     "name": "Format",
     "url": "/engagement/ampscript/functions/format/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Formats a number, a date or a string with a .NET pattern. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
+    "description": "Formats a number, a date or a string with a .NET pattern. Notes that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
   },
   {
     "name": "FormatCurrency",
     "url": "/engagement/ampscript/functions/formatcurrency/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Formats a number as a currency amount for a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
+    "description": "Formats a number as a currency amount for a locale. Notes that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
   },
   {
     "name": "FormatDate",
     "url": "/engagement/ampscript/functions/formatdate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Formats a date according to a date pattern, a time pattern and a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that mm in the date pattern renders the month, not the minutes."
+    "description": "Formats a date according to a date pattern, a time pattern and a locale. Notes that mm in the date pattern renders the month, not the minutes."
   },
   {
     "name": "FormatNumber",
     "url": "/engagement/ampscript/functions/formatnumber/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Formats a number with a .NET numeric pattern, optionally for a locale. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
+    "description": "Formats a number with a .NET numeric pattern, optionally for a locale. Covers half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
   },
   {
     "name": "Function Index",
@@ -487,35 +487,35 @@
     "url": "/engagement/ampscript/functions/getjwt/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Generates a JSON Web Token signed with an inline secret. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
+    "description": "Generates a JSON Web Token signed with an inline secret. Notes that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
   },
   {
     "name": "GetJWTByKeyName",
     "url": "/engagement/ampscript/functions/getjwtbykeyname/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Generates a JSON Web Token signed with a named Key Management key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
+    "description": "Generates a JSON Web Token signed with a named Key Management key. Notes that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
   },
   {
     "name": "GetSocialPublishURL",
     "url": "/engagement/ampscript/functions/getsocialpublishurl/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns HTML for sharing a content region on a supported social network via Social Forward. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
+    "description": "Returns HTML for sharing a content region on a supported social network via Social Forward. Notes that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
   },
   {
     "name": "GetSocialPublishURLByName",
     "url": "/engagement/ampscript/functions/getsocialpublishurlbyname/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns HTML for sharing a content region on a supported social network identified by name via Social Forward. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it yields a bare Publish.aspx URL and aborts the page on an empty region or an unknown network name."
+    "description": "Returns HTML for sharing a content region on a supported social network identified by name via Social Forward. Notes that it yields a bare Publish.aspx URL and aborts the page on an empty region or an unknown network name."
   },
   {
     "name": "GUID",
     "url": "/engagement/ampscript/functions/guid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Generates a new globally unique identifier. Runtime-proven on a live Marketing Cloud Engagement CloudPage — 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
+    "description": "Generates a new globally unique identifier. The result is 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
   },
   {
     "name": "Handlebars Helper Reference",
@@ -529,203 +529,203 @@
     "url": "/engagement/ampscript/functions/httpget/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Performs an HTTP GET request and returns the response body. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the status output variable that reports 0 on success and -2 on a failed request."
+    "description": "Performs an HTTP GET request and returns the response body. Covers the status output variable that reports 0 on success and -2 on a failed request."
   },
   {
     "name": "HTTPPost",
     "url": "/engagement/ampscript/functions/httppost/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Performs an HTTP POST request and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fourth argument that receives the response body rather than the status the docs describe."
+    "description": "Performs an HTTP POST request and returns the HTTP status code. Covers the fourth argument that receives the response body rather than the status the docs describe."
   },
   {
     "name": "HTTPPost2",
     "url": "/engagement/ampscript/functions/httppost2/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the response argument that holds the body while a separate rowset argument holds the headers."
+    "description": "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Covers the response argument that holds the body while a separate rowset argument holds the headers."
   },
   {
     "name": "HTTPPostWithRetry",
     "url": "/engagement/ampscript/functions/httppostwithretry/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Posts content to a URL with automatic retry logic and returns the HTTP status code. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the responseStatus argument that holds the response body rather than the status the docs describe."
+    "description": "Posts content to a URL with automatic retry logic and returns the HTTP status code. Covers the responseStatus argument that holds the response body rather than the status the docs describe."
   },
   {
     "name": "HTTPRequestHeader",
     "url": "/engagement/ampscript/functions/httprequestheader/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the value of a specified HTTP request header from the inbound request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that custom headers are returned even though the docs restrict it to standard headers."
+    "description": "Returns the value of a specified HTTP request header from the inbound request. Notes that custom headers are returned even though the docs restrict it to standard headers."
   },
   {
     "name": "IIf",
     "url": "/engagement/ampscript/functions/iif/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Picks one of two values from a boolean expression. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
+    "description": "Picks one of two values from a boolean expression. Covers the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
   },
   {
     "name": "IndexOf",
     "url": "/engagement/ampscript/functions/indexof/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the 1-based position of a substring, matching case-insensitively. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including an undocumented third argument that selects which occurrence to locate."
+    "description": "Returns the 1-based position of a substring, matching case-insensitively. Covers an undocumented third argument that selects which occurrence to locate."
   },
   {
     "name": "InsertData",
     "url": "/engagement/ampscript/functions/insertdata/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns the number of rows inserted. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the return value and the read-back."
+    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns the number of rows inserted. Covers the return value and the read-back."
   },
   {
     "name": "InsertDE",
     "url": "/engagement/ampscript/functions/insertde/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData."
   },
   {
     "name": "InvokeCreate",
     "url": "/engagement/ampscript/functions/invokecreate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Create on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+    "description": "Runs the SOAP API Create on a CreateObject-built handle and returns the OverallStatus."
   },
   {
     "name": "InvokeDelete",
     "url": "/engagement/ampscript/functions/invokedelete/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Delete on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+    "description": "Runs the SOAP API Delete on a CreateObject-built handle and returns the OverallStatus."
   },
   {
     "name": "InvokeExecute",
     "url": "/engagement/ampscript/functions/invokeexecute/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results."
   },
   {
     "name": "InvokePerform",
     "url": "/engagement/ampscript/functions/invokeperform/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage without moving any data."
+    "description": "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus."
   },
   {
     "name": "InvokeRetrieve",
     "url": "/engagement/ampscript/functions/invokeretrieve/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset."
   },
   {
     "name": "InvokeUpdate",
     "url": "/engagement/ampscript/functions/invokeupdate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus. Runtime-proven on a live Marketing Cloud Engagement CloudPage against a throwaway data extension."
+    "description": "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus."
   },
   {
     "name": "IsCHTMLBrowser",
     "url": "/engagement/ampscript/functions/ischtmlbrowser/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Tests a user agent string for a compact HTML feature-phone browser. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the true path, which two feature-phone agent families still produce, while the empty string aborts the page."
+    "description": "Tests a user agent string for a compact HTML feature-phone browser. Covers the true path, which two feature-phone agent families still produce, while the empty string aborts the page."
   },
   {
     "name": "IsEmailAddress",
     "url": "/engagement/ampscript/functions/isemailaddress/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Checks a value against email address syntax only. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
+    "description": "Checks a value against email address syntax only. Covers a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
   },
   {
     "name": "IsNull",
     "url": "/engagement/ampscript/functions/isnull/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Tests a value for a genuine null. Runtime-proven on a live Marketing Cloud Engagement CloudPage — where it returned False for every input a page variable can hold, including the unset variable the official example says returns true."
+    "description": "Tests a value for a genuine null. It returns False for every input a page variable can hold, including the unset variable the official example says returns true."
   },
   {
     "name": "IsNullDefault",
     "url": "/engagement/ampscript/functions/isnulldefault/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a value, or a fallback when it is null. Runtime-proven on a live Marketing Cloud Engagement CloudPage — where the fallback was never reached and every empty-ish input returned the empty string instead."
+    "description": "Returns a value, or a fallback when it is null. The fallback is never reached: every empty-ish input returns the empty string instead."
   },
   {
     "name": "IsPhoneNumber",
     "url": "/engagement/ampscript/functions/isphonenumber/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Checks a value against the North American Numbering Plan. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including Canadian and Caribbean numbers, which pass despite the function's reputation for being US-only."
+    "description": "Checks a value against the North American Numbering Plan. Covers Canadian and Caribbean numbers, which pass despite the function's reputation for being US-only."
   },
   {
     "name": "Length",
     "url": "/engagement/ampscript/functions/length/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Measures the size of a string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the counting unit, which is UTF-16 code units rather than user-visible characters."
+    "description": "Measures the size of a string. Covers the counting unit, which is UTF-16 code units rather than user-visible characters."
   },
   {
     "name": "LocalDateToSystemDate",
     "url": "/engagement/ampscript/functions/localdatetosystemdate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a date in the account's configured time zone to the Marketing Cloud system date. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that a date with no time part lands on the previous day."
+    "description": "Converts a date in the account's configured time zone to the Marketing Cloud system date. Notes that a date with no time part lands on the previous day."
   },
   {
     "name": "LongSFID",
     "url": "/engagement/ampscript/functions/longsfid/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a non-15-character input is passed straight through unchanged instead of being validated."
+    "description": "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Notes that a non-15-character input is passed straight through unchanged instead of being validated."
   },
   {
     "name": "Lookup",
     "url": "/engagement/ampscript/functions/lookup/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a single field value from the first matching row of a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic name/value criteria and what a no-match returns."
+    "description": "Returns a single field value from the first matching row of a data extension. Covers the variadic name/value criteria and what a no-match returns."
   },
   {
     "name": "LookupOrderedRows",
     "url": "/engagement/ampscript/functions/lookuporderedrows/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a sorted, row-limited rowset of matching rows from a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sort direction and the row limit."
+    "description": "Returns a sorted, row-limited rowset of matching rows from a data extension. Covers the sort direction and the row limit."
   },
   {
     "name": "LookupOrderedRowsCS",
     "url": "/engagement/ampscript/functions/lookuporderedrowscs/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupOrderedRows."
+    "description": "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Covers the difference from the case-insensitive LookupOrderedRows."
   },
   {
     "name": "LookupRows",
     "url": "/engagement/ampscript/functions/lookuprows/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns every matching row of a data extension as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the variadic criteria and what a no-match returns."
+    "description": "Returns every matching row of a data extension as a rowset. Covers the variadic criteria and what a no-match returns."
   },
   {
     "name": "LookupRowsCS",
     "url": "/engagement/ampscript/functions/lookuprowscs/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns every matching row of a data extension using a case-sensitive comparison. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the difference from the case-insensitive LookupRows."
+    "description": "Returns every matching row of a data extension using a case-sensitive comparison. Covers the difference from the case-insensitive LookupRows."
   },
   {
     "name": "Lowercase",
     "url": "/engagement/ampscript/functions/lowercase/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a value to lower case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
+    "description": "Converts a value to lower case. Covers the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
   },
   {
     "name": "Marketing Cloud Engagement",
@@ -753,21 +753,21 @@
     "url": "/engagement/ampscript/functions/md5/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the MD5 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
+    "description": "Returns the MD5 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
   },
   {
     "name": "MicrositeURL",
     "url": "/engagement/ampscript/functions/micrositeurl/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Builds a Classic Content microsite URL. Runtime-proven on a live Marketing Cloud Engagement CloudPage — the page reference and any extra name-value pairs are folded into one encrypted token, and every call produces a different token."
+    "description": "Builds a Classic Content microsite URL. Covers that the page reference and any extra name-value pairs are folded into one encrypted token, and every call produces a different token."
   },
   {
     "name": "Mod",
     "url": "/engagement/ampscript/functions/mod/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the remainder after dividing the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sign rule and the NaN result for a zero divisor."
+    "description": "Returns the remainder after dividing the first number by the second. Covers the sign rule and the NaN result for a zero divisor."
   },
   {
     "name": "MSO Conditionals (VS Code)",
@@ -781,28 +781,28 @@
     "url": "/engagement/ampscript/functions/multiply/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Computes the product of two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+    "description": "Computes the product of two numeric values. Covers which argument types are accepted and which abort the page."
   },
   {
     "name": "Now",
     "url": "/engagement/ampscript/functions/now/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the current system date and time in Central Standard Time. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that every call in one render returns the same frozen instant."
+    "description": "Returns the current system date and time in Central Standard Time. Covers that every call in one render returns the same frozen instant."
   },
   {
     "name": "Output",
     "url": "/engagement/ampscript/functions/output/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Writes the result of a nested function call into the rendered content. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a string literal argument, which renders nothing at all rather than the error the official reference promises."
+    "description": "Writes the result of a nested function call into the rendered content. Covers a string literal argument, which renders nothing at all rather than the error the official reference promises."
   },
   {
     "name": "OutputLine",
     "url": "/engagement/ampscript/functions/outputline/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Writes the result of a nested function call into the rendered content, followed by a line break. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
+    "description": "Writes the result of a nested function call into the rendered content, followed by a line break. Covers the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
   },
   {
     "name": "Predictive Intelligence (PI) Data Extensions",
@@ -823,105 +823,105 @@
     "url": "/engagement/ampscript/functions/propercase/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a value to proper (title) case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that every letter after the first of a word is forced to lower case."
+    "description": "Converts a value to proper (title) case. Covers that every letter after the first of a word is forced to lower case."
   },
   {
     "name": "QueryParameter",
     "url": "/engagement/ampscript/functions/queryparameter/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the value of a URL query string parameter from the current page request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — indistinguishable from RequestParameter on a GET, and with no optional second argument despite what the one-argument signature invites you to try."
+    "description": "Returns the value of a URL query string parameter from the current page request. Covers that it is indistinguishable from RequestParameter on a GET."
   },
   {
     "name": "RaiseError",
     "url": "/engagement/ampscript/functions/raiseerror/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that outside a send it is not a graceful abort: the message never reaches the caller and the response is indistinguishable from any other failure."
+    "description": "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Covers that outside a send it is not a graceful abort: the message never reaches the caller and the response is indistinguishable from any other failure."
   },
   {
     "name": "Random",
     "url": "/engagement/ampscript/functions/random/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a random whole number between two inclusive bounds. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the decimal bounds that the official docs allow but the runtime rejects."
+    "description": "Returns a random whole number between two inclusive bounds. Covers the decimal bounds that the official docs allow but the runtime rejects."
   },
   {
     "name": "Redirect",
     "url": "/engagement/ampscript/functions/redirect/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Ends the request with an HTTP redirect to the supplied address. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a real 302 with the value passed straight into the Location header, and nothing like the similarly named RedirectTo."
+    "description": "Ends the request with an HTTP redirect to the supplied address. Covers that it is a real 302 with the value passed straight into the Location header, and nothing like the similarly named RedirectTo."
   },
   {
     "name": "RedirectTo",
     "url": "/engagement/ampscript/functions/redirectto/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Marks a URL held in a variable or field as a tracked email link. Runtime-proven on a live Marketing Cloud Engagement CloudPage — despite the name it emits no redirect, never halts the script, and hands the value straight back."
+    "description": "Marks a URL held in a variable or field as a tracked email link. Despite the name it emits no redirect, never halts the script, and hands the value straight back."
   },
   {
     "name": "RegExMatch",
     "url": "/engagement/ampscript/functions/regexmatch/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the first occurrence of a regular expression match in a string, selected by capture group. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the case-sensitive matching that sets it apart from every other String function."
+    "description": "Returns the first occurrence of a regular expression match in a string, selected by capture group. Covers the case-sensitive matching that sets it apart from every other String function."
   },
   {
     "name": "Replace",
     "url": "/engagement/ampscript/functions/replace/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Replaces all occurrences of a substring with a new value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including matching that ignores case and a single-pass scan that never revisits text it just inserted."
+    "description": "Replaces all occurrences of a substring with a new value. Covers matching that ignores case and a single-pass scan that never revisits text it just inserted."
   },
   {
     "name": "ReplaceList",
     "url": "/engagement/ampscript/functions/replacelist/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Replaces several search values with one common replacement value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sequential passes that let a later search value rewrite what an earlier one inserted."
+    "description": "Replaces several search values with one common replacement value. Covers the sequential passes that let a later search value rewrite what an earlier one inserted."
   },
   {
     "name": "RequestParameter",
     "url": "/engagement/ampscript/functions/requestparameter/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the value of a form post or query string parameter from the current request. Runtime-proven on a live Marketing Cloud Engagement CloudPage — names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
+    "description": "Returns the value of a form post or query string parameter from the current request. Covers that names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
   },
   {
     "name": "RetrieveSalesforceJobSources",
     "url": "/engagement/ampscript/functions/retrievesalesforcejobsources/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a job ID with no matching sources returns a clean empty rowset rather than an error."
+    "description": "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Covers that a job ID with no matching sources returns a clean empty rowset rather than an error."
   },
   {
     "name": "RetrieveSalesforceObjects",
     "url": "/engagement/ampscript/functions/retrievesalesforceobjects/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that an unknown object name aborts the page and an empty match returns a clean empty rowset."
+    "description": "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Covers that an unknown object name aborts the page and an empty match returns a clean empty rowset."
   },
   {
     "name": "Row",
     "url": "/engagement/ampscript/functions/row/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns a single row from a rowset by its 1-based index. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that index 0 aborts the page."
+    "description": "Returns a single row from a rowset by its 1-based index. Covers that index 0 aborts the page."
   },
   {
     "name": "RowCount",
     "url": "/engagement/ampscript/functions/rowcount/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the number of rows in a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it returns zero for an empty rowset and never aborts."
+    "description": "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
   },
   {
     "name": "SetObjectProperty",
     "url": "/engagement/ampscript/functions/setobjectproperty/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Sets a scalar (or nested-handle) property on a CreateObject handle. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Sets a scalar (or nested-handle) property on a CreateObject handle."
   },
   {
     "name": "sf-plugin-mcnext",
@@ -1026,21 +1026,21 @@
     "url": "/engagement/ampscript/functions/sha1/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the SHA-1 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
+    "description": "Returns the SHA-1 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
   },
   {
     "name": "SHA256",
     "url": "/engagement/ampscript/functions/sha256/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the SHA-256 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
+    "description": "Returns the SHA-256 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
   },
   {
     "name": "SHA512",
     "url": "/engagement/ampscript/functions/sha512/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Returns the SHA-512 hash of the input value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
+    "description": "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input, and an unrecognised encoding name aborts the page."
   },
   {
     "name": "SSJS Function Reference",
@@ -1054,35 +1054,35 @@
     "url": "/engagement/ampscript/functions/stringtodate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a date string to a date value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that it produced character-for-character identical output to DateParse for every input tried, while accepting no second argument at all."
+    "description": "Converts a date string to a date value. It produces character-for-character identical output to DateParse for every input, while accepting no second argument at all."
   },
   {
     "name": "StringToHex",
     "url": "/engagement/ampscript/functions/stringtohex/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a string to its hexadecimal representation. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that it renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
+    "description": "Converts a string to its hexadecimal representation. It renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
   },
   {
     "name": "Substring",
     "url": "/engagement/ampscript/functions/substring/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Extracts a portion of a string starting at the given index for the specified length. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including a start position below 1 that clamps silently while a negative length aborts the page."
+    "description": "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 that clamps silently while a negative length aborts the page."
   },
   {
     "name": "Subtract",
     "url": "/engagement/ampscript/functions/subtract/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Computes the difference between two numeric values. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including which argument types are accepted and which abort the page."
+    "description": "Computes the difference between two numeric values. Covers which argument types are accepted and which abort the page."
   },
   {
     "name": "SystemDateToLocalDate",
     "url": "/engagement/ampscript/functions/systemdatetolocaldate/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a Marketing Cloud system date to the time zone configured on the account. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the shift is seasonal rather than a fixed offset."
+    "description": "Converts a Marketing Cloud system date to the time zone configured on the account. The shift is seasonal rather than a fixed offset."
   },
   {
     "name": "Tools",
@@ -1096,28 +1096,28 @@
     "url": "/engagement/ampscript/functions/transformxml/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Transforms an XML document using an XSLT stylesheet. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the argument order and the way any bad input takes the whole page down."
+    "description": "Transforms an XML document using an XSLT stylesheet. Covers the argument order and the way any bad input takes the whole page down."
   },
   {
     "name": "TreatAsContent",
     "url": "/engagement/ampscript/functions/treatascontent/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that embedded AMPscript is executed rather than escaped."
+    "description": "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Covers that embedded AMPscript is executed rather than escaped."
   },
   {
     "name": "TreatAsContentArea",
     "url": "/engagement/ampscript/functions/treatascontentarea/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that it renders the inline second argument rather than looking the key up."
+    "description": "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Covers that it renders the inline second argument rather than looking the key up."
   },
   {
     "name": "Trim",
     "url": "/engagement/ampscript/functions/trim/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Removes leading and trailing whitespace from a value. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that tabs, line breaks and the non-breaking space all count as whitespace."
+    "description": "Removes leading and trailing whitespace from a value. Covers that tabs, line breaks and the non-breaking space all count as whitespace."
   },
   {
     "name": "Update Catalog",
@@ -1131,63 +1131,63 @@
     "url": "/engagement/ampscript/functions/updatedata/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count."
   },
   {
     "name": "UpdateDE",
     "url": "/engagement/ampscript/functions/updatede/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count."
   },
   {
     "name": "UpdateSingleSalesforceObject",
     "url": "/engagement/ampscript/functions/updatesinglesalesforceobject/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
+    "description": "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Covers that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
   },
   {
     "name": "Uppercase",
     "url": "/engagement/ampscript/functions/uppercase/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Converts a value to upper case. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the German sharp s, which is returned untouched instead of expanding to a double S."
+    "description": "Converts a value to upper case. Covers the German sharp s, which is returned untouched instead of expanding to a double S."
   },
   {
     "name": "UpsertContact",
     "url": "/engagement/ampscript/functions/upsertcontact/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that both a create and an update return 0 and that an unknown attribute returns 1 without writing."
+    "description": "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Create and update return 0 and an unknown attribute returns 1 without writing."
   },
   {
     "name": "UpsertData",
     "url": "/engagement/ampscript/functions/upsertdata/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count."
   },
   {
     "name": "UpsertDE",
     "url": "/engagement/ampscript/functions/upsertde/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns an empty string. The email-context twin of UpsertData — the second argument is the search-pair count. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+    "description": "Inserts a row if no match exists, otherwise updates the matching rows, and returns an empty string. The email-context twin of UpsertData — the second argument is the search-pair count."
   },
   {
     "name": "URLEncode",
     "url": "/engagement/ampscript/functions/urlencode/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "URL-encodes a string for safe inclusion in a URL. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the default that leaves a value which is not a URL completely unchanged."
+    "description": "URL-encodes a string for safe inclusion in a URL. Leaves a value which is not a URL completely unchanged."
   },
   {
     "name": "v",
     "url": "/engagement/ampscript/functions/v/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Outputs a value inline, normally a variable reference. Runtime-proven on a live Marketing Cloud Engagement CloudPage — a string literal, a number and a nested function call are accepted too, which makes one particular typo render silently instead of failing."
+    "description": "Outputs a value inline, normally a variable reference. Covers that a string literal, a number and a nested function call are accepted too, which makes one particular typo render silently instead of failing."
   },
   {
     "name": "Why the SFMC Language Service Is Great on Its Own, and Even Better With ESLint and Prettier",
@@ -1201,6 +1201,6 @@
     "url": "/engagement/ampscript/functions/wraplongurl/",
     "section": "AMPscript Function Reference",
     "type": "page",
-    "description": "Shortens a long URL for email clients that truncate long hyperlinks. Runtime-proven on a live Marketing Cloud Engagement CloudPage — outside a send the argument comes back byte for byte unchanged, whatever its length."
+    "description": "Shortens a long URL for email clients that truncate long hyperlinks. Outside a send the argument comes back byte for byte unchanged, whatever its length."
   }
 ]

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "CloudPagesURL"
-description: "Builds the published URL of a CloudPages landing page. Runtime-proven on a live Marketing Cloud Engagement CloudPage — extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
+description: "Builds the published URL of a CloudPages landing page. Extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/cloudpagesurl/
@@ -78,9 +78,9 @@ The value domain is open, so there is no set of sentinel values to test for. Wha
 
 {% include test-script.html bundle="ampscript-functions--cloudpagesurl" chapter="behaviour" %}
 
-{% include callout.html type="warning" title="OutputLine needs Concat" text="Re-running the script above: a bare string literal passed to `OutputLine` renders an empty line instead of the marker. Every marker, banner and label has to go through `Concat(...)`, even with a single argument." %}
+{% include callout.html type="warning" title="OutputLine needs Concat" text="Re-running the script above: a bare string literal passed to `OutputLine` renders an empty line instead of the marker. Every marker and label has to go through `Concat(...)`, even with a single argument." %}
 
-Two things this harness cannot reach. What the token resolves to on the target page needs a real send with a real subscriber, so the personalisation the official reference describes is untested here — only the token's existence, its per-call variation and its absorption of the extra pairs were proven. And the reserved parameter names the official reference lists were not exercised at all, so that list stands unchallenged and unconfirmed.
+Two things need a real send with a real subscriber and cannot be reached from a published page. What the token resolves to on the target page — the personalisation the official reference describes — is one of them; what is shown above is only the token's existence, its per-call variation and its absorption of the extra pairs. The reserved parameter names the official reference lists are the other, so that list stands unconfirmed.
 
 ## Availability
 
@@ -94,4 +94,5 @@ Two things this harness cannot reach. What the token resolves to on the target p
 - [MicrositeURL](/engagement/ampscript/functions/micrositeurl/) — the Classic Content microsite counterpart, which accepts an ID that matches nothing instead of aborting
 - [RedirectTo](/engagement/ampscript/functions/redirectto/) — wrap the result when link tags would otherwise break the URL
 - [Unknown page IDs abort the request](/engagement/differs-from-docs/#cloudpagesurl-unknown-page-id-aborts) — the finding in full
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-cloud-pages-url.html) · [ampscript.guide](https://ampscript.guide/cloudpagesurl/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-cloud-pages-url.html)
+- [ampscript.guide](https://ampscript.guide/cloudpagesurl/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "BuildOptionList"
-description: "Builds an HTML <option> list from literal value/text pairs. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including exactly which pair is marked selected and what a non-matching default does."
+description: "Builds an HTML <option> list from literal value/text pairs. Covers exactly which pair is marked selected and what a non-matching default does."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/buildoptionlist/
@@ -85,5 +85,7 @@ Pass the default from a data value to reflect a stored preference back to the su
 
 ## See also
 
-- [`ContentArea`](/engagement/ampscript/functions/contentarea/) · [`ContentBlockByName`](/engagement/ampscript/functions/contentblockbyname/) — other Content functions
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-option-list.html) · [ampscript.guide](https://ampscript.guide/buildoptionlist/)
+- [`ContentArea`](/engagement/ampscript/functions/contentarea/)
+- [`ContentBlockByName`](/engagement/ampscript/functions/contentblockbyname/) — other Content functions
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-option-list.html)
+- [ampscript.guide](https://ampscript.guide/buildoptionlist/)

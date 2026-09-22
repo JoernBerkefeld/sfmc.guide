@@ -2091,7 +2091,7 @@
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: "In MCN, returns a locale-formatted string (G standard format, e.g. \"5/15/2026 1:23:45 PM\") instead of a dateTime object. Cannot be reliably passed to FormatDate() or other date functions in MCN - use FormatDate() directly instead."
-  description: "Converts a date string to a date value. Behaves identically to DateParse for every input format tested, but takes no second argument, so DateParse is the only one of the two that can return the instant in UTC. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected."
+  description: "Converts a date string to a date value. Behaves identically to DateParse for every input format, but takes no second argument, so DateParse is the only one of the two that can return the instant in UTC. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected."
   guideUrl: "https://ampscript.guide/stringtodate/"
 - name: "StringToHex"
   slug: "stringtohex"

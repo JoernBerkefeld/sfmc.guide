@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "InvokeRetrieve"
-description: "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/invokeretrieve/
@@ -74,6 +74,9 @@ Renders `st=[OK] rc=[1]` when a data extension with that key exists.
 ## See also
 
 - SSJS Platform function [`InvokeRetrieve`](https://ssjs.guide/platform-functions/invokeretrieve/) — the same-named 1:1 SSJS counterpart of this AMPscript function
-- [`CreateObject`](/engagement/ampscript/functions/createobject/) · [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/) · [`AddObjectArrayItem`](/engagement/ampscript/functions/addobjectarrayitem/) — build the request
+- [`CreateObject`](/engagement/ampscript/functions/createobject/)
+- [`SetObjectProperty`](/engagement/ampscript/functions/setobjectproperty/)
+- [`AddObjectArrayItem`](/engagement/ampscript/functions/addobjectarrayitem/) — build the request
 - [`InvokeExecute`](/engagement/ampscript/functions/invokeexecute/) — the other rowset-returning executor
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-retrieve.html) · [ampscript.guide](https://ampscript.guide/invokeretrieve/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-api/mc-ampscript-reference-api-invoke-retrieve.html)
+- [ampscript.guide](https://ampscript.guide/invokeretrieve/)

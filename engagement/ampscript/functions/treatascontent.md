@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "TreatAsContent"
-description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including that embedded AMPscript is executed rather than escaped."
+description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Covers that embedded AMPscript is executed rather than escaped."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/treatascontent/
@@ -80,4 +80,5 @@ Because the embedded content is executed, never pass unreviewed input straight i
 ## See also
 
 - [`TreatAsContentArea`](/engagement/ampscript/functions/treatascontentarea/) — stores a content string under a key and renders it
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-treat-as-content.html) · [ampscript.guide](https://ampscript.guide/treatascontent/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-treat-as-content.html)
+- [ampscript.guide](https://ampscript.guide/treatascontent/)

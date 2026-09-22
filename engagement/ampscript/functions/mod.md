@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Mod"
-description: "Returns the remainder after dividing the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the sign rule and the NaN result for a zero divisor."
+description: "Returns the remainder after dividing the first number by the second. Covers the sign rule and the NaN result for a zero divisor."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/mod/
@@ -101,4 +101,5 @@ This is where `Mod` and its sibling [`Divide`](/engagement/ampscript/functions/d
 
 - [`Divide`](/engagement/ampscript/functions/divide/) — the sibling function, with a different zero-divisor result
 - [Differs from official docs](/engagement/differs-from-docs/#mod-zero-divisor-nan) — the zero-divisor and sign findings
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html) · [ampscript.guide](https://ampscript.guide/mod/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html)
+- [ampscript.guide](https://ampscript.guide/mod/)

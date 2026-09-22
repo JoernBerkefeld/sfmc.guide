@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "InsertDE"
-description: "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData — runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/insertde/
@@ -74,5 +74,7 @@ A realistic use inserts a row inside a send:
 
 - [`InsertData`](/engagement/ampscript/functions/insertdata/) — the CloudPage twin; same arguments, returns the inserted-row count
 - [`UpsertDE`](/engagement/ampscript/functions/upsertde/) — insert or update in one call
-- [`UpdateDE`](/engagement/ampscript/functions/updatede/) · [`DeleteDE`](/engagement/ampscript/functions/deletede/)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-insert-de.html) · [ampscript.guide](https://ampscript.guide/insertde/)
+- [`UpdateDE`](/engagement/ampscript/functions/updatede/)
+- [`DeleteDE`](/engagement/ampscript/functions/deletede/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-insert-de.html)
+- [ampscript.guide](https://ampscript.guide/insertde/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Divide"
-description: "Divides the first number by the second. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
+description: "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/divide/
@@ -83,11 +83,11 @@ A zero divisor does **not** raise an error and does **not** abort the page. Inst
 | `Divide(0, 0)` | `NaN` |
 | `Divide(100, "0")` | `∞` |
 
-The glyph is genuinely U+221E, confirmed by dumping the codepoints of the rendered line. A zero divisor passed as a numeric string behaves identically to the numeric zero.
+The glyph is U+221E. A zero divisor passed as a numeric string behaves identically to the numeric zero.
 
 The practical consequence is that an unguarded division by zero does not fail loudly — the `∞` flows straight into the rendered message and ships to the recipient. Check the divisor yourself before dividing.
 
-{% include callout.html type="warning" title="Verify the codepoint, not the glyph" content="A console that is not reading the response as UTF-8 displays `∞` as the digit `8`. During verification that misread the result entirely until the response was re-fetched as UTF-8 and the codepoints dumped. Always codepoint-check a suspicious literal before drawing a conclusion." %}
+{% include callout.html type="warning" title="Verify the codepoint, not the glyph" content="A console that is not reading the response as UTF-8 displays `∞` as the digit `8`. Always codepoint-check a suspicious literal before drawing a conclusion." %}
 
 Both zero-divisor behaviours are catalogued as findings on [Differs from official docs](/engagement/differs-from-docs/#divide-zero-divisor-infinity), alongside the contrasting behaviour of [`Mod`](/engagement/ampscript/functions/mod/), which renders `NaN` in every zero-divisor case.
 
@@ -107,4 +107,5 @@ Both zero-divisor behaviours are catalogued as findings on [Differs from officia
 - [`Mod`](/engagement/ampscript/functions/mod/) — the sibling remainder function, which handles a zero divisor differently
 - [`Multiply`](/engagement/ampscript/functions/multiply/) — the inverse operation
 - [Differs from official docs](/engagement/differs-from-docs/#divide-zero-divisor-infinity) — the zero-divisor finding
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html) · [ampscript.guide](https://ampscript.guide/divide/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html)
+- [ampscript.guide](https://ampscript.guide/divide/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "EncryptSymmetric"
-description: "Encrypts a value with symmetric key encryption and returns Base64. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the ciphertext is deterministic, so equal plaintexts are linkable."
+description: "Encrypts a value with symmetric key encryption and returns Base64. Notes that the ciphertext is deterministic, so equal plaintexts are linkable."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/encryptsymmetric/
@@ -87,7 +87,7 @@ There is no sentinel value to test for. A rejected argument aborts the page rath
 
 **All eight arguments are required, and a wrong count is a compile-time error.** Seven and nine arguments each abort the page — and unlike a bad argument *value*, a wrong argument *count* kills every branch of the page, including ones that never run. You cannot hide an arity mistake behind a condition.
 
-**The named-key form is not covered here.** Supplying a Key Management customer key in the external-key positions requires a key configured in Setup, which was not available on the business unit used for these checks. Everything above was proven with inline values only.
+**The named-key form requires a Key Management customer key configured in Setup.** Everything above uses inline values only.
 
 {% include test-script.html bundle="ampscript-functions--encryptsymmetric" chapter="behaviour" %}
 
@@ -104,4 +104,5 @@ There is no sentinel value to test for. A rejected argument aborts the page rath
 
 - [DecryptSymmetric](/engagement/ampscript/functions/decryptsymmetric/) — the inverse; the pair round-trips exactly when all four settings match
 - [Base64Encode](/engagement/ampscript/functions/base64encode/) — encoding, not encryption; anyone can reverse it
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-encrypt-symmetric.html) · [ampscript.guide](https://ampscript.guide/encryptsymmetric/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-encrypt-symmetric.html)
+- [ampscript.guide](https://ampscript.guide/encryptsymmetric/)

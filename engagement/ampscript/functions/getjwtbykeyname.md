@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "GetJWTByKeyName"
-description: "Generates a JSON Web Token signed with a named Key Management key. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
+description: "Generates a JSON Web Token signed with a named Key Management key. Notes that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/getjwtbykeyname/
@@ -78,7 +78,7 @@ There is no closed set of sentinel values to test for. Every accepted call retur
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so the marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- safe start ---\"))` — even for a single argument." %}
 
-{% include callout.html type="note" title="Provisioning: the key type must match the algorithm" content="The first argument is the key's **External Key**, not its display name, and the key must live in the **same Business Unit (MID)** the AMPscript runs in. The algorithm has to match the provisioned key type — `HS256`/`HS384`/`HS512` need a **Symmetric** key (a stored passphrase or Base64 string), while `RS256`/`RS384`/`RS512` need an **Asymmetric** key; mixing them throws a `FunctionExecutionException`. Both the HMAC and RSA paths were proven with the key living in the same child BU the CloudPage ran in — no parent-BU escalation was needed." %}
+{% include callout.html type="note" title="Provisioning: the key type must match the algorithm" content="The first argument is the key's **External Key**, not its display name, and the key must live in the **same Business Unit (MID)** the AMPscript runs in. The algorithm has to match the provisioned key type — `HS256`/`HS384`/`HS512` need a **Symmetric** key (a stored passphrase or Base64 string), while `RS256`/`RS384`/`RS512` need an **Asymmetric** key; mixing them throws a `FunctionExecutionException`. The key must live in the same business unit the AMPscript runs in: both the HMAC and RSA paths work with the key in the same child BU as the page, and no parent-BU escalation is needed." %}
 
 {% include callout.html type="note" title="Reproducing a stored-key token off-platform" content="For the HMAC algorithms, `GetJWTByKeyName` UTF-8-encodes the *stored key string* before signing, so to match its output with `GetJWT` you pass the **exact same string value** — don't Base64-decode the stored secret first, or the signatures won't line up. The RSA algorithms have no `GetJWT` equivalent (`GetJWT` is HMAC-only), so an `RS*` token can only be checked off-platform: export the RSA public key from the uploaded keypair to SPKI PEM and verify `RSA-SHA256`/`384`/`512` over the `header.payload` bytes — see [Provisioning the RSA key](#provisioning-the-rsa-key)." %}
 
@@ -118,4 +118,5 @@ To verify an `RS*` token, use the matching **public** `.asc`: convert it to SPKI
 
 - [GetJWT](/engagement/ampscript/functions/getjwt/) — the inline-secret variant; HMAC only, and the secret is visible in the page source
 - [Base64Encode](/engagement/ampscript/functions/base64encode/) — the padded, non-URL-safe encoding the token segments deliberately avoid
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt-by-key-name.html) · [ampscript.guide](https://ampscript.guide/getjwtbykeyname/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-get-jwt-by-key-name.html)
+- [ampscript.guide](https://ampscript.guide/getjwtbykeyname/)

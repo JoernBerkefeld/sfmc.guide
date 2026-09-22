@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Base64Encode"
-description: "Encodes a value as a Base64 string. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including the fact that the bytes encoded are the UTF-8 form of the input, and that the encoding argument accepts far more names than any source lists."
+description: "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 form of the input. The encoding argument accepts far more names than any source lists."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/base64encode/
@@ -94,4 +94,5 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — the same bytes in hexadecimal instead
 - [Encoding names are wider than documented](/engagement/differs-from-docs/#base64encode-wider-encoding-domain)
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-encode.html) · [ampscript.guide](https://ampscript.guide/base64encode/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-encode.html)
+- [ampscript.guide](https://ampscript.guide/base64encode/)

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "DataExtensionRowCount"
-description: "Returns the total number of rows in a data extension. Runtime-proven on a live Marketing Cloud Engagement CloudPage."
+description: "Returns the total number of rows in a data extension."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/dataextensionrowcount/
@@ -69,4 +69,5 @@ There is no sentinel: the result is a bare non-negative integer.
 
 - [`RowCount`](/engagement/ampscript/functions/rowcount/) — counts the rows in a rowset rather than a whole data extension
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — read a filtered subset of the same data extension
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-row-count.html) · [ampscript.guide](https://ampscript.guide/dataextensionrowcount/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-row-count.html)
+- [ampscript.guide](https://ampscript.guide/dataextensionrowcount/)

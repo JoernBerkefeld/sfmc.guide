@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "IsPhoneNumber"
-description: "Checks a value against the North American Numbering Plan. Runtime-proven on a live Marketing Cloud Engagement CloudPage — including Canadian and Caribbean numbers, which pass despite the function's reputation for being US-only."
+description: "Checks a value against the North American Numbering Plan. Covers Canadian and Caribbean numbers, which pass despite the function's reputation for being US-only."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/isphonenumber/
@@ -95,4 +95,5 @@ Both literals were produced in the same render, as the capitalised words `True` 
 ## See also
 
 - [IsEmailAddress](/engagement/ampscript/functions/isemailaddress/) — the sibling format check for email addresses
-- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-phone-number.html) · [ampscript.guide](https://ampscript.guide/isphonenumber/)
+- [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-phone-number.html)
+- [ampscript.guide](https://ampscript.guide/isphonenumber/)
