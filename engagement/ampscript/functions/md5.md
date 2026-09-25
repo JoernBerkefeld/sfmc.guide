@@ -85,7 +85,7 @@ An unrecognised name is not tolerated at all. `banana`, the dashless spelling `U
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

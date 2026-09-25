@@ -100,9 +100,8 @@ The last three rows are the ones that surprise: midnight is `12` rather than `0`
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
-Unlike [Now](/engagement/ampscript/functions/now/), [DateAdd](/engagement/ampscript/functions/dateadd/), [DateDiff](/engagement/ampscript/functions/datediff/) and [FormatDate](/engagement/ampscript/functions/formatdate/), this function did not gain Marketing Cloud Next support in the Summer '26 release.
 
 ## See also
 

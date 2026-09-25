@@ -64,7 +64,7 @@ Impression regions are an **email-send** feature: they name a region of a messag
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

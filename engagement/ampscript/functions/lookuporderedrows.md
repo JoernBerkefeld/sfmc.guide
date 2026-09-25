@@ -80,7 +80,7 @@ A no-match returns an empty rowset; guard with `RowCount`.
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Check the official reference |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

@@ -73,7 +73,7 @@ The value is an open domain, so there is no set of tokens to test against. What 
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

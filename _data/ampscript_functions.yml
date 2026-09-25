@@ -212,7 +212,7 @@
   url: "/engagement/ampscript/functions/base64decode/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.Base64Decode"
@@ -229,7 +229,7 @@
   url: "/engagement/ampscript/functions/base64encode/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.Base64Encode"
@@ -246,7 +246,7 @@
   url: "/engagement/ampscript/functions/beginimpressionregion/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.BeginImpressionRegion"
@@ -294,7 +294,7 @@
   url: "/engagement/ampscript/functions/buildrowsetfromstring/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -309,7 +309,7 @@
   url: "/engagement/ampscript/functions/buildrowsetfromxml/"
   differsFromDocs: true
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -324,7 +324,7 @@
   url: "/engagement/ampscript/functions/char/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: "char"
   handlebarsExact: true
   ssjsEquivalents: []
@@ -340,7 +340,7 @@
   url: "/engagement/ampscript/functions/claimrow/"
   differsFromDocs: true
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -355,7 +355,7 @@
   url: "/engagement/ampscript/functions/claimrowvalue/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -643,7 +643,7 @@
   url: "/engagement/ampscript/functions/datepart/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -751,7 +751,7 @@
   url: "/engagement/ampscript/functions/domain/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -797,7 +797,7 @@
   url: "/engagement/ampscript/functions/endimpressionregion/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.EndImpressionRegion"
@@ -1040,7 +1040,7 @@
   url: "/engagement/ampscript/functions/guid/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.GUID"
@@ -1335,7 +1335,7 @@
   url: "/engagement/ampscript/functions/isemailaddress/"
   differsFromDocs: true
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.IsEmailAddress"
@@ -1368,7 +1368,7 @@
   url: "/engagement/ampscript/functions/isnulldefault/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: "fallback"
   handlebarsExact: false
   ssjsEquivalents: []
@@ -1482,7 +1482,7 @@
   url: "/engagement/ampscript/functions/lookuporderedrows/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: "query"
   handlebarsExact: false
   ssjsEquivalents:
@@ -1516,7 +1516,7 @@
   url: "/engagement/ampscript/functions/lookuprows/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: "query"
   handlebarsExact: false
   ssjsEquivalents:
@@ -1566,7 +1566,7 @@
   url: "/engagement/ampscript/functions/md5/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.MD5"
@@ -1845,10 +1845,10 @@
   url: "/engagement/ampscript/functions/regexmatch/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "MC Next uses a different regex engine that excludes .NET-only constructs. Options must be literal comma-separated text and can only be IgnoreCase, Multiline, Singleline, IgnorePatternWhitespace, or ExplicitCapture."
   description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Matching is case-sensitive unless the IgnoreCase option is passed."
   guideUrl: "https://ampscript.guide/regexmatch/"
 - name: "Replace"
@@ -2042,7 +2042,7 @@
   url: "/engagement/ampscript/functions/sha1/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -2057,7 +2057,7 @@
   url: "/engagement/ampscript/functions/sha256/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -2072,7 +2072,7 @@
   url: "/engagement/ampscript/functions/sha512/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -2102,7 +2102,7 @@
   url: "/engagement/ampscript/functions/stringtohex/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
   mcnNotes: ""
@@ -2372,7 +2372,7 @@
   url: "/engagement/ampscript/functions/urlencode/"
   differsFromDocs: false
   deprecated: false
-  mcn: ""
+  mcn: "68"
   handlebarsEquivalent: ""
   ssjsEquivalents:
     - name: "Platform.Function.UrlEncode"

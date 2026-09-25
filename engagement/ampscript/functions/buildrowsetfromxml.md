@@ -98,7 +98,7 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

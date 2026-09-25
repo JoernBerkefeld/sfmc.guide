@@ -94,7 +94,7 @@ The official reference lists an address whose domain is a single label — no `.
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

@@ -65,7 +65,7 @@ Each **distinct** `claimantValue` claims the next unclaimed row: the first calle
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

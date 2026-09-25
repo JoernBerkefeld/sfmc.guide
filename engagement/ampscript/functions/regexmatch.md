@@ -108,7 +108,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#regexm
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
+
+### Marketing Cloud Next caveat
+
+Marketing Cloud Next uses a different regex engine: .NET-only constructs are unsupported. Options must be literal, comma-separated names; only `IgnoreCase`, `Multiline`, `Singleline`, `IgnorePatternWhitespace`, and `ExplicitCapture` are supported.
 
 ## See also
 

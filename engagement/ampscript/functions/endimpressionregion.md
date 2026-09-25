@@ -65,7 +65,7 @@ Impression regions are an **email-send** feature. The distinction between ending
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

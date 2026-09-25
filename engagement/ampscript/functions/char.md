@@ -95,7 +95,7 @@ The capability is catalogued on [Differs from official docs](/engagement/differs
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

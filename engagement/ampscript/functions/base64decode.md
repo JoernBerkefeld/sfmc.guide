@@ -94,7 +94,7 @@ The middle case is the one that bites: that is the correct payload for `Hello` w
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 

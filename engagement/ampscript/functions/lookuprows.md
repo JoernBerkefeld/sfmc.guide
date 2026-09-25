@@ -77,7 +77,7 @@ A no-match returns an empty rowset, not a null or an error: `RowCount(LookupRows
 | Platform | Available |
 |---|---|
 | Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Check the official reference |
+| Marketing Cloud Next | Yes, from API 68.0 |
 
 ## See also
 
