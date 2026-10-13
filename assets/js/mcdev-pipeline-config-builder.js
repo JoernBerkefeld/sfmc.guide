@@ -18,7 +18,7 @@
  * @property {{[childRef: string]: string}} lineage child-BU ref -> upstream-BU ref (one hop up the chain)
  * @property {string} separator suffix separator (default `_`)
  * @property {{[buRef: string]: string}} suffixes BU ref -> suffix (includes the separator, e.g. `_UAT`)
- * @property {{[buRef: string]: {[varName: string]: string}}} [marketVariables] BU ref -> extra market variables (merged into config.markets[name]; `suffix` is never stored here)
+ * @property {{[buRef: string]: {[varName: string]: string|number|boolean|{search: string, replace: string|number|boolean, template?: string}}}} [marketVariables] BU ref -> native market variables (merged into config.markets[name]; `suffix` is never stored here)
  * @property {string[]} prodBUs BU refs confirmed as production
  * @property {boolean} sharedDEs whether a shared-DE parent pipeline is used
  * @property {string[]} [selectedRules] validation rule ids the user picked (round-tripped)
@@ -161,7 +161,9 @@
      */
     function resolveBranch(environment, environmentBranches) {
         const mapped =
-            environmentBranches && typeof environmentBranches === 'object' ? environmentBranches[environment] : '';
+            environmentBranches && typeof environmentBranches === 'object'
+                ? environmentBranches[environment]
+                : '';
         const trimmed = typeof mapped === 'string' ? mapped.trim() : '';
         return trimmed || branchKey(environment);
     }
@@ -217,6 +219,102 @@
         return structuredClone(value);
     }
 
+    /**
+     * Classify a native market value by shape (pattern syntax is checked separately).
+     *
+     * @param {unknown} value imported or saved value
+     * @returns {'scalar'|'regex'|'invalid'} supported value kind
+     */
+    function classifyMarketVariable(value) {
+        if (
+            typeof value === 'string' ||
+            typeof value === 'boolean' ||
+            (typeof value === 'number' && Number.isFinite(value))
+        ) {
+            return 'scalar';
+        }
+        if (
+            value &&
+            typeof value === 'object' &&
+            !Array.isArray(value) &&
+            Object.hasOwn(value, 'search') &&
+            Object.hasOwn(value, 'replace') &&
+            typeof value.search === 'string' &&
+            (typeof value.replace === 'string' ||
+                typeof value.replace === 'boolean' ||
+                (typeof value.replace === 'number' && Number.isFinite(value.replace))) &&
+            (!Object.hasOwn(value, 'template') || typeof value.template === 'string') &&
+            Object.keys(value).every(
+                (key) => key === 'search' || key === 'replace' || key === 'template',
+            )
+        ) {
+            return 'regex';
+        }
+        return 'invalid';
+    }
+
+    /**
+     * Read the displayed replacement without coercing numeric/boolean originals.
+     * Invalid imported shapes return an empty display value; validation reports the error.
+     *
+     * @param {unknown} value imported or saved value
+     * @returns {string|number|boolean} scalar or regex replacement, retaining its type
+     */
+    function displayedMarketVariableValue(value) {
+        const kind = classifyMarketVariable(value);
+        return kind === 'regex' ? value.replace : kind === 'scalar' ? value : '';
+    }
+
+    /**
+     * Validate shape and compile a global, case-sensitive pattern without executing it.
+     * Empty scalar cells remain valid; the caller decides whether a literal is required.
+     *
+     * @param {unknown} value imported or draft value
+     * @returns {string|null} actionable error, or null when valid
+     */
+    function validateMarketVariable(value) {
+        const kind = classifyMarketVariable(value);
+        if (kind === 'invalid') {
+            return 'Use text, a finite number, a boolean, or a regex object with search (string), replace (text/number/boolean), and optional template (string); remove unsupported fields.';
+        }
+        if (kind === 'regex') {
+            if (value.search === '') {
+                return 'Enter a non-empty regex search pattern.';
+            }
+            try {
+                // Compile only: never test or replace imported patterns during validation.
+                new RegExp(value.search, 'g');
+            } catch (ex) {
+                return 'Fix the regex search pattern: ' + ex.message;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Copy a valid native value for emission, omitting only the generated default template.
+     * The original saved object is never changed; empty replacements are retained.
+     *
+     * @param {unknown} value imported or saved value
+     * @param {string} variableName variable key used to derive its default template
+     * @returns {string|number|boolean|object} normalized scalar or fresh regex object
+     * @throws {TypeError} when the value shape or search pattern is invalid
+     */
+    function normalizeMarketVariable(value, variableName) {
+        const error = validateMarketVariable(value);
+        if (error) {
+            throw new TypeError(error);
+        }
+        if (classifyMarketVariable(value) === 'scalar') {
+            return value;
+        }
+        const normalized = { search: value.search, replace: value.replace };
+        if (Object.hasOwn(value, 'template') && value.template !== '{{{' + variableName + '}}}') {
+            normalized.template = value.template;
+        }
+        return normalized;
+    }
+
     // Keys that are never treated as pipeline "market variables" for coverage/key-set purposes.
     const RESERVED_MARKET_KEYS = new Set(['suffix', 'description']);
 
@@ -233,7 +331,11 @@
      * @returns {string} the effective suffix, or `''` when none is available
      */
     function effectiveSuffix(marketVariables, suffixKey) {
-        if (marketVariables && typeof marketVariables.suffix === 'string' && marketVariables.suffix !== '') {
+        if (
+            marketVariables &&
+            typeof marketVariables.suffix === 'string' &&
+            marketVariables.suffix !== ''
+        ) {
             return marketVariables.suffix;
         }
         if (
@@ -378,7 +480,10 @@
                 continue;
             }
             const value = list[qualified];
-            if (typeof value === 'string' && Object.prototype.hasOwnProperty.call(markets || {}, value)) {
+            if (
+                typeof value === 'string' &&
+                Object.prototype.hasOwnProperty.call(markets || {}, value)
+            ) {
                 return value;
             }
         }
@@ -400,7 +505,7 @@
         const candidateNames = Object.keys(markets).filter((name) => name.indexOf(MPB) !== 0);
         // Prefer a market named after the BU, then a stable alphabetical order.
         const ordered = candidateNames.toSorted((a, b) =>
-            a === bu ? -1 : b === bu ? 1 : a < b ? -1 : a > b ? 1 : 0
+            a === bu ? -1 : b === bu ? 1 : a < b ? -1 : a > b ? 1 : 0,
         );
         const matches = ordered.filter((name) => {
             if (effectiveSuffix(markets[name], suffixKey) !== want) {
@@ -496,7 +601,7 @@
                             hop.sourceEnv +
                             ' → ' +
                             hop.targetEnv +
-                            ')'
+                            ')',
                     );
                 }
             }
@@ -510,7 +615,7 @@
                             hop.sourceEnv +
                             ' → ' +
                             hop.targetEnv +
-                            ')'
+                            ')',
                     );
                 }
             }
@@ -520,13 +625,21 @@
                 const parentQualified = cred + '/_ParentBU_';
                 if (!someMarketListHasReference(marketLists, parentQualified)) {
                     missing.push(
-                        'Missing parent market list for ' + hop.sourceEnv + ' → ' + hop.targetEnv + ' (shared DEs)'
+                        'Missing parent market list for ' +
+                            hop.sourceEnv +
+                            ' → ' +
+                            hop.targetEnv +
+                            ' (shared DEs)',
                     );
                 }
             }
         }
 
-        return { covered: missing.length === 0, missing: missing, marketNameByRef: marketNameByReference };
+        return {
+            covered: missing.length === 0,
+            missing: missing,
+            marketNameByRef: marketNameByReference,
+        };
     }
 
     /**
@@ -646,7 +759,15 @@
         // generating any mpb_ markets/marketLists/mappings. Still write the mpb_pipeline round-trip
         // block so the wizard state survives reopen. Return before the generation loops. ──
         if (options_.adoptExisting) {
-            writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes);
+            writePipelineBlock(
+                deployment,
+                state,
+                environmentOrder,
+                environmentBUs,
+                environmentBranches,
+                separator,
+                suffixes,
+            );
             return config;
         }
 
@@ -655,7 +776,10 @@
         // between a market's key and every marketList value that references it.
         const environmentMarketNames = {};
         for (const environment of environmentOrder) {
-            environmentMarketNames[environment] = marketNameMap(environment, environmentBUs[environment] || []);
+            environmentMarketNames[environment] = marketNameMap(
+                environment,
+                environmentBUs[environment] || [],
+            );
         }
 
         // ── markets: one per env-BU. Generated markets carry only { suffix };
@@ -673,10 +797,24 @@
                 const variables = (state.marketVariables && state.marketVariables[reference]) || {};
                 const variableNames = Object.keys(variables)
                     .filter((key) => key !== 'suffix' && key !== 'description')
-                    .filter((key) => String(variables[key]).trim() !== '')
-                    .toSorted((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : a.toLowerCase() > b.toLowerCase() ? 1 : 0));
+                    .filter(
+                        (key) => typeof variables[key] !== 'string' || variables[key].trim() !== '',
+                    )
+                    .toSorted((a, b) =>
+                        a.toLowerCase() < b.toLowerCase()
+                            ? -1
+                            : a.toLowerCase() > b.toLowerCase()
+                              ? 1
+                              : 0,
+                    );
                 for (const key of variableNames) {
-                    market[key] = variables[key];
+                    const error = validateMarketVariable(variables[key]);
+                    if (error) {
+                        throw new TypeError(
+                            'Market variable ' + reference + ' / ' + key + ': ' + error,
+                        );
+                    }
+                    market[key] = normalizeMarketVariable(variables[key], key);
                 }
                 config.markets[name] = market;
             }
@@ -692,14 +830,14 @@
             firstEnvironment,
             firstEnvironmentBUs.slice(0, 1),
             baseConfig,
-            environmentMarketNames[firstEnvironment] || new Map()
+            environmentMarketNames[firstEnvironment] || new Map(),
         );
         const lastEnvironment = environmentOrder.at(-1);
         config.marketList[MPB + 'hotfix-target'] = singleEnvironmentMarketList(
             lastEnvironment,
             environmentBUs[lastEnvironment] || [],
             baseConfig,
-            environmentMarketNames[lastEnvironment] || new Map()
+            environmentMarketNames[lastEnvironment] || new Map(),
         );
 
         // ── per-hop child + optional parent pipelines. ──
@@ -719,7 +857,11 @@
 
             // Split the hop into one pipeline per distinct upstream (source) BU. mcdev requires each
             // source marketList to map exactly one BU, so a multi-source hop yields multiple pairs.
-            const groups = groupTargetsBySource(sourceReferences, tgtReferences, state.lineage || {});
+            const groups = groupTargetsBySource(
+                sourceReferences,
+                tgtReferences,
+                state.lineage || {},
+            );
             // Back-compat short names when the whole hop is a single 1:1 source in a single-BU env.
             const shouldUseShortNames = groups.length === 1 && isSourceSingle;
             // Track the generated source ML names used in THIS hop so two source BUs whose slug
@@ -729,7 +871,9 @@
 
             for (const group of groups) {
                 // Long names carry a <sourceBuSlug> infix so each per-source pipeline is unique.
-                const baseInfix = shouldUseShortNames ? '' : '-' + slug(splitReference(group.source).bu);
+                const baseInfix = shouldUseShortNames
+                    ? ''
+                    : '-' + slug(splitReference(group.source).bu);
                 let infix = baseInfix;
                 let counter = 1;
                 while (usedSourceMlNames.has(MPB + 'deployment-' + branch + infix + '-source')) {
@@ -742,12 +886,15 @@
 
                 // Exactly ONE BU in the source marketList.
                 const sourceMl = {
-                    [qualifiedReference(group.source, baseConfig)]: sourceMarketNames.get(group.source),
+                    [qualifiedReference(group.source, baseConfig)]: sourceMarketNames.get(
+                        group.source,
+                    ),
                 };
                 // One or more BUs in the target marketList.
                 const targetMl = {};
                 for (const reference of group.targets) {
-                    targetMl[qualifiedReference(reference, baseConfig)] = tgtMarketNames.get(reference);
+                    targetMl[qualifiedReference(reference, baseConfig)] =
+                        tgtMarketNames.get(reference);
                 }
                 config.marketList[sourceMlName] = sourceMl;
                 config.marketList[targetMlName] = targetMl;
@@ -757,18 +904,25 @@
                 // Filter is ends-only on the source BU's suffix so each parent pair isolates that hop's
                 // keys (e.g. `_DEV` → `%[_]DEV`) without a contained mid-key band or a lower-env exclude.
                 if (state.sharedDEs) {
-                    const parentSourceName = MPB + 'deployment-' + branch + infix + '-parent-source';
-                    const parentTargetName = MPB + 'deployment-' + branch + infix + '-parent-target';
+                    const parentSourceName =
+                        MPB + 'deployment-' + branch + infix + '-parent-source';
+                    const parentTargetName =
+                        MPB + 'deployment-' + branch + infix + '-parent-target';
                     const cred = credOf(group.source, baseConfig);
-                    const sourceSuffix = suffixes[group.source] || separator + slug(sourceEnvironment);
+                    const sourceSuffix =
+                        suffixes[group.source] || separator + slug(sourceEnvironment);
                     const parentSource = {
                         filter: { include: { key: { '*': [suffixEndPattern(sourceSuffix)] } } },
                         [cred + '/_ParentBU_']: sourceMarketNames.get(group.source),
                     };
-                    const targetParentMarkets = Array.from(group.targets, reference => tgtMarketNames.get(reference));
+                    const targetParentMarkets = Array.from(group.targets, (reference) =>
+                        tgtMarketNames.get(reference),
+                    );
                     const parentTarget = {
                         [cred + '/_ParentBU_']:
-                            targetParentMarkets.length === 1 ? targetParentMarkets[0] : targetParentMarkets,
+                            targetParentMarkets.length === 1
+                                ? targetParentMarkets[0]
+                                : targetParentMarkets,
                     };
                     config.marketList[parentSourceName] = parentSource;
                     config.marketList[parentTargetName] = parentTarget;
@@ -778,7 +932,15 @@
         }
 
         // ── persisted wizard-state block for GUI round-trip. ──
-        writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes);
+        writePipelineBlock(
+            deployment,
+            state,
+            environmentOrder,
+            environmentBUs,
+            environmentBranches,
+            separator,
+            suffixes,
+        );
 
         // ── stripForeign (ignored when adoptExisting returned early above): drop every non-mpb_
         // market, marketList, and deployment mapping so only the tool-generated pipeline remains. ──
@@ -786,7 +948,9 @@
             config.markets = keepOnlyMpb(config.markets);
             config.marketList = keepOnlyMpb(config.marketList);
             deployment.sourceTargetMapping = keepOnlyMpb(deployment.sourceTargetMapping);
-            deployment.branchSourceTargetMapping = keepOnlyMpbBranchMap(deployment.branchSourceTargetMapping);
+            deployment.branchSourceTargetMapping = keepOnlyMpbBranchMap(
+                deployment.branchSourceTargetMapping,
+            );
         }
 
         return config;
@@ -806,7 +970,15 @@
      * @param {object} suffixes BU ref -> suffix
      * @returns {void}
      */
-    function writePipelineBlock(deployment, state, environmentOrder, environmentBUs, environmentBranches, separator, suffixes) {
+    function writePipelineBlock(
+        deployment,
+        state,
+        environmentOrder,
+        environmentBUs,
+        environmentBranches,
+        separator,
+        suffixes,
+    ) {
         deployment.mpb_pipeline = {
             version: state.version || 1,
             envOrder: environmentOrder,
@@ -817,14 +989,21 @@
             suffixes: suffixes,
             // Persist the per-BU extra market variables so a reopened tool config restores them
             // (the merged values live under config.markets[...] but the wizard reads its state here).
-            marketVariables: state.marketVariables && typeof state.marketVariables === 'object' ? state.marketVariables : {},
+            marketVariables:
+                state.marketVariables && typeof state.marketVariables === 'object'
+                    ? state.marketVariables
+                    : {},
             prodBUs: state.prodBUs || [],
             sharedDEs: !!state.sharedDEs,
             // Persist the three validations-tab inputs so a re-opened tool config restores them
             // instead of losing them (they were previously derived only into generated output).
             selectedRules: Array.isArray(state.selectedRules) ? state.selectedRules : [],
-            prefixBlacklist: state.prefixBlacklist && typeof state.prefixBlacklist === 'object' ? state.prefixBlacklist : {},
-            retention: state.retention && typeof state.retention === 'object' ? state.retention : {},
+            prefixBlacklist:
+                state.prefixBlacklist && typeof state.prefixBlacklist === 'object'
+                    ? state.prefixBlacklist
+                    : {},
+            retention:
+                state.retention && typeof state.retention === 'object' ? state.retention : {},
         };
         // Conditional emit (byte-identity for fresh state): only add these keys when they carry data.
         if (state.marketAdoption && Object.keys(state.marketAdoption).length) {
@@ -895,6 +1074,10 @@
         buildConfig: buildConfig,
         analyzeExistingCoverage: analyzeExistingCoverage,
         effectiveSuffix: effectiveSuffix,
+        classifyMarketVariable: classifyMarketVariable,
+        displayedMarketVariableValue: displayedMarketVariableValue,
+        validateMarketVariable: validateMarketVariable,
+        normalizeMarketVariable: normalizeMarketVariable,
     };
 
     // Browser global.

@@ -77,6 +77,176 @@ function sampleWizardState() {
   };
 }
 
+test('native market helpers classify, display and normalize without mutating typed originals', () => {
+  const {
+    classifyMarketVariable,
+    displayedMarketVariableValue,
+    validateMarketVariable,
+    normalizeMarketVariable,
+  } = globalThis.mpbConfigBuilder;
+  for (const scalar of ['literal', '', '  ', 0, 42, false, true]) {
+    assert.equal(classifyMarketVariable(scalar), 'scalar');
+    assert.equal(displayedMarketVariableValue(scalar), scalar);
+    assert.equal(validateMarketVariable(scalar), null);
+    assert.equal(normalizeMarketVariable(scalar, 'value'), scalar);
+  }
+  for (const replace of ['', 'text', 0, 42, false, true]) {
+    for (const template of [undefined, '{{{value}}}', 'custom-{{{value}}}', '']) {
+      const value = { search: '(?=x)', replace };
+      if (template !== undefined) {
+        value.template = template;
+      }
+      Object.freeze(value);
+      assert.equal(classifyMarketVariable(value), 'regex');
+      assert.equal(displayedMarketVariableValue(value), replace);
+      assert.equal(validateMarketVariable(value), null);
+      const expected = { search: '(?=x)', replace };
+      if (template !== undefined && template !== '{{{value}}}') {
+        expected.template = template;
+      }
+      const normalized = normalizeMarketVariable(value, 'value');
+      assert.deepEqual(normalized, expected);
+      assert.notEqual(normalized, value);
+      assert.equal(value.template, template, 'normalization leaves the saved template untouched');
+    }
+  }
+  assert.equal(
+    validateMarketVariable({ search: ' ', replace: '' }),
+    null,
+    'whitespace is a non-empty pattern',
+  );
+});
+
+test('native market validation rejects unsupported imported shapes and patterns actionably', () => {
+  const {
+    classifyMarketVariable,
+    displayedMarketVariableValue,
+    validateMarketVariable,
+    normalizeMarketVariable,
+  } = globalThis.mpbConfigBuilder;
+  for (const value of [
+    null,
+    undefined,
+    [],
+    {},
+    { replace: 'x' },
+    { search: 'x' },
+    { search: 2, replace: 'x' },
+    { search: 'x', replace: {} },
+    { search: 'x', replace: [] },
+    { search: 'x', replace: null },
+    { search: 'x', replace: 'x', template: false },
+    { search: 'x', replace: 'x', flags: 'i' },
+    Infinity,
+    Number.NaN,
+  ]) {
+    assert.equal(classifyMarketVariable(value), 'invalid');
+    assert.equal(displayedMarketVariableValue(value), '');
+    assert.match(validateMarketVariable(value), /Use text.*search.*replace.*template/);
+    assert.throws(() => normalizeMarketVariable(value, 'value'), TypeError);
+  }
+  for (const search of ['', '[', '(a']) {
+    const value = { search, replace: '' };
+    assert.equal(
+      classifyMarketVariable(value),
+      'regex',
+      'classification describes shape, not syntax',
+    );
+    assert.match(
+      validateMarketVariable(value),
+      search === '' ? /non-empty/ : /Fix the regex search pattern/,
+    );
+    assert.throws(() => normalizeMarketVariable(value, 'value'), TypeError);
+  }
+});
+
+test('native regex emission retains typed values and originals through output modes and roundtrip', () => {
+  const state = sampleWizardState();
+  state.marketVariables = {
+    DEV: {
+      custom: { search: 'x+', replace: 'y', template: 'custom' },
+      default: { search: 'x', replace: '', template: '{{{default}}}' },
+      noTemplate: { search: 'x', replace: 'y' },
+      zeroRegex: { search: 'x', replace: 0 },
+      falseRegex: { search: 'x', replace: false },
+      trueRegex: { search: 'x', replace: true },
+      numberRegex: { search: 'x', replace: 12 },
+      zeroScalar: 0,
+      falseScalar: false,
+      trueScalar: true,
+      numberScalar: 12,
+      text: '  literal  ',
+      empty: '',
+      blank: '  ',
+    },
+  };
+  const originalState = structuredClone(state);
+  const originalConfig = structuredClone(sampleConfig);
+  for (const options of [{}, { stripForeign: true }]) {
+    const out = buildConfig(state, sampleConfig, options);
+    const expected = structuredClone(state.marketVariables.DEV);
+    delete expected.default.template;
+    delete expected.empty;
+    delete expected.blank;
+    assert.deepEqual(out.markets.mpb_DEV, { suffix: '_DEV', ...expected });
+    assert.deepEqual(out.options.deployment.mpb_pipeline.marketVariables, state.marketVariables);
+    // eslint-disable-next-line unicorn/prefer-structured-clone -- Exercise the saved JSON file roundtrip, not an in-memory clone.
+    const restored = JSON.parse(JSON.stringify(out.options.deployment.mpb_pipeline));
+    assert.deepEqual(restored.marketVariables, state.marketVariables);
+    assert.deepEqual(buildConfig(restored, out, options), out, 'reopened output stays idempotent');
+  }
+  const adopted = buildConfig(state, sampleConfig, { adoptExisting: true, stripForeign: true });
+  assert.deepEqual(
+    adopted.markets,
+    sampleConfig.markets,
+    'adoption leaves original markets unchanged',
+  );
+  assert.deepEqual(adopted.options.deployment.mpb_pipeline.marketVariables, state.marketVariables);
+  assert.deepEqual(state, originalState);
+  assert.deepEqual(sampleConfig, originalConfig);
+});
+
+test('native invalid emission names the cell, while adoption retains its existing early return', () => {
+  const state = sampleWizardState();
+  state.marketVariables = { DEV: { bad: { search: '[', replace: false } } };
+  assert.throws(
+    () => buildConfig(state, sampleConfig),
+    /Market variable DEV \/ bad: Fix the regex/,
+  );
+  state.marketVariables.DEV.bad = { unexpected: 'value' };
+  assert.throws(() => buildConfig(state, sampleConfig), /Market variable DEV \/ bad: Use text/);
+  const out = buildConfig(state, sampleConfig, { adoptExisting: true });
+  assert.deepEqual(out.markets, sampleConfig.markets);
+  assert.deepEqual(out.options.deployment.mpb_pipeline.marketVariables, state.marketVariables);
+});
+
+test('native validation compiles global patterns without executing a match or replacement', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '../assets/js/mcdev-pipeline-config-builder.js'),
+    'utf8',
+  );
+  const compilations = [];
+  const context = {
+    RegExp: function (search, flags) {
+      compilations.push({ search, flags });
+      return {
+        test() {
+          throw new Error('must not execute');
+        },
+        exec() {
+          throw new Error('must not execute');
+        },
+      };
+    },
+  };
+  vm.runInNewContext(source, context);
+  assert.equal(
+    context.mpbConfigBuilder.validateMarketVariable({ search: '(a+)+$', replace: '$1' }),
+    null,
+  );
+  assert.deepEqual(compilations, [{ search: '(a+)+$', flags: 'g' }]);
+});
+
 test('buildConfig preserves user-authored keys and credentials', () => {
   const out = buildConfig(sampleWizardState(), sampleConfig);
   // credentials untouched
@@ -959,6 +1129,7 @@ require('../assets/js/mcdev-pipeline-persistence.js');
 require('../assets/js/mcdev-pipeline-builder-header.js');
 require('../assets/js/mcdev-pipeline-step-environment-order.js');
 require('../assets/js/mcdev-pipeline-step-production-confirm.js');
+require('../assets/js/mcdev-pipeline-market-variable-editor.js');
 require('../assets/js/mcdev-pipeline-step-market-vars.js');
 require('../assets/js/mcdev-pipeline-step-suffixes.js');
 require('../assets/js/mcdev-pipeline-step-rules.js');
@@ -5194,6 +5365,7 @@ test('script-order lock: index.md pipeline srcs match the test require() list', 
     'mcdev-pipeline-builder-header.js',
     'mcdev-pipeline-step-environment-order.js',
     'mcdev-pipeline-step-production-confirm.js',
+    'mcdev-pipeline-market-variable-editor.js',
     'mcdev-pipeline-step-market-vars.js',
     'mcdev-pipeline-step-suffixes.js',
     'mcdev-pipeline-step-rules.js',
@@ -5681,7 +5853,443 @@ test('filledBUCountFor: counts BUs with a non-empty stored value (whitespace cou
   assert.equal(controller.filledBUCountFor(references, 'varA'), 0);
 });
 
+test('native market access, count, rename and delete retain complete regex entries', () => {
+  const defaultRegex = { search: 'dev', replace: false };
+  const customRegex = { search: 'sit', replace: 0, template: 'custom token' };
+  const references = seedMarketVariables({
+    DEV: { native: 0, flag: false, token: defaultRegex, blank: { search: 'x', replace: '' } },
+    SIT: { native: false, token: customRegex, invalid: { unsupported: true } },
+  });
+  assert.equal(controller.variableValueOf('DEV', 'native'), 0);
+  assert.equal(controller.displayedVariableValueOf('DEV', 'flag'), false);
+  assert.equal(controller.displayedVariableValueOf('SIT', 'token'), 0);
+  assert.deepEqual(controller.variableValueOf('SIT', 'invalid'), { unsupported: true });
+  assert.equal(controller.variableValueOf('SIT', 'missing'), '');
+  assert.equal(controller.filledBUCountFor(references, 'native'), 2);
+  assert.equal(controller.filledBUCountFor(references, 'blank'), 1);
+  assert.equal(controller.filledBUCountFor(references, 'invalid'), 1);
+  assert.equal(controller.renameVariable(references, 'token', 'renamed'), true);
+  assert.equal(controller.variableValueOf('DEV', 'renamed'), defaultRegex);
+  assert.equal(controller.variableValueOf('SIT', 'renamed'), customRegex);
+  assert.equal(Object.hasOwn(defaultRegex, 'template'), false);
+  controller.deleteVariable(references, 'renamed');
+  assert.equal(controller.variableValueOf('DEV', 'renamed'), '');
+  assert.equal(controller.variableValueOf('SIT', 'renamed'), '');
+  assert.equal(customRegex.template, 'custom token');
+});
+
+test('market mutation helpers guard a read-only lock transition at execution', () => {
+  const references = seedMarketVariables({ DEV: { token: 'dev' }, SIT: { token: false } });
+  const original = controller.state.wizardState.marketVariables;
+  const suffixes = controller.state.wizardState.suffixes;
+  controller.persistence.readOnly = true;
+  try {
+    assert.equal(controller.setVariableValue('DEV', 'token', { search: 'x', replace: 0 }), false);
+    assert.equal(controller.renameVariable(references, 'token', 'renamed'), false);
+    assert.equal(controller.addVariable(references, 'newToken'), false);
+    controller.deleteVariable(references, 'token');
+    assert.deepEqual(controller.matchMarketsForPipeline(references, 'unknown', {}), {
+      matched: [],
+      unmatched: references,
+    });
+    assert.equal(controller.state.wizardState.marketVariables, original);
+    assert.equal(controller.state.wizardState.suffixes, suffixes);
+  } finally {
+    controller.persistence.readOnly = false;
+  }
+  const draft = { search: 'x', replace: 0, template: '{{{token}}}' };
+  assert.equal(controller.setVariableValue('DEV', 'token', draft), true);
+  assert.deepEqual(controller.variableValueOf('DEV', 'token'), { search: 'x', replace: 0 });
+  assert.equal(draft.template, '{{{token}}}');
+  assert.equal(controller.setVariableValue('DEV', 'suffix', 'changed'), false);
+  controller.deleteVariable(references, 'suffix');
+  assert.equal(controller.renameVariable(references, 'suffix', 'renamed'), false);
+  assert.equal(controller.state.wizardState.suffixes, suffixes);
+});
+
+test('native market values survive vanilla inference, adoption and saved-session reopen', () => {
+  const config = {
+    credentials: { account: { businessUnits: { DEV: '1', SIT: '2' } } },
+    markets: {
+      dev: { suffix: '_DEV', token: { search: 'dev', replace: false }, zero: 0, legacy: 'text' },
+      sit: {
+        suffix: '_SIT',
+        token: { search: 'sit', replace: 0, template: 'custom' },
+        zero: false,
+        invalid: { unsupported: true },
+      },
+    },
+    marketList: { dev: { 'account/DEV': 'dev' }, sit: { 'account/SIT': 'sit' } },
+    options: { deployment: { branchSourceTargetMapping: { sit: { dev: 'sit' } } } },
+  };
+  const inferred = controller.inferWizardStateFromVanilla(config).state;
+  assert.deepEqual(inferred.marketVariables.DEV.token, config.markets.dev.token);
+  assert.deepEqual(inferred.marketVariables.SIT.invalid, { unsupported: true });
+  // Matching key sets copy native values, not their display strings.
+  const references = seedMarketVariables({});
+  const vars = { token: config.markets.sit.token, zero: false };
+  controller.matchMarketsForPipeline(references, 'dev', {
+    byBU: { DEV: 'dev', SIT: 'sit' },
+    marketOf: {
+      dev: { keys: Object.keys(vars) },
+      sit: { keys: Object.keys(vars), vars, suffix: '_SIT' },
+    },
+  });
+  assert.deepEqual(controller.state.wizardState.marketVariables.SIT, vars);
+  const restore = installMemoryLocalStorage();
+  try {
+    controller.persistence.available = null;
+    inferred.mode = 'full';
+    localStorage.setItem(
+      'mcdevpipe::save::native-market',
+      JSON.stringify({
+        id: 'native-market',
+        name: 'Native',
+        version: 1,
+        timestamp: Date.now(),
+        config,
+        wizardState: inferred,
+      }),
+    );
+    controller.reopenSave('native-market');
+    assert.deepEqual(controller.state.wizardState.marketVariables, inferred.marketVariables);
+    assert.equal(controller.variableValueOf('DEV', 'zero'), 0);
+    assert.equal(controller.variableValueOf('DEV', 'legacy'), 'text');
+    assert.equal(controller.displayedVariableValueOf('SIT', 'token'), 0);
+  } finally {
+    stopControllerTimers();
+    restore();
+    controller.persistence.available = null;
+    controller.persistence.readOnly = false;
+  }
+});
+
+test('market teardown composes with lineage on wizard rebuild, Download, intake and mode', () => {
+  const context = { document: { querySelector: () => null } };
+  vm.runInNewContext(
+    fs.readFileSync(path.join(__dirname, '../assets/js/mcdev-pipeline-core.js'), 'utf8'),
+    context,
+  );
+  const core = context.mpbController;
+  core.persistence = { currentId: null };
+  core.renderBuilderHeader = () => {};
+  const calls = [];
+  core.setBeforeWizardStepRender(() => calls.push('lineage'));
+  core.setMarketVariableTeardown(() => calls.push('market'));
+  core.state.step = 'wizard';
+  core.setWizardStep('market-vars');
+  core.render();
+  assert.deepEqual(calls.splice(0), ['market', 'lineage']);
+  core.setWizardStep('output');
+  core.registerStep({ id: 'output', render: () => calls.push('output') });
+  core.render();
+  assert.deepEqual(calls.splice(0), ['market', 'lineage', 'output']);
+  for (const view of ['intake', 'mode']) {
+    core.goToStep(view);
+    assert.deepEqual(calls.splice(0), ['market', 'lineage']);
+  }
+  core.setMarketVariableTeardown(null);
+  core.renderWizardStep('rules');
+  assert.deepEqual(calls.splice(0), ['lineage']);
+  core.setMarketVariableTeardown(() => {
+    throw new Error('dispose failed');
+  });
+  assert.throws(() => core.renderWizardStep('rules'), /dispose failed/);
+  assert.deepEqual(calls, ['lineage'], 'lineage cleanup is not disabled by market disposal');
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
+// Production table wiring uses the real step and editor with an event-capable DOM.
+function editMarketTableInput(node, value) {
+  node.value = value;
+  node.dispatch('input');
+}
+function marketTableFixture(values) {
+  const document = { activeElement: null, listeners: new Map() };
+  class Element {
+    constructor(tag) {
+      this.tag = tag;
+      this.ownerDocument = document;
+      this.children = [];
+      this.listeners = new Map();
+      this.attributes = {};
+      this.classes = new Set();
+      this.classList = {
+        toggle: (name, enabled) => (enabled ? this.classes.add(name) : this.classes.delete(name)),
+        add: (name) => this.classes.add(name),
+        remove: (name) => this.classes.delete(name),
+      };
+      this.value = '';
+    }
+    append(...children) {
+      for (const child of children) {
+        child.parent = this;
+        this.children.push(child);
+      }
+    }
+    remove() {
+      this.parent.children = this.parent.children.filter((child) => child !== this);
+    }
+    contains(node) {
+      return this === node || this.children.some((child) => child.contains(node));
+    }
+    setAttribute(key, value) {
+      this.attributes[key] = value;
+    }
+    focus() {
+      document.activeElement = this;
+      this.dispatch('focus');
+    }
+    getClientRects() {
+      return this.hidden ? [] : [{}];
+    }
+    querySelectorAll() {
+      return this.children.flatMap((child) => [
+        ...(['input', 'button'].includes(child.tag) ? [child] : []),
+        ...child.querySelectorAll(),
+      ]);
+    }
+    addEventListener(type, handler) {
+      this.listeners.set(type, [...(this.listeners.get(type) || []), handler]);
+    }
+    removeEventListener(type, handler) {
+      this.listeners.set(
+        type,
+        (this.listeners.get(type) || []).filter((item) => item !== handler),
+      );
+    }
+    dispatch(type, properties = {}) {
+      const event = {
+        target: this,
+        preventDefault() {},
+        stopPropagation() {},
+        stopImmediatePropagation() {},
+        ...properties,
+      };
+      for (const handler of this.listeners.get(type) || []) {
+        handler(event);
+      }
+    }
+  }
+  document.createElement = (tag) => new Element(tag);
+  document.addEventListener = Element.prototype.addEventListener;
+  document.removeEventListener = Element.prototype.removeEventListener;
+  const context = { mpbConfigBuilder: globalThis.mpbConfigBuilder, document };
+  let registered;
+  let teardown;
+  let saves = 0;
+  let renders = 0;
+  const C = {
+    state: { wizardState: { marketVariables: { DEV: values }, suffixes: { DEV: '_DEV' } } },
+    persistence: { readOnly: false },
+    makeEl: (tag, options = {}) => {
+      const node = new Element(tag);
+      node.className = options.class || '';
+      node.value = String(options.value ?? '');
+      node.textContent = options.text || '';
+      node.id = options.id;
+      for (const [key, value] of Object.entries(options.attrs || {})) {
+        node.setAttribute(key, value);
+      }
+      return node;
+    },
+    setText: (node, text) => {
+      node.children = [];
+      node.textContent = text;
+    },
+    childBUReferences: () => ['DEV'],
+    suffixOf: () => C.state.wizardState.suffixes.DEV,
+    suffixFieldErrors: () => new Map(),
+    pipelinesByRoot: () => new Map([['DEV', ['DEV']]]),
+    environmentNames: () => ['Development'],
+    assignedBUReferences: () => ['DEV'],
+    suffixSlug: (value) => value,
+    bareBUName: (value) => value,
+    updateNavGate: () => {},
+    scheduleAutosave: () => {
+      saves += 1;
+    },
+    render: () => {
+      teardown();
+      renders += 1;
+    },
+    registerStep: (step) => {
+      registered = step;
+    },
+    setMarketVariableTeardown: (callback) => {
+      teardown = callback;
+    },
+  };
+  context.mpbController = C;
+  for (const filename of [
+    'mcdev-pipeline-market-variable-editor.js',
+    'mcdev-pipeline-step-market-vars.js',
+  ]) {
+    vm.runInNewContext(
+      fs.readFileSync(path.join(__dirname, '../assets/js', filename), 'utf8'),
+      context,
+    );
+  }
+  const panel = new Element('section');
+  registered.render(panel);
+  const nodes = (root = panel) => [root, ...root.children.flatMap((child) => nodes(child))];
+  const row = (name) => nodes().find((node) => node.attributes['data-var'] === name);
+  const input = (name) =>
+    nodes(row(name)).find((node) => node.className.split(/\s+/).includes('mpb-mv-input'));
+  const mode = (name) =>
+    nodes(row(name)).find((node) => node.className.split(/\s+/).includes('mpb-mv-mode'));
+  const host = panel.children[0];
+  const editorPanel = host.children[1];
+  const confirmation = host.children[3];
+  const fields = editorPanel.querySelectorAll().filter((node) => node.tag === 'input');
+  const button = (root, text) =>
+    nodes(root).find((node) => node.tag === 'button' && node.textContent === text);
+  const edit = editMarketTableInput;
+  return {
+    C,
+    panel,
+    host,
+    nodes,
+    row,
+    input,
+    mode,
+    fields,
+    editorPanel,
+    confirmation,
+    button,
+    edit,
+    gate: () => registered.canProceed(),
+    teardown: () => teardown?.(),
+    rebuild: () => {
+      teardown?.();
+      registered.render(new Element('section'));
+    },
+    counts: () => ({ saves, renders }),
+  };
+}
+
+test('production table preserves typed values, drafts and commits only Apply or Switch', () => {
+  for (const scalar of ['text', 0, false]) {
+    const f = marketTableFixture({ token: scalar });
+    assert.equal(f.input('token').value, String(scalar));
+    assert.equal(f.input('token').readOnly, false);
+    assert.equal(f.mode('token').textContent, 'aA');
+    f.mode('token').dispatch('click');
+    assert.equal(f.fields[0].value, String(scalar));
+    assert.equal(f.fields[1].value, '');
+    f.edit(f.fields[1], '(source)');
+    f.mode('token').dispatch('click');
+    assert.equal(f.fields[1].value, '(source)', 'same-cell activation preserves draft');
+    assert.deepEqual(f.counts(), { saves: 0, renders: 0 });
+    const rename = f.nodes(f.row('token')).find((node) => node.attributes.title === 'Rename');
+    assert.deepEqual(
+      f
+        .mode('token')
+        .className.split(/\s+/)
+        .filter((token) => token !== 'mpb-mv-mode'),
+      rename.className.split(/\s+/),
+    );
+    f.edit(f.fields[0], 'Unsaved');
+    f.edit(f.fields[2], '$1-draft');
+    const scalarSwitch = f.button(f.editorPanel, 'Switch to text');
+    assert.equal(scalarSwitch.hidden, false);
+    scalarSwitch.dispatch('click');
+    assert.equal(f.editorPanel.hidden, true);
+    assert.equal(f.confirmation.hidden, true);
+    assert.equal(f.fields[0].ownerDocument.activeElement, f.mode('token'));
+    assert.equal(f.C.variableValueOf('DEV', 'token'), scalar);
+    assert.deepEqual(f.counts(), { saves: 0, renders: 0 });
+    f.mode('token').dispatch('click');
+    assert.deepEqual(
+      f.fields.map((field) => field.value),
+      [String(scalar), '', '{{{token}}}'],
+    );
+    f.edit(f.fields[1], '(source)');
+    f.button(f.editorPanel, 'Apply').dispatch('click');
+    assert.equal(f.C.variableValueOf('DEV', 'token').replace, scalar);
+    assert.equal(f.C.variableValueOf('DEV', 'token').search, '(source)');
+    assert.deepEqual(f.counts(), { saves: 1, renders: 1 });
+    assert.equal(f.host.children.length, 0, 'commit teardown disposes overlay');
+    const regex = marketTableFixture({ token: { search: '(source)', replace: scalar } });
+    assert.equal(regex.input('token').readOnly, true);
+    regex.input('token').dispatch('click');
+    regex.edit(regex.fields[0], 'Unsaved');
+    regex.edit(regex.fields[1], '(draft)');
+    regex.edit(regex.fields[2], '$1-draft');
+    const document = regex.fields[0].ownerDocument;
+    const panelSwitch = regex.button(regex.editorPanel, 'Switch to text');
+    assert.equal(panelSwitch.hidden, false);
+    for (const action of ['cancel', 'escape']) {
+      regex.fields[2].focus();
+      panelSwitch.focus();
+      panelSwitch.dispatch('click');
+      assert.equal(regex.editorPanel.hidden, false);
+      assert.equal(document.activeElement, regex.button(regex.confirmation, 'Cancel'));
+      if (action === 'cancel') {
+        regex.button(regex.confirmation, 'Cancel').dispatch('click');
+      } else {
+        for (const handler of document.listeners.get('keydown')) {
+          handler({
+            key: 'Escape',
+            preventDefault() {},
+            stopPropagation() {},
+            stopImmediatePropagation() {},
+          });
+        }
+      }
+      assert.equal(document.activeElement, regex.fields[2]);
+      assert.deepEqual(
+        regex.fields.map((field) => field.value),
+        ['Unsaved', '(draft)', '$1-draft'],
+      );
+      assert.equal(regex.C.variableValueOf('DEV', 'token').search, '(source)');
+      assert.equal(regex.C.variableValueOf('DEV', 'token').replace, scalar);
+      assert.deepEqual(regex.counts(), { saves: 0, renders: 0 });
+    }
+    panelSwitch.dispatch('click');
+    regex.button(regex.confirmation, 'Switch to text').dispatch('click');
+    assert.equal(regex.C.variableValueOf('DEV', 'token'), scalar);
+    assert.deepEqual(regex.counts(), { saves: 1, renders: 1 });
+  }
+});
+
+test('production table scalar typing is in-place, gates invalid imports and guards lock transitions', () => {
+  const f = marketTableFixture({ token: 'saved' });
+  f.input('token').focus();
+  f.edit(f.input('token'), ' typed ');
+  assert.equal(f.C.variableValueOf('DEV', 'token'), ' typed ');
+  assert.deepEqual(f.counts(), { saves: 1, renders: 0 });
+  assert.equal(f.input('token').ownerDocument.activeElement, f.input('token'));
+  f.mode('token').dispatch('click');
+  f.edit(f.fields[1], '(valid)');
+  f.C.persistence.readOnly = true;
+  f.button(f.editorPanel, 'Apply').dispatch('click');
+  f.edit(f.input('token'), 'blocked');
+  const suffix = f.nodes(f.row('suffix')).find((node) => node.tag === 'input');
+  f.edit(suffix, 'blocked');
+  assert.equal(f.C.state.wizardState.suffixes.DEV, '_DEV');
+  assert.equal(f.C.variableValueOf('DEV', 'token'), ' typed ');
+  assert.deepEqual(f.counts(), { saves: 1, renders: 0 });
+  f.teardown();
+  assert.equal(f.host.children.length, 0);
+  f.mode('token').dispatch('click');
+  assert.equal(f.host.children.length, 0);
+  for (const value of [{ search: '[', replace: '' }, { unsupported: true }]) {
+    const invalid = marketTableFixture({ broken: value });
+    assert.equal(invalid.gate().ok, false);
+    assert.match(invalid.gate().reason, /broken for DEV:/);
+    assert.equal(invalid.input('broken').attributes['aria-invalid'], 'true');
+    invalid.teardown();
+  }
+  const empty = marketTableFixture({ blank: '', regex: { search: '(source)', replace: '' } });
+  assert.equal(empty.gate().ok, true);
+  assert.equal(empty.input('blank').classes.has('mpb-input-warn'), true);
+  assert.equal(empty.input('regex').classes.has('mpb-input-warn'), false);
+  empty.rebuild();
+  assert.equal(empty.host.children.length, 0);
+  empty.teardown();
+});
+
 // CHUNK 6 — output-config options, market-list adoption & tiering (all synthetic).
 //
 // Every fixture below is built from hand-authored placeholder names (bu_dev_a,

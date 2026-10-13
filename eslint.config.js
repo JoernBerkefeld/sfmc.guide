@@ -20,84 +20,87 @@ import js from '@eslint/js';
 
 const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js'];
 const TEST_FILES = [
-    'tests/mcdev-pipeline-builders.test.cjs',
-    'tests/mcdev-pipeline-builder-css.test.cjs',
-    'tests/site-index-discoverable.test.cjs',
+  'tests/mcdev-pipeline-builders.test.cjs',
+  'tests/mcdev-pipeline-builder-css.test.cjs',
+  'tests/site-index-discoverable.test.cjs',
+  'tests/mcdev-pipeline-regex-demo.test.cjs',
+  'tests/mcdev-pipeline-market-variable-editor.test.cjs',
 ];
 const ALL_FILES = [...BUILDER_FILES, ...TEST_FILES];
 
 export default [
-    {
-        // Everything except the new builder files + their test is out of scope for ESLint.
-        ignores: [
-            '**/node_modules/**',
-            '**/_site/**',
-            '**/.jekyll-cache/**',
-            '**/vendor/**',
-            'assets/js/main.js',
-            'assets/js/search.js',
-            'sw.js',
-            'scripts/**',
-        ],
+  {
+    // Everything except the new builder files + their test is out of scope for ESLint.
+    ignores: [
+      '**/node_modules/**',
+      '**/_site/**',
+      '**/.jekyll-cache/**',
+      '**/vendor/**',
+      'assets/js/main.js',
+      'assets/js/search.js',
+      'sw.js',
+      'scripts/**',
+    ],
+  },
+  { files: ALL_FILES, ...js.configs.recommended },
+  { files: ALL_FILES, ...eslintPluginPrettierRecommended },
+  { files: ALL_FILES, ...jsdoc.configs['flat/recommended'] },
+  { files: ALL_FILES, ...eslintPluginUnicorn.configs['recommended'] },
+  {
+    files: ALL_FILES,
+    settings: {
+      jsdoc: {
+        mode: 'typescript',
+      },
     },
-    { files: ALL_FILES, ...js.configs.recommended },
-    { files: ALL_FILES, ...eslintPluginPrettierRecommended },
-    { files: ALL_FILES, ...jsdoc.configs['flat/recommended'] },
-    { files: ALL_FILES, ...eslintPluginUnicorn.configs['recommended'] },
-    {
-        files: ALL_FILES,
-        settings: {
-            jsdoc: {
-                mode: 'typescript',
-            },
-        },
-        rules: {
-            'unicorn/better-regex': 'off',
-            'unicorn/catch-error-name': ['error', { name: 'ex' }],
-            'unicorn/explicit-length-check': 'off',
-            'unicorn/filename-case': 'off',
-            'unicorn/no-array-callback-reference': 'off',
-            'unicorn/no-array-reduce': 'off',
-            'unicorn/no-null': 'off',
-            'unicorn/no-nested-ternary': 'off',
-            'unicorn/numeric-separators-style': 'off',
-            'unicorn/prefer-add-event-listener': 'off',
-            'unicorn/prefer-module': 'off',
-            'unicorn/prevent-abbreviations': 'off',
-            'arrow-body-style': ['error', 'as-needed'],
-            curly: 'error',
-            'no-console': 'error',
-            'no-var': 'error',
-            'prefer-const': 'error',
-            'prettier/prettier': 'warn',
-            'jsdoc/require-jsdoc': 'off',
-            'jsdoc/require-param-type': 'off',
-            'jsdoc/tag-lines': ['warn', 'any', { startLines: 1 }],
-            'jsdoc/no-undefined-types': 'off',
-            'jsdoc/valid-types': 'off',
-        },
+    rules: {
+      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
+      'unicorn/better-regex': 'off',
+      'unicorn/catch-error-name': ['error', { name: 'ex' }],
+      'unicorn/explicit-length-check': 'off',
+      'unicorn/filename-case': 'off',
+      'unicorn/no-array-callback-reference': 'off',
+      'unicorn/no-array-reduce': 'off',
+      'unicorn/no-null': 'off',
+      'unicorn/no-nested-ternary': 'off',
+      'unicorn/numeric-separators-style': 'off',
+      'unicorn/prefer-add-event-listener': 'off',
+      'unicorn/prefer-module': 'off',
+      'unicorn/prevent-abbreviations': 'off',
+      'arrow-body-style': ['error', 'as-needed'],
+      curly: 'error',
+      'no-console': 'error',
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'prettier/prettier': 'warn',
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-param-type': 'off',
+      'jsdoc/tag-lines': ['warn', 'any', { startLines: 1 }],
+      'jsdoc/no-undefined-types': 'off',
+      'jsdoc/valid-types': 'off',
     },
-    {
-        // Browser scripts loaded via <script> tags — NOT ES modules.
-        files: BUILDER_FILES,
-        languageOptions: {
-            globals: {
-                ...globals.browser,
-                module: 'writable',
-            },
-            ecmaVersion: 2021,
-            sourceType: 'script',
-        },
+  },
+  {
+    // Browser scripts loaded via <script> tags — NOT ES modules.
+    files: BUILDER_FILES,
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        module: 'writable',
+      },
+      ecmaVersion: 2021,
+      sourceType: 'script',
     },
-    {
-        // The Node test `require()`s the two pure builders through their UMD footer.
-        files: TEST_FILES,
-        languageOptions: {
-            globals: {
-                ...globals.node,
-            },
-            ecmaVersion: 2022,
-            sourceType: 'commonjs',
-        },
+  },
+  {
+    // The Node test `require()`s the two pure builders through their UMD footer.
+    files: TEST_FILES,
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
     },
+  },
 ];

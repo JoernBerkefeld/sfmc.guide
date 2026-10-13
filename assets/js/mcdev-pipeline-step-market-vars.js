@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/name-replacements -- the `mcdev-pipeline-step-market-vars.js` filename is fixed by the script-order invariant (referenced verbatim in index.md, the test require-list, and the hardcoded lock array); `varName` mirrors the `marketVariables[buRef][varName]` state shape used across the feature. */
 /**
  * mcdev Pipeline Builder — market variables wizard step.
  *
@@ -140,12 +139,12 @@
      *
      * @param {string} reference the buRef
      * @param {string} varName the variable name
-     * @returns {string} the stored value or `''`
+     * @returns {unknown} the native stored value or `''`
      */
     function variableValueOf(reference, varName) {
         const all = state.wizardState.marketVariables || {};
         const forBU = all[reference];
-        return forBU && typeof forBU[varName] === 'string' ? forBU[varName] : '';
+        return forBU && Object.hasOwn(forBU, varName) ? forBU[varName] : '';
     }
 
     /**
@@ -154,14 +153,36 @@
      *
      * @param {string} reference the buRef
      * @param {string} varName the variable name
-     * @param {string} value the raw value to store
-     * @returns {void}
+     * @param {unknown} value the native value to store
+     * @returns {boolean} whether the mutation was applied
      */
     function setVariableValue(reference, varName, value) {
+        if (C.persistence.readOnly || varName === 'suffix') {
+            return false;
+        }
+        const builder = global.mpbConfigBuilder;
+        const stored =
+            builder.validateMarketVariable(value) === null
+                ? builder.normalizeMarketVariable(value, varName)
+                : value;
         const all = { ...state.wizardState.marketVariables };
-        const forBU = { ...all[reference] , [varName]: value,};
+        const forBU = { ...all[reference], [varName]: stored };
         all[reference] = forBU;
         state.wizardState.marketVariables = all;
+        return true;
+    }
+
+    /**
+     * Read the native scalar shown in a cell without coercing imported numbers or booleans.
+     *
+     * @param {string} reference the buRef
+     * @param {string} varName the variable key
+     * @returns {string|number|boolean} the scalar or regex replacement
+     */
+    function displayedVariableValueOf(reference, varName) {
+        return global.mpbConfigBuilder.displayedMarketVariableValue(
+            variableValueOf(reference, varName),
+        );
     }
 
     /**
@@ -272,6 +293,9 @@
      * @returns {boolean} true when a rename was applied, false on a guarded no-op
      */
     function renameVariable(pipelineReferences, oldName, newName) {
+        if (C.persistence.readOnly || oldName === 'suffix') {
+            return false;
+        }
         const next = String(newName ?? '').trim();
         if (next === oldName) {
             return false;
@@ -304,6 +328,9 @@
      * @returns {boolean} true when the variable was added, false on a guarded no-op
      */
     function addVariable(pipelineReferences, name) {
+        if (C.persistence.readOnly) {
+            return false;
+        }
         const clean = String(name ?? '').trim();
         if (variableNameError(clean, pipelineReferences, null) !== '') {
             return false;
@@ -329,7 +356,14 @@
      * @returns {number} the count of BUs with a non-empty stored value
      */
     function filledBUCountFor(pipelineReferences, name) {
-        return pipelineReferences.filter((reference) => variableValueOf(reference, name).trim() !== '').length;
+        return pipelineReferences.filter((reference) => {
+            const value = variableValueOf(reference, name);
+            // Regex settings (even a blank replacement) and unsupported imports are data to lose.
+            if (global.mpbConfigBuilder.classifyMarketVariable(value) !== 'scalar') {
+                return true;
+            }
+            return String(value).trim() !== '';
+        }).length;
     }
 
     /**
@@ -357,9 +391,16 @@
      * @returns {{matched: string[], unmatched: string[]}} the BUs filled vs. left untouched
      */
     function matchMarketsForPipeline(pipelineReferences, sourceMarketName, marketAdoption) {
+        if (C.persistence.readOnly) {
+            return {
+                matched: [],
+                unmatched: unmatchedFor(pipelineReferences, sourceMarketName, marketAdoption),
+            };
+        }
         const adoption = marketAdoption && typeof marketAdoption === 'object' ? marketAdoption : {};
         const byBU = adoption.byBU && typeof adoption.byBU === 'object' ? adoption.byBU : {};
-        const marketOf = adoption.marketOf && typeof adoption.marketOf === 'object' ? adoption.marketOf : {};
+        const marketOf =
+            adoption.marketOf && typeof adoption.marketOf === 'object' ? adoption.marketOf : {};
 
         const separator = state.wizardState.separator || '_';
         const nextVariables = { ...state.wizardState.marketVariables };
@@ -402,6 +443,9 @@
      * @returns {void}
      */
     function deleteVariable(pipelineReferences, name) {
+        if (C.persistence.readOnly || name === 'suffix') {
+            return;
+        }
         const all = { ...state.wizardState.marketVariables };
         for (const reference of pipelineReferences) {
             const forBU = all[reference];
@@ -428,10 +472,11 @@
      * @param {string} reference the buRef
      * @param {string} varName the variable name (`suffix` is special: see below)
      * @param {() => void} refreshAll repaint every row's warnings/border after a state edit
+     * @param {object} editor draft editor for this rendered step
      * @returns {{cell: HTMLElement, input: HTMLInputElement, warnings: HTMLElement, reference: string, varName: string}}
      *   the built cell and its in-place-refresh handles
      */
-    function variableCell(environment, reference, varName, refreshAll) {
+    function variableCell(environment, reference, varName, refreshAll, editor) {
         const cell = makeElement('div', { class: 'mpb-env-node-control' });
         const inputId =
             'mpb-mv-' + suffixSlug(environment) + '-' + suffixSlug(reference) + '-' + suffixSlug(varName);
@@ -457,8 +502,8 @@
             group.append(input);
             cell.append(group);
         } else {
-            // Non-suffix values render a plain input (no `.mpb-suffix-input` wrapper).
-            const initialValue = variableValueOf(reference, varName);
+            // Native values stay typed in state; only the DOM display is stringified.
+            const initialValue = displayedVariableValueOf(reference, varName);
             input = makeElement('input', {
                 type: 'text',
                 id: inputId,
@@ -466,10 +511,59 @@
                 value: initialValue,
                 attrs: { autocomplete: 'off', spellcheck: 'false', 'aria-label': ariaLabel },
             });
-            cell.append(input);
+            const kind = global.mpbConfigBuilder.classifyMarketVariable(variableValueOf(reference, varName));
+            const regex = kind === 'regex';
+            input.readOnly = regex || kind === 'invalid' || C.persistence.readOnly;
+            const control = makeElement('div', { class: 'mpb-mv-value-control' });
+            const mode = makeElement('button', {
+                type: 'button',
+                class: 'mpb-btn mpb-btn--secondary mpb-mv-action-btn mpb-mv-mode',
+                text: regex ? '.*' : 'aA',
+                attrs: {
+                    'aria-label': regex ? 'Switch ' + ariaLabel + ' to text' : 'Use regex for ' + ariaLabel,
+                    title: regex ? 'Switch to text' : 'Use regex',
+                },
+            });
+            mode.disabled = C.persistence.readOnly || kind === 'invalid';
+            const descriptor = (trigger) => ({
+                key: JSON.stringify([reference, varName]),
+                name: varName,
+                marketLabel: bareBUName(reference) || reference,
+                reference: reference,
+                value: variableValueOf(reference, varName),
+                trigger: trigger,
+            });
+            const open = () => {
+                if (!C.persistence.readOnly && regex) {
+                    editor.open(descriptor(input));
+                }
+            };
+            input.addEventListener('click', open);
+            input.addEventListener('keydown', (event) => {
+                if (regex && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    open();
+                }
+            });
+            mode.addEventListener('click', () => {
+                if (C.persistence.readOnly || kind === 'invalid') {
+                    return;
+                }
+                if (regex) {
+                    editor.confirmSwitch(descriptor(mode));
+                } else {
+                    editor.open(descriptor(mode));
+                }
+            });
+            control.append(input, mode);
+            cell.append(control);
         }
+        input.readOnly ||= C.persistence.readOnly;
 
         input.addEventListener('input', () => {
+            if (C.persistence.readOnly || input.readOnly) {
+                return;
+            }
             if (isSuffix) {
                 // Auto-trim on store (identical to the Suffixes step) — the shared suffixes map never
                 // retains surrounding spaces. The visible value is left as typed so the caret is safe.
@@ -636,7 +730,7 @@
          * @returns {void}
          */
         function commit() {
-            if (isCommitted) {
+            if (isCommitted || C.persistence.readOnly) {
                 return;
             }
             const next = nameInput.value.trim();
@@ -649,7 +743,9 @@
                 return;
             }
             isCommitted = true;
-            renameVariable(pipelineReferences, varName, next);
+            if (!renameVariable(pipelineReferences, varName, next)) {
+                return;
+            }
             scheduleAutosave();
             render();
             flashRow(next);
@@ -696,7 +792,7 @@
             attrs: { 'aria-label': 'Rename variable ' + varName, title: 'Rename' },
         });
         editButton.addEventListener('click', () => {
-            if (!(nameInput && typeof nameInput.focus === 'function')) {
+            if (C.persistence.readOnly || !(nameInput && typeof nameInput.focus === 'function')) {
                 return;
             }
 
@@ -713,6 +809,9 @@
             attrs: { 'aria-label': 'Delete variable ' + varName, title: 'Delete' },
         });
         deleteButton.addEventListener('click', () => {
+            if (C.persistence.readOnly) {
+                return;
+            }
             const filled = filledBUCountFor(pipelineReferences, varName);
             const total = pipelineReferences.length;
             const message =
@@ -735,6 +834,9 @@
              * @returns {void}
              */
             const performDelete = () => {
+                if (C.persistence.readOnly) {
+                    return;
+                }
                 deleteVariable(pipelineReferences, varName);
                 scheduleAutosave();
                 render();
@@ -897,6 +999,9 @@
             select.append(option);
         }
         select.addEventListener('change', () => {
+            if (C.persistence.readOnly) {
+                return;
+            }
             const value = select.value;
             if (!value) {
                 return;
@@ -999,6 +1104,9 @@
             text: 'Apply market variables',
         });
         applyButton.addEventListener('click', () => {
+            if (C.persistence.readOnly) {
+                return;
+            }
             const chosen = getChosenMarket();
             if (!chosen) {
                 return;
@@ -1031,6 +1139,21 @@
     }
 
     /**
+     * Commit only after the editor has closed and restored trigger focus.
+     *
+     * @param {object} cell BU/variable descriptor passed back by the editor
+     * @param {unknown} value native regex object or scalar replacement
+     * @returns {void}
+     */
+    function commitEditorValue(cell, value) {
+        if (!setVariableValue(cell.reference, cell.name, value)) {
+            return;
+        }
+        scheduleAutosave();
+        render();
+    }
+
+    /**
      * The `market-vars` step render. Builds one `<table>` per pipeline (grouped by lineage root):
      * variables down the rows (`suffix` first, then alpha), one input column per BU under environment
      * column-group headers, a name column (static for suffix, inline-rename input otherwise), and an
@@ -1042,6 +1165,24 @@
      * @returns {void}
      */
     function renderMarketVariablesStep(panel) {
+        // One overlay host per render, never nested in the scrolling table.
+        const overlayHost = makeElement('div', { class: 'mpb-mv-editor-host' });
+        const editor = global.mpbMarketVariableEditor.create(overlayHost, {
+            readOnly: () => C.persistence.readOnly,
+            onApply: commitEditorValue,
+            onSwitch: commitEditorValue,
+        });
+        C.setMarketVariableTeardown(() => {
+            editor.dispose();
+            C.setMarketVariableTeardown(null);
+        });
+        panel.append(overlayHost);
+        panel.append(
+            makeElement('p', {
+                class: 'mpb-mv-legend',
+                text: 'aA = text; select it to configure regex. .* = regex; select it to confirm switching back to text. Select a regex value to edit its draft. Regex requires mcdev 10+, matches globally and is case-sensitive. Reusing existing markets leaves the original markets unchanged; these edits are saved only in mpb_pipeline.',
+            })
+        );
         panel.append(
             makeElement('p', {
                 class: 'text-muted',
@@ -1112,6 +1253,21 @@
                         );
                     }
                 } else {
+                    const stored = variableValueOf(entry.reference, entry.varName);
+                    const kind = global.mpbConfigBuilder.classifyMarketVariable(stored);
+                    const error = global.mpbConfigBuilder.validateMarketVariable(stored);
+                    entry.input.classList.toggle('mpb-input-warn', kind === 'scalar' && isEmpty);
+                    entry.input.setAttribute('aria-invalid', String(Boolean(error)));
+                    if (error) {
+                        entry.warnings.append(makeElement('p', {
+                            class: 'mpb-field-error',
+                            text: entry.varName + ' for ' + entry.reference + ': ' + error,
+                        }));
+                        continue;
+                    }
+                    if (kind !== 'scalar') {
+                        continue;
+                    }
                     if (isEmpty) {
                         isAnyNonSuffixEmpty = true;
                     }
@@ -1194,7 +1350,7 @@
                 for (const column of columns) {
                     for (const reference of column.references) {
                         const td = makeElement('td', { class: 'mpb-mv-value-cell' });
-                        const cell = variableCell(column.environment, reference, variableName, refreshAll);
+                        const cell = variableCell(column.environment, reference, variableName, refreshAll, editor);
                         td.append(cell.cell);
                         tr.append(td);
                         cells.push(cell);
@@ -1239,13 +1395,33 @@
                 return { ok: false, reason: duplicate };
             }
         }
+        for (const reference of references) {
+            for (const name of variableNamesFor([reference])) {
+                if (name === 'suffix') {
+                    continue;
+                }
+                const error = global.mpbConfigBuilder.validateMarketVariable(variableValueOf(reference, name));
+                if (error) {
+                    return { ok: false, reason: name + ' for ' + reference + ': ' + error };
+                }
+            }
+        }
         return { ok: true, reason: '' };
     }
 
-    C.registerStep({ id: 'market-vars', render: renderMarketVariablesStep, canProceed: canProceedMarketVariables });
+    C.registerStep({
+        id: 'market-vars',
+        render: renderMarketVariablesStep,
+        canProceed: canProceedMarketVariables,
+    });
 
     // Publish the pure state helpers so the Node test harness (which cannot dispatch DOM events /
     // confirm dialogs) can exercise them directly — mirrors config-builder.js's `api` publish.
+    C.variableValueOf = variableValueOf;
+    C.displayedVariableValueOf = displayedVariableValueOf;
+    C.setVariableValue = setVariableValue;
+    C.deleteVariable = deleteVariable;
+    C.variableNamesFor = variableNamesFor;
     C.variableNameError = variableNameError;
     C.renameVariable = renameVariable;
     C.addVariable = addVariable;

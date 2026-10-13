@@ -55,6 +55,11 @@ platforms:
   <strong>Requires <code>mcdev</code> &ge; v8.3.0.</strong>
   The shared-DE parent pipeline relies on type-specific marketList
   <code>filter.include</code>/<code>filter.exclude</code> keys, first shipped in v8.3.0.
+  Regex market variables require <code>mcdev</code> 10 or later; matching is global
+  and case-sensitive. Use <code>aA</code> in a market-variable cell to draft regex
+  settings and <code>.*</code> to confirm switching back to text.
+  When reusing existing markets, their original values stay unchanged; builder edits
+  are retained in <code>mpb_pipeline</code> only.
 </div>
 
 <div class="mpb-callout mpb-callout--security" role="note">
@@ -90,6 +95,7 @@ platforms:
         Use pasted JSON
       </button>
     </div>
+
   </div>
 
   <div id="mpb-intake-error" class="mpb-error" role="alert" hidden></div>
@@ -192,6 +198,7 @@ platforms:
         </p>
       </div>
     </div>
+
   </section>
 
   <div class="mpb-wizard-nav">
@@ -220,6 +227,7 @@ platforms:
  <script src="{{ '/assets/js/mcdev-pipeline-builder-header.js' | relative_url | cache_bust }}" defer></script>
  <script src="{{ '/assets/js/mcdev-pipeline-step-environment-order.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-production-confirm.js' | relative_url | cache_bust }}" defer></script>
+<script src="{{ '/assets/js/mcdev-pipeline-market-variable-editor.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-market-vars.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-suffixes.js' | relative_url | cache_bust }}" defer></script>
 <script src="{{ '/assets/js/mcdev-pipeline-step-rules.js' | relative_url | cache_bust }}" defer></script>

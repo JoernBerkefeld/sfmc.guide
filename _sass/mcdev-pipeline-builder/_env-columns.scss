@@ -211,6 +211,158 @@ input.mpb-input-warn {
   &:focus { border-color: $accent-primary; outline: 0; }
 }
 
+// Compact literal/regex controls; the table value stays unlabelled and has no separate Edit button.
+.mpb-mv-value-control {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  .mpb-mv-input {
+    flex: 1;
+    min-width: 8rem;
+  }
+  .mpb-mv-input[readonly] {
+    cursor: pointer;
+  }
+}
+
+.mpb-mv-mode {
+  flex: none;
+}
+
+.mpb-mv-legend {
+  font-size: $text-sm;
+  margin: $space-3 0;
+}
+
+// Backdrops and overlays live above the builder header and sticky table cells.
+.mpb-mv-panel-backdrop,
+.mpb-mv-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba($text-primary, 0.22);
+  z-index: $z-overlay;
+}
+
+.mpb-mv-confirmation-backdrop {
+  z-index: $z-modal + 1;
+}
+
+.mpb-mv-panel,
+.mpb-mv-confirmation {
+  position: fixed;
+  z-index: $z-modal;
+  box-sizing: border-box;
+  margin: 0;
+  padding: $space-5;
+  background: $bg-surface;
+  color: $text-primary;
+  border: 1px solid $border-default;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  max-height: calc(100dvh - 24px);
+
+  h2 {
+    margin: 0 0 $space-3;
+    font-size: $text-lg;
+  }
+  p {
+    font-size: $text-sm;
+  }
+}
+
+.mpb-mv-panel {
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(34rem, calc(100vw - 24px));
+}
+
+.mpb-mv-confirmation {
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(25rem, calc(100vw - 24px));
+  z-index: $z-modal + 2;
+}
+
+// Explicitly preserve hidden semantics even when overlay layout rules change.
+.mpb-mv-panel[hidden],
+.mpb-mv-panel-backdrop[hidden],
+.mpb-mv-confirmation[hidden],
+.mpb-mv-confirmation-backdrop[hidden] {
+  display: none;
+}
+
+.mpb-mv-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  margin-top: $space-3;
+  font-size: $text-xs;
+  min-width: 0;
+
+  input,
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.mpb-mv-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin-top: $space-5;
+}
+
+.mpb-mv-editor-error {
+  font-size: $text-sm;
+  color: $color-danger;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.mpb-mv-input[aria-invalid='true'] {
+  border-color: $color-danger;
+}
+
+.mpb-mv-value-control,
+.mpb-mv-panel,
+.mpb-mv-confirmation {
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid $accent-primary;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mpb-mv-panel {
+    inset: 12px;
+    width: auto;
+    border-radius: $radius-md;
+  }
+
+  // Pinned columns would cover value controls on phones; scroll all cells together.
+  .mpb-mv-table {
+    .mpb-mv-col-name,
+    .mpb-mv-col-actions,
+    .mpb-mv-name-cell,
+    .mpb-mv-actions-cell {
+      position: static;
+    }
+  }
+}
+
 // Static `suffix` name label (the suffix row is not renamable).
 .mpb-mv-name-static {
   font-weight: 600;

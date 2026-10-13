@@ -1,0 +1,130 @@
+---
+---
+
+@use 'variables' as *;
+
+// Only these prototype pages load this sheet; every selector is demo-scoped.
+.regex-demo {
+  .regex-demo-legend {
+    font-size: $text-sm;
+    margin: $space-3 0;
+  }
+  .regex-demo-overlay {
+    position: fixed;
+    z-index: $z-modal;
+    box-sizing: border-box;
+    margin: 0;
+    padding: $space-5;
+    background: $bg-surface;
+    color: $text-primary;
+    border: 1px solid $border-default;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    overflow-y: auto;
+    max-height: calc(100dvh - 24px);
+  }
+  .regex-demo-confirmation {
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(25rem, calc(100vw - 24px));
+    z-index: $z-modal + 1;
+  }
+  &[data-variant='panel'] .mpb-mv-input[readonly] {
+    cursor: pointer;
+  }
+  .regex-demo-popover {
+    width: min(25rem, calc(100vw - 24px));
+  }
+  .regex-demo-panel {
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: min(34rem, calc(100vw - 24px));
+  }
+  .regex-demo-editor-title {
+    margin: 0 0 $space-3;
+    font-size: $text-lg;
+    overflow-wrap: anywhere;
+  }
+  .regex-demo-editor-help {
+    font-size: $text-sm;
+  }
+  .regex-demo-overlay .regex-demo-field {
+    margin-top: $space-3;
+  }
+  .regex-demo-editor-actions {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-5;
+  }
+  .regex-demo-edit {
+    flex: none;
+    padding: 0.45em 0.6em;
+  }
+  .regex-demo-edit[hidden] {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .regex-demo-overlay.regex-demo-dialog {
+      inset: 12px;
+      width: auto;
+      border-radius: $radius-md;
+    }
+  }
+  .regex-demo-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: $space-2;
+  }
+  .regex-demo-field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: $text-xs;
+    flex: 1;
+    min-width: 0;
+  }
+  .regex-demo-cell {
+    min-width: 15rem;
+  }
+  .regex-demo-mode {
+    flex: none;
+    padding: 0.45em 0.6em;
+    min-width: 2.4rem;
+    font-family: $font-mono;
+  }
+  .regex-demo-mode[aria-pressed='true'] {
+    border: 2px solid currentColor;
+    font-weight: 700;
+  }
+  .regex-demo-mode:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+  .regex-demo-editor {
+    margin-top: $space-2;
+  }
+  .regex-demo-editor[hidden] {
+    display: none;
+  }
+  .regex-demo-template {
+    margin-top: $space-2;
+  }
+  .regex-demo-template summary {
+    cursor: pointer;
+    font-size: $text-xs;
+  }
+  .regex-demo-error:empty {
+    display: none;
+  }
+  .mpb-mv-input[aria-invalid='true'] {
+    border-color: $color-danger;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid $accent-primary;
+    outline-offset: 2px;
+  }
+}

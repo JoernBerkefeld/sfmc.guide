@@ -25,6 +25,7 @@
     const hooks = {
         render: null,
         beforeWizardStepRender: null,
+        marketVariableTeardown: null,
         onSharedDEsChange: null,
         deriveValidationsState: null,
     };
@@ -91,11 +92,9 @@
      * @returns {void}
      */
     function renderWizardStep(stepId) {
+        teardownWizardEditors();
         if (!dom.stepHost) {
             return;
-        }
-        if (typeof hooks.beforeWizardStepRender === 'function') {
-            hooks.beforeWizardStepRender();
         }
         setText(dom.stepHost, '');
         const title = WIZARD_STEP_TITLES[stepId] || stepId;
@@ -130,6 +129,14 @@
      * @returns {void}
      */
     function render() {
+        // These views bypass renderWizardStep; release both editors before hiding their host.
+        if (
+            state.step !== 'wizard' ||
+            wizardStep === 'output' ||
+            typeof hooks.render === 'function'
+        ) {
+            teardownWizardEditors();
+        }
         if (typeof hooks.render === 'function') {
             hooks.render();
             return;
@@ -221,6 +228,35 @@
      */
     function setBeforeWizardStepRender(teardownHook) {
         hooks.beforeWizardStepRender = teardownHook;
+    }
+
+    /**
+     * Register market editor disposal without replacing the lineage-owned wizard hook.
+     * The callback should dispose the current editor and clear its local reference; null unregisters.
+     *
+     * @param {(() => void)|null} teardownHook market editor cleanup
+     * @returns {void}
+     */
+    function setMarketVariableTeardown(teardownHook) {
+        hooks.marketVariableTeardown = teardownHook;
+    }
+
+    /**
+     * Release ephemeral editors on host rebuilds and on views that hide the wizard host.
+     *
+     * @returns {void}
+     */
+    function teardownWizardEditors() {
+        try {
+            if (typeof hooks.marketVariableTeardown === 'function') {
+                hooks.marketVariableTeardown();
+            }
+        } finally {
+            // Keep lineage's original setter ownership and guarantee its cleanup still runs.
+            if (typeof hooks.beforeWizardStepRender === 'function') {
+                hooks.beforeWizardStepRender();
+            }
+        }
     }
 
     /**
@@ -2276,6 +2312,7 @@
         setRender: setRender,
         render: render,
         setBeforeWizardStepRender: setBeforeWizardStepRender,
+        setMarketVariableTeardown: setMarketVariableTeardown,
         setOnSharedDEsChange: setOnSharedDEsChange,
         setDeriveValidationsState: setDeriveValidationsState,
         getDeriveValidationsState: function getDeriveValidationsState() {
