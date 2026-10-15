@@ -10,15 +10,15 @@ platforms:
   - next
 ---
 
-{% include callout.html type="note" title="Originally published" content="Published **18 June 2026** on [LinkedIn](https://www.linkedin.com/pulse/why-sfmc-language-service-great-its-own-even-better-eslint-berkefeld-z3fbf/). Republished here for sfmc.guide." %}
+{% include callout.html type="note" title="Originally published" content="Published **18 June 2026** on [LinkedIn](https://www.linkedin.com/pulse/why-sfmc-language-service-great-its-own-even-better-eslint-berkefeld-z3fbf/). This version was updated **15 October 2026** to reflect Prettier formatting built into SFMC Language Service." %}
 
 If you write AMPscript or Server-Side JavaScript (SSJS) for Salesforce Marketing Cloud Engagement, you have probably lived through the classic workflow: paste code into Content Builder, hope it runs, discover a typo in a send preview, fix it, repeat.
 
 That loop is fine for quick experiments. It is painful for anything you ship to production, review with teammates, or store in Git.
 
-The **SFMC Language Service** VS Code extension changed that for me. It brings real editor intelligence to AMPscript, SSJS, GTL, and SFMC HTML: syntax highlighting, completions, hover docs, diagnostics, snippets, and even Marketing Cloud Next compatibility hints.
+The **SFMC Language Service** VS Code extension changed that for me. It brings real editor intelligence to AMPscript, SSJS, GTL, and SFMC HTML: syntax highlighting, completions, hover docs, diagnostics, snippets, and even Marketing Cloud Next compatibility hints. It also bundles **Prettier and prettier-plugin-sfmc** for formatting, with no separate formatter install required.
 
-But here is the part many people miss: the extension is only one layer of a small toolchain. Pair it with **eslint-plugin-sfmc** and **prettier-plugin-sfmc**, and you get something that feels like a modern JavaScript project, not a copy-paste island inside Marketing Cloud.
+But here is the part many people miss: the extension is only one layer of a small toolchain. Pair it with **eslint-plugin-sfmc** and project-local **Prettier and prettier-plugin-sfmc** for CI or Git hooks, and you get something that feels like a modern JavaScript project, not a copy-paste island inside Marketing Cloud.
 
 This article explains what each tool does on its own, what they share, where they differ, and why ESLint becomes the real hero once CI/CD or Git hooks enter the picture.
 
@@ -76,9 +76,9 @@ Install the extension from the [VS Code Marketplace](https://marketplace.visuals
 
 Prettier solves a different problem: *"Make this file look the same every time, for everyone."*
 
-Neither the SFMC Language Service nor ESLint auto-formats your code. If you want consistent layout (keyword casing, quotes, indentation, line breaks in AMPscript blocks), Prettier is the tool for that.
+The SFMC Language Service includes Prettier formatting through its bundled **prettier-plugin-sfmc**. If you want consistent layout (keyword casing, quotes, indentation, line breaks in AMPscript blocks), use **Format Document** or **Format on Save** — no separate Prettier extension or npm install is needed.
 
-Install **prettier-plugin-sfmc** as a dev dependency. Prettier auto-discovers the plugin for `.amp`, `.ampscript`, `.ssjs`, and `.sql` files.
+For terminal commands, CI, or Git hooks, install **Prettier and prettier-plugin-sfmc** as dev dependencies and configure the plugin in your project. The editor uses its bundled versions; a project-local install lets you pin versions for automation.
 
 **AMPscript formatting** is where this plugin shines:
 
@@ -100,7 +100,7 @@ Install **prettier-plugin-sfmc** as a dev dependency. Prettier auto-discovers th
 - `.prettierignore` for SMS/mobile assets where whitespace is part of the message
 - Project-wide style via `.prettierrc` committed to Git so the whole team shares one format
 
-Pair **Format on Save** in VS Code with the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and suddenly every AMPscript block in a shared repo looks like one person wrote it.
+Enable **Format on Save** with the SFMC Language Service's bundled formatter and suddenly every AMPscript block in a shared repo looks like one person wrote it. The separate [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) is optional.
 
 ---
 
@@ -151,19 +151,33 @@ The SFMC Language Service extension also wires up `eslint.validate` for SFMC lan
 Here is the stack I recommend for day-to-day SFMC development:
 
 1. **SFMC Language Service** for completions, hover, and instant feedback while coding.
-2. **Prettier** on save for formatting (no more "your diff is 400 lines of whitespace").
+2. **Bundled Prettier** on save for formatting (no more "your diff is 400 lines of whitespace").
 3. **ESLint** in the editor for rule violations, plus `npm run lint` before you push.
 
 In VS Code, that feels seamless: type, see hovers, get squiggles, save to format, commit.
 
-The magic is that steps 2 and 3 are **project tools**, not editor tools. They live in `package.json` and config files in Git, run from the terminal, and behave identically on every machine.
+The magic is that ESLint and project-local Prettier also work **outside the editor**. They live in `package.json` and config files in Git and run from the terminal, CI, or Git hooks, independently of the extension.
 
 **Example workspace settings** you can commit for a team repo:
 
 ```json
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[ampscript]": {
+    "editor.defaultFormatter": "joernberkefeld.sfmc-language"
+  },
+  "[ssjs]": {
+    "editor.defaultFormatter": "joernberkefeld.sfmc-language"
+  },
+  "[sfmc]": {
+    "editor.defaultFormatter": "joernberkefeld.sfmc-language"
+  },
+  "[handlebars]": {
+    "editor.defaultFormatter": "joernberkefeld.sfmc-language"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "joernberkefeld.sfmc-language"
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
@@ -216,12 +230,12 @@ Prettier plays the same enforcement role for style: `prettier --check` in CI cat
 
 If you are starting from zero:
 
-1. Install **SFMC Language Service** today. Immediate payoff, zero repo setup.
-2. Add **prettier-plugin-sfmc** when two or more people touch the same files, or whenever you want **auto-formatted code** (something neither the language service nor ESLint provides).
+1. Install **SFMC Language Service** today. Immediate payoff, including bundled formatting, zero repo setup.
+2. Add project-local **Prettier and prettier-plugin-sfmc** when you want formatting commands or checks in CI and Git hooks, not just in the editor.
 3. Add **eslint-plugin-sfmc** when you want guardrails the whole team shares: ES3 compliance, Platform.Load order, deprecated APIs, naming rules, MCN migration checks.
 4. Wire **Husky + lint-staged** or a CI lint job when broken code in main has cost you a send preview or a deployment rollback.
 
-You do not need all four on day one. You do need to understand that they solve different layers of the same problem: **understand** (language service), **style** (Prettier), **policy** (ESLint), **enforce** (CI/hooks).
+You do not need all four on day one. You do need to understand that they solve different layers of the same problem: **understand** (language service), **style** (Prettier, bundled in the extension), **policy** (ESLint), **enforce** (CI/hooks).
 
 ---
 
@@ -229,9 +243,9 @@ You do not need all four on day one. You do need to understand that they solve d
 
 Salesforce Marketing Cloud code has lived outside the normal software toolchain for too long. AMPscript and SSJS are real languages with real footguns: ES3 limits, Platform.Load ordering, deprecated SOAP-era APIs, and soon Marketing Cloud Next compatibility.
 
-The SFMC Language Service makes writing that code feel modern in the editor. [ssjs.guide](https://ssjs.guide) gives you a durable reference for SSJS that stays in sync with those same definitions. ESLint and Prettier make the *repository* modern: reviewable, consistent, and safe to merge.
+The SFMC Language Service makes writing and formatting that code feel modern in the editor. [ssjs.guide](https://ssjs.guide) gives you a durable reference for SSJS that stays in sync with those same definitions. ESLint and project-local Prettier make the *repository* modern: reviewable, consistent, and safe to merge.
 
-Use the extension because coding without IntelliSense is a waste of your afternoon. Bookmark ssjs.guide when you need the full picture on a Platform function. Add ESLint when your team needs one shared rulebook, not fifteen personal VS Code setups. Add Prettier when you want the formatter nobody else in the stack provides. Wire CI and hooks because your teammates, your pipeline, and your future self at 4:55 p.m. on a Friday all deserve the same protection you get from squiggles in VS Code.
+Use the extension because coding without IntelliSense is a waste of your afternoon. Bookmark ssjs.guide when you need the full picture on a Platform function. Add ESLint when your team needs one shared rulebook, not fifteen personal VS Code setups. Add project-local Prettier when you want formatting beyond the editor, in CI and Git hooks. Wire CI and hooks because your teammates, your pipeline, and your future self at 4:55 p.m. on a Friday all deserve the same protection you get from squiggles in VS Code.
 
 ---
 
