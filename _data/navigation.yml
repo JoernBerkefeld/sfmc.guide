@@ -45,7 +45,7 @@
     - title: AMPscript Function Index
       url: /engagement/ampscript/functions/
       children:
-        - title: "— Math functions —"
+        - title: '— Math functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: Add
           url: /engagement/ampscript/functions/add/
@@ -59,7 +59,7 @@
           url: /engagement/ampscript/functions/random/
         - title: Subtract
           url: /engagement/ampscript/functions/subtract/
-        - title: "— String functions —"
+        - title: '— String functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: Char
           url: /engagement/ampscript/functions/char/
@@ -85,7 +85,7 @@
           url: /engagement/ampscript/functions/trim/
         - title: Uppercase
           url: /engagement/ampscript/functions/uppercase/
-        - title: "— Date and Time functions —"
+        - title: '— Date and Time functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: DateAdd
           url: /engagement/ampscript/functions/dateadd/
@@ -105,7 +105,7 @@
           url: /engagement/ampscript/functions/stringtodate/
         - title: SystemDateToLocalDate
           url: /engagement/ampscript/functions/systemdatetolocaldate/
-        - title: "— Encryption and Encoding functions —"
+        - title: '— Encryption and Encoding functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: Base64Decode
           url: /engagement/ampscript/functions/base64decode/
@@ -131,7 +131,7 @@
           url: /engagement/ampscript/functions/stringtohex/
         - title: URLEncode
           url: /engagement/ampscript/functions/urlencode/
-        - title: "— Content functions —"
+        - title: '— Content functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: BarcodeURL
           url: /engagement/ampscript/functions/barcodeurl/
@@ -167,7 +167,7 @@
           url: /engagement/ampscript/functions/treatascontent/
         - title: TreatAsContentArea
           url: /engagement/ampscript/functions/treatascontentarea/
-        - title: "— Data Extension functions —"
+        - title: '— Data Extension functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: ClaimRow
           url: /engagement/ampscript/functions/claimrow/
@@ -211,7 +211,7 @@
           url: /engagement/ampscript/functions/upsertdata/
         - title: UpsertDE
           url: /engagement/ampscript/functions/upsertde/
-        - title: "— Marketing Cloud API functions —"
+        - title: '— Marketing Cloud API functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: AddObjectArrayItem
           url: /engagement/ampscript/functions/addobjectarrayitem/
@@ -231,7 +231,7 @@
           url: /engagement/ampscript/functions/invokeupdate/
         - title: SetObjectProperty
           url: /engagement/ampscript/functions/setobjectproperty/
-        - title: "— HTTP functions —"
+        - title: '— HTTP functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: HTTPGet
           url: /engagement/ampscript/functions/httpget/
@@ -243,7 +243,7 @@
           url: /engagement/ampscript/functions/httppostwithretry/
         - title: HTTPRequestHeader
           url: /engagement/ampscript/functions/httprequestheader/
-        - title: "— Utility functions —"
+        - title: '— Utility functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: AttributeValue
           url: /engagement/ampscript/functions/attributevalue/
@@ -305,7 +305,7 @@
           url: /engagement/ampscript/functions/v/
         - title: WrapLongURL
           url: /engagement/ampscript/functions/wraplongurl/
-        - title: "— Sales and Service Cloud functions —"
+        - title: '— Sales and Service Cloud functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: CreateSalesforceObject
           url: /engagement/ampscript/functions/createsalesforceobject/
@@ -317,13 +317,13 @@
           url: /engagement/ampscript/functions/retrievesalesforceobjects/
         - title: UpdateSingleSalesforceObject
           url: /engagement/ampscript/functions/updatesinglesalesforceobject/
-        - title: "— Social functions —"
+        - title: '— Social functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: GetSocialPublishURL
           url: /engagement/ampscript/functions/getsocialpublishurl/
         - title: GetSocialPublishURLByName
           url: /engagement/ampscript/functions/getsocialpublishurlbyname/
-        - title: "— MobileConnect functions —"
+        - title: '— MobileConnect functions —'
           url: /engagement/ampscript/functions/#all-functions
         - title: UpsertContact
           url: /engagement/ampscript/functions/upsertcontact/
@@ -347,19 +347,23 @@
       url: /tools/
     - title: Language Service article
       url: /tools/language-service-eslint-prettier/
-    - title: "— Highlights —"
+    - title: '— SFMC Highlights —'
       url: /tools/#own-tools
     - title: SFMC Language Service
       url: /tools/vscode-sfmc-language/
-    - title: MCP Server for SFMC Coding
+    - title: SFMC MCP Server for Coding
       url: /tools/mcp-server-sfmc/
     - title: SFMC DevTools
       url: /tools/mcdev/
     - title: SFMC DevTools Pipeline Builder
       url: /tools/mcdev-pipeline-builder/
-    - title: SF Plugin for MCNext
-      url: /tools/sf-plugin-mcnext/
-    - title: "— Community —"
+    - title: SFMC Data Loader (VSCode)
+      url: /tools/vscode-sfmc-dataloader/
+    - title: '— MCN Highlights —'
+      url: /tools/#own-tools
+    - title: SF-CLI Plugin for CMS
+      url: /tools/sf-plugin-cms/
+    - title: '— Community —'
       url: /tools/#community-and-ecosystem
     - title: dataviews.io
       url: https://dataviews.io/

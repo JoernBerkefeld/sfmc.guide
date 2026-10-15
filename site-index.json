@@ -924,6 +924,13 @@
     "description": "Sets a scalar (or nested-handle) property on a CreateObject handle."
   },
   {
+    "name": "sf-plugin-cms",
+    "url": "/tools/sf-plugin-cms/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Salesforce CLI plugin for bounded Marketing Cloud CMS inspection, workspace export/import, and Email lifecycle operations."
+  },
+  {
     "name": "sf-plugin-mcnext",
     "url": "/tools/sf-plugin-mcnext/",
     "section": "Tools",

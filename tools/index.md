@@ -48,9 +48,16 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
 </a>
 </div>
 
-## MCNext Plugin for SF CLI
+## Marketing Cloud Next
 
 <div class="tool-grid">
+<a class="tool-card" href="/tools/sf-plugin-cms/">
+  <div class="tool-card-title">sf-plugin-cms <span class="platform-badge platform-badge--cli">CLI</span></div>
+  <div class="platform-badges">
+    <span class="platform-badge platform-badge--next">Next</span>
+  </div>
+  <div class="tool-card-desc">Salesforce CLI plugin for bounded Marketing Cloud CMS inspection, workspace export/import, and Email lifecycle operations.</div>
+</a>
 <a class="tool-card" href="/tools/sf-plugin-mcnext/">
   <div class="tool-card-title">sf-plugin-mcnext <span class="platform-badge platform-badge--cli">CLI</span></div>
   <div class="platform-badges">

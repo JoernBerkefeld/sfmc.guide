@@ -115,6 +115,23 @@ test('tools index lists the pipeline builder card', () => {
   assert.match(index, /SFMC DevTools Pipeline Builder/);
 });
 
+test('CMS catalog is discoverable and separates released and development capabilities', () => {
+  const page = fs.readFileSync(path.join(SITE, 'tools', 'sf-plugin-cms', 'index.md'), 'utf8');
+  assert.doesNotMatch(page, /^discoverable:\s*false\s*$/m);
+  assert.match(
+    page,
+    /Single-item Email or Email Template retrieval into editable local source files is unreleased development\. Batch retrieval and a deploy command are not included\./,
+  );
+  assert.doesNotMatch(page, /0\.11\.0/);
+  assert.match(page, /https:\/\/github\.com\/JoernBerkefeld\/sf-plugin-cms/);
+  const index = fs.readFileSync(path.join(SITE, 'tools', 'index.md'), 'utf8');
+  assert.match(index, /href="\/tools\/sf-plugin-cms\/"/);
+  const nav = fs.readFileSync(path.join(SITE, '_data', 'navigation.yml'), 'utf8');
+  assert.match(nav, /\/tools\/sf-plugin-cms\//);
+  const lunr = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
+  assert.match(JSON.stringify(lunr), /\/tools\/sf-plugin-cms\//);
+});
+
 test('sidebar and plugin honor the undiscoverable lookup', () => {
   const sidebar = fs.readFileSync(path.join(SITE, '_includes', 'sidebar.html'), 'utf8');
   assert.match(sidebar, /site\.data\.undiscoverable_urls/);

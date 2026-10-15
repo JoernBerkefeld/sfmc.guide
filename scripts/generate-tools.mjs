@@ -308,6 +308,21 @@ The original shareable ESLint config for SSJS. Kept here for historical referenc
 Salesforce CLI (\`sf\`) plugin aimed at Marketing Cloud Next developer workflows. Tracked in the monorepo as it matures.`,
     links: [{ label: 'GitHub', url: 'https://github.com/JoernBerkefeld/sf-plugin-mcnext' }],
   },
+  {
+    slug: 'sf-plugin-cms',
+    title: 'sf-plugin-cms',
+    group: 'own',
+    platforms: ['next'],
+    summary:
+      'Salesforce CLI plugin for bounded Marketing Cloud CMS inspection, workspace export/import, and Email lifecycle operations.',
+    body: `Salesforce CLI (\`sf cms\`) plugin for inspecting Marketing Cloud CMS resources, experimental workspace export, create-only workspace import, and narrowly scoped Email update, publish, unpublish, and delete operations. See the repository for supported profiles and experimental limits.
+
+{% include callout.html type="note" title="Unreleased development" content="Single-item Email or Email Template retrieval into editable local source files is unreleased development. Batch retrieval and a deploy command are not included." %}`,
+    links: [
+      { label: 'npm (released package)', url: 'https://www.npmjs.com/package/sf-plugin-cms' },
+      { label: 'GitHub', url: 'https://github.com/JoernBerkefeld/sf-plugin-cms' },
+    ],
+  },
   // Community
   {
     slug: 'dataviews-io',
