@@ -118,11 +118,20 @@ test('tools index lists the pipeline builder card', () => {
 test('CMS catalog is discoverable and separates released and development capabilities', () => {
   const page = fs.readFileSync(path.join(SITE, 'tools', 'sf-plugin-cms', 'index.md'), 'utf8');
   assert.doesNotMatch(page, /^discoverable:\s*false\s*$/m);
+  assert.match(page, /Version 0\.20\.0 includes bounded retrieval, Draft deployment and deletion/);
+  assert.match(page, /Email, Email Template, Image, Document and Audio/);
+  assert.match(page, /Deploy executes by default; use --preview for read-only preflight/);
+  assert.match(page, /Unreleased 0\.21\.0 adds bounded five-family metadata publish\/unpublish/);
   assert.match(
     page,
-    /Single-item Email or Email Template retrieval into editable local source files is unreleased development\. Batch retrieval and a deploy command are not included\./,
+    /local-source safeguards, per-item outcomes and all-page workspace\/channel lists/,
   );
-  assert.doesNotMatch(page, /0\.11\.0/);
+  assert.match(page, /conservative runtime qualification labels/);
+  assert.doesNotMatch(
+    page,
+    /workspace export\/import|experimental workspace export|create-only workspace import/,
+  );
+  assert.doesNotMatch(page, /0\.11\.0|0\.12\.0|Unreleased Phase 3|dry-run-default Draft creation/);
   assert.match(page, /https:\/\/github\.com\/JoernBerkefeld\/sf-plugin-cms/);
   const index = fs.readFileSync(path.join(SITE, 'tools', 'index.md'), 'utf8');
   assert.match(index, /href="\/tools\/sf-plugin-cms\/"/);

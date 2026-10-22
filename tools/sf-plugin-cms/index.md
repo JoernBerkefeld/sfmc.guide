@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "sf-plugin-cms"
-description: "Salesforce CLI plugin for bounded Marketing Cloud CMS inspection, workspace export/import, and Email lifecycle operations."
+description: "Salesforce CLI plugin for bounded CMS inspection, retrieval, Draft deployment, and content lifecycle operations."
 parent: Tools
 parent_url: /tools/
 permalink: /tools/sf-plugin-cms/
@@ -9,9 +9,9 @@ platforms:
   - next
 ---
 
-Salesforce CLI (`sf cms`) plugin for inspecting Marketing Cloud CMS resources, experimental workspace export, create-only workspace import, and narrowly scoped Email update, publish, unpublish, and delete operations. See the repository for supported profiles and experimental limits.
+Salesforce CLI (`sf cms`) plugin for inspecting Marketing Cloud CMS resources and working with supported Email, Email Template, Image, Document and Audio content. It is not a complete CMS backup or restore tool. See the repository for supported profiles and experimental limits.
 
-{% include callout.html type="note" title="Unreleased development" content="Single-item Email or Email Template retrieval into editable local source files is unreleased development. Batch retrieval and a deploy command are not included." %}
+{% include callout.html type="note" title="Released and unreleased capabilities" content="Version 0.20.0 includes bounded retrieval, Draft deployment and deletion for these five families, plus separate loose-image upload. Deploy executes by default; use --preview for read-only preflight. Existing Email/Template updates are HTML-only; media updates are bytes-only. Unreleased 0.21.0 adds bounded five-family metadata publish/unpublish, local-source safeguards, per-item outcomes and all-page workspace/channel lists. See the README for conservative runtime qualification labels and operation-specific limits; development-artifact evidence does not establish general-format or released-package qualification." %}
 
 ## Links
 

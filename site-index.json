@@ -928,7 +928,7 @@
     "url": "/tools/sf-plugin-cms/",
     "section": "Tools",
     "type": "page",
-    "description": "Salesforce CLI plugin for bounded Marketing Cloud CMS inspection, workspace export/import, and Email lifecycle operations."
+    "description": "Salesforce CLI plugin for bounded CMS inspection, retrieval, Draft deployment, and content lifecycle operations."
   },
   {
     "name": "sf-plugin-mcnext",
