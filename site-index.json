@@ -259,6 +259,13 @@
     "description": "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Notes that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
   },
   {
+    "name": "Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/",
+    "section": "Next",
+    "type": "page",
+    "description": "Data Cloud metadata commands, default source-format files, illustrative responses and supported lifecycle limits for Marketing Cloud Next."
+  },
+  {
     "name": "DataExtensionRowCount",
     "url": "/engagement/ampscript/functions/dataextensionrowcount/",
     "section": "AMPscript Function Reference",
