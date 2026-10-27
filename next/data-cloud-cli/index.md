@@ -9,13 +9,65 @@ platforms:
   - next
 ---
 
-Use standard Salesforce CLI to retrieve Data Cloud (Data 360) configuration into a Salesforce project. Support is operation-specific: a successful export does not establish complete migration, safe replay or full CRUD support.
+You can use Salesforce CLI to download quite a bit of your Data Cloud (Data 360) configuration. Making changes is a little less straightforward: some commands work with saved definitions, while others work with the actual running component.
 
-Metadata examples cover **API `65.0`, default dataspace**. The operational CI chapter uses **API `67.0`** facade creation and API 65 direct lifecycle requests; operational Segment requests use API 65, and operational Data Graph and Identity Resolution CRUD use the API 67 MCP facade (native Identity Resolution GET uses API 65). The separate Segment Members runtime-data chapter uses **API `67.0`**. Replace the generic member names with exact names from your org, and `SOURCE_ALIAS` / `TARGET_ALIAS` with deliberately selected authenticated aliases. Names are illustrative, not assets supplied by Salesforce. Check the evolving [sf-plugin-data capabilities](https://github.com/JoernBerkefeld/sf-plugin-data#metadata-examples-prerequisites-and-qualification) for the current support boundary.
+This page explains the difference and shows the commands next to the files and responses you can expect. Start with retrieving an existing component. Only move on to create, update or delete when you have checked the prerequisites for that section.
 
-## Project and command conventions
+- **Objects and connections:** [DMOs](#data-model-object-dmo-customobject-dlm), [DLOs](#data-lake-object-dlo-customobject-dll), [mappings](#dlo-to-dmo-mapping-objectsourcetargetmap), [relationships](#field-relationship-fieldsrctrgtrelationship), [source objects](#source-object-configuration-datasourceobject), [streams](#data-stream-configuration-datastreamdefinition).
+- **Insights and audiences:** [calculated insight definitions](#calculated-insight-mktcalcinsightobjectdef), [segment definitions](#segment-marketsegmentdefinition), [live calculated insights](#operational-calculated-insights), [live segments](#operational-segments), [segment members](#segment-members-runtime-data-not-metadata).
+- **Other configuration:** [Data Graphs](#operational-data-graphs), [Identity Resolution](#operational-identity-resolution), [kit templates](#kit-template-datakitobjecttemplate), [kit definitions](#kit-definition-datapackagekitdefinition), [kit membership](#kit-membership-datapackagekitobject).
 
-Assume the default **`force-app/main/default/`** source-format layout throughout. Run commands at the project root, with an existing `force-app` directory and this `sfdx-project.json`:
+## Before you start
+
+### What is the CLI, and where do I type this?
+
+Salesforce CLI is a program on your computer that talks to Salesforce. CLI stands for **command-line interface**: instead of clicking through pages, you type a command and read its response. Here we use it to save configuration as files, compare settings and make selected changes. Installing it does not create a Salesforce account or give you additional permissions.
+
+Open **PowerShell** on Windows or **Terminal** on macOS/Linux. A terminal is the window; the shell inside it interprets what you type. You can also use the terminal in an editor such as VS Code. Do not paste these commands into Salesforce's browser search box or a browser's developer console.
+
+Copy one command line at a time and press Enter. Long lines may wrap on this page, but are still one command. Wait for the prompt to return and check the result before running the next line. Blocks labelled JSON or XML are file contents or sample responses, **not terminal commands**. The `sf` commands below work in PowerShell and common macOS/Linux shells; the later `Get-Content` example is specifically PowerShell.
+
+### Install and check Salesforce CLI
+
+You need a computer where you can install software, an internet connection to Salesforce, a plain-text editor, and access to an org with Data Cloud enabled. An **org** is a Salesforce environment with its own users, settings and data. Ask your administrator for a non-production practice org, its login URL and the appropriate API/Data Cloud permissions. A **sandbox** is a separate testing environment; an arbitrary new Salesforce account will not necessarily have these features.
+
+Follow Salesforce's [CLI installation instructions](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm). If you choose the npm installation route, first install a supported Node.js LTS version from [Node.js](https://nodejs.org/en/download/). Node.js runs JavaScript outside the browser; its bundled **npm** program installs software packages. Then run:
+
+```sh
+node --version
+npm --version
+npm install --global @salesforce/cli
+sf --version
+```
+
+The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. You do not need to build a plugin, install Yarn/TypeScript or install the separate `sf-plugin-data` plugin for this page. A **plugin** adds commands to the CLI; these examples use Salesforce's standard commands.
+
+To see what a command accepts without running it, append `--help`, for example `sf org login web --help`. Words starting with `--` are **flags**: options that change how a command runs.
+
+### Log in and name the connection
+
+An **alias** is a local nickname for an authenticated connection. Choose a clear one, such as `data-practice`. Replace `LOGIN_URL` below with the exact HTTPS login URL your administrator supplied, keeping the quotes:
+
+```sh
+sf org login web --instance-url 'LOGIN_URL' --alias data-practice
+sf org list
+```
+
+The first command opens your browser. Sign in to the intended org, complete any sign-in checks, approve access if your administrator allows it, then return to the terminal. The second lists connections: check the alias, username and connection status. If login is blocked by your company's security policy, ask your administrator; do not try to bypass it. The CLI retains authentication locally, so protect your computer and never share authentication files or tokens.
+
+Throughout this page, `SOURCE_ALIAS` and `TARGET_ALIAS` are **placeholders**, not literal connections. Replace them with your chosen aliases. If you are only reading, one login is enough. If a later example changes a different org, log in to that org separately with a different alias and verify it too. `--target-org` always chooses the org the command contacts, even for a read.
+
+An alias is not a read-only permission setting. Some explicitly source-only examples below write to `SOURCE_ALIAS`. Before every deploy, POST, PATCH or DELETE, check the command, the actual org and your permission to make that change. We deliberately pass `--target-org` rather than rely on a saved default org. Start with retrieval, not the create/delete sections; these are alternatives to consult, not a script to run from top to bottom.
+
+### Make a local Salesforce project
+
+A **project** is a folder on your computer, not a new org. It tells the CLI where to put Salesforce configuration files. For this guide, the smallest setup is enough:
+
+1. In your file manager, create a new empty folder called `data-cloud-practice` in a private working location. Do not reuse a project containing unrelated work.
+2. Inside it, create the nested folders `force-app`, then `main`, then `default`. This gives you `force-app/main/default/`.
+3. In your text editor, create `sfdx-project.json` directly inside `data-cloud-practice`, beside `force-app`, with the contents below. Save it as plain UTF-8 text, not as `sfdx-project.json.txt`.
+
+JSON stores named settings as `"key": value` pairs inside braces. Keep double quotes, commas and brackets as shown; JSON does not allow comments or a comma after the last entry.
 
 ```json
 {
@@ -25,16 +77,77 @@ Assume the default **`force-app/main/default/`** source-format layout throughout
 }
 ```
 
-- **Read / retrieve:** reads the org and writes/replaces selected local XML. Inspect local changes first. It does not start ingestion, run calculations or publish segments.
-- **Create / update:** deploys selected local XML to the target org. It does not rewrite those local files. Existing prerequisites must already be valid in the target.
-- **Delete:** changes the org; the destructive-deployment mechanism below does **not** remove local source XML. Cascades require separate local reconciliation.
-- All JSON and XML samples below are **sanitized, shortened illustrations**, not recorded command outputs or complete response contracts. XML comments marking omitted content mean the block is an excerpt, **not a deployable replacement**. Preserve actual retrieved attributes and dependencies.
-- Only qualified operations have command shapes. Unsupported operations have limitations instead of speculative recipes.
-- **Manifest-dependent examples are lower-level mechanism references, not self-contained user workflows.** Their commands run only when an integration has already supplied the exact ephemeral files shown. No current multi-family wrapper or generator invocation is provided here. Do not assume those files exist or hand-author them as a required normal workflow. A one-command interface with generated internals requires separate tooling; none is promised by these examples.
+`packageDirectories` identifies the source folder; `default: true` makes it the default location for retrieved files. `namespace` stays empty here. `sourceApiVersion` selects the project's default Salesforce API version, explained below. There is no package to install from this file.
 
-### Reading command responses
+Now change the terminal's **working directory**—the folder commands run from—to your project. Replace `PROJECT_FOLDER` with its full path, keeping the quotes (especially if the path contains spaces):
 
-Each Metadata retrieve command below uses the same response shape; runtime REST responses use their own envelope. Illustrative shortened DMO response:
+```sh
+cd 'PROJECT_FOLDER'
+pwd
+```
+
+`cd` changes directory; `pwd` prints the current one. Check that it is `data-cloud-practice`, the folder containing `sfdx-project.json`, not `force-app` or `default`. Run the remaining commands from that project root unless a section tells you to use a separate project. A path such as `force-app/main/default/...` is relative to this root. After reopening a terminal, use `cd` again.
+
+### Configuration, live components and names
+
+**Metadata** means configuration: object definitions, fields, labels and selection rules rather than customer rows. Salesforce's **Metadata API** transfers those definitions. An **API** is an interface programs use to communicate; the CLI handles the login and sends the request for you. **Runtime** or **operational** means the live component and its current state, which is not always created by saving a definition. Retrieving a segment definition, for example, does not retrieve its members.
+
+A **dataspace** groups Data Cloud data and configuration with its own access boundaries. The metadata examples use **API `65.0`, default dataspace**. Ask your administrator to confirm you can use that dataspace. API versions describe the Salesforce interface, not your installed CLI version. Keep the API versions in the commands: the later sections deliberately use API `67.0` for some requests. The examples do not establish that a configuration can be moved between orgs unchanged.
+
+A component's **label** is its friendly display text. Its **API name** is the exact technical name; a **metadata member name** is the name used to select its saved definition. An **ID** is a separate record identifier returned by Salesforce. These are not interchangeable. Names such as `Customer__dlm`, `CustomerActivity` and `ActiveCustomers` are examples, not objects Salesforce creates for you. Keep actual capitalization and suffixes; replace example names consistently in commands, filenames and file contents. Later placeholders such as `QUERY_ID` must come from the response specified in that section, never from a guessed display name.
+
+To find an existing metadata member before your first download, ask the component owner for its API name or list the relevant type. For example, this read lists `CustomObject` definitions visible to your user:
+
+```sh
+sf org list metadata --metadata-type CustomObject --target-org SOURCE_ALIAS --api-version 65.0 --json
+```
+
+Look for the exact `fullName` of your intended DMO ending in `__dlm`. The list can include other kinds of objects; do not pick the first entry blindly. If you cannot identify the intended component, stop and ask its owner. Later sections give the corresponding metadata type to list.
+
+An **object** describes a table-like collection of records; its **fields** are the columns. A **schema** describes those fields and their types. A **primary key** identifies a row; a **key qualifier** distinguishes keys from different sources. A lookup links to another object, and relationship **cardinality** describes how many rows may match: `ManyToOne` or `N:1` means many source rows can refer to one target row. Keep the real key and relationship settings rather than inferring them from example names.
+
+**Dependencies** are the objects, fields or other components a definition relies on—or consumers that rely on it. Ask the owner to check these before writes and deletion; an empty result from one inventory is not proof that nothing uses a component. The later create examples assume those prerequisites already exist. This page is not a recipe for building an entire Data Cloud environment from scratch.
+
+### Files you send, files you receive
+
+Salesforce source-format metadata uses **XML**: named elements such as `<label>Customer</label>`. Preserve the surrounding tags and namespace declarations. Create any missing parent folders in your editor before saving a new file at the exact path shown. Do not paste an XML fragment over a complete retrieved file.
+
+The default source layout is **`force-app/main/default/`**. In short:
+
+- **Retrieve** downloads XML into that folder. It can replace local edits, but does not change the org or start ingestion, calculations or publication.
+- **Deploy** sends your selected local XML to the org. It does not rewrite the local file, and it does not automatically create missing dependencies.
+- **REST requests** print a response to the terminal. They do not create Salesforce project files. Save the request JSON shown below yourself, outside metadata source; `--body '@file.json'` reads that file.
+- **Delete** changes the org. The delete examples here leave previously downloaded XML on your computer. Reconcile those files before deploying again, or you risk restoring stale configuration.
+
+For a request such as `--body '@ci-create.json'`, create `ci-create.json` in the project root, **beside `force-app`, not inside it**, using your text editor. Save only the JSON block, without the surrounding Markdown backticks. The `@` tells the CLI to read a local file; it is not part of the filename. All later unqualified request filenames use this same location. `--file ci-delete.json` is different: that file describes the whole request, including URL and method, rather than only its body. Neither form creates the file for you.
+
+**REST** is the API request style used for the live components below. The quoted `/services/data/...` path is an **endpoint**, an address within the org selected by `--target-org`, not a folder on your computer. `GET` reads; `PATCH` changes selected settings; `DELETE` requests removal. `POST` submits an operation and can create or process data, but some explicitly named operations below are reads. `--header` supplies request context, such as `Data-Space:default`; `--body` supplies the request's input. A response body is the data Salesforce sends back. Do not assume that a response can be reused as a request.
+
+Some examples call an **MCP facade**: one REST endpoint that accepts a named operation in `toolName` and its inputs in `paramsJson`. You are calling it through the CLI; you do not need an AI assistant or an MCP client. A **native endpoint** instead addresses the component directly. Here `paramsJson` contains JSON encoded as a string inside outer JSON, so inner quotes appear as `\"`. Keep that escaping; an object in its place is not equivalent.
+
+All responses are **sanitized, shortened illustrations**, not complete response contracts. XML with an “omitted” comment is an excerpt: keep the complete retrieved file when deploying. Likewise, `<redacted-member-id>` and similar response markers stand for removed values, not inputs to copy.
+
+### Your first retrieval
+
+Use the DMO name you identified above in place of `Customer__dlm`:
+
+```sh
+sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+```
+
+Here's how to read that command:
+
+- `sf project retrieve start` downloads configuration into the current project.
+- `--metadata CustomObject:Customer__dlm` selects **type:name**. `CustomObject` is Salesforce's metadata type here, not an instruction to create an object.
+- `--target-org` chooses the authenticated connection; `--api-version` selects the interface version.
+- `--wait 5` waits up to five minutes for results, not five seconds. Returning to the prompt is not proof that a job finished.
+- `--json` asks for structured output with named properties rather than a human-oriented table. It does not save an output file.
+
+Later, `--source-dir` selects a local file or folder to deploy; selecting a folder includes its subfolders. `--manifest` selects components listed in an XML file instead. `--test-level NoTestRun` concerns Salesforce Apex code tests, **not** a simulation or permission to skip checking the result. `--dry-run`, where supported, validates rather than saving the change; these examples otherwise perform the requested operation.
+
+### What does a successful response look like?
+
+For example, retrieving a DMO can return:
 
 ```json
 {
@@ -43,29 +156,43 @@ Each Metadata retrieve command below uses the same response shape; runtime REST 
     "done": true,
     "success": true,
     "status": "Succeeded",
-    "files": [
-      {
-        "fullName": "Customer__dlm",
-        "type": "CustomObject",
-        "state": "Created",
-        "filePath": "force-app/main/default/objects/Customer__dlm/Customer__dlm.object-meta.xml"
-      }
-    ]
+    "files": [{
+      "fullName": "Customer__dlm",
+      "type": "CustomObject",
+      "state": "Created",
+      "filePath": "force-app/main/default/objects/Customer__dlm/Customer__dlm.object-meta.xml"
+    }]
   }
 }
 ```
 
-The real file list can include many decomposed fields, and existing local files need not report `Created`. For each type below, use its stated member, type and path in interpreting that response; a success flag does not attest to omitted runtime configuration.
+The outer `status: 0` says the CLI command reported success; a nonzero status means you need to read the error. Inside `result`, check `done`, `success` and the job's own `status` when present. JSON braces `{}` group named properties; brackets `[]` hold a list. `result.files` means the `files` list inside `result`, not a filename. `null` means no value was supplied, not zero or a successful run.
 
-### Selecting multiple components
+`filePath` tells you where to look. Open that path in your editor, starting from the project root. `Created` describes the **local file**, not a newly created object in Salesforce. The full response can also list individual field files. You have now logged in and downloaded a definition without deploying it. You can stop here and inspect the files before choosing another section.
 
-Repeat `--metadata` to retrieve multiple exact members in one command, without a manifest:
+For deployments, wait for the whole job to succeed and then read the component again to check the result. A component listed as successful inside a failed deployment is not enough. Likewise, `Unchanged` means the configuration did not change; the deployment job still ran.
+
+For REST, check the HTTP status **and the response body**. HTTP is the request/response protocol: codes such as `200` and `201` indicate a successful request, `204` has no response body, and `404` means the requested resource was not found. Authentication or permission failures are not evidence of deletion. With `--json`, look for `result.statusCode` and `result.body` where provided. The API 67 MCP facade used below is an API that runs named operations. It can return an error inside an otherwise successful HTTP/CLI response. Its examples show the decoded result, not the complete enclosing response.
+
+**Asynchronous** work continues on Salesforce after your command returns. **Polling** means repeating a read/status request, not repeating the create, update or delete. For a deployment that has not finished, use its returned job ID in place of `JOB_ID` and the same org:
+
+```sh
+sf project deploy report --job-id JOB_ID --target-org TARGET_ALIAS --wait 5 --json
+```
+
+For a retrieval that times out, follow the installed command's recovery guidance rather than assuming all files arrived or inventing a deploy-report command for it. For live components, use that section's read command to check progress. Allow time between checks; if the state stays unresolved or reports an error, stop and ask the administrator instead of resubmitting writes. Later **terminal checks** mean checks for a final state, not simply text appearing in your terminal window.
+
+A collection or query may return only a **page** of results. **Pagination** means reading the remaining pages. A limit is how many rows to request; an offset is how many rows have already been passed. The Segment Members section shows the concrete steps. Where a collection returns a continuation link/token, use the documented continuation for that endpoint, keeping the same org and expected API path; if you cannot establish that you reached the end, you cannot conclude a deleted item is absent. Never forward credentials to an arbitrary returned URL.
+
+### Retrieve more than one component
+
+You can repeat `--metadata`; there is no need for a manifest just to select two components:
 
 ```sh
 sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened response:
+The `files` list then contains both definitions:
 
 ```json
 {
@@ -80,13 +207,23 @@ Illustrative shortened response:
 }
 ```
 
-This writes both local definitions and changes neither org component. Their dependency and lifecycle limitations still apply independently.
+### A note about deletion examples
+
+A **manifest** is an XML list of metadata types and member names. A destructive-change manifest selects what to delete; `--post-destructive-changes` applies those removals after the regular deployment content. An empty `package.xml` does not cancel those deletions.
+
+A few metadata deletes below use generated `package.xml` and destructive-change files. These explain the lower-level mechanism; they are **not self-contained user workflows**. Run them only when your integration has supplied the exact files and checked ownership and dependencies. No current multi-family wrapper or generator invocation is supplied here, and hand-authoring manifests is not the intended normal workflow.
+
+Here, **your integration** means existing tooling or a developer on your team that supplies reviewed files—not something installed by following this page. If you do not have those files and checks, skip these deletion examples. **Git** is a tool for tracking and sharing file changes; keeping a file out of Git means not adding it to that history or uploading it to a repository.
+
+Keep those generated files temporary and out of Git. Use an isolated source project without unrelated XML. Never delete a shared or populated object just to make another example work.
 
 ## Data Model Object (DMO): `CustomObject`, `__dlm`
 
+A DMO is the model your data is mapped into, such as a customer or order. It uses the suffix `__dlm`. Salesforce CLI treats its definition as a `CustomObject`, with a separate XML file for each field.
+
 ### Create
 
-Standard Metadata API DMO creation is not qualified. Do not use retrieved object XML as a general creation recipe. The custom plugin's bounded JSON creation route is separate.
+Creating a DMO by deploying its XML has **not been verified**. Downloading an object does not mean you can recreate it that way. The custom `sf-plugin-data` plugin has a separate, limited JSON creation route; that is not the standard Metadata API route shown here.
 
 ### Read / retrieve
 
@@ -94,13 +231,13 @@ Standard Metadata API DMO creation is not qualified. Do not use retrieved object
 sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Local artifacts include:
+Look for these files:
 
 - `force-app/main/default/objects/Customer__dlm/Customer__dlm.object-meta.xml`
 - `force-app/main/default/objects/Customer__dlm/fields/Id__c.field-meta.xml`
-- One additional `fields/<FieldName>.field-meta.xml` per exported field, including system fields and lookups.
+- Further files in `fields/` for the other fields, including system fields and lookups.
 
-Illustrative object-file excerpt:
+The object file contains information such as the label and dataspace:
 
 ```xml
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -108,44 +245,22 @@ Illustrative object-file excerpt:
   <mktDataModelAttributes>
     <creationType>Custom</creationType>
     <dataSpaceName>default</dataSpaceName>
-    <!-- Additional retrieved taxonomy, category and state attributes omitted. -->
+    <!-- Other retrieved attributes omitted. -->
   </mktDataModelAttributes>
 </CustomObject>
 ```
 
-Illustrative primary-field file:
-
-```xml
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-  <fullName>Id__c</fullName>
-  <label>Id</label>
-  <length>60</length>
-  <mktDataModelFieldAttributes>
-    <definitionCreationType>Custom</definitionCreationType>
-    <isDynamicLookup>false</isDynamicLookup>
-    <labelOverride>Id</labelOverride>
-    <masterLabel>Id</masterLabel>
-    <primaryIndexOrder>1</primaryIndexOrder>
-    <usageTag>None</usageTag>
-  </mktDataModelFieldAttributes>
-  <required>false</required>
-  <type>Text</type>
-</CustomField>
-```
-
-The response follows the retrieve example above. Local object/field files change; org configuration does not. Preserve actual primary/key-qualifier attributes: names alone do not establish qualifier binding. Object XML is not a complete mapping, relationship or ingestion export. An `isEnabled` value must not be interpreted as an activation contract or proof of no processing.
+Keep the field files too. In particular, preserve the primary-key and key-qualifier attributes rather than trying to reconstruct them from field names. This export is not a complete set of mappings, relationships or ingestion settings. An `isEnabled` flag alone does not tell you whether processing is active.
 
 ### Update
 
-Standard Metadata API DMO updates are not qualified. The plugin's bounded object/existing non-primary field label-update route does not establish general XML schema updates.
+General DMO XML updates have **not been verified** either. The plugin's limited object/field label updates do not establish support for changing a DMO schema through Metadata API.
 
 ### Delete
 
-Qualified only for an **empty, explicitly owned custom DMO with freshly checked dependencies**. Its sole owned mapping can be removed by the parent cascade; this does not authorize populated/business-object deletion or arbitrary shared-dependency cascades. Downstream insights, segments, identity resolution and activations can block deletion. No universal dependency-visibility guarantee is established.
+The deletion route is limited to an **empty custom DMO that you own**, after a fresh dependency check. It can also delete the DMO's sole owned mapping. It does not delete the DLO, and it is not a safe recipe for arbitrary business objects or shared dependencies.
 
-The supported lower-level mechanism uses internally generated ephemeral files. These contents explain the operation; they are **not a requirement to hand-author manifests** and do not imply an implemented plugin delete wrapper.
-
-Generated `package.xml`:
+The integration supplies an empty `package.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -154,7 +269,7 @@ Generated `package.xml`:
 </Package>
 ```
 
-Generated `destructiveChangesPost.xml`, selecting exactly the admitted DMO:
+Its `destructiveChangesPost.xml` selects only the intended DMO:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -167,37 +282,27 @@ Generated `destructiveChangesPost.xml`, selecting exactly the admitted DMO:
 </Package>
 ```
 
-Run only after ownership, emptiness and dependency admission, from an isolated project without unrelated source:
+With those files and checks in place:
 
 ```sh
 sf project deploy start --manifest package.xml --post-destructive-changes destructiveChangesPost.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened terminal response:
+A completed deletion can look like this:
 
 ```json
-{
-  "status": 0,
-  "result": {
-    "done": true,
-    "success": true,
-    "status": "Succeeded",
-    "details": {
-      "componentSuccesses": [
-        { "componentType": "CustomObject", "fullName": "Customer__dlm", "deleted": true, "success": true }
-      ]
-    }
-  }
-}
+{ "status": 0, "result": { "done": true, "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "CustomObject", "fullName": "Customer__dlm", "deleted": true, "success": true }] } } }
 ```
 
-**Org:** removes the selected DMO and its admitted mapping cascade; no DLO is selected. Independently confirm exact DMO/mapping absence and preserved DLO state. **Local:** object, field and mapping XML remain until deliberately reconciled; generated manifests should stay ephemeral and out of Git. Do not trust provisional successes in a failed deployment. `sf project delete source` is not qualified as an interchangeable route and also deletes local files.
+Check afterward that the exact DMO and its owned mapping are gone and the DLO remains. Downstream insights, segments, identity resolution and activations can block deletion; no single dependency list is guaranteed to show everything. Local object, field and mapping XML remain. `sf project delete source` is not an interchangeable verified alternative and would also remove local files.
 
 ## Data Lake Object (DLO): `CustomObject`, `__dll`
 
+A DLO holds data brought in from a source, before it is mapped into the data model. It uses `__dll`, not `__dlm`. Its XML describes the lake object, not the whole connection that brings data into it. Bringing data in is **ingestion**; a **connector** supplies the connection, a **stream** controls the incoming data flow, and a **transform** reshapes data.
+
 ### Create
 
-Standard Metadata API DLO creation is not qualified. Preserve actual primary-key and system qualifier fields; stripping them is not a supported workaround.
+Creating a DLO through Metadata API has **not been verified**. Do not remove primary-key or system qualifier fields to make a deployment pass.
 
 ### Read / retrieve
 
@@ -205,67 +310,40 @@ Standard Metadata API DLO creation is not qualified. Preserve actual primary-key
 sf project retrieve start --metadata CustomObject:CustomerSource__dll --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Local artifacts:
-
-- `force-app/main/default/objects/CustomerSource__dll/CustomerSource__dll.object-meta.xml`
-- `force-app/main/default/objects/CustomerSource__dll/fields/<FieldName>.field-meta.xml`
-
-Illustrative object-file excerpt:
+This writes `force-app/main/default/objects/CustomerSource__dll/CustomerSource__dll.object-meta.xml` and the individual files under `objects/CustomerSource__dll/fields/`.
 
 ```xml
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
   <label>Customer Source</label>
   <mktDataLakeAttributes>
-    <!-- Preserve the retrieved DLO definition and its attributes. -->
+    <!-- Retrieved DLO attributes omitted. -->
   </mktDataLakeAttributes>
 </CustomObject>
 ```
 
-Illustrative field excerpt:
-
-```xml
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-  <fullName>Id__c</fullName>
-  <label>Id</label>
-  <!-- Retrieved primary-index, qualifier and field attributes omitted. -->
-  <type>Text</type>
-</CustomField>
-```
-
-Interpret the retrieve response with `type: CustomObject` and member `CustomerSource__dll`. **Local:** writes decomposed definition/fields. **Org:** unchanged. `__dll` identifies a DLO, not a DMO; this is not a complete connector/credential/ingestion export.
+The response uses `type: CustomObject` and `fullName: CustomerSource__dll`. Keep the complete attributes and field definitions. Connector credentials and the rest of the ingestion setup are not included in this object export.
 
 ### Update
 
-DLO updates are not qualified.
+DLO updates have **not been verified**.
 
 ### Delete
 
-No successful standard delete route is qualified. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even with zero listed DMO dependencies and no associated stream. Illustrative shortened error, not a success response:
+There is no verified standard delete recipe here. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
 
 ```json
-{
-  "status": 1,
-  "result": {
-    "success": false,
-    "status": "Failed",
-    "details": {
-      "componentFailures": [
-        { "fullName": "CustomerSource__dll", "problem": "This data lake object definition is referenced elsewhere in Salesforce. Remove the usage and try again." }
-      ]
-    }
-  }
-}
+{ "status": 1, "result": { "success": false, "status": "Failed", "details": { "componentFailures": [{ "fullName": "CustomerSource__dll", "problem": "This data lake object definition is referenced elsewhere in Salesforce. Remove the usage and try again." }] } } }
 ```
 
-That refusal leaves the DLO in place; reconcile actual state after any failure. It does not prove all deletion mechanisms unsupported. No instance-delete workaround or runnable success recipe is offered.
+That is a refusal, not a successful delete. Check the actual state after a failure; do not try an assumed instance-delete workaround. This does not mean every possible DLO deletion route is unsupported.
 
 ## DLO-to-DMO mapping: `ObjectSourceTargetMap`
 
+This is the definition that connects fields in a DLO to fields in a DMO. Both objects must already exist with matching fields, primary keys and key qualifiers.
+
 ### Create
 
-Qualified for a bounded mapping with **already-existing, matching custom DLO and DMO**, independently checked fields, primary keys and key qualifiers, and no existing mapping of that identity. Standard Metadata API creation of those prerequisite objects is not supported by this reference.
-
-Use the complete retrieved file at `force-app/main/default/objectSourceTargetMaps/CustomerMapping.objectSourceTargetMap-meta.xml`. Illustrative excerpt only:
+Start with a complete retrieved mapping file at `force-app/main/default/objectSourceTargetMaps/CustomerMapping.objectSourceTargetMap-meta.xml`. For example, one field pair looks like this:
 
 ```xml
 <ObjectSourceTargetMap xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -278,33 +356,24 @@ Use the complete retrieved file at `force-app/main/default/objectSourceTargetMap
     <sourceField>CustomerSource__dll.Id__c</sourceField>
     <targetField>Customer__dlm.Id__c</targetField>
   </fieldSourceTargetMaps>
-  <!-- All other retrieved authored/system pairs must be retained. -->
+  <!-- Other retrieved field pairs omitted. -->
   <masterLabel>Customer Mapping</masterLabel>
   <sourceObjectName>CustomerSource__dll</sourceObjectName>
   <targetObjectName>Customer__dlm</targetObjectName>
 </ObjectSourceTargetMap>
 ```
 
+Keep **all** field pairs in the real file. Once you have checked the existing custom objects and confirmed that this mapping does not already exist:
+
 ```sh
 sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened response:
-
 ```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "status": "Succeeded",
-    "files": [
-      { "fullName": "CustomerMapping", "type": "ObjectSourceTargetMap", "state": "Created" }
-    ]
-  }
-}
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "files": [{ "fullName": "CustomerMapping", "type": "ObjectSourceTargetMap", "state": "Created" }] } }
 ```
 
-**Org:** creates the admitted mapping; independently verify all runtime pairs and exact source/target identities. System key-qualifier pairs such as `KQ_Id__c` can be generated at runtime even when absent from XML; do not add guessed pairs. **Local:** deployment leaves the selected XML unchanged. This does not qualify arbitrary formulas, filters or general mapping fidelity. DMO `isEnabled` semantics remain undefined; neither that flag nor lack of an explicit run command proves activation or inertness.
+Read the mapping back and compare the source, target and every runtime field pair. Salesforce can generate system qualifier pairs such as `KQ_Id__c` that were not in the XML; do not add guessed pairs yourself. This example does not cover arbitrary formulas or filters, and it does not guarantee that mapping creation performs no internal processing.
 
 ### Read / retrieve
 
@@ -312,42 +381,37 @@ Illustrative shortened response:
 sf project retrieve start --metadata ObjectSourceTargetMap:CustomerMapping --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-The retrieve response identifies `ObjectSourceTargetMap:CustomerMapping` and the exact mapping-file path above. **Local:** writes the complete XML, including repeated `fieldSourceTargetMaps`. **Org:** unchanged. Resolve the actual member name rather than guessing generated names.
+The response points to the mapping file above. Use the actual metadata member name from your org, not a name guessed from the source and target objects.
 
 ### Update
 
-Only a **`masterLabel` change** is qualified. Edit that element in the complete mapping file, leaving all field pairs and object references unchanged:
+The verified change is the **label only**. Edit `masterLabel` in the complete file, leaving all pairs and object references alone:
 
 ```xml
 <masterLabel>Customer Mapping Updated</masterLabel>
 ```
 
+Then deploy it:
+
 ```sh
 sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened update and identical-repeat responses, respectively:
-
-```json
-{
-  "update": { "status": 0, "result": { "success": true, "files": [{ "fullName": "CustomerMapping", "state": "Changed" }] } },
-  "identicalRepeat": { "status": 0, "result": { "success": true, "files": [{ "fullName": "CustomerMapping", "state": "Unchanged" }] } }
-}
-```
-
-These are two illustrative invocations, not one CLI envelope. **Org:** changes the label; independent readback must preserve every pair and identity. Identical repeat reports configuration no-change, not absence of internal work. **Local:** only your label edit changes the file; the deployment does not. Retargeting, field removal and formula/filter changes are unqualified.
+The file entry can report `Changed`; sending the same file again can report `Unchanged`. These are separate invocations, and neither proves that Salesforce performed no internal work. Read back the label and pairs. Retargeting, field removal and formula/filter updates have not been verified.
 
 ### Delete
 
-Standalone standard deletion is not supported by this reference: an internal server error or sole-mapping restriction can prevent removal. The bounded parent-DMO delete can cascade its sole owned mapping; that is **not** standalone delete support or permission to delete an arbitrary parent. No standalone delete recipe is offered.
+Standalone mapping deletion is not supported by this example. It can fail with an internal server error or a restriction on removing the sole mapping. Deleting an empty, owned parent DMO can remove its sole owned mapping, as described above; do not delete an arbitrary parent as a workaround.
 
 ## Field relationship: `FieldSrcTrgtRelationship`
 
+The following example links an order's customer field to a customer DMO. It covers a custom, DataCloud-owned `ManyToOne` relationship between existing **empty custom DMOs** in the default dataspace, not managed relationships or shared lookup fields.
+
 ### Create
 
-Qualified for **custom, DataCloud-owned `ManyToOne` relationships** on existing empty custom DMOs in the default dataspace. Source and target fields, including primary/key-qualifier semantics, must already be correct. This does not qualify creating those DMOs through Metadata API, managed relationships, shared lookup reuse or activation.
+Assume `Order__dlm.CustomerId__c` and `Customer__dlm.Id__c` already exist with the correct key settings. You need two files.
 
-The source DMO `Order__dlm` already has `CustomerId__c`; the target `Customer__dlm` already has `Id__c`. Supply the explicitly owned, sole-use lookup prerequisite in `force-app/main/default/objects/Order__dlm/fields/CustomerLookup__c.field-meta.xml`:
+First, the new lookup field at `force-app/main/default/objects/Order__dlm/fields/CustomerLookup__c.field-meta.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -360,7 +424,7 @@ The source DMO `Order__dlm` already has `CustomerId__c`; the target `Customer__d
 </CustomField>
 ```
 
-The `fullName` element is required. Supply `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`:
+Do not leave out `fullName`. Second, the relationship at `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -375,29 +439,20 @@ The `fullName` element is required. Supply `force-app/main/default/fieldSrcTrgtR
 </FieldSrcTrgtRelationship>
 ```
 
-Deploy the lookup and relationship together:
+Deploy both together:
 
 ```sh
 sf project deploy start --metadata CustomField:Order__dlm.CustomerLookup__c --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened response:
-
 ```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "status": "Succeeded",
-    "files": [
-      { "fullName": "Order__dlm.CustomerLookup__c", "type": "CustomField", "state": "Created" },
-      { "fullName": "OrderCustomer", "type": "FieldSrcTrgtRelationship", "state": "Created" }
-    ]
-  }
-}
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "files": [
+  { "fullName": "Order__dlm.CustomerLookup__c", "type": "CustomField", "state": "Created" },
+  { "fullName": "OrderCustomer", "type": "FieldSrcTrgtRelationship", "state": "Created" }
+] } }
 ```
 
-**Org:** creates one lookup field and one relationship, not the DMOs or source/target key fields. Confirm exact relationship identity, field references and cardinality independently. **Local:** creates the two authored files before deployment; deployment does not rewrite them. No explicit enable/run/publish operation is included; do not generalize that into a no-processing guarantee.
+This creates the lookup and relationship, **not the DMOs or their key fields**. Read back the exact relationship, field references and cardinality. No explicit activation command is included, but that is not a guarantee of no internal processing.
 
 ### Read / retrieve
 
@@ -405,25 +460,11 @@ Illustrative shortened response:
 sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened response:
-
-```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "files": [
-      { "fullName": "OrderCustomer", "type": "FieldSrcTrgtRelationship", "state": "Created", "filePath": "force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml" }
-    ]
-  }
-}
-```
-
-**Local:** writes the relationship XML with the elements shown above. It does not automatically supply the prerequisite objects/fields; retrieve their `CustomObject` definitions separately when needed. **Org:** unchanged.
+The `files` entry points to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`, containing the elements above. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
 
 ### Update
 
-Only **`masterLabel`** changes are qualified. Keep identity, source/target references, lookup and cardinality unchanged; edit the relationship file:
+Change only the relationship's label:
 
 ```xml
 <masterLabel>Order Customer Updated</masterLabel>
@@ -433,22 +474,13 @@ Only **`masterLabel`** changes are qualified. Keep identity, source/target refer
 sf project deploy start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened update and identical-repeat responses:
-
-```json
-{
-  "update": { "status": 0, "result": { "success": true, "files": [{ "fullName": "OrderCustomer", "state": "Changed" }] } },
-  "identicalRepeat": { "status": 0, "result": { "success": true, "files": [{ "fullName": "OrderCustomer", "state": "Unchanged" }] } }
-}
-```
-
-These represent separate invocations. **Org:** updates the label, retaining identity/references/cardinality; repeat reports no configuration change, not zero internal writes/work. **Local:** your label edit remains; deployment does not rewrite the file. Retargeting, cardinality changes and `OneToOne` lifecycle are not qualified.
+Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, source, target and cardinality stayed the same. Retargeting, cardinality changes and `OneToOne` updates have not been verified.
 
 ### Delete
 
-Qualified only for the admitted custom relationship with its **explicitly owned, sole-use lookup**. Deletion also removes that lookup field; do not assume a shared lookup is safe.
+**Deleting this relationship also removes its owned, sole-use lookup field.** Do not apply this to a shared lookup.
 
-Use the empty generated `package.xml` from the DMO delete section. Generate `relationship-delete.xml` with exactly this relationship:
+Use the generated empty `package.xml` from the DMO section. The integration supplies `relationship-delete.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -465,32 +497,19 @@ Use the empty generated `package.xml` from the DMO delete section. Generate `rel
 sf project deploy start --manifest package.xml --post-destructive-changes relationship-delete.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
 ```
 
-Illustrative shortened response:
-
 ```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "status": "Succeeded",
-    "details": {
-      "componentSuccesses": [
-        { "componentType": "FieldSrcTrgtRelationship", "fullName": "OrderCustomer", "deleted": true, "success": true }
-      ]
-    }
-  }
-}
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "FieldSrcTrgtRelationship", "fullName": "OrderCustomer", "deleted": true, "success": true }] } } }
 ```
 
-**Org:** removes the relationship and owned lookup, leaving both DMOs and the original source/target key fields. Confirm relationship/lookup absence and preserved objects independently. **Local:** both `OrderCustomer.fieldSrcTrgtRelationship-meta.xml` and `CustomerLookup__c.field-meta.xml` remain stale until deliberately reconciled.
+Confirm that the relationship and lookup are gone, but both DMOs and their original key fields remain.
 
-**Avoid stale-source redeployment:** reconcile those exact local files with confirmed org state before another deployment. Leftover lookup XML can cause a later destructive deployment to fail with a missing-field warning. Use an isolated empty source project for separately admitted destructive cleanup rather than suppressing warnings or broadly deploying the stale project. A failed deployment's provisional component successes do not establish deletion. Keep generated destructive files ephemeral and out of Git; this is a lower-level mechanism, not a promised plugin wrapper.
+**Avoid stale-source redeployment:** the local relationship and lookup files are still there. Reconcile them before another deploy. Leftover lookup XML can make later deletion fail; use an isolated empty source project rather than suppressing warnings.
 
 ## Source object configuration: `DataSourceObject`
 
 ### Create
 
-Creation is not qualified.
+Creation has **not been verified**.
 
 ### Read / retrieve
 
@@ -498,7 +517,7 @@ Creation is not qualified.
 sf project retrieve start --metadata DataSourceObject:CustomerSource --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Local file: `force-app/main/default/dataSourceObjects/CustomerSource.dataSourceObject-meta.xml`. Illustrative content:
+The response points to `force-app/main/default/dataSourceObjects/CustomerSource.dataSourceObject-meta.xml`:
 
 ```xml
 <DataSourceObject xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -510,21 +529,21 @@ Local file: `force-app/main/default/dataSourceObjects/CustomerSource.dataSourceO
 </DataSourceObject>
 ```
 
-The retrieve response identifies `DataSourceObject:CustomerSource` and this file path. **Local:** writes configuration XML. **Org:** unchanged. This representation has no field definitions and is not a complete connector/credential export.
+This tells you which source record the configuration refers to. It does not include field definitions or a complete connector/credential export.
 
 ### Update
 
-Updates are not qualified.
+Updates have **not been verified**.
 
 ### Delete
 
-Deletion is not qualified.
+Deletion has **not been verified**.
 
 ## Data stream configuration: `DataStreamDefinition`
 
 ### Create
 
-Creation is not qualified.
+Creation has **not been verified**.
 
 ### Read / retrieve
 
@@ -532,7 +551,7 @@ Creation is not qualified.
 sf project retrieve start --metadata DataStreamDefinition:CustomerStream --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Local file: `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStreamDefinition-meta.xml`. Illustrative excerpt:
+Look for `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStreamDefinition-meta.xml`:
 
 ```xml
 <DataStreamDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -542,27 +561,31 @@ Local file: `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStr
   <dataSource>SalesforceSource</dataSource>
   <mktDataLakeObject>CustomerSource__dll</mktDataLakeObject>
   <mktDataTranObject>CustomerTransform</mktDataTranObject>
-  <!-- Additional retrieved attributes omitted. -->
+  <!-- Other retrieved attributes omitted. -->
 </DataStreamDefinition>
 ```
 
-The retrieve response identifies `DataStreamDefinition:CustomerStream` and this path. **Local:** writes the definition. **Org:** unchanged; no ingestion or refresh starts. Connector, source, DLO and transform references remain dependencies. The source-object and stream examples are independent shapes, not a complete configured ingestion chain.
+Retrieving this file does **not** start a refresh. The connector, source, DLO and transform still need to exist for a working stream. This and the source-object example show file shapes, not a complete ingestion setup.
 
 ### Update
 
-Updates, activation and refresh are not qualified.
+Updates, activation and refresh have **not been verified** here.
 
 ### Delete
 
-Deletion is not qualified.
+Deletion has **not been verified**.
 
 ## Calculated insight: `MktCalcInsightObjectDef`
 
-These operations manage a **Metadata definition**, not a qualified runnable calculated insight. Runtime binding, enabled/schedule state, materialization and safe noncomputing execution are not established **by this Metadata route**. A definition-only deployment can reserve the API name while no operational CI exists: runtime creation then reports that the name already exists, and PATCH cannot attach/publish the missing runtime. Do not create a Metadata shell before the operational route below; resolve any owned name collision deliberately, never by deleting a shared definition. Do not use this route where absence of processing is a requirement.
+A calculated insight computes values from your data, for example a customer count grouped by application. The expression uses **SQL**, a language for querying tables: `SELECT` chooses fields/calculations, `FROM` names the source, `WHERE` filters rows and `GROUP BY` groups results. Grouping fields are **dimensions**; calculated values are **measures**. You need compatible existing objects and fields, and someone who can check the query if you are not familiar with SQL.
+
+This XML holds a calculated insight **definition**. It is not the same as creating a live calculated insight. For that, use the [operational route below](#operational-calculated-insights).
+
+**Important:** deploying a definition can reserve the API name without creating a runtime insight. Runtime creation then finds the name taken, while PATCH cannot attach the missing runtime. Do not deploy an XML shell first if your goal is a live insight, and do not delete someone else's definition to free a name.
 
 ### Create
 
-Create a definition only with an admitted existing DMO/field dependency and explicit permission for possible processing. Save `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml` with the complete sanitized example below, replacing its DMO and fields with compatible existing names:
+Definition-only creation requires compatible existing DMO fields and permission for possible processing. Save `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -573,26 +596,17 @@ Create a definition only with an admitted existing DMO/field dependency and expl
 </MktCalcInsightObjectDef>
 ```
 
-The zero-row predicate bounds returned business rows, **not scanning or processing**. It is not a draft/inertness control.
+Replace the DMO and fields consistently. `WHERE 1 = 0` gives an empty result; it does **not** prevent scanning or processing.
 
 ```sh
 sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened response:
-
 ```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "status": "Succeeded",
-    "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": true, "success": true }] }
-  }
-}
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": true, "success": true }] } } }
 ```
 
-**Org:** stores the definition; success does not prove a runtime `CustomerActivity__cio` exists or can run. A runtime lookup can return `ITEM_NOT_FOUND` despite definition success. **Local:** the authored XML remains unchanged by deployment. Independently retrieve it to verify SQL, creation type and label.
+That success means the definition was stored. Runtime GET can still return `ITEM_NOT_FOUND`. This route is not suitable when you need a guarantee of no processing.
 
 ### Read / retrieve
 
@@ -600,37 +614,27 @@ Illustrative shortened response:
 sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Use the Metadata member name, not its runtime `__cio` name. Local file: `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`. Illustrative excerpt:
+This writes the XML file above, including the SQL, label and creation type. Use the **metadata name**, not the runtime name ending in `__cio`.
 
-```xml
-<MktCalcInsightObjectDef xmlns="http://soap.sforce.com/2006/04/metadata">
-  <creationType>Custom</creationType>
-  <expression><!-- Retrieved SQL expression omitted. --></expression>
-  <masterLabel>Customer Activity</masterLabel>
-</MktCalcInsightObjectDef>
-```
-
-The retrieve response identifies `MktCalcInsightObjectDef:CustomerActivity` and this path. **Local:** writes SQL/label/creation-type XML. **Org:** unchanged; retrieval starts no calculation. XML omits **enabled state, schedule, definition type, dimensions/measures and dataspace**. Referenced DMO fields remain dependencies. Unscheduled source state does not establish inert deployment.
+The file does not include enabled state, schedule, definition type, dimensions/measures or dataspace. Keep the referenced DMO fields in mind when comparing environments.
 
 ### Update
 
-Only a definition's **`masterLabel` change** is qualified. Change that element to `Customer Activity Updated`, retain the expression/creation type, and deploy the same exact file:
+The verified change is the definition's **`masterLabel` change**. Keep the expression and creation type, edit the label, and deploy the same file:
 
 ```sh
 sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened response:
-
 ```json
 { "status": 0, "result": { "success": true, "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": false, "changed": true, "success": true }] } } }
 ```
 
-**Org:** updates the definition label; retrieve independently to confirm unchanged expression/creation type. **Local:** only your label edit changes the file. Expression updates, identical-repeat semantics and runtime updates are not qualified by this Metadata route; see the separate operational CI chapter for runtime PATCH.
+Retrieve again to confirm the label and unchanged SQL. Expression updates, identical-repeat semantics and runtime updates are not qualified by this Metadata route.
 
 ### Delete
 
-For an explicitly owned definition with admitted dependencies, an integration can supply the empty `manifest/package.xml` (version `65.0`, no types) and exact `manifest/destructiveChangesPost.xml`:
+For an owned definition whose dependencies have been checked, the integration supplies the empty `manifest/package.xml` and this `manifest/destructiveChangesPost.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -643,27 +647,26 @@ For an explicitly owned definition with admitted dependencies, an integration ca
 </Package>
 ```
 
-Conditional lower-level command, only with those supplied ephemeral files:
-
 ```sh
 sf project deploy start --manifest manifest/package.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5 --json
+sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0 --json
 ```
 
-Illustrative shortened response:
-
-```json
-{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "deleted": true, "success": true }] } } }
-```
-
-**Org:** deletes the exact definition; confirm its absence independently. This is not a general runtime insight cleanup or generated-data removal guarantee. **Local:** XML remains for deliberate reconciliation; exclude generated manifests from Git.
+The successful component response reports `deleted: true`. Confirm the exact definition is absent from the inventory. This is definition deletion, not a promise to clean up a runtime insight or its generated data.
 
 ## Segment: `MarketSegmentDefinition`
 
-The qualified write operations below are **source-only API 65 DBT Metadata definition CRUD**, not live segment instantiation. A saved definition can exist while its runtime GET returns `ITEM_NOT_FOUND`. Neither safe noncomputing deployment nor target/cross-org replay is established; use the separate Operational segments chapter for the distinct live REST route. UI criteria retrieval does not qualify UI-definition writes.
+A **segment** selects an audience using rules. Publishing prepares it for use; refreshing recalculates it, while activation sends data to a destination. These are distinct from saving the definition. A **unified DMO** contains the combined profiles produced by identity resolution; use an existing one with its actual key.
+
+The examples distinguish `UI` criteria built in Salesforce's visual interface from `DBT`/`Dbt`, a SQL-based pipeline representation. You do not need to install a separate dbt command-line tool for the requests here. **CRUD** simply abbreviates create, read, update and delete.
+
+As with calculated insights, segment XML is a **saved definition**, not necessarily a usable live segment. The write examples cover **source-only API 65 DBT Metadata definition CRUD**: creating, reading, changing the label and deleting that definition in the source org. Cross-org replay and deployment without processing have not been verified.
+
+If you want a live segment, go to [Operational segments](#operational-segments). Being able to retrieve UI criteria also does not mean UI-definition writes are supported.
 
 ### Create
 
-Use an isolated source project containing only the explicitly owned definition and an existing compatible unified DMO/key. Save the complete generic example at `force-app/main/default/marketSegmentDefinitions/CustomerDefinition.marketSegmentDefinition-meta.xml`, replacing the model and DMO/key consistently:
+Use a separate project containing only this owned definition, with a compatible existing unified DMO/key. Save `force-app/main/default/marketSegmentDefinitions/CustomerDefinition.marketSegmentDefinition-meta.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -674,69 +677,56 @@ Use an isolated source project containing only the explicitly owned definition a
 </MarketSegmentDefinition>
 ```
 
-DBT criteria are XML-escaped pipeline XML; this shape omits `segmentOn`. The empty-result SQL does **not** guarantee absence of scanning, processing or off-core activity. With explicit permission for possible processing:
+**Escaping** preserves text that would otherwise be interpreted as file syntax: `&lt;` means `<`, `&gt;` means `>` and `&amp;` means `&` in XML text. Decoding reverses that representation; it does not execute the contents. Keep the escaping when saving nested XML, and do not replace it with raw tags.
+
+`includeCriteria` contains XML-escaped pipeline XML. This DBT form has no `segmentOn` element. Replace the model and DMO/key consistently, and obtain permission for possible processing even with the empty-result SQL.
 
 ```sh
 sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened deploy response:
-
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": true, "changed": true, "success": true }] } } }
 ```
 
-**Org:** stores the definition, not a proven usable runtime segment. A `--dry-run` response is not persisted-create evidence. **Local:** deployment leaves authored XML in place; explicit retrieve writes/replaces the same definition path. Independently compare decoded pipeline SQL/model, label and type. Do not deploy unrelated files through this project-wide selector.
+The second command downloads the definition for comparison. Check the decoded model/SQL, label and type. A successful deploy can still leave runtime GET returning `ITEM_NOT_FOUND`; `--dry-run` would not store anything at all. The project-wide selector above is why this project must contain no unrelated files.
 
 ### Read / retrieve
+
+For an existing segment:
 
 ```sh
 sf project retrieve start --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Local file: `force-app/main/default/marketSegmentDefinitions/ActiveCustomers.marketSegmentDefinition-meta.xml`. Illustrative excerpt:
+This writes `force-app/main/default/marketSegmentDefinitions/ActiveCustomers.marketSegmentDefinition-meta.xml`. A **UI retrieval example**, separate from the DBT creation example, looks like this:
 
 ```xml
 <MarketSegmentDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
   <masterLabel>Active Customers</masterLabel>
   <segmentOn>UnifiedCustomer__dlm</segmentOn>
   <segmentType>UI</segmentType>
-  <!-- Retrieved nested selection criteria omitted. -->
+  <!-- Retrieved selection criteria omitted. -->
 </MarketSegmentDefinition>
 ```
 
-This is a separate **UI retrieval example**, not the DBT creation payload above. The retrieve response identifies `MarketSegmentDefinition:ActiveCustomers` and this path. **Local:** writes criteria/label/target/type XML. **Org:** unchanged; retrieval does not publish, count or activate. XML omits **lookback, schedule, state and dataspace**. Unified/link DMOs, source objects, fields and relationships remain dependencies. `NO_REFRESH` does not prove draft behavior or absence of initial computation on deployment.
+The XML omits lookback, schedule, state and dataspace. It does not publish, count or activate the segment. Referenced objects, fields and relationships remain dependencies; `NO_REFRESH` is not proof that a later deployment will do no initial processing.
 
 ### Update
 
-For the owned DBT definition, change only `masterLabel` to `Customer Definition Updated`, preserving decoded criteria/model/SQL and `segmentType`. Repeat the isolated-source deploy and independent retrieve:
+In the owned DBT file, change only `masterLabel` to `Customer Definition Updated`. Keep the criteria, model, SQL and type intact:
 
 ```sh
 sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative shortened changed-component response:
-
-```json
-{ "status": 0, "result": { "success": true, "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": false, "changed": true, "success": true }] } } }
-```
-
-An identical redeployment can report the segment component `Unchanged` (`created: false`, `changed: false`). **Unchanged is not zero writes**: a deploy job still occurs and package metadata can change. **Org:** updates only the qualified definition label, not a demonstrated live segment. **Local:** your label edit remains; retrieve replaces XML for comparison. Broader criteria/SQL/UI changes and runtime-update fidelity are not qualified by this Metadata route.
+Expect `changed: true` for the label change. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
 
 ### Delete
 
-For the exact owned DBT definition, an integration supplies an ephemeral empty `manifest/package.xml` and exact `manifest/destructiveChangesPost.xml`. Complete empty package:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Package xmlns="http://soap.sforce.com/2006/04/metadata">
-  <version>65.0</version>
-</Package>
-```
-
-Complete destructive package:
+Use the integration-supplied empty `manifest/package.xml` and this exact `manifest/destructiveChangesPost.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -749,30 +739,22 @@ Complete destructive package:
 </Package>
 ```
 
-Conditional lower-level command, only when those exact integration-supplied files exist:
-
 ```sh
 sf project deploy start --manifest manifest/package.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE_ALIAS --api-version 65.0 --json
 ```
 
-Illustrative shortened deletion response:
-
-```json
-{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "deleted": true, "success": true }] } } }
-```
-
-Require independent inventory absence of `CustomerDefinition`. **Org:** deletes that definition only; no runtime or generated-data cleanup guarantee follows. **Local:** source XML remains for deliberate reconciliation before future deploys; generated manifests are internal and stay out of Git. This is not a required hand-authored-manifest workflow.
+The completed response reports `deleted: true`. Require independent inventory absence of `CustomerDefinition` as well. This deletes the definition only; it does not promise runtime or generated-data cleanup. The downloaded XML remains on your computer.
 
 ## Operational calculated insights
 
-This is a separate runtime route from `MktCalcInsightObjectDef` deployment: **standard CLI transports an API 67 MCP facade create request**, then API 65 direct REST requests manage the returned CI. It is not a dedicated CI CLI command or a demonstrated direct public API 65 POST create endpoint. Creation produces its own Metadata definition. Require compatible existing DMO fields, an unused API name ending `__cio`, and explicit permission for processing/publication. Source lifecycle support does not establish cross-org fidelity or noncomputing target admission.
+Here we create an actual calculated insight, rather than just its XML definition. Creation uses the **API 67 MCP facade**; subsequent reads, updates and deletion use **API 65 REST**. This is not a dedicated CLI insight command or a verified direct public API 65 POST create endpoint.
 
-All REST commands in this and the next chapter print responses to **stdout** (`--json` adds the CLI envelope); they do not automatically create `force-app` source files. Save the shown JSON request files deliberately in a private working directory outside metadata source. File names are user-prepared inputs, not generated artifacts. Inspect HTTP/body errors and embedded facade errors, not CLI exit status alone. Responses below are sanitized illustrative selections; omitted fields/headers are not a complete response contract.
+Use compatible existing DMO fields and an unused name ending in `__cio`. Check both runtime and metadata names first. The route creates its own metadata definition, so do not deploy one beforehand. You need permission for processing/publication; cross-org migration and processing-free creation are not established.
 
 ### Create
 
-Save the full `ci-create.json` body. `paramsJson` is a **JSON string**, not an object; its decoded value contains the `input` wrapper. Replace the DMO/fields with existing compatible names:
+Save `ci-create.json` outside metadata source. `paramsJson` is a **JSON string**, not an object. Its contents are wrapped in `input`:
 
 ```json
 {
@@ -785,32 +767,32 @@ Save the full `ci-create.json` body. `paramsJson` is a **JSON string**, not an o
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@ci-create.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative decoded successful **facade result selection**, not the literal facade envelope:
+A decoded result can contain:
 
 ```json
 { "apiName": "CustomerActivity__cio", "status": "DRAFT", "isEnabled": true, "publishScheduleInterval": "NOT_SCHEDULED", "dimensions": [], "measures": [] }
 ```
 
-A facade's outer success/response code can contain an embedded error. Require a real successful result and use its **returned `apiName`** thereafter. **Org:** creates a draft runtime CI and associated definition. `isEnabled: true` and `NOT_SCHEDULED` are not disabled/no-processing guarantees; draft creation is not proof of successful computation. **Local:** only your request JSON exists until you explicitly retrieve metadata.
+Use the **returned `apiName`** from now on. `DRAFT` does not prove successful computation, and `NOT_SCHEDULED` does not mean disabled or guarantee no processing. Check for embedded errors before treating the request as successful.
 
 ### Read / retrieve
+
+Read the live state, then download its XML separately if you want it in your project:
 
 ```sh
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method GET --target-org TARGET_ALIAS --json
 sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --target-org TARGET_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
-Illustrative selected REST body:
-
 ```json
 { "apiName": "CustomerActivity__cio", "status": "DRAFT", "dataSpace": "default", "publishScheduleInterval": "NOT_SCHEDULED", "lastRunStatus": null }
 ```
 
-**Org:** both reads leave configuration unchanged. **Local:** REST prints stdout only; the separate retrieve writes `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`, retaining expression, creation type and label but not complete runtime state. Use the actual Metadata member name when correlating the runtime object, not a runtime selector in `--metadata`.
+The REST request prints the live configuration. The retrieve writes `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`. Compare the expression and label, but remember the XML is not the complete runtime state.
 
 ### Update
 
-Publication is a runtime PATCH, **not** Metadata deployment. Save complete `ci-publish.json`:
+**Publish the draft:** save `ci-publish.json`:
 
 ```json
 { "displayName": "Customer Activity", "draft": false, "publishScheduleInterval": "SystemManaged" }
@@ -820,15 +802,13 @@ Publication is a runtime PATCH, **not** Metadata deployment. Save complete `ci-p
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-publish.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected body:
-
 ```json
 { "apiName": "CustomerActivity__cio", "status": "PROCESSING", "publishScheduleInterval": "SYSTEM_MANAGED" }
 ```
 
-Read the same CI with GET until processing resolves; require `ACTIVE`, correct expression, and expected dimension/measure schema before considering publication settled. Stop on errors or an unresolved transition; do not blindly repeat publication. `ACTIVE` proves an operational definition, **not materialized output, successful last run or computation completion**. No explicit run/computed dataset is qualified here.
+Read the insight again until it reaches `ACTIVE`, checking the expression and expected dimensions/measures. Stop on errors or an unresolved transition rather than repeating the PATCH. `ACTIVE` means an operational definition, **not a completed calculation or materialized output**.
 
-For the qualified label/schedule update, save `ci-update.json` (omit `definitionType` on update):
+**Change its label and schedule:** save `ci-update.json`. Leave `definitionType` out of updates:
 
 ```json
 { "displayName": "Customer Activity Updated", "publishScheduleInterval": "NotScheduled" }
@@ -838,17 +818,11 @@ For the qualified label/schedule update, save `ci-update.json` (omit `definition
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-update.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected body:
-
-```json
-{ "apiName": "CustomerActivity__cio", "displayName": "Customer Activity Updated", "status": "PROCESSING", "publishScheduleInterval": "NOT_SCHEDULED" }
-```
-
-Independently GET and verify label/schedule, identity, unchanged SQL and dimension/measure schema; reconcile any processing transition. `NotScheduled` does not mean disabled. **Org:** PATCH changes runtime configuration and may process. **Local:** only the deliberately saved request files change; retrieve metadata separately if needed. Arbitrary SQL mutation and identical-repeat semantics are not qualified by these commands.
+The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`. Read it back to confirm the change and preserved SQL/dimensions/measures. `NotScheduled` does not disable the insight. Arbitrary SQL updates and identical-repeat behavior have not been verified.
 
 ### Delete
 
-Delete only the explicitly owned CI after reviewing dependencies. The demonstrated CLI request-file form avoids the local empty-body error possible with a bare `--method DELETE`. Save full `ci-delete.json`:
+After checking ownership and dependencies, save `ci-delete.json`. The request-file form avoids a CLI empty-body error that can occur with a bare DELETE:
 
 ```json
 { "url": "/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
@@ -860,21 +834,23 @@ sf api request rest '/services/data/v65.0/ssot/calculated-insights' --method GET
 sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0 --json
 ```
 
-The delete response can be empty while the CI remains `DELETING`. Illustrative selected collection during transition:
+An empty response can mean deletion has started, not finished. The collection may still show:
 
 ```json
 { "items": [{ "apiName": "CustomerActivity__cio", "status": "DELETING" }] }
 ```
 
-**Terminal checks:** reconcile the full runtime collection, including any continuation, until the exact CI is absent; independently require its Metadata member absent from the inventory. An empty DELETE body is not completion. Do not issue another DELETE merely because removal is asynchronous. **Org:** removes the owned runtime CI and associated definition asynchronously; no general generated-data cleanup claim follows. **Local:** request files and any earlier retrieved XML remain; reconcile stale XML before future deployments.
+**Terminal checks:** read the full collection, including continuation pages, until this insight is absent. Also check that its metadata member is gone. Do not send another DELETE while removal is underway. Generated-data cleanup is not guaranteed, and any downloaded XML still needs local reconciliation.
 
 ## Operational segments
 
-This API 65 REST route creates a live segment, unlike a saved `MarketSegmentDefinition` alone. It requires compatible existing unified DMO/key fields and explicit permission for automatic processing. **`NoRefresh` can transition `PROCESSING` → `ACTIVE`**; it is not draft/noncomputing admission. Empty-result SQL also does not prove no processing. No member export, send destination or explicit publication/count/run is implied.
+This API 65 route creates a live segment. Unlike saving XML alone, it can begin processing immediately: **`NoRefresh` can transition `PROCESSING` → `ACTIVE`**. Empty-result SQL does not prevent scanning or processing either. Get permission for those effects before creating or updating a segment.
+
+The example does not set up a send destination, export members or prove cross-org migration.
 
 ### Create
 
-Save full `segment-create.json`, replacing the model name and existing DMO/key together:
+Save `segment-create.json`, replacing the existing unified DMO/key and model name consistently:
 
 ```json
 {
@@ -896,13 +872,11 @@ Save full `segment-create.json`, replacing the model name and existing DMO/key t
 sf api request rest '/services/data/v65.0/ssot/segments' --method POST --body '@segment-create.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected response body:
-
 ```json
 { "apiName": "ActiveCustomers", "segmentType": "DBT", "segmentStatus": "PROCESSING", "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D", "includeDbt": { "models": [{ "name": "ActiveCustomers", "sql": "SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0" }] } }
 ```
 
-**Input uses nested `includeDbt.models.models`; output uses an array at `includeDbt.models`.** Do not send the response back verbatim as a request. Use returned API name/identities to reconcile the same segment. `P90D` is the returned lookback in this qualified shape, not a universal configurable default. **Org:** creates a live definition and may process automatically. **Local:** request JSON is user-authored; REST writes stdout, not project XML.
+There is an easy-to-miss difference: the **request** uses nested `includeDbt.models.models`, but the **response** has an array at `includeDbt.models`. Do not send the response back unchanged. `P90D` is an example returned lookback, not a universal writable default.
 
 ### Read / retrieve
 
@@ -910,19 +884,21 @@ Illustrative selected response body:
 sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected GET body, whose segment is inside `segments`:
+The **lookback** is the time window used by the segment; `P90D` is duration notation for 90 days. Check the returned value rather than assuming every segment uses it.
+
+GET wraps the segment in a `segments` array:
 
 ```json
 { "segments": [{ "apiName": "ActiveCustomers", "segmentStatus": "ACTIVE", "lastSegmentMemberCount": 0, "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D", "dataSpace": "default", "segmentOnApiName": "UnifiedCustomer__dlm" }] }
 ```
 
-Require the exact API name/identities, original SQL/model/type/dataspace, lookback and schedule. Resolve `PROCESSING` to terminal status before the next lifecycle operation; `ACTIVE` alone is not broader migration or publication fidelity. **Org:** unchanged by GET. **Local:** stdout only. For XML, separately run the Metadata retrieve command in the `MarketSegmentDefinition` chapter; that artifact is not a full runtime export.
+Check the exact segment, SQL/model, type, dataspace, segment-on object, lookback and schedule. Wait for processing to settle before the next change. For local XML, use the separate `MarketSegmentDefinition` retrieve command; REST does not write it for you.
 
 ### Update
 
-A sparse label-only PATCH is not qualified. The supported update carries the **complete preserved definition** (type, segment-on and DBT model/SQL), changes only label/description and **omits both `publishSchedule` and `publishScheduleInfo`** to preserve the existing no-refresh schedule. Do not re-send `NoRefresh` on this PATCH or invent a `None` schedule subtype.
+A label-only PATCH is not enough here. Send the **complete preserved definition**, changing just the label and description. The example deliberately omits both `publishSchedule` and `publishScheduleInfo` to retain the existing no-refresh schedule. Do not re-send `NoRefresh` or invent a `None` schedule value.
 
-Save complete `segment-update.json`:
+Save `segment-update.json`:
 
 ```json
 {
@@ -942,17 +918,15 @@ Save complete `segment-update.json`:
 sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method PATCH --body '@segment-update.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected response body:
-
 ```json
 { "apiName": "ActiveCustomers", "segmentStatus": "PROCESSING", "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D" }
 ```
 
-Independently GET until settled `ACTIVE`; require updated label/description and unchanged identity, type, dataspace, segment-on, model/SQL, lookback and schedule. This qualifies preservation for this narrow complete-definition update, **not arbitrary missing-field preservation, schedule/lookback editing or broader SQL/UI grammar**. **Org:** changes the definition and may process. **Local:** only the user-prepared request changes; no automatic source artifact.
+GET again until `ACTIVE`, then compare the changed label/description and all preserved values. This narrow update does not establish arbitrary omitted-field preservation, SQL/UI criteria updates or schedule/lookback editing.
 
 ### Delete
 
-Save complete `segment-delete.json` for the explicitly owned segment:
+For the owned segment, save `segment-delete.json`:
 
 ```json
 { "url": "/services/data/v65.0/ssot/segments/ActiveCustomers", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
@@ -964,33 +938,37 @@ sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --metho
 sf org list metadata --metadata-type MarketSegmentDefinition --target-org TARGET_ALIAS --api-version 65.0 --json
 ```
 
-A successful DELETE can return HTTP `204` with no body. Require independent GET HTTP `404` / `ITEM_NOT_FOUND` and absence of the exact Metadata member, not just an empty response. Illustrative selected error body after removal:
+DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404` / `ITEM_NOT_FOUND` and the exact metadata member is absent:
 
 ```json
 [{ "errorCode": "ITEM_NOT_FOUND", "message": "<segment not found>" }]
 ```
 
-**Org:** removes the owned live segment/definition; shared unified DMOs or membership tables must not be deleted as guessed cleanup. **Local:** request files and any retrieved XML remain; reconcile stale XML explicitly. Target noncomputing creation, arbitrary schedules and cross-org fidelity remain unqualified.
+Do not delete shared unified DMOs or membership tables as extra cleanup. Previously downloaded source files remain local.
 
 ## Segment Members: runtime data, not metadata
 
-Segment membership uses **API `67.0`** here, independently of the API 65 metadata examples. These are data reads, not `sf project` retrievals. They do not automatically create anything under `force-app/main/default/`, publish a segment or refresh its population. Member identifiers and profile details are personal data: avoid Git, shared logs and screenshots; restrict access and retention for any export.
+These **API `67.0`** examples read the people in a segment, rather than its definition. They do not publish or refresh it, and they do not write anything under `force-app/main/default/`.
+
+Member identifiers and profile fields are personal data. Keep request files and exports in a private working directory, restrict access and retention, and avoid Git, shared logs and screenshots.
 
 ### Read basic membership
 
-Resolve the exact segment descriptor first:
+First read the segment itself:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers' --target-org SOURCE_ALIAS --json
 ```
 
-Use its returned `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName` for enrichment. Do not infer a membership table from the display name. Then request a small basic page:
+Keep the returned `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName`. You will need them if you want profile details later; do not guess a table name from the display name.
+
+The returned configuration is also called the segment **descriptor**. In a path, `?` starts query parameters and `&` separates them: `limit=1&offset=0` asks for one row starting at the beginning. Keep the quotes around the full path so the shell does not interpret `&` as an instruction.
+
+Now request one member:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?limit=1&offset=0' --target-org SOURCE_ALIAS --json
 ```
-
-Illustrative sanitized response, omitting headers and timing/filter properties:
 
 ```json
 {
@@ -1009,31 +987,41 @@ Illustrative sanitized response, omitting headers and timing/filter properties:
 }
 ```
 
-`totalCount` above is illustrative, not a promised population size. Basic rows contain membership/audit data, **not enriched profile fields**. One CLI invocation makes one request; it does not automatically export every page. The documented maximum page size is **1000**. Basic continuation is a documented mechanism, not an end-to-end qualified full export: issue bounded requests on the same validated path with increasing offsets; check `offSet`, stable totals and nonempty progress, incrementing offset by returned row count. Do not blindly follow a returned URL into another org/path/context. A changing population requires reconciliation rather than assuming a consistent snapshot.
+You get membership and audit information, **not the person's profile fields**. `1200` is just an illustrative count. A CLI invocation retrieves one page; it does not export the whole segment automatically. The documented maximum page size is **1000**.
 
-### Read enriched details: discover, join, paginate
+For further pages, increase the offset by the number of returned rows. Check `offSet`, stable totals and nonempty progress, staying on the same validated org/path. Do not blindly follow a returned URL. Full-population export has not been verified here; if membership changes while you read it, reconcile the result rather than assuming a fixed snapshot.
 
-There is **no standard CLI `--include-details` flag** for this endpoint. Enrichment requires multiple reads and a Data 360 SQL query; `sf data query` is core **SOQL**, not the Data 360 SQL executor.
+### Include profile details
 
-1. Resolve the descriptor above, then validate its dataspace with SOQL:
+The following is an advanced read example, not a requirement for downloading configuration. A **join** combines rows from two tables using related keys; an incorrect key can return the wrong person's details. If you cannot validate the relationship and SQL, stop at basic membership and ask a data specialist to help.
+
+There is **no standard CLI `--include-details` flag**. To get that result, you need to discover the tables, join membership to the detail DMO, and read the query pages. This is orchestration of several API reads, not a plugin implementation.
+
+#### 1. Check the dataspace
+
+**SOQL** (Salesforce Object Query Language) queries core Salesforce records, while Data 360 SQL queries Data Cloud tables. They use different commands and are not interchangeable. The next command uses SOQL only to identify the dataspace record.
+
+Use the dataspace returned by the segment descriptor. For `default`:
 
 ```sh
 sf data query --target-org SOURCE_ALIAS --api-version 67.0 --query "SELECT Id, DataSpaceApiName FROM DataSpace WHERE DataSpaceApiName = 'default' LIMIT 2" --json
 ```
 
-Require exactly one matching dataspace. Illustrative shortened result:
-
 ```json
 { "status": 0, "result": { "totalSize": 1, "done": true, "records": [{ "DataSpaceApiName": "default" }] } }
 ```
 
-2. Read Data 360 schema in that space:
+You need exactly one match. This command uses core **SOQL**; it is not the Data 360 SQL executor used below.
+
+#### 2. Find the tables and join fields
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/metadata' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-From the response, resolve the descriptor's **exact latest membership table** and **segment-on detail DMO**, primary key, ordered detail fields and the relationship between them. Require an exact **N:1** relationship with source/target attributes (including `fromEntityAttribute` / `toEntityAttribute` where returned). Do not hardcode a field count or assume `Id__c` joins to every DMO's key. Illustrative selected schema facts, abbreviated from the larger metadata response:
+Find the descriptor's exact latest membership table, segment-on detail DMO, primary key and ordered detail fields. Check that the relationship is **N:1**, using its actual source/target attributes (`fromEntityAttribute` / `toEntityAttribute` where returned). Do not assume that every DMO joins on `Id__c`.
+
+For the next example, imagine discovery gave you these facts. This is an explanation of the schema, **not the literal API response**:
 
 ```json
 {
@@ -1046,11 +1034,11 @@ From the response, resolve the descriptor's **exact latest membership table** an
 }
 ```
 
-This block is an explanatory selection, **not the literal REST metadata envelope**. Stop if identities, keys, cardinality or field order are missing/ambiguous.
+Stop if the identities, keys, cardinality or field order are missing or ambiguous.
 
-3. Prepare the SQL request. The following is the **complete JSON body** for a minimal illustrative two-detail-column projection. Replace table/key/field identifiers using discovery; to include all details, enumerate **every discovered detail field in metadata order**, not `SELECT *`. Replace `SEGMENT_ID_15` with the resolved MarketSegment ID's case-preserved first 15 characters, never the segment API name. Quote identifiers and validate/escape values before constructing SQL.
+#### 3. Submit a small query
 
-Save this request as `segment-member-query.json` in a private working directory, outside metadata source and excluded from Git:
+Save `segment-member-query.json`. Replace table/key/field names from discovery, and replace `SEGMENT_ID_15` with the first 15 case-preserved characters of the returned MarketSegment ID, **not its API name**. Quote identifiers and validate/escape values before constructing SQL.
 
 ```json
 {
@@ -1059,23 +1047,30 @@ Save this request as `segment-member-query.json` in a private working directory,
 }
 ```
 
-The outer `SELECT *` preserves the explicitly ordered inner projection. `LIMIT 2` bounds the **total query result**, while `rowLimit: 1` requests one result row per page. Neither bounds total engine scanning. The null-safe `LEFT JOIN` retains membership rows without a detail match; unmatched detail values are null. Do not accept more than one matching detail row per membership key.
+The query does four things:
 
-Submit the JSON file explicitly:
+1. Selects two detail fields in metadata order. To include all details, list **every discovered detail field in that order**, rather than using `SELECT *` on the underlying tables.
+2. Uses a null-safe `LEFT JOIN`, so members without a matching profile remain in the result with null details.
+3. Adds the membership key and match count for validation. Reject more than one detail match per member.
+4. Limits the whole result to two rows, requesting one row per page. These limits do not bound how much data the query engine scans.
 
-```sh
-sf api request rest '/services/data/v67.0/ssot/query-sql' --target-org SOURCE_ALIAS --method POST --header 'Data-Space:default' 'Content-Type:application/json' --body '@segment-member-query.json' --json
-```
+The outer `SELECT *` only keeps the explicitly ordered inner columns.
 
-`--body @file` reads the shown JSON, not a metadata manifest. The equivalent `--body -` takes that JSON from stdin; stdin submission is the qualified execution route. For example, from PowerShell in the private working directory:
+Here `m` and `d` are short SQL aliases for the membership and detail tables, not org aliases. `IS NOT DISTINCT FROM` compares keys while treating two nulls as equal; the match-count check still matters. Double quotes identify table/column names, single quotes delimit text values, and `\"` preserves a double quote inside a JSON string. Do not build SQL from untrusted values by simple text replacement; have a developer validate names and escape values for this SQL dialect.
+
+The verified submission form uses **stdin** (standard input): text passed into a program. In PowerShell, `Get-Content -Raw -LiteralPath` reads the whole named file as text, `|` passes it to the next program, and `--body -` tells the CLI to use that incoming text. For example, in PowerShell:
 
 ```powershell
 Get-Content -Raw -LiteralPath './segment-member-query.json' | sf api request rest '/services/data/v67.0/ssot/query-sql' --target-org SOURCE_ALIAS --method POST --header 'Data-Space:default' 'Content-Type:application/json' --body - --json
 ```
 
-The file-input form is documented CLI syntax. POST submits a read query, not a segment refresh, but it can consume query resources.
+The CLI also documents file input for the same body:
 
-Illustrative shortened successful submission (`201` is valid):
+```sh
+sf api request rest '/services/data/v67.0/ssot/query-sql' --target-org SOURCE_ALIAS --method POST --header 'Data-Space:default' 'Content-Type:application/json' --body '@segment-member-query.json' --json
+```
+
+POST submits a read query, not a segment refresh, but it can consume query resources. A successful submission can use HTTP `201`:
 
 ```json
 {
@@ -1092,65 +1087,69 @@ Illustrative shortened successful submission (`201` is valid):
 }
 ```
 
-The four-value row illustrates this minimal projection's two null detail fields, membership key and zero detail matches. With all discovered fields, actual row width is **detail-field count + 2**. This sample does not disclose a person's data or imply that only two detail columns exist.
+This row has two empty detail fields, the internal membership key and a zero match count. With all detail fields selected, row width is **detail-field count + 2**. Check the returned metadata order and width before interpreting the values.
 
-4. Use the fresh query handle in `result.body.status.queryId` (or `body.queryId` where returned). If asynchronous, poll the query status until recognized success; stop on errors, expiry or incompatible status/schema:
+#### 4. Read the remaining pages
+
+Use the fresh `result.body.status.queryId` (or `body.queryId` where returned). If the query is still running, check its status; stop on errors, expiry or an unfamiliar status/schema:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Illustrative shortened status response: unlike submission, status properties are **directly at the body root**:
+Unlike submission, this response puts status properties directly under `body`:
 
 ```json
 { "status": 0, "result": { "statusCode": 200, "body": { "queryId": "<query-id>", "completionStatus": "ResultsProduced", "rowCount": 2, "progress": 1 } } }
 ```
 
-Submission may already include page one. Use `offset=1` only after validating and accepting exactly one submission row (including metadata width/order and match count). Read the next bounded page without submitting a second query:
+Use `offset=1` only after validating and accepting exactly one submission row. Then ask for the next row using the **same query**, not a new POST:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=1&rowLimit=1' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Otherwise, if submission contains no rows, wait for recognized status success, then fetch the first bounded page at `offset=0&rowLimit=1` so row zero is not skipped:
+Otherwise, if submission contains no rows, wait for recognized status success, then fetch the first bounded page at `offset=0&rowLimit=1`:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=0&rowLimit=1' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Illustrative sanitized continuation:
-
 ```json
 { "status": 0, "result": { "statusCode": 200, "body": { "data": [[null, null, "<redacted-membership-key>", 0]], "metadata": ["<column descriptors abbreviated>"], "returnedRows": 1 } } }
 ```
 
-`returnedRows` is page size; `status.rowCount` is the total bounded SQL result. Advance offset by the actual number of validated and accepted rows, including any accepted submission rows, not by the requested page size. Keep offsets/page bounds, stable total and metadata width/order consistent; require positive progress, stop at the total, and reject match counts greater than one before exporting. Two bounded SQL pages are qualified, **not an unbounded/full-population export**. Raw CLI retains array rows and the two internal validation columns; it does not automatically remove internals, format label/API keys or normalize dates. Validate and transform privately before delivering data.
+`returnedRows` is the page size; `status.rowCount` is the total for the bounded query. Advance offset by the actual number of validated and accepted rows, including any from submission. Require progress, a stable total and consistent metadata order/width; stop at the total and reject match counts above one before exporting.
 
-### Local output, privacy and unsupported operations
+This example covers **two bounded SQL pages, not an unrestricted full export**. The CLI still returns array rows with the two internal columns. Validate and transform the results privately if you want named fields, normalized dates or output without those internal columns.
 
-Without `--stream-to-file`, `sf api request rest` writes to **stdout**; `--json` wraps `statusCode`, headers and body. No runtime-data file or source artifact is automatically created. Avoid logging the complete output.
+### Save output deliberately
 
-Optional documented file-output syntax, **not live-qualified for this member workflow**:
+**Stdout** (standard output) is the program's normal output, which you usually see in the terminal. A shell redirect such as `> output.json` saves that stream to a file and can overwrite an existing file; it does not turn the response into metadata or fetch extra pages. Shell encoding and error-output handling differ, so do not add redirects casually to these examples.
+
+REST normally writes to stdout. The documented file-output form below is **not live-qualified for this member workflow**:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?limit=1&offset=0' --target-org SOURCE_ALIAS --stream-to-file 'PRIVATE_EXPORT_PATH/members.json'
 ```
 
-Choose a real restricted path outside metadata source; this flag writes API response bytes. Do not add `--include` when pure JSON is required. The query request file and any member/profile output should stay out of Git; stdout redirection and file output are explicit user choices, not automatic metadata retrieval. Create/update/delete of membership rows, refresh/publish and a single-call equivalent of enriched export are not provided here.
+Choose a real restricted path outside metadata source. This writes API response bytes; do not add `--include` if you need pure JSON. Request files and member/profile output should stay out of Git. Creating, updating or deleting membership rows, refreshing/publishing, and a one-call enriched export are not covered here.
 
-See the official [segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).
+> Official reference: [Segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).
 
 ## Operational Data Graphs
 
-Use standard `sf api request rest` as transport for the documented **API 67 MCP execute facade**. These are not qualified native graph CRUD endpoints. A `DataKitObjectTemplate` deployment stores template XML; **it does not instantiate this runtime graph**.
+A **Data Graph** brings selected fields and related data together around a **root** object, the starting object for that graph. **Projected** fields are the fields included in its output. A full refresh rebuilds that output; an incremental refresh processes changes.
 
-The root-only example projects a customer key/name from an existing unified DMO, then adds the surname. `UnifiedssotIndividualMkt__dlm` and its Text fields `ssot__Id__c`, `ssot__FirstName__c`, `ssot__LastName__c` are a compatible schema shape; verify the exact root, types, mapped fields and key in your org before using them. Replace the root name consistently if yours differs. Do not create or modify the underlying DMO merely to follow this example.
+A Data Graph template is a saved configuration. The following API 67 MCP facade operations create and manage the **runtime graph** instead; these are not qualified native graph CRUD endpoints.
 
-**Creation automatically processes** and generates supporting objects/transform; updates can also process. Require explicit permission and account for resource use—no zero-cost/noncomputing or cross-org guarantee is established. Save the following complete JSON request bodies deliberately outside metadata source. `paramsJson` is a JSON string. Commands print to stdout (`--json` supplies the CLI envelope); they create **no automatic `force-app` artifact**. Inspect embedded facade errors even when the HTTP/CLI envelope succeeds. Samples below show sanitized decoded result selections, not full facade envelopes.
+This example starts with a customer key and first name, then adds the last name. It assumes the existing `UnifiedssotIndividualMkt__dlm` and its Text fields `ssot__Id__c`, `ssot__FirstName__c` and `ssot__LastName__c`. Check your actual root, mapped fields, types and key before using it. Do not change the underlying DMO just to fit the example.
+
+**Creation automatically processes** and generates supporting objects/transform. Updates can process too. Obtain permission for the resource use; there is no processing-free or cross-org guarantee. Like the other REST examples, request files are local inputs and responses go to stdout, not `force-app`.
 
 ### Create
 
-Save `graph-create.json`:
+Save `graph-create.json`. This is a root-only graph with a seven-day full-refresh schedule and incremental refresh disabled:
 
 ```json
 {
@@ -1163,13 +1162,11 @@ Save `graph-create.json`:
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-create.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected result:
-
 ```json
 { "name": "CustomerGraph", "status": "creating", "version": "1" }
 ```
 
-**Org:** creates the runtime graph and starts automatic supporting work; there is no required explicit activation/refresh step in this sequence. Do not submit duplicate refresh/create requests while work is running. **Local:** only your request file exists; runtime responses go to stdout.
+The automatic work has already started. Do not submit another create or refresh while it is running.
 
 ### Read / retrieve
 
@@ -1183,17 +1180,17 @@ Save `graph-get.json`, using the actual created name:
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-get.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected settled result:
-
 ```json
 { "name": "CustomerGraph", "status": "ready", "version": "1" }
 ```
 
-Independently inspect the returned root, projected fields/key flags, description, schedule and incremental setting—not merely the state. Capture exact generated ID/VALUE/fragment DMO and transform references from returned configuration before deletion; do not guess their generated names. Consumer detail flags do not guarantee an exhaustive external-consumer inventory. **Org:** unchanged by this facade read despite its HTTP POST transport. **Local:** stdout only. Template retrieval is separate and writes `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml` as described below.
+This is a read despite the HTTP POST transport. Check the root, fields/key flags, description and refresh settings, not just `ready`. Capture the exact generated object/transform references for checking deletion later; do not guess names. The consumer-detail flags do not promise a complete list of every external dependency.
 
 ### Update
 
-Preserve the complete configuration, change the description and add the verified surname projection. Save `graph-update.json`; `editScheduleOnly` is **outside `input`**:
+First confirm that initial generated-transform processing completed successfully and that the graph can be edited. `ready` alone is not enough, and **not every lifecycle state is mutable**. If edit eligibility is unclear, stop; this guide does not provide a universal status-to-editability check. Do not force a refresh to unlock editing.
+
+Now preserve the full configuration, changing the description and adding the surname field. Save `graph-update.json`; `editScheduleOnly` belongs **outside `input`**:
 
 ```json
 {
@@ -1206,19 +1203,17 @@ Preserve the complete configuration, change the description and add the verified
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-update.json' --target-org TARGET_ALIAS --json
 ```
 
-Illustrative selected initial result:
-
 ```json
 { "name": "CustomerGraph", "status": "processing", "version": "1" }
 ```
 
-The qualified sequence is **initial generated transform completes successfully, then update is accepted**; earlier states can reject edits. Neither `ready` alone nor transform completion is a universal edit-eligibility guarantee, and not every lifecycle state is mutable. Reconcile work/status errors instead of blindly retrying. Independent GET must confirm the changed description and three projected Text fields: Id key=true, FirstName/LastName key=false; preserve root, seven-day schedule and incremental=false. Update can pass through `processing` / `editing_post_sync` before `ready`.
+Read back with `graph-get.json`. The graph can pass through `processing` and `editing_post_sync` before `ready`. Confirm three projected Text fields, only Id marked as the key, and unchanged root, seven-day schedule and incremental setting.
 
-Once settled, repeating the identical update request can retain the same graph/node/field identities, version `1` and semantic definition. Verify with independent GET; this is **not a guarantee of zero writes, no processing or universal idempotency**. **Org:** changes runtime projection/description. **Local:** request edit only; no automatic template/source synchronization.
+An identical repeat can preserve identities, version and configuration, but does not guarantee zero writes or no processing. Templates in your project are not automatically refreshed by this update.
 
 ### Delete
 
-Review dependencies, then save `graph-delete.json` for the explicitly owned graph:
+After checking dependencies and ownership, save `graph-delete.json`:
 
 ```json
 { "toolName": "d360_data_graph_delete", "paramsJson": "{\"dataGraphName\":\"CustomerGraph\"}" }
@@ -1226,27 +1221,28 @@ Review dependencies, then save `graph-delete.json` for the explicitly owned grap
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-delete.json' --target-org TARGET_ALIAS --json
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-get.json' --target-org TARGET_ALIAS --json
 ```
-
-Illustrative selected result:
 
 ```json
 { "success": true }
 ```
 
-Require independent `graph-get.json` to report the exact graph not found. The inspected generated ID/VALUE/fragment DMOs and transform can also become unreadable after deletion; confirm exact captured references with the same access used before removal. This supports only those inspected artifacts: **generated mapping absence and graph-specific internal-state cleanup are not proven**. Do not claim universal absence of leftovers or delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. **Org:** removes the owned graph; supporting-artifact cleanup is bounded as above. **Local:** request files and any separately retrieved template XML remain for deliberate reconciliation.
+Confirm that the exact graph is no longer found. Check the captured generated object/transform references with the same access used before deletion; unreadable is not permission-independent proof of physical removal. Note that **generated mapping absence and graph-specific internal-state cleanup are not proven**. Never delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. Local requests and any retrieved template remain.
 
 ## Operational Identity Resolution
 
-Standard CLI can execute the documented **API 67 MCP facade** for source Identity Resolution create/read/substantive update/delete. Native API 65 **GET** is separately supported below; native write equivalence and cross-org fidelity are not established. This route needs no custom data plugin, user manifest or mandatory GUI workflow.
+**Identity Resolution** combines records believed to represent the same person. Its **ruleset** contains matching rules (which records belong together) and reconciliation rules (which value to keep when records disagree). Here `Fuzzy` allows similar names, `Exact` requires an exact match and `ExactNormalized` compares normalized values. `LastUpdated` prefers the most recently updated values; `MostFrequent` prefers the most common. These choices affect real profiles, not just labels.
 
-Use existing compatible Individual/name/ContactPointEmail fields and a unique ruleset suffix of **at most four characters**. `cust` below is illustrative; verify it is unused and use the actual returned `objectApiName` thereafter. Creation and update automatically enter **`PUBLISHING` even with `doesRunAutomatically: false`**. This is not draft/nonpublishing admission or a no-processing guarantee. Require explicit permission for publication/provisioning; no successful data-run/profile-counter claim follows.
+These API 67 MCP facade operations manage a live ruleset. A native API 65 GET is also shown, but equivalent native write endpoints and cross-org migration have not been verified. You do not need a custom data plugin or a kit for this route.
 
-All files below are complete user-prepared request JSON saved deliberately outside metadata source. `paramsJson` is a **JSON string**. Standard REST commands write stdout, with `--json` wrapping the response; no automatic `force-app` source artifact is created. Inspect **nested `body.error`** as well as the decoded result: HTTP `201` and CLI exit `0` can still contain an operation error. Samples are sanitized illustrative decoded selections, not literal complete facade envelopes.
+Use compatible existing Individual/name/ContactPointEmail fields and an unused ruleset suffix of **at most four characters**. The example uses `cust`; after creation, use the returned `objectApiName`.
+
+**Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`.** Obtain permission for publication/provisioning. That flag is not draft mode, and publication does not prove that a successful identity-resolution data run occurred.
 
 ### Create
 
-Save `ir-create.json`:
+Save `ir-create.json`. It matches on first name, last name and normalized email, and starts with a `LastUpdated` reconciliation rule:
 
 ```json
 {
@@ -1259,38 +1255,36 @@ Save `ir-create.json`:
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-create.json' --json
 ```
 
-Illustrative selected result:
-
 ```json
 { "objectApiName": "Individual_cust", "doesRunAutomatically": false, "rulesetStatus": "PUBLISHING" }
 ```
 
-**Org:** creates the owned ruleset and starts automatic publication/provisioning of unified/link outputs. Additional reconciliation entities can be supplied by the service; do not assume the request's single reconciliation rule is the complete response. **Local:** request file only; no generated source XML. Capture the returned identity and exact generated output references for readback/deletion reconciliation, not guessed naming patterns.
+Check nested `body.error` as well as the result: HTTP `201` and CLI exit `0` can still contain an operation error. Salesforce may add reconciliation entities beyond the one sent. Keep the returned identity and exact generated output/link references for later checks.
 
 ### Read / retrieve
 
-Save `ir-get.json` with the actual returned identity:
+Save `ir-get.json`:
 
 ```json
 { "toolName": "d360_ir_get", "paramsJson": "{\"identityResolution\":\"Individual_cust\"}" }
 ```
+
+You can read through the facade or the native API 65 endpoint:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json' --json
 sf api request rest '/services/data/v65.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method GET --json
 ```
 
-Illustrative selected settled result:
-
 ```json
 { "objectApiName": "Individual_cust", "doesRunAutomatically": false, "rulesetStatus": "PUBLISHED" }
 ```
 
-The facade read uses POST transport but does not mutate the ruleset. Require exact identity, match criteria, reconciliation values and generated output references. **Wait for `PUBLISHED` before updating**; `PUBLISHING` can reject an update despite outer HTTP/CLI success. Stop on nested errors or unresolved transitions rather than replaying writes. **Org:** unchanged by reads. **Local:** stdout only. A separate kit/template retrieve can write XML but is not this runtime configuration route.
+Compare identity, matching rules, reconciliation values and generated references. **Wait for `PUBLISHED` before updating**; an update during `PUBLISHING` can fail inside an otherwise successful response. Both reads print to stdout and leave the ruleset unchanged.
 
 ### Update
 
-The qualified update preserves the complete name/email match definition and changes the Individual reconciliation rule from `LastUpdated` to **`MostFrequent`**, plus description. Supply label and full matching/reconciliation input; do not assume an arbitrary sparse PATCH works. Save `ir-update.json`:
+Let's change the Individual reconciliation rule from `LastUpdated` to **`MostFrequent`**, keeping the matching definition intact. Save `ir-update.json` with the full matching/reconciliation input and label, rather than assuming a sparse update will work:
 
 ```json
 {
@@ -1303,17 +1297,15 @@ The qualified update preserves the complete name/email match definition and chan
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-update.json' --json
 ```
 
-Illustrative selected result, abbreviating other service-supplied rules:
-
 ```json
 { "objectApiName": "Individual_cust", "rulesetStatus": "PUBLISHING", "reconciliationRules": { "rules": [{ "entityName": "ssot__Individual__dlm", "ruleType": "mostfrequent" }] } }
 ```
 
-Independently GET and reconcile publication, unchanged identity/matches and the substantive reconciliation change. Do not treat the echoed update as sufficient readback or perform another update while publishing. **Org:** changes the ruleset and can publish/provision again, even with automatic runs false. **Local:** only the request file changes; no automatic template refresh. Broader matching grammar, run success and repeat/idempotency behavior are not qualified here.
+Read back until publication settles, then check the changed rule and unchanged matches/identity. Do not issue another update while publishing. Broader matching grammar, repeat behavior and successful data runs are not covered by this example.
 
 ### Delete
 
-Save `ir-delete.json` for the explicitly owned ruleset after dependency review:
+After checking dependencies and ownership, save `ir-delete.json`:
 
 ```json
 { "toolName": "d360_ir_delete", "paramsJson": "{\"identityResolution\":\"Individual_cust\"}" }
@@ -1324,114 +1316,43 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json' --json
 ```
 
-Illustrative decoded delete result and transitional read selection:
-
-```json
-{ "success": true }
-```
+The delete can return `{ "success": true }` while a following read still shows:
 
 ```json
 { "objectApiName": "Individual_cust", "rulesetStatus": "DELETING", "reconciliationRules": [] }
 ```
 
-Delete acceptance is **not completion**. Poll the exact identity until the facade reports not found; independently confirm native API 65 GET HTTP `404` / `ITEM_NOT_FOUND`. Do not repeat DELETE while asynchronous removal is underway. Generated outputs can remain readable during `DELETING`; reconcile their exact captured references only after terminal ruleset absence. Later unreadability of inspected output/link DMOs means absent **or inaccessible**, not permission-independent proof of physical deletion, profile-row removal or universal cleanup. Do not race the owning ruleset's cleanup with guessed DMO deletes.
+Wait for the exact ruleset to become not found, and independently confirm native API 65 GET returns HTTP `404` / `ITEM_NOT_FOUND`. Do not repeat DELETE during removal.
 
-**Org:** removes the owned ruleset asynchronously. **Local:** request files and separately retrieved template XML remain; protect personal/configuration data and reconcile stale artifacts deliberately.
-
-### Template transport and instantiation limits
-
-Kit/template Metadata transport is separate from runtime CRUD. A manually constructed IR template can be stored successfully yet its asynchronous instantiation job can fail; that does **not** establish failure of every valid Salesforce-generated kit. An accepted job must be reconciled to terminal success/error, not equated with instantiated IR. The currently available tools do not expose canonical kit creation/component-add/template-generation; reading a manifest is not generation. Do not invent token/config fields or prescribe mandatory GUI work for the direct facade workflow above. Successful canonical kit instantiation and cross-org replay remain unqualified.
+Generated outputs can remain readable during `DELETING`. Check their captured references only after ruleset removal. Later unreadability means absent **or inaccessible**, not proof of physical deletion, profile-row removal or universal cleanup. Do not race the ruleset's cleanup by deleting DMOs yourself. Local request files and retrieved templates remain.
 
 ## Kit template: `DataKitObjectTemplate`
 
+A **data kit** groups configuration for reuse. Its definition describes the kit, templates store component settings, and membership files link the two. **Instantiation** or installation creates live components from that saved configuration; copying files alone does not do this. A **payload** is simply the content carried inside a field or request.
+
+A kit template is a **snapshot**, not the live component. A Data Graph template can contain projected fields, joins and refresh settings; an Identity Resolution template can contain matching and reconciliation rules. Segment templates omit live publish schedule/status.
+
 ### Create
 
-Standard deployment can store a standalone **Data Graph template**, without instantiating a graph or requiring a parent kit. Use the complete, dependency-reviewed template XML at `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`. The payload must retain its valid root, projected fields, data types, key flags and other required configuration; the abbreviated excerpt below is not a complete creation payload.
+A complete Data Graph template can be stored without a parent kit. Use the existing, dependency-reviewed file at `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`:
 
 ```sh
 sf project deploy start --metadata DataKitObjectTemplate:CustomerGraph --target-org TARGET_ALIAS --api-version 65.0 --wait 10 --json
 ```
 
-Illustrative shortened response:
-
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [{ "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Created" }] } }
 ```
 
-**Org:** stores the template only. A successful deployment does not create the named runtime graph, install a kit or qualify component replay. **Local:** deployment does not rewrite the template file. Independently retrieve and compare the decoded payload. No inertness or cross-org fidelity guarantee follows.
+This stores the template; **it does not create a runtime graph or install a kit**. Retrieve it again to compare the decoded payload. The excerpt below is not a complete creation file.
 
 ### Read / retrieve
-
-Retrieve one standalone template directly:
 
 ```sh
 sf project retrieve start --metadata DataKitObjectTemplate:CustomerGraph --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
 ```
 
-Illustrative shortened response:
-
-```json
-{ "status": 0, "result": { "success": true, "files": [{ "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Created", "filePath": "force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml" }] } }
-```
-
-**Local:** writes the XML-escaped JSON template payload at that path. **Org:** unchanged. For a complete kit snapshot, retain its definition and membership links as well.
-
-### Read / retrieve a kit snapshot
-
-Retrieve kit templates together with their definition and membership links. The lower-level transport uses an **internally generated** manifest containing the actual member names, not merely the kit display name. Illustrative complete manifest structure at `manifest/package.xml`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Package xmlns="http://soap.sforce.com/2006/04/metadata">
-  <types>
-    <members>CustomerGraph</members>
-    <members>CustomerIdentity</members>
-    <members>ActiveCustomers</members>
-    <name>DataKitObjectTemplate</name>
-  </types>
-  <types>
-    <members>CustomerKit</members>
-    <name>DataPackageKitDefinition</name>
-  </types>
-  <types>
-    <members>CustomerKitGraphMember</members>
-    <members>CustomerKitIdentityMember</members>
-    <members>CustomerKitSegmentMember</members>
-    <name>DataPackageKitObject</name>
-  </types>
-  <version>65.0</version>
-</Package>
-```
-
-The member names above are illustrative; use actual names, not invented naming conventions. Lower-level command:
-
-```sh
-sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
-```
-
-Illustrative shortened response:
-
-```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "files": [
-      { "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Created" },
-      { "fullName": "CustomerKit", "type": "DataPackageKitDefinition", "state": "Created" },
-      { "fullName": "CustomerKitGraphMember", "type": "DataPackageKitObject", "state": "Created" }
-    ]
-  }
-}
-```
-
-Other selected templates/members are omitted from this abbreviated response. Local template paths:
-
-- `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`
-- `force-app/main/default/dataKitObjectTemplates/CustomerIdentity.dataKitObjectTemplate-meta.xml`
-- `force-app/main/default/dataKitObjectTemplates/ActiveCustomers.dataKitObjectTemplate-meta.xml`
-
-Illustrative template-file excerpt:
+The response points to `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`. Its `entityPayload` is XML-escaped JSON:
 
 ```xml
 <DataKitObjectTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -1442,75 +1363,168 @@ Illustrative template-file excerpt:
 </DataKitObjectTemplate>
 ```
 
-**Local:** writes substantive payloads, not just names; identity resolution uses `IdentityResolution`, segments `MarketSegment`. **Org:** unchanged, no kit installation or instantiation. Data graphs include projected fields/joins and refresh settings; identity resolution includes match/reconciliation rules and automatic-run settings. Segment templates omit live publish schedule/status. Existing kits are snapshots, not automatically refreshed live exports.
-
-Source IDs, generated DMOs/transforms and external DLO references remain dependencies. Disabled kit state does not neutralize graph refresh or identity-resolution automatic runs. Direct individual graph/identity-resolution metadata lifecycle is not qualified; do not infer it from kit transport.
+Other template types use `IdentityResolution` or `MarketSegment`. Preserve complete payloads and references: source IDs, generated objects/transforms and external DLO references can prevent replay elsewhere. Existing snapshots do not automatically update when a live component changes.
 
 ### Update
 
-A Data Graph template's **description inside `entityPayload`** can be updated with the same selector command. Decode the JSON, change only its description, re-encode it as XML text in the complete template file, and preserve all root/field/key/type settings:
+The verified edit is the **description inside `entityPayload`** of a Data Graph template. Decode the JSON, change only the description, then encode it as XML text again. Keep the root, fields, keys, types and other settings:
 
 ```sh
 sf project deploy start --metadata DataKitObjectTemplate:CustomerGraph --target-org TARGET_ALIAS --api-version 65.0 --wait 10 --json
 ```
 
-Illustrative shortened response:
-
 ```json
 { "status": 0, "result": { "success": true, "files": [{ "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Changed" }] } }
 ```
 
-**Org:** updates stored template content, not an instantiated graph. Retrieve independently to confirm the decoded description and preserved payload. **Local:** your XML edit remains; deployment does not rewrite it. Full graph updates through template deployment, arbitrary payload edits and refreshing snapshots from current live configuration are not qualified; the separate operational graph chapter qualifies only its facade-based projection/description update. Identity-resolution template/container operations are separate; do not infer that a whole-container repeat/update is supported.
+This updates stored template content, not an instantiated graph. Retrieve and compare the decoded payload. Arbitrary payload changes, full graph updates through templates, and whole-container repeat/update behavior have not been verified.
 
 ### Delete
 
-A stored Data Graph template can be removed, but no exact reproducible standard delete invocation is specified by this reference. No deletion command is offered. Do not infer runtime graph deletion or supporting-artifact cleanup from template removal.
+Removing a stored Data Graph template has been demonstrated, but an exact reproducible standard CLI delete invocation is not established here. No command is offered. Template deletion would not by itself prove runtime graph or supporting-artifact cleanup.
 
 ## Kit definition: `DataPackageKitDefinition`
 
 ### Create
 
-Kit creation/installation and target replay are not qualified. Transporting kit metadata does not instantiate its components.
+An owned Identity Resolution kit definition, substantive template and membership link have been created **together in the source org**. Run this only from an isolated Salesforce project whose `force-app` directory contains exactly those three complete, compatible metadata files, with matching references:
+
+- `force-app/main/default/dataPackageKitDefinitions/CustomerIdentityKit.dataPackageKitDefinition-meta.xml`
+- `force-app/main/default/dataKitObjectTemplates/CustomerIdentityTemplate.dataKitObjectTemplate-meta.xml`
+- `force-app/main/default/DataPackageKitObjects/CustomerIdentityMember.DataPackageKitObject-meta.xml`
+
+These are local project-relative paths; replace the illustrative names with your own. The complete Identity Resolution template content must already exist—these paths are not a template generator.
+
+```sh
+sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+```
+
+Shortened illustrative response:
+
+```json
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "files": [
+  { "fullName": "CustomerIdentityKit", "type": "DataPackageKitDefinition", "state": "Created" },
+  { "fullName": "CustomerIdentityTemplate", "type": "DataKitObjectTemplate", "state": "Created" },
+  { "fullName": "CustomerIdentityMember", "type": "DataPackageKitObject", "state": "Created" }
+] } }
+```
+
+This proves joint metadata creation only, not independent member creation, runtime installation or cross-org replay.
 
 ### Read / retrieve
 
-Use the combined kit manifest command above. Local file: `force-app/main/default/dataPackageKitDefinitions/CustomerKit.dataPackageKitDefinition-meta.xml`. The abbreviated response includes `DataPackageKitDefinition:CustomerKit`.
-
-Illustrative excerpt:
+Use the combined kit retrieval in the next section. Its `files` response includes `DataPackageKitDefinition:CustomerKit`, written to `force-app/main/default/dataPackageKitDefinitions/CustomerKit.dataPackageKitDefinition-meta.xml`. Keep the templates and membership links alongside it for a complete snapshot.
 
 ```xml
 <DataPackageKitDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
   <isEnabled>false</isEnabled>
   <isDeployed>false</isDeployed>
-  <!-- Retrieved template ordering, state and other definition attributes omitted. -->
+  <!-- Retrieved ordering, state and other attributes omitted. -->
 </DataPackageKitDefinition>
 ```
 
-**Local:** writes definition/state/order XML. **Org:** unchanged. These flags do not guarantee inactive downstream behavior or complete dependency closure.
+These flags do not switch off schedules or automatic runs embedded in component templates.
 
 ### Update
 
-Definition updates are not qualified.
+Definition updates have **not been verified**.
 
 ### Delete
 
-Deletion/undeployment is not qualified.
+The owned source-org definition, template and membership link have also been deleted **together**. For the same three components, the generated local `manifest/empty.xml` contains only the package namespace and API version:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <version>65.0</version>
+</Package>
+```
+
+The generated local `manifest/destructiveChangesPost.xml` selects the exact three components to remove. Replace these illustrative names only with components you own and intend to delete:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types>
+    <members>CustomerIdentityTemplate</members>
+    <name>DataKitObjectTemplate</name>
+  </types>
+  <types>
+    <members>CustomerIdentityMember</members>
+    <name>DataPackageKitObject</name>
+  </types>
+  <types>
+    <members>CustomerIdentityKit</members>
+    <name>DataPackageKitDefinition</name>
+  </types>
+  <version>65.0</version>
+</Package>
+```
+
+With both files supplied at those project-relative paths, run:
+
+```sh
+sf project deploy start --manifest manifest/empty.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+```
+
+Shortened illustrative response:
+
+```json
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "files": [
+  { "fullName": "CustomerIdentityTemplate", "type": "DataKitObjectTemplate", "state": "Deleted" },
+  { "fullName": "CustomerIdentityMember", "type": "DataPackageKitObject", "state": "Deleted" },
+  { "fullName": "CustomerIdentityKit", "type": "DataPackageKitDefinition", "state": "Deleted" }
+] } }
+```
+
+This proves joint metadata deletion only. Runtime undeployment, generated-object cleanup, independent deletion of arbitrary member links and cross-org behavior remain unverified.
 
 ## Kit membership: `DataPackageKitObject`
 
 ### Create
 
-Member creation is not qualified.
+The owned Identity Resolution membership link was created together with its definition and template using the shared [kit definition example](#kit-definition-datapackagekitdefinition). Independent member creation and portability remain **unverified**.
 
 ### Read / retrieve
 
-Use the same combined kit manifest command. Local files:
+A membership file links a kit definition to a template. Use exact member names from the org; they are not necessarily the kit's display name.
 
-- `force-app/main/default/DataPackageKitObjects/CustomerKitGraphMember.DataPackageKitObject-meta.xml`
-- `force-app/main/default/DataPackageKitObjects/CustomerKitIdentityMember.DataPackageKitObject-meta.xml`
-- `force-app/main/default/DataPackageKitObjects/CustomerKitSegmentMember.DataPackageKitObject-meta.xml`
+For the verified combined transport, the integration supplies `manifest/package.xml` with the actual member names. Here is a small example of that generated file:
 
-Capitalization matters. Illustrative graph-member file:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types>
+    <members>CustomerGraph</members>
+    <name>DataKitObjectTemplate</name>
+  </types>
+  <types>
+    <members>CustomerKit</members>
+    <name>DataPackageKitDefinition</name>
+  </types>
+  <types>
+    <members>CustomerKitGraphMember</members>
+    <name>DataPackageKitObject</name>
+  </types>
+  <version>65.0</version>
+</Package>
+```
+
+With that file supplied, retrieve the pieces together:
+
+```sh
+sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+```
+
+```json
+{ "status": 0, "result": { "success": true, "files": [
+  { "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Created" },
+  { "fullName": "CustomerKit", "type": "DataPackageKitDefinition", "state": "Created" },
+  { "fullName": "CustomerKitGraphMember", "type": "DataPackageKitObject", "state": "Created" }
+] } }
+```
+
+The member file is `force-app/main/default/DataPackageKitObjects/CustomerKitGraphMember.DataPackageKitObject-meta.xml`. **Capitalization matters.** Further members each have their own file in that same directory.
 
 ```xml
 <DataPackageKitObject xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -1521,18 +1535,22 @@ Capitalization matters. Illustrative graph-member file:
 </DataPackageKitObject>
 ```
 
-Each file links a kit to a template; preserve its exact retrieved references. The abbreviated kit response includes `DataPackageKitObject:CustomerKitGraphMember`. **Local:** writes membership XML. **Org:** unchanged. These links are not independent proof of portable components.
+Preserve the exact references. For a larger snapshot, the generated manifest includes the other actual template and membership names too. Retrieval does not install the kit, and these links alone do not prove that its components are portable.
 
 ### Update
 
-Member updates are not qualified.
+Member updates have **not been verified**.
 
 ### Delete
 
-Member deletion is not qualified.
+The owned Identity Resolution membership link was deleted together with its definition and template using the shared [kit definition example](#kit-definition-datapackagekitdefinition). Independent deletion of arbitrary member links and runtime component undeployment remain **unverified**.
 
-## Kit transport is not component instantiation
+## Moving a kit is not installing it
 
-Standard CLI retrieval/deployment transports kit metadata. Instantiating an installed kit is a **separate asynchronous Connect deployment** whose job must be reconciled to completion/error; transport success alone is not target component creation. See Salesforce's [CLI kit transport guide](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy_data_kit_using_cli.html) and [Connect kit deployment guide](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy-data-kits-using-connect-api.html).
+Downloading or deploying kit XML only transports its metadata. Instantiation is a **separate asynchronous Connect deployment**: wait for that job's final success or error before assuming any runtime component exists.
 
-`sf-plugin-data` has separate bounded DMO JSON retrieval, preview and guarded creation/label-update capabilities. Those commands do not support every operation listed here. Keep export completeness, dependency closure, lifecycle fidelity, safe execution and independent post-operation readback as separate requirements.
+In particular, an Identity Resolution template can be stored successfully while its later instantiation fails. That does not mean every valid Salesforce-generated kit fails. The available tools do not expose canonical kit creation, component-add or template-generation, so no generated-kit workflow is supplied here. Do not invent template tokens or treat reading a manifest as generating one. Successful canonical kit instantiation and cross-org replay remain unverified; the direct runtime routes above do not require a GUI detour.
+
+For the official workflows, see [CLI kit transport](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy_data_kit_using_cli.html) and [Connect kit deployment](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy-data-kits-using-connect-api.html).
+
+For the separate custom plugin's current limits, see [sf-plugin-data capabilities](https://github.com/JoernBerkefeld/sf-plugin-data#metadata-examples-prerequisites-and-qualification). The standard CLI examples on this page are not additional `sf data360` commands.
