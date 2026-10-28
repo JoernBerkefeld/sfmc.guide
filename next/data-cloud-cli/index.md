@@ -9,13 +9,34 @@ platforms:
   - next
 ---
 
+*Last updated: October 28, 2026, 13:49 (UTC+1).*
+
 You can use Salesforce CLI to download quite a bit of your Data Cloud (Data 360) configuration. Making changes is a little less straightforward: some commands work with saved definitions, while others work with the actual running component.
 
 This page explains the difference and shows the commands next to the files and responses you can expect. Start with retrieving an existing component. Only move on to create, update or delete when you have checked the prerequisites for that section.
 
-- **Objects and connections:** [DMOs](#data-model-object-dmo-customobject-dlm), [DLOs](#data-lake-object-dlo-customobject-dll), [mappings](#dlo-to-dmo-mapping-objectsourcetargetmap), [relationships](#field-relationship-fieldsrctrgtrelationship), [source objects](#source-object-configuration-datasourceobject), [streams](#data-stream-configuration-datastreamdefinition).
-- **Insights and audiences:** [calculated insight definitions](#calculated-insight-mktcalcinsightobjectdef), [segment definitions](#segment-marketsegmentdefinition), [live calculated insights](#operational-calculated-insights), [live segments](#operational-segments), [segment members](#segment-members-runtime-data-not-metadata).
-- **Other configuration:** [Data Graphs](#operational-data-graphs), [Identity Resolution](#operational-identity-resolution), [kit templates](#kit-template-datakitobjecttemplate), [kit definitions](#kit-definition-datapackagekitdefinition), [kit membership](#kit-membership-datapackagekitobject).
+<!-- Keep this capability table and the visible last-updated timestamp synchronized with every substantive page update. -->
+
+The ratings describe **verified vanilla Salesforce CLI workflows on this page**, including REST API calls—not dedicated native commands or universal API support. **Yes** means the shown retrieval works; **Partial** means only a bounded variant, combined operation or incomplete asynchronous lifecycle is demonstrated; **No** means no verified usable workflow is supplied here, not that the API cannot do it. Write permissions, dependencies and processing warnings still apply.
+
+| Configuration or runtime data | Retrieve | Create | Update | Delete | Verified scope / limits |
+|---|---|---|---|---|---|
+| [DMOs](#data-model-object-dmo-customobject-dlm) | Yes | No | No | Partial | XML retrieval; deletion only for an empty owned custom DMO after dependency checks. |
+| [DLOs](#data-lake-object-dlo-customobject-dll) | Yes | Partial | Partial | Partial | Owned Ingestion API stream creates the DLO; additive source-schema sync works; accepted cleanup remained `DELETING`. |
+| [Mappings](#dlo-to-dmo-mapping-objectsourcetargetmap) | Yes | Partial | Partial | No | Existing compatible objects; label-only update; standalone deletion is not established. |
+| [Relationships](#field-relationship-fieldsrctrgtrelationship) | Yes | Partial | Partial | Partial | Empty custom DMOs, owned `ManyToOne` lookup; label-only update; deletion also removes its sole-use lookup. |
+| [Source object definitions](#source-object-configuration-datasourceobject) | Yes | No | No | No | `DataSourceObject` XML, not a complete connector or credential export. |
+| [Stream definitions](#data-stream-configuration-datastreamdefinition) | Yes | No | No | No | `DataStreamDefinition` XML only; runtime Ingestion API results are in the DLO section. |
+| [Calculated insight definitions](#calculated-insight-mktcalcinsightobjectdef) | Yes | Partial | Partial | Partial | Definition-only XML creation, label update and owned-definition deletion; not runtime creation. |
+| [Segment definitions](#segment-marketsegmentdefinition) | Yes | Partial | Partial | Partial | Source-only DBT definition CRUD; update is label-only, not cross-org or processing-free replay. |
+| [Live calculated insights](#operational-calculated-insights) | Yes | Partial | Partial | Partial | API 67 facade creation, API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required. |
+| [Live segments](#operational-segments) | Yes | Partial | Partial | Partial | API 65 DBT empty-audience example; full-definition label/description update; exact runtime and metadata deletion checks. |
+| [Segment members](#segment-members-runtime-data-not-metadata) | Partial | No | No | No | Bounded membership/query pages, not a verified full-population export or member writes. |
+| [Data Graphs](#operational-data-graphs) | Yes | Partial | Partial | Partial | API 67 facade, root-only projection and owner-linked transform checks; deletion does not prove generated-object cleanup. |
+| [Identity Resolution](#operational-identity-resolution) | Yes | Partial | Partial | Partial | API 67 facade source-only ruleset lifecycle; bounded reconciliation change, not a successful data run or universal cleanup. |
+| [Kit templates](#kit-template-datakitobjecttemplate) | Yes | Partial | Partial | No | Stored Data Graph snapshot and description update; no reproducible standard CLI delete invocation supplied. |
+| [Kit definitions](#kit-definition-datapackagekitdefinition) | Yes | Partial | No | Partial | Owned Identity Resolution definition/template/membership created and deleted together; no runtime installation proof. |
+| [Kit membership](#kit-membership-datapackagekitobject) | Yes | Partial | No | Partial | Combined metadata transport with its definition/template; no independent member creation/deletion proof. |
 
 ## Before you start
 
@@ -40,7 +61,7 @@ npm install --global @salesforce/cli
 sf --version
 ```
 
-The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. You do not need to build a plugin, install Yarn/TypeScript or install the separate `sf-plugin-data` plugin for this page. A **plugin** adds commands to the CLI; these examples use Salesforce's standard commands.
+The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. You do not need to build or install a custom plugin, Yarn or TypeScript for this page. A **plugin** adds commands to the CLI; these examples use Salesforce's standard commands.
 
 To see what a command accepts without running it, append `--help`, for example `sf org login web --help`. Words starting with `--` are **flags**: options that change how a command runs.
 
@@ -123,7 +144,7 @@ For a request such as `--body '@ci-create.json'`, create `ci-create.json` in the
 
 **REST** is the API request style used for the live components below. The quoted `/services/data/...` path is an **endpoint**, an address within the org selected by `--target-org`, not a folder on your computer. `GET` reads; `PATCH` changes selected settings; `DELETE` requests removal. `POST` submits an operation and can create or process data, but some explicitly named operations below are reads. `--header` supplies request context, such as `Data-Space:default`; `--body` supplies the request's input. A response body is the data Salesforce sends back. Do not assume that a response can be reused as a request.
 
-Some examples call an **MCP facade**: one REST endpoint that accepts a named operation in `toolName` and its inputs in `paramsJson`. You are calling it through the CLI; you do not need an AI assistant or an MCP client. A **native endpoint** instead addresses the component directly. Here `paramsJson` contains JSON encoded as a string inside outer JSON, so inner quotes appear as `\"`. Keep that escaping; an object in its place is not equivalent.
+Some examples call an **API 67 MCP facade** at `/services/data/v67.0/ssot/mcp/execute`: one REST endpoint that accepts a named operation in `toolName` and its inputs in `paramsJson`. You invoke it through vanilla `sf api request rest`; these operations are not native `sf` commands or proof of equivalent native CRUD endpoints. You do not need an AI assistant or an MCP client. A **native endpoint** instead addresses the component directly. Here `paramsJson` contains JSON serialized **once** as a string inside outer JSON, so inner quotes appear as `\"`. Keep that escaping; an object in its place is not equivalent.
 
 All responses are **sanitized, shortened illustrations**, not complete response contracts. XML with an “omitted” comment is an excerpt: keep the complete retrieved file when deploying. Likewise, `<redacted-member-id>` and similar response markers stand for removed values, not inputs to copy.
 
@@ -223,7 +244,7 @@ A DMO is the model your data is mapped into, such as a customer or order. It use
 
 ### Create
 
-Creating a DMO by deploying its XML has **not been verified**. Downloading an object does not mean you can recreate it that way. The custom `sf-plugin-data` plugin has a separate, limited JSON creation route; that is not the standard Metadata API route shown here.
+Creating a DMO by deploying its XML has **not been verified**. Downloading an object does not mean you can recreate it that way.
 
 ### Read / retrieve
 
@@ -254,7 +275,7 @@ Keep the field files too. In particular, preserve the primary-key and key-qualif
 
 ### Update
 
-General DMO XML updates have **not been verified** either. The plugin's limited object/field label updates do not establish support for changing a DMO schema through Metadata API.
+General DMO XML updates, including schema changes through Metadata API, have **not been verified** either.
 
 ### Delete
 
@@ -304,6 +325,12 @@ A DLO holds data brought in from a source, before it is mapped into the data mod
 
 Creating a DLO through Metadata API has **not been verified**. Do not remove primary-key or system qualifier fields to make a deployment pass.
 
+We did create a new, owned Ingestion API connection without external credentials, add a one-event schema with two Text fields, and create its stream and DLO. This used the **API 67 `/ssot/mcp/execute` facade through vanilla `sf api request rest`**, with operations `d360_connection_create_ingestion_api`, `d360_connection_schema_put_ingestion_api` and `d360_datastream_create_ingestion_api`—not native CLI DLO commands or native CRUD parity.
+
+Separate connection, schema, stream and DLO reads confirmed `CONNECTED`, then stream/DLO `ACTIVE`. The tested configuration was one event, category `Other`, default dataspace, a Text primary key and `UPSERT`. Salesforce generated the returned stream/DLO names rather than using the proposed names literally. Use those returned identities. Persisted DLO fields had `__c` suffixes while embedded stream mappings used unsuffixed fields; the embedded definition ID was not the persisted DLO ID.
+
+The DLO had six fields: the two source fields and four generated key-qualifier/system fields. The custom key-qualifier designation list was empty, so this does not establish preservation of nonempty custom qualifiers. Initial processing happened automatically, with zero records and no explicit ingestion or refresh request. This is a narrow source-only result, not a portable recipe for every connector or category.
+
 ### Read / retrieve
 
 ```sh
@@ -325,11 +352,17 @@ The response uses `type: CustomObject` and `fullName: CustomerSource__dll`. Keep
 
 ### Update
 
-We found API operations for creating and updating DLOs, but have not tested them end to end. We did not create a new source or stream because we could not yet confirm how to remove all test resources safely. Updating existing DLOs and preserving their primary keys and key qualifiers remain untested. We left existing shared connections unchanged.
+We tried adding a Text field directly with `d360_dlo_update`. It failed because this DLO belonged to a stream: Salesforce required field addition through the Data Stream API. The facade returned HTTP `201` and CLI exit `0` with a nested error; an independent read confirmed the original six fields were unchanged.
+
+The successful route was to read the complete owned connection schema, retain both original source fields and add one Text field with `d360_connection_schema_put_ingestion_api`, then invoke `d360_datastream_patch_ingestion_api` with the exact returned stream identity and `syncSchema: true`. These are the same API 67 facade operations called through vanilla `sf api request rest`, not Metadata API updates. The stream entered `PROCESSING`, and separate stream/DLO reads reached `ACTIVE` with seven persisted fields.
+
+The comparison preserved all six original field definitions, including primary-key, generated qualifier and system settings, plus source bindings, original mappings/formulas and refresh configuration. Only the new Text field and its source mapping were added. Custom qualifier lists remained empty. This does not establish arbitrary field removal, type changes, direct DLO updates, nonempty custom qualifier preservation or cross-org replay. Shared connections were not changed.
 
 ### Delete
 
-There is no verified standard delete recipe here. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
+For the new owned ingestion chain, one owning-stream delete with `shouldDeleteDataLakeObject: true` was accepted, but separate stream and DLO reads still showed `DELETING` at the last check. The connection remained `CONNECTED` and its schema in use. This is not completed cleanup or a verified full lifecycle; do not repeat the delete or remove generated objects yourself while it is pending.
+
+There is no verified completed standard delete recipe here. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
 
 ```json
 { "status": 1, "result": { "success": false, "status": "Failed", "details": { "componentFailures": [{ "fullName": "CustomerSource__dll", "problem": "This data lake object definition is referenced elsewhere in Salesforce. Remove the usage and try again." }] } } }
@@ -569,7 +602,7 @@ Retrieving this file does **not** start a refresh. The connector, source, DLO an
 
 ### Update
 
-Updates, activation and refresh have **not been verified** here.
+Updates through this Metadata API definition, explicit activation and explicit refresh have **not been verified** here. The [DLO section](#data-lake-object-dlo-customobject-dll) describes the separately tested API 67 Ingestion API stream creation and additive schema-sync route; it is not a `DataStreamDefinition` XML deployment.
 
 ### Delete
 
@@ -820,7 +853,11 @@ sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActiv
 
 The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`. Read it back to confirm the change and preserved SQL/dimensions/measures. `NotScheduled` does not disable the insight.
 
-We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` while keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail. A successful SQL change, what happens when sending an identical update again, and a completed calculation remain untested.
+We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` while keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail.
+
+A later **expression-only API 65 PATCH** succeeded: we retained `WHERE 1 = 0` and added a fully qualified `DeviceId IS NOT NULL` predicate, keeping `APPROX_COUNT_DISTINCT`, output aliases and the grouped application dimension unchanged. Use the exact actual field name, such as `ssot__DeviceApplicationEngagement__dlm.ssot__DeviceId__c`, not the shortened name in this explanation. Send only `expression` in the PATCH body through the same vanilla `sf api request rest` update route above.
+
+After `PROCESSING`, independent runtime reads reached `ACTIVE`, and a separate Metadata read contained the exact edited SQL. The aggregate formula, dimension/measure names, types, roles and aggregability, label and schedule/settings were retained. The returned fields' derived `dataSource` attribution changed despite stable formulas; do not treat that attribution as an unchanged dependency identifier. This proves the bounded predicate edit, not arbitrary SQL or schema editing, general omitted-field preservation, an identical-repeat guarantee or completed computation. The empty-result filter also cannot demonstrate a change in output rows.
 
 ### Delete
 
@@ -924,7 +961,9 @@ sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --metho
 { "apiName": "ActiveCustomers", "segmentStatus": "PROCESSING", "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D" }
 ```
 
-GET again until `ACTIVE`, then compare the changed label/description and all preserved values. This narrow update does not establish arbitrary omitted-field preservation, SQL/UI criteria updates or schedule/lookback editing.
+GET again until `ACTIVE`, then compare the changed label/description and all preserved values. In one owned DBT update, separate reads observed **`PROCESSING` → `COUNTING` → `ACTIVE`** without intervention. `COUNTING` was not final success or proof of failure. The later `ACTIVE` read was about nine minutes after the observed `COUNTING` read; the exact transition time between those checks is unknown.
+
+Independent runtime and standard XML retrieval then confirmed the exact updated label/description, original model/SQL/type, identities, dataspace, segment-on object, schedule/lookback and generated membership references. Description is runtime-only; the XML label agreed with runtime. The first command had already stopped with an unknown outcome: later API settlement does not retroactively make that command successful. Do not replay an update with an unknown outcome; reconcile it with reads. This narrow result does not establish arbitrary omitted-field preservation, SQL/UI criteria updates or schedule/lookback editing.
 
 ### Delete
 
@@ -1192,14 +1231,24 @@ This is a read despite the HTTP POST transport. Check the root, fields/key flags
 
 First confirm that initial generated-transform processing completed successfully and that the graph can be edited. `ready` alone is not enough, and **not every lifecycle state is mutable**. If edit eligibility is unclear, stop; this guide does not provide a universal status-to-editability check. Do not force a refresh to unlock editing.
 
-We created and read a graph successfully, but its read response did not tell us whether processing had finished successfully or editing was allowed. We did not attempt another update because we could not reliably check that its initial processing had finished and editing was allowed. The update below worked in an earlier test; use it only after confirming those conditions for your graph.
+We resolved the initial-processing check by reading the **exact `dayZeroTransformDevName` returned by the owner graph**, not by guessing a transform name. Save `graph-transform-get.json`, replacing `RETURNED_TRANSFORM_NAME` with that value:
 
-Preserve the full configuration, changing the description and adding the surname field. Save `graph-update.json`; `editScheduleOnly` belongs **outside `input`**:
+```json
+{ "toolName": "d360_transform_get", "paramsJson": "{\"dataTransformNameOrId\":\"RETURNED_TRANSFORM_NAME\"}" }
+```
+
+```sh
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-transform-get.json' --target-org TARGET_ALIAS --json
+```
+
+This is a read operation through the **API 67 facade using vanilla `sf api request rest`**, not a native transform command or native CRUD equivalence. Check the exact returned transform name, default dataspace and `creationSource: Data Graph` against a fresh owner graph read. In the tested graph, the transform moved through `PENDING` and `IN_PROGRESS` before `status: ACTIVE`, `lastRunStatus: SUCCESS` and a completed `lastRunDate` after creation. Only then did we submit the one full-definition update below. This observation does not make `ready` alone a universal edit-permission check.
+
+Preserve the full configuration, including label and description, and add only the surname field. Save `graph-update.json`; `editScheduleOnly` belongs **outside `input`**:
 
 ```json
 {
   "toolName": "d360_data_graph_update",
-  "paramsJson": "{\"input\":{\"name\":\"CustomerGraph\",\"label\":\"Customer Graph\",\"description\":\"Customer key, given-name and surname projection\",\"creationMode\":\"DEFAULT\",\"dataspaceName\":\"default\",\"primaryObjectName\":\"UnifiedssotIndividualMkt__dlm\",\"type\":\"NONE\",\"fullRefreshConfig\":{\"schedule\":{\"frequency\":7,\"timeGranularity\":\"Day\"}},\"incrementalRefreshConfig\":{\"enabled\":false},\"sourceObject\":{\"name\":\"UnifiedssotIndividualMkt__dlm\",\"devName\":\"UnifiedssotIndividualMkt__dlm\",\"label\":\"Unified Customer\",\"path\":[],\"fields\":[{\"sourceFieldName\":\"ssot__Id__c\",\"dataType\":\"Text\",\"isKeyColumn\":true,\"isProjected\":true},{\"sourceFieldName\":\"ssot__FirstName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true},{\"sourceFieldName\":\"ssot__LastName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true}],\"relatedObjects\":[]}},\"editScheduleOnly\":false}"
+  "paramsJson": "{\"input\":{\"name\":\"CustomerGraph\",\"label\":\"Customer Graph\",\"description\":\"Customer key and given-name projection\",\"creationMode\":\"DEFAULT\",\"dataspaceName\":\"default\",\"primaryObjectName\":\"UnifiedssotIndividualMkt__dlm\",\"type\":\"NONE\",\"fullRefreshConfig\":{\"schedule\":{\"frequency\":7,\"timeGranularity\":\"Day\"}},\"incrementalRefreshConfig\":{\"enabled\":false},\"sourceObject\":{\"name\":\"UnifiedssotIndividualMkt__dlm\",\"devName\":\"UnifiedssotIndividualMkt__dlm\",\"label\":\"Unified Customer\",\"path\":[],\"fields\":[{\"sourceFieldName\":\"ssot__Id__c\",\"dataType\":\"Text\",\"isKeyColumn\":true,\"isProjected\":true},{\"sourceFieldName\":\"ssot__FirstName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true},{\"sourceFieldName\":\"ssot__LastName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true}],\"relatedObjects\":[]}},\"editScheduleOnly\":false}"
 }
 ```
 
@@ -1211,7 +1260,9 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 { "name": "CustomerGraph", "status": "processing", "version": "1" }
 ```
 
-Read back with `graph-get.json`. The graph can pass through `processing` and `editing_post_sync` before `ready`. Confirm three projected Text fields, only Id marked as the key, and unchanged root, seven-day schedule and incremental setting.
+Read back with `graph-get.json`. The graph can pass through `processing` and `editing_post_sync` before `ready`. In the later source-only test, adding LastName while keeping label/description unchanged settled at `ready`, version `"1"`, about 30 minutes after the single update. The generated transform reported a new successful run before the graph finished settling. That duration is an observation, not a deadline or guarantee; do not repeat the update while waiting.
+
+Independent readback confirmed the ordered Id, FirstName and LastName Text projections, only Id marked as the key, and the unchanged logical root, empty paths/related objects, seven-day schedule and disabled incremental refresh. GET omitted `creationMode`: `DEFAULT` remains known creation-time intent, not a returned value to manufacture. Its generated `sourceObject.devName` was an owner-node binding, not the logical root name to copy blindly into a new request.
 
 An identical repeat can preserve identities, version and configuration, but does not guarantee zero writes or no processing. Templates in your project are not automatically refreshed by this update.
 
@@ -1557,4 +1608,4 @@ In particular, an Identity Resolution template can be stored successfully while 
 
 For the official workflows, see [CLI kit transport](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy_data_kit_using_cli.html) and [Connect kit deployment](https://developer.salesforce.com/docs/data/data-cloud-dev/guide/dc-deploy-data-kits-using-connect-api.html).
 
-For the separate custom plugin's current limits, see [sf-plugin-data capabilities](https://github.com/JoernBerkefeld/sf-plugin-data#metadata-examples-prerequisites-and-qualification). The standard CLI examples on this page are not additional `sf data360` commands.
+These examples use vanilla Salesforce CLI commands to call the indicated Metadata or REST API. A missing dedicated CLI command does not mean the underlying API operation is unavailable.
