@@ -822,7 +822,7 @@ The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`
 
 ### Delete
 
-After checking ownership and dependencies, save `ci-delete.json`. The request-file form avoids a CLI empty-body error that can occur with a bare DELETE:
+After checking ownership and dependencies, save `ci-delete.json`. If a DELETE without `--body` fails with `No 'mode' found in 'body' entry`, use a whole-request file with an explicit empty raw body, as below. This workaround was verified with Salesforce CLI 2.151.7.
 
 ```json
 { "url": "/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
