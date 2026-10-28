@@ -217,7 +217,7 @@ Here, **your integration** means existing tooling or a developer on your team th
 
 Keep those generated files temporary and out of Git. Use an isolated source project without unrelated XML. Never delete a shared or populated object just to make another example work.
 
-## Data Model Object (DMO): `CustomObject`, `__dlm`
+## Data Model Object (DMO): `CustomObject`, `__dlm` {#data-model-object-dmo-customobject-dlm}
 
 A DMO is the model your data is mapped into, such as a customer or order. It uses the suffix `__dlm`. Salesforce CLI treats its definition as a `CustomObject`, with a separate XML file for each field.
 
@@ -296,7 +296,7 @@ A completed deletion can look like this:
 
 Check afterward that the exact DMO and its owned mapping are gone and the DLO remains. Downstream insights, segments, identity resolution and activations can block deletion; no single dependency list is guaranteed to show everything. Local object, field and mapping XML remain. `sf project delete source` is not an interchangeable verified alternative and would also remove local files.
 
-## Data Lake Object (DLO): `CustomObject`, `__dll`
+## Data Lake Object (DLO): `CustomObject`, `__dll` {#data-lake-object-dlo-customobject-dll}
 
 A DLO holds data brought in from a source, before it is mapped into the data model. It uses `__dll`, not `__dlm`. Its XML describes the lake object, not the whole connection that brings data into it. Bringing data in is **ingestion**; a **connector** supplies the connection, a **stream** controls the incoming data flow, and a **transform** reshapes data.
 
@@ -325,7 +325,7 @@ The response uses `type: CustomObject` and `fullName: CustomerSource__dll`. Keep
 
 ### Update
 
-DLO updates have **not been verified**.
+We found API operations for creating and updating DLOs, but have not tested them end to end. We did not create a new source or stream because we could not yet confirm how to remove all test resources safely. Updating existing DLOs and preserving their primary keys and key qualifiers remain untested. We left existing shared connections unchanged.
 
 ### Delete
 
@@ -818,7 +818,9 @@ Read the insight again until it reaches `ACTIVE`, checking the expression and ex
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-update.json' --target-org TARGET_ALIAS --json
 ```
 
-The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`. Read it back to confirm the change and preserved SQL/dimensions/measures. `NotScheduled` does not disable the insight. Arbitrary SQL updates and identical-repeat behavior have not been verified.
+The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`. Read it back to confirm the change and preserved SQL/dimensions/measures. `NotScheduled` does not disable the insight.
+
+We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` while keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail. A successful SQL change, what happens when sending an identical update again, and a completed calculation remain untested.
 
 ### Delete
 
@@ -1184,13 +1186,15 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 { "name": "CustomerGraph", "status": "ready", "version": "1" }
 ```
 
-This is a read despite the HTTP POST transport. Check the root, fields/key flags, description and refresh settings, not just `ready`. Capture the exact generated object/transform references for checking deletion later; do not guess names. The consumer-detail flags do not promise a complete list of every external dependency.
+This is a read despite the HTTP POST transport. Check the root, fields/key flags, description and refresh settings, not just `ready`. We also read the generated ID, VALUE and root-fragment DMOs through API 65, using the exact names returned by the graph. That confirms those objects could be read in the source org, not that the graph's processing finished or that the same configuration works in another org. Nested graphs remain untested. Capture the exact generated object/transform references for checking deletion later; do not guess names. The consumer-detail flags do not promise a complete list of every external dependency.
 
 ### Update
 
 First confirm that initial generated-transform processing completed successfully and that the graph can be edited. `ready` alone is not enough, and **not every lifecycle state is mutable**. If edit eligibility is unclear, stop; this guide does not provide a universal status-to-editability check. Do not force a refresh to unlock editing.
 
-Now preserve the full configuration, changing the description and adding the surname field. Save `graph-update.json`; `editScheduleOnly` belongs **outside `input`**:
+We created and read a graph successfully, but its read response did not tell us whether processing had finished successfully or editing was allowed. We did not attempt another update because we could not reliably check that its initial processing had finished and editing was allowed. The update below worked in an earlier test; use it only after confirming those conditions for your graph.
+
+Preserve the full configuration, changing the description and adding the surname field. Save `graph-update.json`; `editScheduleOnly` belongs **outside `input`**:
 
 ```json
 {
@@ -1228,7 +1232,7 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 { "success": true }
 ```
 
-Confirm that the exact graph is no longer found. Check the captured generated object/transform references with the same access used before deletion; unreadable is not permission-independent proof of physical removal. Note that **generated mapping absence and graph-specific internal-state cleanup are not proven**. Never delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. Local requests and any retrieved template remain.
+Confirm that the exact graph is no longer found. Check the captured generated object/transform references with the same access used before deletion; unreadable is not permission-independent proof of physical removal. A generated VALUE DMO was still readable after its graph was deleted, so deleting the graph did not confirm removal of all its generated objects. Note that **generated mapping absence and graph-specific internal-state cleanup are not proven**. Never delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. Local requests and any retrieved template remain.
 
 ## Operational Identity Resolution
 
@@ -1236,7 +1240,7 @@ Confirm that the exact graph is no longer found. Check the captured generated ob
 
 These API 67 MCP facade operations manage a live ruleset. A native API 65 GET is also shown, but equivalent native write endpoints and cross-org migration have not been verified. You do not need a custom data plugin or a kit for this route.
 
-Use compatible existing Individual/name/ContactPointEmail fields and an unused ruleset suffix of **at most four characters**. The example uses `cust`; after creation, use the returned `objectApiName`.
+Use compatible existing Individual/name/ContactPointEmail fields and an unused ruleset suffix of **at most four characters**. The example uses `cust`; after creation, use the returned `objectApiName` exactly, rather than a display label or a name guessed from the suffix. This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work.
 
 **Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`.** Obtain permission for publication/provisioning. That flag is not draft mode, and publication does not prove that a successful identity-resolution data run occurred.
 
