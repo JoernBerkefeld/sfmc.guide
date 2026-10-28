@@ -154,6 +154,13 @@
     "description": "Parses an XML string using an XPath expression and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
+    "name": "Calculated insights | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/calculated-insights/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for calculated insight definitions and runtime state."
+  },
+  {
     "name": "Char",
     "url": "/engagement/ampscript/functions/char/",
     "section": "AMPscript Function Reference",
@@ -266,6 +273,55 @@
     "description": "Data Cloud metadata commands, default source-format files, illustrative responses and supported lifecycle limits for Marketing Cloud Next."
   },
   {
+    "name": "Data Graphs | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-graphs/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Operational Data Graphs."
+  },
+  {
+    "name": "Data Kit definition | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-package-kit-definition/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Kit definition: DataPackageKitDefinition."
+  },
+  {
+    "name": "Data Kit membership | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-package-kit-object/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Kit membership: DataPackageKitObject."
+  },
+  {
+    "name": "Data Kit template | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-kit-object-template/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Kit template: DataKitObjectTemplate."
+  },
+  {
+    "name": "Data Lake Object (DLO) | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-lake-object/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Data Lake Object (DLO): CustomObject, __dll."
+  },
+  {
+    "name": "Data Model Object (DMO) | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-model-object/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Data Model Object (DMO): CustomObject, __dlm."
+  },
+  {
+    "name": "Data stream configuration | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-stream-definition/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Data stream configuration: DataStreamDefinition."
+  },
+  {
     "name": "DataExtensionRowCount",
     "url": "/engagement/ampscript/functions/dataextensionrowcount/",
     "section": "AMPscript Function Reference",
@@ -327,6 +383,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
+  },
+  {
+    "name": "DLO-to-DMO mapping | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/object-source-target-map/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for DLO-to-DMO mapping: ObjectSourceTargetMap."
   },
   {
     "name": "Domain",
@@ -448,6 +511,13 @@
     "description": "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
   },
   {
+    "name": "Field relationship | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/field-source-target-relationship/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Field relationship: FieldSrcTrgtRelationship."
+  },
+  {
     "name": "Format",
     "url": "/engagement/ampscript/functions/format/",
     "section": "AMPscript Function Reference",
@@ -565,6 +635,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the value of a specified HTTP request header from the inbound request. Notes that custom headers are returned even though the docs restrict it to standard headers."
+  },
+  {
+    "name": "Identity Resolution | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/identity-resolution/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Operational Identity Resolution."
   },
   {
     "name": "IIf",
@@ -924,6 +1001,20 @@
     "description": "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
   },
   {
+    "name": "Segment members | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/segment-members/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Segment Members: runtime data, not metadata."
+  },
+  {
+    "name": "Segments | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/segments/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Operational segments."
+  },
+  {
     "name": "SetObjectProperty",
     "url": "/engagement/ampscript/functions/setobjectproperty/",
     "section": "AMPscript Function Reference",
@@ -1055,6 +1146,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input, and an unrecognised encoding name aborts the page."
+  },
+  {
+    "name": "Source object configuration | Data Cloud with Salesforce CLI",
+    "url": "/next/data-cloud-cli/data-source-object/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "Salesforce CLI workflows and verified operation limits for Source object configuration: DataSourceObject."
   },
   {
     "name": "SSJS Function Reference",

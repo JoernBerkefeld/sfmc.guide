@@ -24,6 +24,7 @@
   {% assign status_label = "Verification pending" %}
   {% assign status_title = "This page has not yet been proven against a live CloudPage." %}
 {% endif %}
+{% if include.title %}{% assign status_title = include.title %}{% endif %}
 
 <div class="verification-status" aria-label="Verification status">
   <span class="verified-badge {{ status_class }}" title="{{ status_title | escape }}">
