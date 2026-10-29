@@ -16,7 +16,7 @@ crud:
   delete: { status: "unknown", methods: [] }
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 29, 2026, 17:27 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -40,6 +40,15 @@ sf project retrieve start --metadata ObjectSourceTargetMap:CustomerMapping --tar
 ```
 
 The response points to `force-app/main/default/objectSourceTargetMaps/CustomerMapping.objectSourceTargetMap-meta.xml`. Use the actual metadata member name from your org, not a name guessed from the source and target objects.
+
+An independent exact-name standard Metadata API 65 retrieve was reverified on
+October 29, 2026 for one retained mapping in one source org. The separately
+retrieved XML matched the exported definition byte for byte in a configured
+package source directory. This is source-only definition evidence: it does not
+establish primary-key or key-qualifier compatibility, prerequisite readiness,
+cross-org portability or operational deployment. No target calls, writes or
+processing were performed in this check; it does not requalify the bounded
+write examples below.
 
 {% endcapture %}
 {% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="unknown" api_reason="No API mapping retrieval workflow is supplied." %}

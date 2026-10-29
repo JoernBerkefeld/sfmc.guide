@@ -20,7 +20,7 @@ crud_rows:
   - path: next/data-cloud-cli/object-source-target-map.md
     label: Mappings
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Existing compatible objects; label-only update; standalone deletion is not established.'
+    scope: 'Exact standard API 65 mapping XML retrieval independently reverified in one source org; no semantic key/qualifier, prerequisite or cross-org proof. Existing bounded writes: compatible objects and label-only update; standalone deletion is not established.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: October 29, 2026, 14:35 (UTC+1).*
+*Last updated: October 29, 2026, 17:27 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -92,7 +92,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
-**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources.
+**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources. The 17:27 synchronization adds the October 29 source-only mapping XML comparison; it records retained evidence, not a new live check or broader write qualification.
 
 {% include crud-legend.html %}
 
