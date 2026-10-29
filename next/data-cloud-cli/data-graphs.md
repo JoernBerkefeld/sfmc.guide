@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 29, 2026, 09:17 (UTC+1).*
+*Last updated: October 29, 2026, 10:03 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -48,7 +48,7 @@ This is a read despite the HTTP POST transport. Check the root, fields/key flags
 
 **IR-owned roots:** For a graph rooted in an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#retrieve), correlate the graph's logical root with the exact unified Individual DMO returned by its owning ruleset. Read the ruleset independently through the facade and native API, and verify all twelve returned output/link DMOs through separate API 65 Connect REST and Metadata API reads. Check the root's actual Text field definitions and explicit Id key; do not guess generated names or reuse source-org IDs. A returned `sourceObject.devName` can identify the graph's own node rather than the logical DMO, so it is not by itself an owner or root binding.
 
-A bounded qualification established this correlation for retained owned IR rulesets in two orgs: the portable API identities matched while the org-local IDs differed. One separately created setup graph in each org reached `ready`, with its exact returned transform reporting `ACTIVE` / `SUCCESS` and a completed run. Independent checks also matched the transform's input fields/key, grouping and generated outputs to that graph and root. The source graph projected Id, FirstName and LastName; the target projected Id and FirstName. These are setup and read/schema/lineage observations, **not a completed cross-org configuration deployment or portable graph creation workflow**.
+A bounded qualification established this correlation for retained owned IR rulesets in two orgs: the portable API identities matched while the org-local IDs differed. One separately created setup graph in each org reached `ready`, with its exact returned transform reporting `ACTIVE` / `SUCCESS` and a completed run. Independent checks also matched the transform's input fields/key, grouping and generated outputs to that graph and root. At setup, the source graph projected Id, FirstName and LastName; the target projected Id and FirstName. These initial setup/read observations are separate from the later bounded target update described below and **do not establish a portable graph creation workflow**.
 
 ## Create
 
@@ -110,7 +110,9 @@ Independent readback confirmed the ordered Id, FirstName and LastName Text proje
 
 An identical repeat can preserve identities, version and configuration, but does not guarantee zero writes or no processing. Templates in your project are not automatically refreshed by this update.
 
-**Separate cross-org limit:** The paired IR-owned setup/read qualification above does not extend this source-only update proof to a portable target update. At this evidence checkpoint, no such target update request was dispatched; consequently, its settled full-preservation readback and identical repeat remain **unproven**. A pre-write refusal is not a successful API update, and a comparison that identifies the intended LastName addition is not evidence that Salesforce applied it. Do not infer zero-write repeat behavior or broaden these operation ratings from setup success alone.
+**Bounded existing-owner target update:** The later two-org qualification completed one target Graph update through the API 67 facade, appending only the non-key projected Text LastName field to the existing Id/FirstName projection. The existing target IR ruleset was unchanged and received no update. After five settlement polls, the graph was `ready` and its exact owner-returned transform had the same identity, `ACTIVE` / `SUCCESS` and a later completed run. Separate full readbacks confirmed unchanged IR owner, all twelve output/link DMOs and root schema/key; the graph retained its previous field prefix, target-local identities, root/node/generated bindings and refresh settings, with only the supported projection append. Source-org IDs were not substituted for target-local identities.
+
+An actual repeat of the same desired configuration then found both resources unchanged and sent **zero write requests or explicit processing jobs**. This is a bounded comparison-before-write result, **not** proof that replaying the raw `graph-update.json` request is write-free or processing-free: the earlier raw API repeat above retains that limitation. Automatic processing from the one substantive update was observed; no explicit refresh/run was needed. This continuation created no resources and does not establish portable IR/Graph creation, missing-prerequisite provisioning, arbitrary roots/edits or a complete cross-org lifecycle. The earlier pre-write refusals remain refusals; this later independently confirmed update is the new evidence.
 
 ## Delete
 

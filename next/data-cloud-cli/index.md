@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 29, 2026, 09:17 (UTC+1).*
+*Last updated: October 29, 2026, 10:03 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -37,8 +37,8 @@ The ratings describe **verified vanilla Salesforce CLI workflows on this page**,
 | [Calculated insights](/next/data-cloud-cli/calculated-insights/#retrieve) | Yes | Partial | Partial | Partial | XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required. |
 | [Segments](/next/data-cloud-cli/segments/#retrieve) | Yes | Partial | Partial | Partial | XML definition and runtime reads; source-only DBT XML label-only update or API 65 live empty-audience creation and full-definition label/description update; exact runtime and metadata deletion checks. |
 | [Segment members](/next/data-cloud-cli/segment-members/#segment-members-runtime-data-not-metadata) | Partial | No | No | No | Bounded membership/query pages, not a verified full-population export or member writes. |
-| [Data Graphs](/next/data-cloud-cli/data-graphs/#operational-data-graphs) | Yes | Partial | Partial | Partial | API 67 facade source-only root projection update; two-org IR-owned setup/root/transform lineage qualified, not portable target update/settlement/repeat; deletion does not prove generated-object cleanup. |
-| [Identity Resolution](/next/data-cloud-cli/identity-resolution/#operational-identity-resolution) | Yes | Partial | Partial | Partial | API 67 facade source-only ruleset lifecycle and bounded reconciliation change; two-org retained-owner/twelve-output schema correlation, not portable creation, successful IR data run or universal cleanup. |
+| [Data Graphs](/next/data-cloud-cli/data-graphs/#operational-data-graphs) | Yes | Partial | Partial | Partial | API 67 facade root-only projection update; bounded existing-IR-owner target LastName append, full preservation and comparison-before-write repeat qualified; not portable creation or arbitrary edits; deletion does not prove generated-object cleanup. |
+| [Identity Resolution](/next/data-cloud-cli/identity-resolution/#operational-identity-resolution) | Yes | Partial | Partial | Partial | API 67 facade source-only ruleset lifecycle and bounded reconciliation change; two-org owner/twelve-output correlation and preservation during dependent Graph update, with no IR mutation; not portable IR creation/update, successful IR data run or universal cleanup. |
 | [Kit templates](/next/data-cloud-cli/data-kit-object-template/#kit-template-datakitobjecttemplate) | Yes | Partial | Partial | No | Stored Data Graph snapshot and description update; no reproducible standard CLI delete invocation supplied. |
 | [Kit definitions](/next/data-cloud-cli/data-package-kit-definition/#kit-definition-datapackagekitdefinition) | Yes | Partial | No | Partial | Owned Identity Resolution definition/template/membership created and deleted together; no runtime installation proof. |
 | [Kit membership](/next/data-cloud-cli/data-package-kit-object/#kit-membership-datapackagekitobject) | Yes | Partial | No | Partial | Combined metadata transport with its definition/template; no independent member creation/deletion proof. |

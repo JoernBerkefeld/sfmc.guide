@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 29, 2026, 09:17 (UTC+1).*
+*Last updated: October 29, 2026, 10:03 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -55,6 +55,8 @@ Compare identity, matching rules, reconciliation values and generated references
 **Using an IR-generated output as a [Data Graph root](/next/data-cloud-cli/data-graphs/#retrieve):** Read the exact ruleset through both the facade and native endpoint. Its returned reconciliation entries identify the unified DMOs (`unifiedDmoName`); correlate the exact returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or a DMO ID. Independently read the generated outputs through API 65 Connect REST and Metadata API, then compare the root's actual field names, Text types and explicit Id key. A matching object name alone is insufficient.
 
 In the bounded two-org qualification, retained owned `PUBLISHED` rulesets and all twelve returned output/link DMOs were independently correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had the compatible Id, FirstName and LastName Text fields and explicit Id key required for the root-only graphs. This establishes existing-owner/output/schema compatibility, **not cross-org ruleset creation or migration**, a successful IR data run, or permission to reuse source IDs in the target. Resolve the owner and its returned outputs afresh in each org; do not provision or modify missing prerequisites merely to match this example.
+
+The later [existing-owner target Graph update](/next/data-cloud-cli/data-graphs/#update) appended only its LastName projection and independently preserved this target ruleset, all twelve output/link DMOs and the root schema/key with their target-local identities. No IR mutation was attempted. A repeat comparison found both resources unchanged and sent no writes or explicit processing jobs. This is preservation of an existing owner during a dependent Graph update, **not cross-org IR update/create proof** or a successful IR data run.
 
 ## Create
 
