@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Segment members | Data Cloud with Salesforce CLI"
+title: "Segment members"
 description: "Salesforce CLI workflows and verified operation limits for Segment Members: runtime data, not metadata."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/segment-members/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -28,6 +29,7 @@ Member identifiers and profile fields are personal data. Keep request files and 
 
 ## Retrieve
 
+{% capture retrieve_api %}
 ### Read basic membership
 
 First read the segment itself:
@@ -211,16 +213,25 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?
 
 Choose a real restricted path outside metadata source. This writes API response bytes; do not add `--include` if you need pure JSON. Request files and member/profile output should stay out of Git. Creating, updating or deleting membership rows, refreshing/publishing, and a one-call enriched export are not covered here.
 
+{% endcapture %}
+{% include operation-tabs.html id="members-retrieve" label="Retrieve" cli_state="blocked" cli_reason="Members are runtime data, not retrievable metadata; no standard include-details flag exists." api_state="available" api_reason="Bounded membership and profile reads only, not a full-population export." api_body=retrieve_api %}
+
 ## Create
 
 Creating membership rows is not qualified here. A segment's rules and processing determine its audience; this page supplies only reads.
+
+{% include operation-tabs.html id="members-create" label="Create" cli_state="unknown" cli_reason="No membership-row creation workflow is supplied." api_state="unknown" api_reason="Membership-row creation is not qualified here." %}
 
 ## Update
 
 Updating membership rows, refreshing or publishing through this resource is not qualified here.
 
+{% include operation-tabs.html id="members-update" label="Update" cli_state="unknown" cli_reason="No membership-row update workflow is supplied." api_state="unknown" api_reason="Membership updates, refresh and publication are not qualified here." %}
+
 ## Delete
 
 Deleting membership rows is not qualified here. Do not delete generated membership tables as a substitute.
+
+{% include operation-tabs.html id="members-delete" label="Delete" cli_state="unknown" cli_reason="No membership-row deletion workflow is supplied." api_state="unknown" api_reason="Membership-row deletion is not qualified here; do not delete generated tables." %}
 
 > Official reference: [Segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).

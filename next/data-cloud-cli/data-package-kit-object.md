@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Data Kit membership | Data Cloud with Salesforce CLI"
+title: "Data Kit membership"
 description: "Salesforce CLI workflows and verified operation limits for Kit membership: DataPackageKitObject."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/data-package-kit-object/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -24,6 +25,7 @@ platforms:
 
 ## Retrieve
 
+{% capture retrieve_cli %}
 A membership file links a kit definition to a template. Use exact member names from the org; they are not necessarily the kit's display name.
 
 For the verified combined transport, the integration supplies `manifest/package.xml` with the actual member names. Here is a small example of that generated file:
@@ -74,17 +76,30 @@ The member file is `force-app/main/default/DataPackageKitObjects/CustomerKitGrap
 
 Preserve the exact references. For a larger snapshot, the generated manifest includes the other actual template and membership names too. Retrieval does not install the kit, and these links alone do not prove that its components are portable.
 
+{% endcapture %}
+{% include operation-tabs.html id="kit-member-retrieve" label="Retrieve" cli_state="available" cli_reason="Combined metadata transport only; retrieval does not install the kit." cli_body=retrieve_cli api_state="unknown" api_reason="No separate API retrieval workflow is supplied." %}
+
 ## Create
 
+{% capture create_cli %}
 The owned Identity Resolution membership link was created together with its definition and template using the shared [kit definition example](/next/data-cloud-cli/data-package-kit-definition/#create). Independent member creation and portability remain **unverified**.
+
+{% endcapture %}
+{% include operation-tabs.html id="kit-member-create" label="Create" cli_state="available" cli_reason="Use the linked joint source-org workflow; independent member creation remains unverified." cli_body=create_cli api_state="unknown" api_reason="No separate API creation workflow is supplied." %}
 
 ## Update
 
 Member updates have **not been verified**.
 
+{% include operation-tabs.html id="kit-member-update" label="Update" cli_state="unknown" cli_reason="Member updates have not been verified; no workflow is supplied." api_state="unknown" api_reason="No API member-update workflow is supplied." %}
+
 ## Delete
 
+{% capture delete_cli %}
 The owned Identity Resolution membership link was deleted together with its definition and template using the shared [kit definition example](/next/data-cloud-cli/data-package-kit-definition/#kit-definition-datapackagekitdefinition). Independent deletion of arbitrary member links and runtime component undeployment remain **unverified**.
+
+{% endcapture %}
+{% include operation-tabs.html id="kit-member-delete" label="Delete" cli_state="available" cli_reason="Use the linked joint metadata-deletion workflow; independent member deletion and runtime undeployment remain unverified." cli_body=delete_cli api_state="unknown" api_reason="No separate API deletion workflow is supplied." %}
 
 ### Moving a kit is not installing it
 

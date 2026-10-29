@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Data Graphs | Data Cloud with Salesforce CLI"
+title: "Data Graphs"
 description: "Salesforce CLI workflows and verified operation limits for Operational Data Graphs."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/data-graphs/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -30,6 +31,7 @@ This example starts with a customer key and first name, then adds the last name.
 
 ## Retrieve
 
+{% capture retrieve_api %}
 Save `graph-get.json`, using the actual created name:
 
 ```json
@@ -50,8 +52,12 @@ This is a read despite the HTTP POST transport. Check the root, fields/key flags
 
 A bounded qualification established this correlation for retained owned IR rulesets in two orgs: the portable API identities matched while the org-local IDs differed. One separately created setup graph in each org reached `ready`, with its exact returned transform reporting `ACTIVE` / `SUCCESS` and a completed run. Independent checks also matched the transform's input fields/key, grouping and generated outputs to that graph and root. At setup, the source graph projected Id, FirstName and LastName; the target projected Id and FirstName. These initial setup/read observations are separate from the later bounded target update described below and **do not establish a portable graph creation workflow**.
 
+{% endcapture %}
+{% include operation-tabs.html id="graphs-retrieve" label="Retrieve" cli_state="unknown" cli_reason="No standard CLI runtime graph retrieval workflow is supplied." api_state="available" api_reason="API 67 facade read with bounded owner/output correlation; not portable creation proof." api_body=retrieve_api %}
+
 ## Create
 
+{% capture create_api %}
 Save `graph-create.json`. This is a root-only graph with a seven-day full-refresh schedule and incremental refresh disabled:
 
 ```json
@@ -71,8 +77,12 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 
 The automatic work has already started. Do not submit another create or refresh while it is running.
 
+{% endcapture %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime graph creation workflow is supplied." api_state="available" api_reason="Root-only API 67 facade creation automatically processes; no processing-free or cross-org guarantee." api_body=create_api %}
+
 ## Update
 
+{% capture update_api %}
 First confirm that initial generated-transform processing completed successfully and that the graph can be edited. `ready` alone is not enough, and **not every lifecycle state is mutable**. If edit eligibility is unclear, stop; this guide does not provide a universal status-to-editability check. Do not force a refresh to unlock editing.
 
 We resolved the initial-processing check by reading the **exact `dayZeroTransformDevName` returned by the owner graph**, not by guessing a transform name. Save `graph-transform-get.json`, replacing `RETURNED_TRANSFORM_NAME` with that value:
@@ -114,8 +124,12 @@ An identical repeat can preserve identities, version and configuration, but does
 
 An actual repeat of the same desired configuration then found both resources unchanged and sent **zero write requests or explicit processing jobs**. This is a bounded comparison-before-write result, **not** proof that replaying the raw `graph-update.json` request is write-free or processing-free: the earlier raw API repeat above retains that limitation. Automatic processing from the one substantive update was observed; no explicit refresh/run was needed. This continuation created no resources and does not establish portable IR/Graph creation, missing-prerequisite provisioning, arbitrary roots/edits or a complete cross-org lifecycle. The earlier pre-write refusals remain refusals; this later independently confirmed update is the new evidence.
 
+{% endcapture %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime graph update workflow is supplied." api_state="available" api_reason="Bounded full-definition projection append after processing and edit-eligibility checks; not arbitrary edits." api_body=update_api %}
+
 ## Delete
 
+{% capture delete_api %}
 After checking dependencies and ownership, save `graph-delete.json`:
 
 ```json
@@ -131,4 +145,9 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 { "success": true }
 ```
 
-Confirm that the exact graph is no longer found. Check the captured generated object/transform references with the same access used before deletion; unreadable is not permission-independent proof of physical removal. A generated VALUE DMO was still readable after its graph was deleted, so deleting the graph did not confirm removal of all its generated objects. Note that **generated mapping absence and graph-specific internal-state cleanup are not proven**. Never delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. Local requests and any retrieved template remain.
+Confirm that the exact graph is no longer found. Check the captured generated object/transform references with the same access used before deletion; unreadable is not permission-independent proof of physical removal. A generated VALUE DMO was still readable after its graph was deleted, so deleting the graph did not confirm removal of all its generated objects. Note that **generated mapping absence and graph-specific internal-state cleanup are not proven**.
+
+{% endcapture %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime graph deletion workflow is supplied." api_state="available" api_reason="Owned graph deletion through the API 67 facade; generated-object cleanup is not proven." api_body=delete_api %}
+
+Never delete the shared `DataGraphStateTable__dlm` or the source unified DMO as guessed cleanup. Local requests and any retrieved template remain.

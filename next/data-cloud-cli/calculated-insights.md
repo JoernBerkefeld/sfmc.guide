@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Calculated insights | Data Cloud with Salesforce CLI"
+title: "Calculated insights"
 description: "Salesforce CLI workflows and verified operation limits for calculated insight definitions and runtime state."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/calculated-insights/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -26,6 +27,7 @@ A calculated insight computes values from your data, for example a customer coun
 
 ## Retrieve
 
+{% capture retrieve_cli %}
 ### Save the XML definition
 
 ```sh
@@ -36,6 +38,8 @@ This writes `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mk
 
 The file does not include enabled state, schedule, definition type, dimensions/measures or dataspace. Keep the referenced DMO fields in mind when comparing environments.
 
+{% endcapture %}
+{% capture retrieve_api %}
 ### Read runtime state through the CLI
 
 Read the live state, then download its XML separately if you want it in your project:
@@ -51,8 +55,12 @@ sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --
 
 The REST request prints the live configuration. The retrieve writes the XML file above. Compare the expression and label, but remember the XML is not the complete runtime state.
 
+{% endcapture %}
+{% include operation-tabs.html id="ci-retrieve" label="Retrieve" cli_state="available" cli_reason="Save the XML definition, not the complete runtime state." cli_body=retrieve_cli api_state="available" api_reason="Read runtime configuration and retrieve its XML separately." api_body=retrieve_api %}
+
 ## Create
 
+{% capture create_api %}
 ### Create a live calculated insight
 
 Creation uses the **API 67 MCP facade**; subsequent reads, updates and deletion use **API 65 REST**. This is not a dedicated CLI insight command or a verified direct public API 65 POST create endpoint.
@@ -80,6 +88,8 @@ A decoded result can contain:
 
 Use the **returned `apiName`** from now on. `DRAFT` does not prove successful computation, and `NOT_SCHEDULED` does not mean disabled or guarantee no processing. Check for embedded errors before treating the request as successful.
 
+{% endcapture %}
+{% capture create_cli %}
 ### Store only an XML definition
 
 Definition-only creation requires compatible existing DMO fields and permission for possible processing. Save `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`:
@@ -105,8 +115,12 @@ sf project deploy start --source-dir force-app/main/default/mktCalcInsightObject
 
 That success means the definition was stored. Runtime GET can still return `ITEM_NOT_FOUND`. This route is not suitable when you need a guarantee of no processing.
 
+{% endcapture %}
+{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition-only; can reserve a name and does not guarantee no processing." cli_body=create_cli api_state="available" api_reason="Bounded API 67 MCP facade workflow; not a public API 65 POST recipe." api_body=create_api %}
+
 ## Update
 
+{% capture update_api %}
 ### Change runtime settings or the qualified expression
 
 **Publish the draft:** save `ci-publish.json`:
@@ -143,6 +157,8 @@ A later **expression-only API 65 PATCH** succeeded: we retained `WHERE 1 = 0` an
 
 After `PROCESSING`, independent runtime reads reached `ACTIVE`, and a separate Metadata read contained the exact edited SQL. The aggregate formula, dimension/measure names, types, roles and aggregability, label and schedule/settings were retained. The returned fields' derived `dataSource` attribution changed despite stable formulas; do not treat that attribution as an unchanged dependency identifier. This proves the bounded predicate edit, not arbitrary SQL or schema editing, general omitted-field preservation, an identical-repeat guarantee or completed computation. The empty-result filter also cannot demonstrate a change in output rows.
 
+{% endcapture %}
+{% capture update_cli %}
 ### Change only the XML definition's label
 
 The verified change is the definition's **`masterLabel` change**. Keep the expression and creation type, edit the label, and deploy the same file:
@@ -157,8 +173,14 @@ sf project deploy start --source-dir force-app/main/default/mktCalcInsightObject
 
 Retrieve again to confirm the label and unchanged SQL. Expression updates, identical-repeat semantics and runtime updates are not qualified by this Metadata route.
 
+{% endcapture %}
+{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only the metadata masterLabel change is verified." cli_body=update_cli api_state="available" api_reason="Runtime settings and the bounded predicate edit only; retain all qualifications." api_body=update_api %}
+
 ## Delete
 
+**Shared safety:** Confirm ownership and dependencies before either deletion workflow. Definition deletion is not runtime or generated-data cleanup.
+
+{% capture delete_api %}
 ### Delete the live insight and check its definition
 
 After checking ownership and dependencies, save `ci-delete.json`. If a DELETE without `--body` fails with `No 'mode' found in 'body' entry`, use a whole-request file with an explicit empty raw body, as below. This workaround was verified with Salesforce CLI 2.151.7.
@@ -181,6 +203,8 @@ An empty response can mean deletion has started, not finished. The collection ma
 
 **Terminal checks:** read the full collection, including continuation pages, until this insight is absent. Also check that its metadata member is gone. Do not send another DELETE while removal is underway. Generated-data cleanup is not guaranteed, and any downloaded XML still needs local reconciliation.
 
+{% endcapture %}
+{% capture delete_cli %}
 ### Delete an owned definition-only component
 
 For an owned definition whose dependencies have been checked, the integration supplies the empty `manifest/package.xml` and this `manifest/destructiveChangesPost.xml`:
@@ -202,3 +226,5 @@ sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET
 ```
 
 The successful component response reports `deleted: true`. Confirm the exact definition is absent from the inventory. This is definition deletion, not a promise to clean up a runtime insight or its generated data.
+{% endcapture %}
+{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only component deletion; not runtime cleanup." cli_body=delete_cli api_state="available" api_reason="Runtime deletion requires terminal collection and metadata checks." api_body=delete_api %}

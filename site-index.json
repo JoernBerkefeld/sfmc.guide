@@ -154,7 +154,7 @@
     "description": "Parses an XML string using an XPath expression and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
-    "name": "Calculated insights | Data Cloud with Salesforce CLI",
+    "name": "Calculated insights",
     "url": "/next/data-cloud-cli/calculated-insights/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -273,49 +273,49 @@
     "description": "Data Cloud metadata commands, default source-format files, illustrative responses and supported lifecycle limits for Marketing Cloud Next."
   },
   {
-    "name": "Data Graphs | Data Cloud with Salesforce CLI",
+    "name": "Data Graphs",
     "url": "/next/data-cloud-cli/data-graphs/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Operational Data Graphs."
   },
   {
-    "name": "Data Kit definition | Data Cloud with Salesforce CLI",
+    "name": "Data Kit definition",
     "url": "/next/data-cloud-cli/data-package-kit-definition/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Kit definition: DataPackageKitDefinition."
   },
   {
-    "name": "Data Kit membership | Data Cloud with Salesforce CLI",
+    "name": "Data Kit membership",
     "url": "/next/data-cloud-cli/data-package-kit-object/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Kit membership: DataPackageKitObject."
   },
   {
-    "name": "Data Kit template | Data Cloud with Salesforce CLI",
+    "name": "Data Kit template",
     "url": "/next/data-cloud-cli/data-kit-object-template/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Kit template: DataKitObjectTemplate."
   },
   {
-    "name": "Data Lake Object (DLO) | Data Cloud with Salesforce CLI",
+    "name": "Data Lake Object (DLO)",
     "url": "/next/data-cloud-cli/data-lake-object/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Data Lake Object (DLO): CustomObject, __dll."
   },
   {
-    "name": "Data Model Object (DMO) | Data Cloud with Salesforce CLI",
+    "name": "Data Model Object (DMO)",
     "url": "/next/data-cloud-cli/data-model-object/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Data Model Object (DMO): CustomObject, __dlm."
   },
   {
-    "name": "Data stream configuration | Data Cloud with Salesforce CLI",
+    "name": "Data stream configuration",
     "url": "/next/data-cloud-cli/data-stream-definition/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -385,7 +385,7 @@
     "description": "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
   },
   {
-    "name": "DLO-to-DMO mapping | Data Cloud with Salesforce CLI",
+    "name": "DLO-to-DMO mapping",
     "url": "/next/data-cloud-cli/object-source-target-map/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -511,7 +511,7 @@
     "description": "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
   },
   {
-    "name": "Field relationship | Data Cloud with Salesforce CLI",
+    "name": "Field relationship",
     "url": "/next/data-cloud-cli/field-source-target-relationship/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -637,7 +637,7 @@
     "description": "Returns the value of a specified HTTP request header from the inbound request. Notes that custom headers are returned even though the docs restrict it to standard headers."
   },
   {
-    "name": "Identity Resolution | Data Cloud with Salesforce CLI",
+    "name": "Identity Resolution",
     "url": "/next/data-cloud-cli/identity-resolution/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -1001,14 +1001,14 @@
     "description": "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
   },
   {
-    "name": "Segment members | Data Cloud with Salesforce CLI",
+    "name": "Segment members",
     "url": "/next/data-cloud-cli/segment-members/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Segment Members: runtime data, not metadata."
   },
   {
-    "name": "Segments | Data Cloud with Salesforce CLI",
+    "name": "Segments",
     "url": "/next/data-cloud-cli/segments/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
@@ -1148,7 +1148,7 @@
     "description": "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input, and an unrecognised encoding name aborts the page."
   },
   {
-    "name": "Source object configuration | Data Cloud with Salesforce CLI",
+    "name": "Source object configuration",
     "url": "/next/data-cloud-cli/data-source-object/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",

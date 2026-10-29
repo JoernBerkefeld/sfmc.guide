@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Identity Resolution | Data Cloud with Salesforce CLI"
+title: "Identity Resolution"
 description: "Salesforce CLI workflows and verified operation limits for Operational Identity Resolution."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/identity-resolution/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -30,6 +31,7 @@ Use compatible existing Individual/name/ContactPointEmail fields and an unused r
 
 ## Retrieve
 
+{% capture retrieve_api %}
 Read through the native API 65 endpoint, or the API 67 facade where needed:
 
 ```sh
@@ -58,8 +60,12 @@ In the bounded two-org qualification, retained owned `PUBLISHED` rulesets and al
 
 The later [existing-owner target Graph update](/next/data-cloud-cli/data-graphs/#update) appended only its LastName projection and independently preserved this target ruleset, all twelve output/link DMOs and the root schema/key with their target-local identities. No IR mutation was attempted. A repeat comparison found both resources unchanged and sent no writes or explicit processing jobs. This is preservation of an existing owner during a dependent Graph update, **not cross-org IR update/create proof** or a successful IR data run.
 
+{% endcapture %}
+{% include operation-tabs.html id="ir-retrieve" label="Retrieve" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." api_state="available" api_reason="Native API 65 and API 67 facade reads; existing-owner correlation is not cross-org migration proof." api_body=retrieve_api %}
+
 ## Create
 
+{% capture create_api %}
 Save `ir-create.json`. It matches on first name, last name and normalized email, and starts with a `LastUpdated` reconciliation rule:
 
 ```json
@@ -79,8 +85,12 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_
 
 Check nested `body.error` as well as the result: HTTP `201` and CLI exit `0` can still contain an operation error. Salesforce may add reconciliation entities beyond the one sent. Keep the returned identity and exact generated output/link references for later checks.
 
+{% endcapture %}
+{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." api_state="available" api_reason="Bounded API 67 facade creation enters publication; automatic-run false is not draft mode." api_body=create_api %}
+
 ## Update
 
+{% capture update_api %}
 Let's change the Individual reconciliation rule from `LastUpdated` to **`MostFrequent`**, keeping the matching definition intact. Save `ir-update.json` with the full matching/reconciliation input and label, rather than assuming a sparse update will work:
 
 ```json
@@ -100,8 +110,12 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_
 
 Read back until publication settles, then check the changed rule and unchanged matches/identity. Do not issue another update while publishing. Broader matching grammar, repeat behavior and successful data runs are not covered by this example.
 
+{% endcapture %}
+{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." api_state="available" api_reason="Bounded full-definition reconciliation-rule update after publication settles; successful data runs are not established." api_body=update_api %}
+
 ## Delete
 
+{% capture delete_api %}
 After checking dependencies and ownership, save `ir-delete.json`:
 
 ```json
@@ -120,5 +134,8 @@ The delete can return `{ "success": true }` while a following read still shows:
 ```
 
 Wait for the exact ruleset to become not found, and independently confirm native API 65 GET returns HTTP `404` / `ITEM_NOT_FOUND`. Do not repeat DELETE during removal.
+
+{% endcapture %}
+{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." api_state="available" api_reason="API 67 facade deletion requires terminal facade and native API 65 absence checks." api_body=delete_api %}
 
 Generated outputs can remain readable during `DELETING`. Check their captured references only after ruleset removal. Later unreadability means absent **or inaccessible**, not proof of physical deletion, profile-row removal or universal cleanup. Do not race the ruleset's cleanup by deleting DMOs yourself. Local request files and retrieved templates remain.

@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Field relationship | Data Cloud with Salesforce CLI"
+title: "Field relationship"
 description: "Salesforce CLI workflows and verified operation limits for Field relationship: FieldSrcTrgtRelationship."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/field-source-target-relationship/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -26,14 +27,19 @@ The following example links an order's customer field to a customer DMO. It cove
 
 ## Retrieve
 
+{% capture retrieve_cli %}
 ```sh
 sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
 
 The `files` entry points to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`, containing the elements illustrated under Create. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
 
+{% endcapture %}
+{% include operation-tabs.html id="relationship-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve relationship XML; retrieve object definitions separately." cli_body=retrieve_cli api_state="unknown" api_reason="No API relationship retrieval workflow is supplied." %}
+
 ## Create
 
+{% capture create_cli %}
 Assume `Order__dlm.CustomerId__c` and `Customer__dlm.Id__c` already exist with the correct key settings. You need two files.
 
 First, the new lookup field at `force-app/main/default/objects/Order__dlm/fields/CustomerLookup__c.field-meta.xml`:
@@ -79,8 +85,12 @@ sf project deploy start --metadata CustomField:Order__dlm.CustomerLookup__c --me
 
 This creates the lookup and relationship, **not the DMOs or their key fields**. Read back the exact relationship, field references and cardinality. No explicit activation command is included, but that is not a guarantee of no internal processing.
 
+{% endcapture %}
+{% include operation-tabs.html id="relationship-create" label="Create" cli_state="available" cli_reason="Owned ManyToOne relationship and lookup between existing empty custom DMOs only." cli_body=create_cli api_state="unknown" api_reason="No API relationship creation workflow is supplied." %}
+
 ## Update
 
+{% capture update_cli %}
 Change only the relationship's label:
 
 ```xml
@@ -93,10 +103,14 @@ sf project deploy start --metadata FieldSrcTrgtRelationship:OrderCustomer --targ
 
 Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, source, target and cardinality stayed the same. Retargeting, cardinality changes and `OneToOne` updates have not been verified.
 
+{% endcapture %}
+{% include operation-tabs.html id="relationship-update" label="Update" cli_state="available" cli_reason="Label-only change; retargeting, cardinality changes and OneToOne updates are not verified." cli_body=update_cli api_state="unknown" api_reason="No API relationship update workflow is supplied." %}
+
 ## Delete
 
 **Deleting this relationship also removes its owned, sole-use lookup field.** Do not apply this to a shared lookup.
 
+{% capture delete_cli %}
 Use the generated empty `package.xml` from the DMO section. The integration supplies `relationship-delete.xml`:
 
 ```xml
@@ -119,5 +133,7 @@ sf project deploy start --manifest package.xml --post-destructive-changes relati
 ```
 
 Confirm that the relationship and lookup are gone, but both DMOs and their original key fields remain.
+{% endcapture %}
+{% include operation-tabs.html id="relationship-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned relationship and its sole-use lookup; verify both DMOs and key fields remain." cli_body=delete_cli api_state="unknown" api_reason="No API relationship deletion workflow is supplied." %}
 
 **Avoid stale-source redeployment:** the local relationship and lookup files are still there. Reconcile them before another deploy. Leftover lookup XML can make later deletion fail; use an isolated empty source project rather than suppressing warnings.

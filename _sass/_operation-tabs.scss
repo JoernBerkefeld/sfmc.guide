@@ -1,0 +1,101 @@
+@use 'variables' as *;
+
+.operation-tabs {
+  margin: $space-4 0 $space-8;
+  min-width: 0;
+
+  &__controls:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $space-1;
+  }
+
+  &__controls button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-1;
+    min-width: 0;
+    padding: $space-3 $space-1;
+    font: inherit;
+    font-size: $text-sm;
+    overflow-wrap: anywhere;
+    color: $text-primary;
+    background: $bg-surface;
+    border: 1px solid $border-default;
+    border-radius: $radius-sm;
+    cursor: pointer;
+
+    &[aria-selected='true'] {
+      color: $text-link;
+      border-color: $accent-primary;
+      box-shadow: inset 0 -3px $accent-primary;
+    }
+
+    &:disabled {
+      color: $text-secondary;
+      background: $bg-elevated;
+      cursor: not-allowed;
+    }
+  }
+
+  &__icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  &__reasons {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin: $space-3 0 $space-5;
+  }
+
+  &--enhanced &__fallback-label {
+    display: none;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  [data-method-panel] {
+    min-width: 0;
+    scroll-margin-top: 5rem;
+  }
+  [data-method-panel] :not(pre) > code {
+    overflow-wrap: anywhere;
+  }
+  button:focus-visible,
+  [data-method-panel]:focus-visible {
+    outline: 3px solid $accent-primary;
+    outline-offset: 3px;
+  }
+}
+
+[data-theme='dark'] .operation-tabs {
+  &__controls button {
+    color: #e2e8f0;
+    background: #0f172a;
+    border-color: #64748b;
+  }
+  &__controls button:disabled {
+    color: #cbd5e1;
+    background: #334155;
+  }
+  &__controls button[aria-selected='true'] {
+    color: #7dd3fc;
+    border-color: #7dd3fc;
+    box-shadow: inset 0 -3px #7dd3fc;
+  }
+  &__reasons {
+    color: #cbd5e1;
+    background: #0f172a;
+    padding: $space-3;
+  }
+  button:focus-visible,
+  [data-method-panel]:focus-visible {
+    outline-color: #7dd3fc;
+  }
+}

@@ -18,8 +18,9 @@ import js from '@eslint/js';
  * `eslint-plugin-unicorn` recommended.
  */
 
-const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js'];
+const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js', 'assets/js/operation-tabs.js'];
 const TEST_FILES = [
+  'tests/operation-tabs.test.cjs',
   'tests/mcdev-pipeline-builders.test.cjs',
   'tests/mcdev-pipeline-builder-css.test.cjs',
   'tests/site-index-discoverable.test.cjs',

@@ -24,6 +24,19 @@ This page explains the difference and shows the commands next to the files and r
 
 Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. CLI and API are not competing alternatives: the CLI also sends API requests. XML definitions and runtime state are views of the same resource, not separate feature types.
 
+### Choose a method for each operation
+
+The resource pages group complete workflows into independent operation tabs. **CLI** means dedicated standard metadata retrieval or deployment commands. **API** means requests such as `sf api request rest`, including any supporting CLI reads needed by that workflow. Both methods use Salesforce CLI; they differ in the interface they call and the files or responses they return. Switching a tab changes the method's prose, payloads, commands and checks together, not just its code blocks. Shared prerequisites, safety warnings and detailed evidence for disabled methods remain visible.
+
+- **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
+- **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
+- **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The overview's **No** rating does not by itself mean blocked.
+- **sf-plugin-data:** a disabled **Unknown** future option throughout this guide. No plugin workflow or support claim is supplied by these tabs.
+
+CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
+
+**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test.
+
 The ratings describe **verified vanilla Salesforce CLI workflows on this page**, including REST API calls—not dedicated native commands or universal API support. **Yes** means the shown retrieval works; **Partial** means only a bounded variant, combined operation or incomplete asynchronous lifecycle is demonstrated; **No** means no verified usable workflow is supplied here, not that the API cannot do it. Write permissions, dependencies and processing warnings still apply.
 
 | Configuration or runtime data | Retrieve | Create | Update | Delete | Verified scope / limits |

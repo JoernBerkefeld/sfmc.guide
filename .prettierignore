@@ -37,6 +37,7 @@ sw.js
 
 # …except the mcdev Pipeline Builder JS, which is scoped-linted/formatted on its own.
 !assets/js/mcdev-pipeline-*.js
+!assets/js/operation-tabs.js
 
 # Site, CI and package configuration
 _config.yml

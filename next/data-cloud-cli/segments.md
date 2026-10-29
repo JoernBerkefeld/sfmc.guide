@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Segments | Data Cloud with Salesforce CLI"
+title: "Segments"
 description: "Salesforce CLI workflows and verified operation limits for Operational segments."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/segments/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -30,6 +31,7 @@ The example does not set up a send destination, export members or prove cross-or
 
 ## Retrieve
 
+{% capture retrieve_cli %}
 ### Save the XML definition
 
 For an existing segment:
@@ -51,6 +53,8 @@ This writes `force-app/main/default/marketSegmentDefinitions/ActiveCustomers.mar
 
 The XML omits lookback, schedule, state and dataspace. It does not publish, count or activate the segment. Referenced objects, fields and relationships remain dependencies; `NO_REFRESH` is not proof that a later deployment will do no initial processing.
 
+{% endcapture %}
+{% capture retrieve_api %}
 ### Read runtime state through the CLI
 
 ```sh
@@ -67,8 +71,12 @@ GET wraps the segment in a `segments` array:
 
 Check the exact segment, SQL/model, type, dataspace, segment-on object, lookback and schedule. Wait for processing to settle before the next change. REST does not write the XML file for you. For audience rows rather than configuration, see [Segment members](/next/data-cloud-cli/segment-members/#retrieve).
 
+{% endcapture %}
+{% include operation-tabs.html id="segments-retrieve" label="Retrieve" cli_state="available" cli_reason="Save the XML definition; runtime settings and audience rows are not included." cli_body=retrieve_cli api_state="available" api_reason="Read runtime configuration, not an XML file or audience export." api_body=retrieve_api %}
+
 ## Create
 
+{% capture create_api %}
 ### Create a live segment
 
 Save `segment-create.json`, replacing the existing unified DMO/key and model name consistently:
@@ -99,6 +107,8 @@ sf api request rest '/services/data/v65.0/ssot/segments' --method POST --body '@
 
 There is an easy-to-miss difference: the **request** uses nested `includeDbt.models.models`, but the **response** has an array at `includeDbt.models`. Do not send the response back unchanged. `P90D` is an example returned lookback, not a universal writable default.
 
+{% endcapture %}
+{% capture create_cli %}
 ### Store only an XML definition
 
 Use a separate project containing only this owned definition, with a compatible existing unified DMO/key. Save `force-app/main/default/marketSegmentDefinitions/CustomerDefinition.marketSegmentDefinition-meta.xml`:
@@ -127,8 +137,12 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 
 The second command downloads the definition for comparison. Check the decoded model/SQL, label and type. A successful deploy can still leave runtime GET returning `ITEM_NOT_FOUND`; `--dry-run` would not store anything at all. The project-wide selector above is why this project must contain no unrelated files.
 
+{% endcapture %}
+{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Source-only API 65 DBT definition creation; runtime creation and processing-free deployment are not established." cli_body=create_cli api_state="available" api_reason="Live API 65 DBT creation can begin processing even with NoRefresh." api_body=create_api %}
+
 ## Update
 
+{% capture update_api %}
 ### Change the live segment
 
 A label-only PATCH is not enough here. Send the **complete preserved definition**, changing just the label and description. The example deliberately omits both `publishSchedule` and `publishScheduleInfo` to retain the existing no-refresh schedule. Do not re-send `NoRefresh` or invent a `None` schedule value.
@@ -161,6 +175,8 @@ GET again until `ACTIVE`, then compare the changed label/description and all pre
 
 Independent runtime and standard XML retrieval then confirmed the exact updated label/description, original model/SQL/type, identities, dataspace, segment-on object, schedule/lookback and generated membership references. Description is runtime-only; the XML label agreed with runtime. The first command had already stopped with an unknown outcome: later API settlement does not retroactively make that command successful. Do not replay an update with an unknown outcome; reconcile it with reads. This narrow result does not establish arbitrary omitted-field preservation, SQL/UI criteria updates or schedule/lookback editing.
 
+{% endcapture %}
+{% capture update_cli %}
 ### Change only the XML definition's label
 
 In the owned DBT file, change only `masterLabel` to `Customer Definition Updated`. Keep the criteria, model, SQL and type intact:
@@ -172,8 +188,14 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 
 Expect `changed: true` for the label change. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
 
+{% endcapture %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update only; reconcile unknown outcomes with reads." api_body=update_api %}
+
 ## Delete
 
+Do not delete shared unified DMOs or membership tables as extra cleanup. Previously downloaded source files remain local.
+
+{% capture delete_api %}
 ### Delete the live segment and check its definition
 
 For the owned segment, save `segment-delete.json`:
@@ -194,8 +216,8 @@ DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404`
 [{ "errorCode": "ITEM_NOT_FOUND", "message": "<segment not found>" }]
 ```
 
-Do not delete shared unified DMOs or membership tables as extra cleanup. Previously downloaded source files remain local.
-
+{% endcapture %}
+{% capture delete_cli %}
 ### Delete an owned definition-only component
 
 Use the integration-supplied empty `manifest/package.xml` and this exact `manifest/destructiveChangesPost.xml`:
@@ -217,3 +239,6 @@ sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE
 ```
 
 The completed response reports `deleted: true`. Require independent inventory absence of `CustomerDefinition` as well. This deletes the definition only; it does not promise runtime or generated-data cleanup. The downloaded XML remains on your computer.
+
+{% endcapture %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only deletion; runtime and generated-data cleanup are not promised." cli_body=delete_cli api_state="available" api_reason="Delete the owned live segment and independently confirm runtime and metadata absence." api_body=delete_api %}

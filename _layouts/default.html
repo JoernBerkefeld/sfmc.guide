@@ -19,5 +19,8 @@
 
   <script src="{{ '/assets/js/search.js' | relative_url | cache_bust }}" defer></script>
   <script src="{{ '/assets/js/main.js' | relative_url | cache_bust }}" defer></script>
+  {% if page.operation_tabs %}
+  <script src="{{ '/assets/js/operation-tabs.js' | relative_url | cache_bust }}" defer></script>
+  {% endif %}
 </body>
 </html>

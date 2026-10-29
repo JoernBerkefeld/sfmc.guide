@@ -1,11 +1,12 @@
 ---
 layout: page
-title: "Data Lake Object (DLO) | Data Cloud with Salesforce CLI"
+title: "Data Lake Object (DLO)"
 description: "Salesforce CLI workflows and verified operation limits for Data Lake Object (DLO): CustomObject, __dll."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/data-lake-object/
 verification: verified
+operation_tabs: true
 platforms:
   - next
 ---
@@ -26,6 +27,7 @@ A DLO holds data brought in from a source, before it is mapped into the data mod
 
 ## Retrieve
 
+{% capture retrieve_cli %}
 ```sh
 sf project retrieve start --metadata CustomObject:CustomerSource__dll --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
@@ -43,6 +45,9 @@ This writes `force-app/main/default/objects/CustomerSource__dll/CustomerSource__
 
 The response uses `type: CustomObject` and `fullName: CustomerSource__dll`. Keep the complete attributes and field definitions. Connector credentials and the rest of the ingestion setup are not included in this object export.
 
+{% endcapture %}
+{% include operation-tabs.html id="dlo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the lake object and fields, not credentials or the whole ingestion setup." cli_body=retrieve_cli api_state="unknown" api_reason="No API retrieval workflow is supplied here." %}
+
 ## Create
 
 Creating a DLO through Metadata API has **not been verified**. Do not remove primary-key or system qualifier fields to make a deployment pass.
@@ -52,6 +57,8 @@ We did create a new, owned Ingestion API connection without external credentials
 Separate connection, schema, stream and DLO reads confirmed `CONNECTED`, then stream/DLO `ACTIVE`. The tested configuration was one event, category `Other`, default dataspace, a Text primary key and `UPSERT`. Salesforce generated the returned stream/DLO names rather than using the proposed names literally. Use those returned identities. Persisted DLO fields had `__c` suffixes while embedded stream mappings used unsuffixed fields; the embedded definition ID was not the persisted DLO ID.
 
 The DLO had six fields: the two source fields and four generated key-qualifier/system fields. The custom key-qualifier designation list was empty, so this does not establish preservation of nonempty custom qualifiers. Initial processing happened automatically, with zero records and no explicit ingestion or refresh request. This is a narrow source-only result, not a portable recipe for every connector or category.
+
+{% include operation-tabs.html id="dlo-create" label="Create" cli_state="unknown" cli_reason="DLO creation through Metadata API has not been verified." api_state="unknown" api_reason="The owned ingestion-chain result is observational, not a supplied portable creation recipe." %}
 
 ## Update
 
@@ -65,6 +72,8 @@ A separate existing-target check confirmed the same bounded update: exactly one 
 
 Persisted DLO reads can also include a last-refresh timestamp and a numeric record count. These are runtime observations, not schema changes or proof of a new ingestion run; in this check the count was zero. Compare the complete configuration separately from those observations and verify `ACTIVE` independently. This remains one existing-target Text-field addition in the source org—not proof of portable creation, completed deletion, populated-data behavior or cross-org deployment.
 
+{% include operation-tabs.html id="dlo-update" label="Update" cli_state="unknown" cli_reason="No Metadata API update workflow is supplied." api_state="unknown" api_reason="Direct DLO field addition failed; owning-connection and stream updates are observations, not a supplied recipe." %}
+
 ## Delete
 
 For the new owned ingestion chain, one owning-stream delete with `shouldDeleteDataLakeObject: true` was accepted, but separate stream and DLO reads still showed `DELETING` at the last check. The connection remained `CONNECTED` and its schema in use. This is not completed cleanup or a verified full lifecycle; do not repeat the delete or remove generated objects yourself while it is pending.
@@ -76,3 +85,5 @@ There is no verified completed standard delete recipe here. A DLO definition can
 ```
 
 That is a refusal, not a successful delete. Check the actual state after a failure; do not try an assumed instance-delete workaround. This does not mean every possible DLO deletion route is unsupported.
+
+{% include operation-tabs.html id="dlo-delete" label="Delete" cli_state="blocked" cli_reason="The definition delete was refused because its still-existing DLO instance referenced it." api_state="unknown" api_reason="The accepted owning-stream delete remained DELETING; no completed API cleanup recipe is verified." %}
