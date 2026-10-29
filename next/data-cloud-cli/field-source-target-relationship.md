@@ -11,7 +11,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 29, 2026, 14:35 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -33,6 +33,13 @@ sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --ta
 ```
 
 The `files` entry points to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`, containing the elements illustrated under Create. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
+
+An independent exact-name standard Metadata API 65 retrieve was reverified on
+October 29, 2026 against a retained standard relationship in one source org,
+using a separately configured package source directory. The returned XML is a
+definition export, not proof of prerequisite compatibility, cross-org portability
+or safe deployment. This read did not create, update or delete any relationship;
+it does not requalify the bounded write examples below.
 
 {% endcapture %}
 {% include operation-tabs.html id="relationship-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve relationship XML; retrieve object definitions separately." cli_body=retrieve_cli api_state="unknown" api_reason="No API relationship retrieval workflow is supplied." %}

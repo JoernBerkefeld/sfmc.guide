@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 29, 2026, 10:03 (UTC+1).*
+*Last updated: October 29, 2026, 14:35 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -35,7 +35,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
-**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test.
+**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources.
 
 The ratings describe **verified vanilla Salesforce CLI workflows on this page**, including REST API calls—not dedicated native commands or universal API support. **Yes** means the shown retrieval works; **Partial** means only a bounded variant, combined operation or incomplete asynchronous lifecycle is demonstrated; **No** means no verified usable workflow is supplied here, not that the API cannot do it. Write permissions, dependencies and processing warnings still apply.
 
@@ -44,7 +44,7 @@ The ratings describe **verified vanilla Salesforce CLI workflows on this page**,
 | [DMOs](/next/data-cloud-cli/data-model-object/#data-model-object-dmo-customobject-dlm) | Yes | Partial | Partial | Partial | XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks. |
 | [DLOs](/next/data-cloud-cli/data-lake-object/#data-lake-object-dlo-customobject-dll) | Yes | Partial | Partial | Partial | Owned Ingestion API stream creates the DLO; one existing-target Text-field addition via source-schema sync and later read-only full-preservation checks; no cross-org proof; accepted cleanup remained `DELETING`. |
 | [Mappings](/next/data-cloud-cli/object-source-target-map/#dlo-to-dmo-mapping-objectsourcetargetmap) | Yes | Partial | Partial | No | Existing compatible objects; label-only update; standalone deletion is not established. |
-| [Relationships](/next/data-cloud-cli/field-source-target-relationship/#field-relationship-fieldsrctrgtrelationship) | Yes | Partial | Partial | Partial | Empty custom DMOs, owned `ManyToOne` lookup; label-only update; deletion also removes its sole-use lookup. |
+| [Relationships](/next/data-cloud-cli/field-source-target-relationship/#field-relationship-fieldsrctrgtrelationship) | Yes | Partial | Partial | Partial | Exact standard API 65 definition retrieval reverified in one source org; no prerequisite or portability proof. Writes remain bounded to empty custom DMOs, owned `ManyToOne` lookup, label-only update and sole-use lookup cascade deletion. |
 | [Source object definitions](/next/data-cloud-cli/data-source-object/#source-object-configuration-datasourceobject) | Yes | No | No | No | `DataSourceObject` XML, not a complete connector or credential export. |
 | [Stream definitions](/next/data-cloud-cli/data-stream-definition/#data-stream-configuration-datastreamdefinition) | Yes | No | No | No | `DataStreamDefinition` XML only; runtime Ingestion API results are in the DLO section. |
 | [Calculated insights](/next/data-cloud-cli/calculated-insights/#retrieve) | Yes | Partial | Partial | Partial | XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required. |

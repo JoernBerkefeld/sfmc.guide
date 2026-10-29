@@ -11,7 +11,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 29, 2026, 10:03 (UTC+1).*
+*Last updated: October 29, 2026, 14:35 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
