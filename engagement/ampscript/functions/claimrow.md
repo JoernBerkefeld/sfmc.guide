@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ClaimRow"
+title: "AMPscript ClaimRow"
 description: "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "MD5"
+title: "AMPscript MD5"
 description: "Returns the MD5 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

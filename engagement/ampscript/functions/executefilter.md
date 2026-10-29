@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ExecuteFilter"
+title: "AMPscript ExecuteFilter"
 description: "Executes a data-extension-based data filter and returns the matching rows as an unordered rowset. Covers what an empty filter returns and its case-insensitive matching."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

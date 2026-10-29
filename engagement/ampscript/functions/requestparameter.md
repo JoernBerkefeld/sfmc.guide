@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RequestParameter"
+title: "AMPscript RequestParameter"
 description: "Returns the value of a form post or query string parameter from the current request. Covers that names ignore case, values arrive decoded and unescaped, and a parameter supplied twice comes back comma-joined."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

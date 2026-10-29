@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [api] }
+  create: { status: "partial", methods: [api] }
+  update: { status: "partial", methods: [api] }
+  delete: { status: "partial", methods: [api] }
 ---
 
 *Last updated: October 29, 2026, 14:35 (UTC+1).*
@@ -28,6 +33,8 @@ A Data Graph template is a saved configuration. The following API 67 MCP facade 
 This example starts with a customer key and first name, then adds the last name. It assumes the existing `UnifiedssotIndividualMkt__dlm` and its Text fields `ssot__Id__c`, `ssot__FirstName__c` and `ssot__LastName__c`. Check your actual root, mapped fields, types and key before using it. Do not change the underlying DMO just to fit the example.
 
 **Creation automatically processes** and generates supporting objects/transform. Updates can process too. Obtain permission for the resource use; there is no processing-free or cross-org guarantee. Like the other REST examples, request files are local inputs and responses go to stdout, not `force-app`.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "TreatAsContent"
+title: "AMPscript TreatAsContent"
 description: "Evaluates a string as AMPscript content, rendering any embedded AMPscript expressions, and returns the rendered string. Covers that embedded AMPscript is executed rather than escaped."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

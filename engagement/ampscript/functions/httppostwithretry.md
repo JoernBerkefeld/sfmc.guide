@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "HTTPPostWithRetry"
+title: "AMPscript HTTPPostWithRetry"
 description: "Posts content to a URL with automatic retry logic and returns the HTTP status code. Covers the responseStatus argument that holds the response body rather than the status the docs describe."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

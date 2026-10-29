@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedMemberName"
+title: "AMPscript AuthenticatedMemberName"
 description: "Returns the display name of the business unit the code runs on. A public, anonymous request gets the business unit's UI display name back, which is neither a person nor the name your tooling configuration uses."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

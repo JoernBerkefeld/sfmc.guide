@@ -1,7 +1,7 @@
 ---
 layout: page
-title: "Concat"
-description: "Joins two or more values into a single string. Covers the one-argument form the reference never mentions and the boolean values that vanish without a trace."
+title: "AMPscript Concat"
+description: "Join values into a string with AMPscript Concat. Includes syntax, examples, and runtime-tested behavior for single arguments and boolean values."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/concat/

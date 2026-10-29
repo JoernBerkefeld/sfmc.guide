@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedEnterpriseID"
+title: "AMPscript AuthenticatedEnterpriseID"
 description: "Returns the enterprise ID (EID) of the Marketing Cloud account tied to the current context. A public, anonymous request gets the account's parent MID back even when the page itself runs on a child business unit."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

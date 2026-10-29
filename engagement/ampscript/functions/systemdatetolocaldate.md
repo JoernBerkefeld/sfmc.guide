@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "SystemDateToLocalDate"
+title: "AMPscript SystemDateToLocalDate"
 description: "Converts a Marketing Cloud system date to the time zone configured on the account. The shift is seasonal rather than a fixed offset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

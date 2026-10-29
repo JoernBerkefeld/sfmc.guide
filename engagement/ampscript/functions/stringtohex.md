@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "StringToHex"
+title: "AMPscript StringToHex"
 description: "Converts a string to its hexadecimal representation. It renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

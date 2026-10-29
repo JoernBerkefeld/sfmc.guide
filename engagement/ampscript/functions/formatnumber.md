@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "FormatNumber"
+title: "AMPscript FormatNumber"
 description: "Formats a number with a .NET numeric pattern, optionally for a locale. Covers half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DateAdd"
+title: "AMPscript DateAdd"
 description: "Adds a whole number of intervals to a date. Notes that any unit outside the documented five destroys the page rather than returning a value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

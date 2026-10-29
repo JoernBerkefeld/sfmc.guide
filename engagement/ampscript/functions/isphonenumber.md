@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IsPhoneNumber"
+title: "AMPscript IsPhoneNumber"
 description: "Checks a value against the North American Numbering Plan. Covers Canadian and Caribbean numbers, which pass despite the function's reputation for being US-only."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

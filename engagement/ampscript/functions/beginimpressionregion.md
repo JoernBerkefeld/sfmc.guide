@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BeginImpressionRegion"
+title: "AMPscript BeginImpressionRegion"
 description: "Marks the start of an impression tracking region. The region name must be a literal, and a variable argument aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

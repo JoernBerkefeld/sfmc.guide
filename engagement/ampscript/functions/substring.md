@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Substring"
+title: "AMPscript Substring"
 description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 that clamps silently while a negative length aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -19,8 +19,8 @@
     "generate:all": "npm run generate:function-index && npm run generate:handlebars-index && npm run generate:site-index && npm run generate:lexer-data",
     "check:bom": "node scripts/check-bom.mjs",
     "test": "node --test \"tests/**/*.test.cjs\"",
-    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\" \"tests/mcdev-pipeline-regex-demo.test.cjs\" \"tests/mcdev-pipeline-market-variable-editor.test.cjs\"",
-    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\" \"tests/mcdev-pipeline-regex-demo.test.cjs\" \"tests/mcdev-pipeline-market-variable-editor.test.cjs\"",
+    "lint": "eslint \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\" \"tests/mcdev-pipeline-regex-demo.test.cjs\" \"tests/mcdev-pipeline-market-variable-editor.test.cjs\" \"assets/js/operation-tabs.js\" \"tests/operation-tabs.test.cjs\" \"tests/seo.test.cjs\"",
+    "lint:fix": "eslint --fix \"assets/js/mcdev-pipeline-*.js\" \"tests/mcdev-pipeline-builders.test.cjs\" \"tests/mcdev-pipeline-builder-css.test.cjs\" \"tests/site-index-discoverable.test.cjs\" \"tests/mcdev-pipeline-regex-demo.test.cjs\" \"tests/mcdev-pipeline-market-variable-editor.test.cjs\" \"assets/js/operation-tabs.js\" \"tests/operation-tabs.test.cjs\" \"tests/seo.test.cjs\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

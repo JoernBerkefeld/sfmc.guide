@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ExecuteFilterOrderedRows"
+title: "AMPscript ExecuteFilterOrderedRows"
 description: "Executes a data-extension-based data filter and returns the matching rows sorted by a column and capped to a row count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

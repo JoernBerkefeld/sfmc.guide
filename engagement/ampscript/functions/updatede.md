@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpdateDE"
+title: "AMPscript UpdateDE"
 description: "Updates existing rows in a data extension and returns an empty string. The email-context twin of UpdateData — the second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

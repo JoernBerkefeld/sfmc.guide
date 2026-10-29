@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokeCreate"
+title: "AMPscript InvokeCreate"
 description: "Runs the SOAP API Create on a CreateObject-built handle and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "SHA1"
+title: "AMPscript SHA1"
 description: "Returns the SHA-1 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "partial", methods: [api] }
+  create: { status: "unknown", methods: [] }
+  update: { status: "unknown", methods: [] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 17:17 (UTC+1).*
@@ -26,6 +31,8 @@ platforms:
 These **API `67.0`** examples read the people in a segment, rather than its definition. They do not publish or refresh it, and they do not write anything under `force-app/main/default/`.
 
 Member identifiers and profile fields are personal data. Keep request files and exports in a private working directory, restrict access and retention, and avoid Git, shared logs and screenshots.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AttributeValue"
+title: "AMPscript AttributeValue"
 description: "Reads an attribute of the current message or page context by name. System attributes resolve there, the name is matched without regard to case, and an unknown name gives an empty value instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

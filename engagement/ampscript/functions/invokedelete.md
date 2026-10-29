@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokeDelete"
+title: "AMPscript InvokeDelete"
 description: "Runs the SOAP API Delete on a CreateObject-built handle and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

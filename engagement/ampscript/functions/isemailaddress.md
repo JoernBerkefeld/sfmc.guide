@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IsEmailAddress"
+title: "AMPscript IsEmailAddress"
 description: "Checks a value against email address syntax only. Covers a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

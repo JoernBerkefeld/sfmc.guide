@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Base64Encode"
+title: "AMPscript Base64Encode"
 description: "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 form of the input. The encoding argument accepts far more names than any source lists."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

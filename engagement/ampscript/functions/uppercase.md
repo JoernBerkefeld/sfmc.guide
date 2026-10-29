@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Uppercase"
+title: "AMPscript Uppercase"
 description: "Converts a value to upper case. Covers the German sharp s, which is returned untouched instead of expanding to a double S."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

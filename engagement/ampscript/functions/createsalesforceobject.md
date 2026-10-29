@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "CreateSalesforceObject"
+title: "AMPscript CreateSalesforceObject"
 description: "Creates a new record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns the 18-character ID of the created record. Notes that a successful create returns a real Salesforce ID and a fault aborts the page instead of returning an error value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "EncryptSymmetric"
+title: "AMPscript EncryptSymmetric"
 description: "Encrypts a value with symmetric key encryption and returns Base64. Notes that the ciphertext is deterministic, so equal plaintexts are linkable."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

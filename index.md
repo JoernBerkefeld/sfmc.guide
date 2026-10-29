@@ -37,7 +37,11 @@ platforms:
 <div class="home-grid">
   <a href="/engagement/" class="home-card">
     <div class="card-title">Engagement</div>
-    <div class="card-description">Cookbook-era patterns, FAQ, AMPscript notes, Einstein, and encryption — with pointers when SSJS belongs on ssjs.guide.</div>
+    <div class="card-description">Practical patterns, FAQ, AMPscript guides and function reference, Einstein, and encryption — with pointers when SSJS belongs on ssjs.guide.</div>
+  </a>
+  <a href="/engagement/ampscript/" class="home-card">
+    <div class="card-title">AMPscript Guide</div>
+    <div class="card-description">Start with syntax and variables, then explore function examples, Data Extension lookups, date formatting, and tracked email links for Engagement.</div>
   </a>
   <a href="/next/" class="home-card">
     <div class="card-title">Marketing Cloud Next</div>

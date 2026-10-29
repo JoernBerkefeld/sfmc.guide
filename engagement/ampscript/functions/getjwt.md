@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "GetJWT"
+title: "AMPscript GetJWT"
 description: "Generates a JSON Web Token signed with an inline secret. Notes that the algorithm name is matched case-insensitively and the payload is never validated as JSON."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

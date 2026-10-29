@@ -1,7 +1,7 @@
 ---
 layout: page
-title: "LookupRows"
-description: "Returns every matching row of a data extension as a rowset. Covers the variadic criteria and what a no-match returns."
+title: "AMPscript LookupRows"
+description: "Use AMPscript LookupRows to retrieve matching data extension rows as a rowset. Includes syntax, search criteria, examples, and empty-result handling."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuprows/

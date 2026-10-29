@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Base64Decode"
+title: "AMPscript Base64Decode"
 description: "Decodes a Base64-encoded string. Malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "CreateObject"
+title: "AMPscript CreateObject"
 description: "Instantiates a named SOAP API object and returns a handle for SetObjectProperty, AddObjectArrayItem and the Invoke* executors."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

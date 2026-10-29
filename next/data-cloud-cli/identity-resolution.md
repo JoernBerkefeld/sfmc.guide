@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [api] }
+  create: { status: "partial", methods: [api] }
+  update: { status: "partial", methods: [api] }
+  delete: { status: "partial", methods: [api] }
 ---
 
 *Last updated: October 29, 2026, 14:35 (UTC+1).*
@@ -28,6 +33,8 @@ These API 67 MCP facade operations manage a live ruleset. A native API 65 GET is
 Use compatible existing Individual/name/ContactPointEmail fields and an unused ruleset suffix of **at most four characters**. The example uses `cust`; after creation, use the returned `objectApiName` exactly, rather than a display label or a name guessed from the suffix. This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work.
 
 **Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`.** Obtain permission for publication/provisioning. That flag is not draft mode, and publication does not prove that a successful identity-resolution data run occurred.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

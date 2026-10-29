@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedEmployeeNotificationAddress"
+title: "AMPscript AuthenticatedEmployeeNotificationAddress"
 description: "Returns the notification email address of the Marketing Cloud user tied to the current context. A public, anonymous request gets a real mailbox address back, and it is not the same string as the similarly email-shaped username."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

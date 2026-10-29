@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "HTTPPost"
+title: "AMPscript HTTPPost"
 description: "Performs an HTTP POST request and returns the HTTP status code. Covers the fourth argument that receives the response body rather than the status the docs describe."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

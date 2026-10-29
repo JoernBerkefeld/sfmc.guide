@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "MicrositeURL"
+title: "AMPscript MicrositeURL"
 description: "Builds a Classic Content microsite URL. Covers that the page reference and any extra name-value pairs are folded into one encrypted token, and every call produces a different token."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

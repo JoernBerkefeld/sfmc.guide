@@ -1,0 +1,11 @@
+<table class="crud-summary">
+  <caption>Supplied workflows for {{ page.title | escape }}</caption>
+  <thead><tr><th scope="col">Retrieve</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th></tr></thead>
+  <tbody><tr>
+    <td>{% include crud-cell.html capability=page.crud.retrieve %}</td>
+    <td>{% include crud-cell.html capability=page.crud.create %}</td>
+    <td>{% include crud-cell.html capability=page.crud.update %}</td>
+    <td>{% include crud-cell.html capability=page.crud.delete %}</td>
+  </tr></tbody>
+</table>
+{% include crud-legend.html %}

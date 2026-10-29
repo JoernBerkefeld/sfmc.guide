@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ContentBlockByID"
+title: "AMPscript ContentBlockByID"
 description: "Retrieves and renders a Content Builder content block by its numeric ID. Covers the missing-block default path and that default content is emitted literally."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

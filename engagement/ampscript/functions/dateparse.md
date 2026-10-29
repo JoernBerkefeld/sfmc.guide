@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DateParse"
+title: "AMPscript DateParse"
 description: "Parses a date string into a date value. Notes that a day-first date is silently read month-first while an unreadable one takes the whole page down."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

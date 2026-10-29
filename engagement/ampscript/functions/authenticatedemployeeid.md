@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedEmployeeID"
+title: "AMPscript AuthenticatedEmployeeID"
 description: "Returns the numeric employee ID of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty ID back, so a non-empty result proves nothing about who is visiting."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

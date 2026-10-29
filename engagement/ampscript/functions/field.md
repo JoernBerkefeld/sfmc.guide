@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Field"
+title: "AMPscript Field"
 description: "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

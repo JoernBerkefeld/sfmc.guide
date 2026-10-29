@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "StringToDate"
+title: "AMPscript StringToDate"
 description: "Converts a date string to a date value. It produces character-for-character identical output to DateParse for every input, while accepting no second argument at all."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

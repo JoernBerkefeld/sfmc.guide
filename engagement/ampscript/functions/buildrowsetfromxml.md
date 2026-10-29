@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BuildRowSetFromXML"
+title: "AMPscript BuildRowSetFromXML"
 description: "Parses an XML string using an XPath expression and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

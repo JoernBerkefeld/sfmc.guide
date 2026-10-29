@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedMemberID"
+title: "AMPscript AuthenticatedMemberID"
 description: "Returns the member ID (MID) of the business unit the code runs on. A public, anonymous request gets the child business unit's own MID back, while AuthenticatedEnterpriseID in the same render returns the parent's."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

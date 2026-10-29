@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BuildRowSetFromString"
+title: "AMPscript BuildRowSetFromString"
 description: "Splits a delimited string into a single-column rowset. Covers the unnamed column and the empty separator that splits nothing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

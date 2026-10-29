@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Random"
+title: "AMPscript Random"
 description: "Returns a random whole number between two inclusive bounds. Covers the decimal bounds that the official docs allow but the runtime rejects."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

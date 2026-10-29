@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "HTTPGet"
+title: "AMPscript HTTPGet"
 description: "Performs an HTTP GET request and returns the response body. Covers the status output variable that reports 0 on success and -2 on a failed request."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

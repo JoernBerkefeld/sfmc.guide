@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Mod"
+title: "AMPscript Mod"
 description: "Returns the remainder after dividing the first number by the second. Covers the sign rule and the NaN result for a zero divisor."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

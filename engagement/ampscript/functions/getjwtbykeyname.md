@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "GetJWTByKeyName"
+title: "AMPscript GetJWTByKeyName"
 description: "Generates a JSON Web Token signed with a named Key Management key. Notes that the RSA algorithms really do sign with an uploaded asymmetric key, verifiable off-platform against its public key."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

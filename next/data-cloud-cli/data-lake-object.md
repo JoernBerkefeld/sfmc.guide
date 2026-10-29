@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "unknown", methods: [] }
+  update: { status: "unknown", methods: [] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 21:58 (UTC+1).*
@@ -24,6 +29,8 @@ platforms:
 **Data Lake Object (DLO)** — `CustomObject` with the `__dll` suffix.
 
 A DLO holds data brought in from a source, before it is mapped into the data model. It uses `__dll`, not `__dlm`. Its XML describes the lake object, not the whole connection that brings data into it. Bringing data in is **ingestion**; a **connector** supplies the connection, a **stream** controls the incoming data flow, and a **transform** reshapes data.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

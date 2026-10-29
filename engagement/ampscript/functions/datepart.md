@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DatePart"
+title: "AMPscript DatePart"
 description: "Extracts a specific component from a date value. Notes that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

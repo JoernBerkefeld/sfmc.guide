@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DecryptSymmetric"
+title: "AMPscript DecryptSymmetric"
 description: "Decrypts a Base64 ciphertext produced by EncryptSymmetric. Covers which cipher names work and why an arity mistake cannot be hidden behind a condition."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

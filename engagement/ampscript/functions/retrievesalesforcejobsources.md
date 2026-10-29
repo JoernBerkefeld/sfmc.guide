@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RetrieveSalesforceJobSources"
+title: "AMPscript RetrieveSalesforceJobSources"
 description: "Returns the source records (SourceID, SourceType, IsInclusionSource) that made up the audience of a Salesforce-triggered send, matched by its numeric job ID, as a rowset. Covers that a job ID with no matching sources returns a clean empty rowset rather than an error."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

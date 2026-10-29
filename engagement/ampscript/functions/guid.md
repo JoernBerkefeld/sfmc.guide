@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "GUID"
+title: "AMPscript GUID"
 description: "Generates a new globally unique identifier. The result is 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

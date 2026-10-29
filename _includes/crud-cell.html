@@ -1,0 +1,13 @@
+{%- assign capability = include.capability -%}
+<span class="crud-cell" data-crud-status="{{ capability.status | escape }}">
+{%- if capability.status == 'yes' or capability.status == 'partial' -%}
+  <span>{{ capability.status | capitalize }}</span>
+  {%- for method in capability.methods %}
+  <img src="{{ '/assets/icons/' | append: method | append: '.svg' | relative_url }}" width="20" height="20" alt="{{ method | upcase }}" title="{{ method | upcase }}">
+  {%- endfor -%}
+{%- elsif capability.status == 'no' -%}
+  <abbr title="Proven unavailable in the explicit scope">No</abbr>
+{%- else -%}
+  <abbr title="Unknown, untested or no usable workflow supplied">?</abbr>
+{%- endif -%}
+</span>

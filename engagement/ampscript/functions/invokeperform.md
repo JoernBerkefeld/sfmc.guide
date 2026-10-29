@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokePerform"
+title: "AMPscript InvokePerform"
 description: "Runs the SOAP API Perform verb on a definition object and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

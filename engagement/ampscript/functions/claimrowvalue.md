@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ClaimRowValue"
+title: "AMPscript ClaimRowValue"
 description: "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

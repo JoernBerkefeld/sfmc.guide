@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Subtract"
+title: "AMPscript Subtract"
 description: "Computes the difference between two numeric values. Covers which argument types are accepted and which abort the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

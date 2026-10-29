@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "unknown", methods: [] }
+  update: { status: "partial", methods: [api] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 19:23 (UTC+1).*
@@ -24,6 +29,8 @@ platforms:
 **Data Model Object (DMO)** — `CustomObject` with the `__dlm` suffix.
 
 A DMO is the model your data is mapped into, such as a customer or order. It uses the suffix `__dlm`. Salesforce CLI treats its definition as a `CustomObject`, with a separate XML file for each field.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

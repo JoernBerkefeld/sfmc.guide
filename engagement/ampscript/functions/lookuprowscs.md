@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "LookupRowsCS"
+title: "AMPscript LookupRowsCS"
 description: "Returns every matching row of a data extension using a case-sensitive comparison. Covers the difference from the case-insensitive LookupRows."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

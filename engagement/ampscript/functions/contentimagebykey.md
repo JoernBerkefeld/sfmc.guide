@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ContentImageByKey"
+title: "AMPscript ContentImageByKey"
 description: "Returns an HTML img tag for a Content Builder image asset by its customer key. Covers the fallback-image path and that a missing image with no fallback aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

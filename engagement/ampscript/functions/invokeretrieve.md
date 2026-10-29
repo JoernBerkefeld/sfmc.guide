@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokeRetrieve"
+title: "AMPscript InvokeRetrieve"
 description: "Runs the SOAP API Retrieve on a RetrieveRequest and returns a rowset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

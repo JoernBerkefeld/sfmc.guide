@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ContentBlockByKey"
+title: "AMPscript ContentBlockByKey"
 description: "Retrieves and renders a Content Builder content block by its customer key. Covers the missing-block default path and that default content is emitted literally."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

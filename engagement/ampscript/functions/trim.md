@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Trim"
+title: "AMPscript Trim"
 description: "Removes leading and trailing whitespace from a value. Covers that tabs, line breaks and the non-breaking space all count as whitespace."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

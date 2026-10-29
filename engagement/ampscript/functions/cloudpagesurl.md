@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "CloudPagesURL"
+title: "AMPscript CloudPagesURL"
 description: "Builds the published URL of a CloudPages landing page. Extra arguments must come in pairs, and a page ID that matches no page aborts the request instead of returning an empty string."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

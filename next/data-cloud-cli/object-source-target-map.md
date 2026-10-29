@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "partial", methods: [cli] }
+  update: { status: "partial", methods: [cli] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 17:17 (UTC+1).*
@@ -24,6 +29,8 @@ platforms:
 **DLO-to-DMO mapping** — `ObjectSourceTargetMap`.
 
 This is the definition that connects fields in a DLO to fields in a DMO. Both objects must already exist with matching fields, primary keys and key qualifiers.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RegExMatch"
+title: "AMPscript RegExMatch"
 description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Covers the case-sensitive matching that sets it apart from every other String function."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

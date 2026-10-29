@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IsCHTMLBrowser"
+title: "AMPscript IsCHTMLBrowser"
 description: "Tests a user agent string for a compact HTML feature-phone browser. Covers the true path, which two feature-phone agent families still produce, while the empty string aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Char"
+title: "AMPscript Char"
 description: "Returns the character for a numeric character code. Notes that the code domain is not capped at 255."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

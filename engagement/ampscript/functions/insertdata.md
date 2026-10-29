@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InsertData"
+title: "AMPscript InsertData"
 description: "Inserts a new row into a data extension using ordered column/value pairs and returns the number of rows inserted. Covers the return value and the read-back."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

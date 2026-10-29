@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Domain"
+title: "AMPscript Domain"
 description: "Returns everything after the first at sign of an email address. Covers multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

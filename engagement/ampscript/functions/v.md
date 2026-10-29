@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "v"
+title: "AMPscript v"
 description: "Outputs a value inline, normally a variable reference. Covers that a string literal, a number and a nested function call are accepted too, which makes one particular typo render silently instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

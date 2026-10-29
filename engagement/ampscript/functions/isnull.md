@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IsNull"
+title: "AMPscript IsNull"
 description: "Tests a value for a genuine null. It returns False for every input a page variable can hold, including the unset variable the official example says returns true."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

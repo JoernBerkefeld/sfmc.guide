@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ProperCase"
+title: "AMPscript ProperCase"
 description: "Converts a value to proper (title) case. Covers that every letter after the first of a word is forced to lower case."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

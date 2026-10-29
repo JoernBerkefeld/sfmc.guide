@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IndexOf"
+title: "AMPscript IndexOf"
 description: "Returns the 1-based position of a substring, matching case-insensitively. Covers an undocumented third argument that selects which occurrence to locate."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

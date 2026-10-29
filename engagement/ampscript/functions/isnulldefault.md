@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IsNullDefault"
+title: "AMPscript IsNullDefault"
 description: "Returns a value, or a fallback when it is null. The fallback is never reached: every empty-ish input returns the empty string instead."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

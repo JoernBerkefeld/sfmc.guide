@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Redirect"
+title: "AMPscript Redirect"
 description: "Ends the request with an HTTP redirect to the supplied address. Covers that it is a real 302 with the value passed straight into the Location header, and nothing like the similarly named RedirectTo."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

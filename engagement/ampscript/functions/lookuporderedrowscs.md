@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "LookupOrderedRowsCS"
+title: "AMPscript LookupOrderedRowsCS"
 description: "Returns a sorted, row-limited rowset of matching rows using a case-sensitive comparison. Covers the difference from the case-insensitive LookupOrderedRows."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

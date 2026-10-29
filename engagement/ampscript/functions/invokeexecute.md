@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokeExecute"
+title: "AMPscript InvokeExecute"
 description: "Runs the SOAP API Execute verb on an ExecuteRequest and returns a rowset of results."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

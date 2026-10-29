@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DeleteData"
+title: "AMPscript DeleteData"
 description: "Deletes matching rows from a data extension and returns the number of rows deleted. Covers the return value and what a no-match returns."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

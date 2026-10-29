@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RetrieveSalesforceObjects"
+title: "AMPscript RetrieveSalesforceObjects"
 description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Covers that an unknown object name aborts the page and an empty match returns a clean empty rowset."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

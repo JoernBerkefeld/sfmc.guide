@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "QueryParameter"
+title: "AMPscript QueryParameter"
 description: "Returns the value of a URL query string parameter from the current page request. Covers that it is indistinguishable from RequestParameter on a GET."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

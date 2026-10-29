@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ReplaceList"
+title: "AMPscript ReplaceList"
 description: "Replaces several search values with one common replacement value. Covers the sequential passes that let a later search value rewrite what an earlier one inserted."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

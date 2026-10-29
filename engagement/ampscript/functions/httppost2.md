@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "HTTPPost2"
+title: "AMPscript HTTPPost2"
 description: "Performs an HTTP POST and returns the HTTP status code, exposing the response body and headers. Covers the response argument that holds the body while a separate rowset argument holds the headers."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

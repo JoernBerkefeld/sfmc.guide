@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Format"
+title: "AMPscript Format"
 description: "Formats a number, a date or a string with a .NET pattern. Notes that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

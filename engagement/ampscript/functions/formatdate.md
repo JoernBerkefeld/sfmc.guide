@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "FormatDate"
+title: "AMPscript FormatDate"
 description: "Formats a date according to a date pattern, a time pattern and a locale. Notes that mm in the date pattern renders the month, not the minutes."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -20,6 +20,7 @@ import js from '@eslint/js';
 
 const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js', 'assets/js/operation-tabs.js'];
 const TEST_FILES = [
+  'tests/seo.test.cjs',
   'tests/operation-tabs.test.cjs',
   'tests/mcdev-pipeline-builders.test.cjs',
   'tests/mcdev-pipeline-builder-css.test.cjs',

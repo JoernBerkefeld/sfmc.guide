@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Multiply"
+title: "AMPscript Multiply"
 description: "Computes the product of two numeric values. Covers which argument types are accepted and which abort the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

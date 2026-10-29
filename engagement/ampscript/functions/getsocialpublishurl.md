@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "GetSocialPublishURL"
+title: "AMPscript GetSocialPublishURL"
 description: "Returns HTML for sharing a content region on a supported social network via Social Forward. Notes that it yields a bare Publish.aspx URL and aborts the page on an empty content region."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

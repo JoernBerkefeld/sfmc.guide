@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli, api] }
+  create: { status: "partial", methods: [cli, api] }
+  update: { status: "partial", methods: [cli, api] }
+  delete: { status: "partial", methods: [api] }
 ---
 
 *Last updated: October 28, 2026, 17:08 (UTC+1).*
@@ -24,6 +29,8 @@ A calculated insight computes values from your data, for example a customer coun
 `MktCalcInsightObjectDef` is the Metadata API XML definition of the **same calculated insight**, not another type of insight. Saving that definition alone need not create a live component. Use the runtime creation workflow below when you need a live insight; use standard metadata commands to save or compare its XML. Both workflows use Salesforce CLI, including API requests sent through the CLI.
 
 **Important:** deploying a definition can reserve the API name without creating a runtime insight. Runtime creation then finds the name taken, while PATCH cannot attach the missing runtime. Do not deploy an XML shell first if your goal is a live insight, and do not delete someone else's definition to free a name.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

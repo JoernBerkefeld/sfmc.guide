@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "IIf"
+title: "AMPscript IIf"
 description: "Picks one of two values from a boolean expression. Covers the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

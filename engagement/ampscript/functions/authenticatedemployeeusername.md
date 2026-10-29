@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AuthenticatedEmployeeUserName"
+title: "AMPscript AuthenticatedEmployeeUserName"
 description: "Returns the login username of the Marketing Cloud user tied to the current context. A public, anonymous request still gets a non-empty, email-shaped username back, so a non-empty result proves nothing about who is visiting."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

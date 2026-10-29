@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpsertContact"
+title: "AMPscript UpsertContact"
 description: "Upserts attributes onto a mobile contact matched by phone number, creating the contact if it does not exist. Create and update return 0 and an unknown attribute returns 1 without writing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "unknown", methods: [] }
+  update: { status: "unknown", methods: [] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 17:17 (UTC+1).*
@@ -22,6 +27,8 @@ platforms:
 <a id="source-object-configuration-datasourceobject"></a>
 
 **Source object configuration** — `DataSourceObject`.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

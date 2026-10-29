@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DateDiff"
+title: "AMPscript DateDiff"
 description: "Returns the difference between two dates in the requested unit. Notes that it counts unit boundaries rather than elapsed time, so one minute either side of midnight is a whole day apart."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

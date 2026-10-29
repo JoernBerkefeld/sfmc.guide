@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "partial", methods: [cli] }
+  update: { status: "partial", methods: [cli] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 29, 2026, 14:35 (UTC+1).*
@@ -24,6 +29,8 @@ platforms:
 **Field relationship** — `FieldSrcTrgtRelationship`.
 
 The following example links an order's customer field to a customer DMO. It covers a custom, DataCloud-owned `ManyToOne` relationship between existing **empty custom DMOs** in the default dataspace, not managed relationships or shared lookup fields.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

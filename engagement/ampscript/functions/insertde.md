@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InsertDE"
+title: "AMPscript InsertDE"
 description: "Inserts a new row into a data extension using ordered column/value pairs and returns an empty string. The email-context twin of InsertData."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

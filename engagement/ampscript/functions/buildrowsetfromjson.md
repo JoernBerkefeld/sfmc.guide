@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BuildRowsetFromJSON"
+title: "AMPscript BuildRowsetFromJSON"
 description: "Parses a JSON string and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

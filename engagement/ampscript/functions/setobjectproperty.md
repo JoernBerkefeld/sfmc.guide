@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "SetObjectProperty"
+title: "AMPscript SetObjectProperty"
 description: "Sets a scalar (or nested-handle) property on a CreateObject handle."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

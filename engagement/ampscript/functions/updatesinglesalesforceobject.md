@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpdateSingleSalesforceObject"
+title: "AMPscript UpdateSingleSalesforceObject"
 description: "Updates a single record in a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns 1 on success. Covers that a successful update returns 1 and that a failed update aborts the page instead of returning the documented 0."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

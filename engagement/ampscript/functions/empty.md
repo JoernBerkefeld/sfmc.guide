@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Empty"
+title: "AMPscript Empty"
 description: "Tests whether a value is missing or blank. Covers which inputs count as empty, and the exact literals True and False that the function renders."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

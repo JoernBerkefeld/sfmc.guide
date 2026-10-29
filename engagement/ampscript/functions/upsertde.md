@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpsertDE"
+title: "AMPscript UpsertDE"
 description: "Inserts a row if no match exists, otherwise updates the matching rows, and returns an empty string. The email-context twin of UpsertData — the second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

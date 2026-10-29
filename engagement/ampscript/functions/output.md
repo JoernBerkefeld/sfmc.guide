@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Output"
+title: "AMPscript Output"
 description: "Writes the result of a nested function call into the rendered content. Covers a string literal argument, which renders nothing at all rather than the error the official reference promises."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

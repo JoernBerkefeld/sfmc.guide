@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RowCount"
+title: "AMPscript RowCount"
 description: "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

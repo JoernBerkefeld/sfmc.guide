@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Replace"
+title: "AMPscript Replace"
 description: "Replaces all occurrences of a substring with a new value. Covers matching that ignores case and a single-pass scan that never revisits text it just inserted."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

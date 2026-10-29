@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "EndImpressionRegion"
+title: "AMPscript EndImpressionRegion"
 description: "Marks the end of an impression tracking region. The optional argument accepts boolean, string, and number truthy values to close all open regions."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

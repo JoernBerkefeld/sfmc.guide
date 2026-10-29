@@ -1,7 +1,7 @@
 ---
 layout: page
-title: "RedirectTo"
-description: "Marks a URL held in a variable or field as a tracked email link. Despite the name it emits no redirect, never halts the script, and hands the value straight back."
+title: "AMPscript RedirectTo"
+description: "Use AMPscript RedirectTo for dynamic URLs in tracked email links. Includes syntax, examples, and how it differs from an HTTP redirect."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/redirectto/

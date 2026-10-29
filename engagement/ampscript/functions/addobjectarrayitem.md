@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "AddObjectArrayItem"
+title: "AMPscript AddObjectArrayItem"
 description: "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

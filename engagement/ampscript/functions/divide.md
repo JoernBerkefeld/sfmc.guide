@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Divide"
+title: "AMPscript Divide"
 description: "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "OutputLine"
+title: "AMPscript OutputLine"
 description: "Writes the result of a nested function call into the rendered content, followed by a line break. Covers the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

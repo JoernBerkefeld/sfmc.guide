@@ -1,7 +1,7 @@
 ---
 layout: page
-title: "Lookup"
-description: "Returns a single field value from the first matching row of a data extension. Covers the variadic name/value criteria and what a no-match returns."
+title: "AMPscript Lookup"
+description: "Use AMPscript Lookup to read a field from a matching data extension row. Includes syntax, multiple search criteria, examples, and no-match behavior."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookup/

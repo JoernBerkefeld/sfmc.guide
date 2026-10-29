@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "RaiseError"
+title: "AMPscript RaiseError"
 description: "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Covers that outside a send it is not a graceful abort: the message never reaches the caller and the response is indistinguishable from any other failure."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

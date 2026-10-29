@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "URLEncode"
+title: "AMPscript URLEncode"
 description: "URL-encodes a string for safe inclusion in a URL. Leaves a value which is not a URL completely unchanged."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

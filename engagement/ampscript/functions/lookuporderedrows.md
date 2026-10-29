@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "LookupOrderedRows"
+title: "AMPscript LookupOrderedRows"
 description: "Returns a sorted, row-limited rowset of matching rows from a data extension. Covers the sort direction and the row limit."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

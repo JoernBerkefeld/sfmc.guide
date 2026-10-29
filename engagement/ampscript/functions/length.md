@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Length"
+title: "AMPscript Length"
 description: "Measures the size of a string. Covers the counting unit, which is UTF-16 code units rather than user-visible characters."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

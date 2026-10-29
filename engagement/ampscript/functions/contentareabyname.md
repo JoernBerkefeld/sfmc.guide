@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "ContentAreaByName"
+title: "AMPscript ContentAreaByName"
 description: "Inserts a Classic content area by its folder path and name. Covers the no-match default path and that default content is emitted literally. Classic content is retired; prefer ContentBlockByName."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

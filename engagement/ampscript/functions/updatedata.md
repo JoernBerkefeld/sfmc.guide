@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpdateData"
+title: "AMPscript UpdateData"
 description: "Updates existing rows in a data extension and returns the number of rows updated. The second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "FormatCurrency"
+title: "AMPscript FormatCurrency"
 description: "Formats a number as a currency amount for a locale. Notes that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

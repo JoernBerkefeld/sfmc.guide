@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Row"
+title: "AMPscript Row"
 description: "Returns a single row from a rowset by its 1-based index. Covers that index 0 aborts the page."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

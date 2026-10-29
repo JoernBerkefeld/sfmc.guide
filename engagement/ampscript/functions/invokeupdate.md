@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "InvokeUpdate"
+title: "AMPscript InvokeUpdate"
 description: "Runs the SOAP API Update on a CreateObject-built handle and returns the OverallStatus."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

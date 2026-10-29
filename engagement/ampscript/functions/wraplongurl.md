@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "WrapLongURL"
+title: "AMPscript WrapLongURL"
 description: "Shortens a long URL for email clients that truncate long hyperlinks. Outside a send the argument comes back byte for byte unchanged, whatever its length."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

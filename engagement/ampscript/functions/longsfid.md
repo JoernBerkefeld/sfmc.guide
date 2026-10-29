@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "LongSFID"
+title: "AMPscript LongSFID"
 description: "Converts a 15-character case-sensitive Salesforce ID to the 18-character case-insensitive version. Notes that a non-15-character input is passed straight through unchanged instead of being validated."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

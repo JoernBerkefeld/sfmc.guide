@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BuildOptionList"
+title: "AMPscript BuildOptionList"
 description: "Builds an HTML <option> list from literal value/text pairs. Covers exactly which pair is marked selected and what a non-matching default does."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DataExtensionRowCount"
+title: "AMPscript DataExtensionRowCount"
 description: "Returns the total number of rows in a data extension."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

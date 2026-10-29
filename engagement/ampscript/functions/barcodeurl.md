@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "BarcodeURL"
+title: "AMPscript BarcodeURL"
 description: "Builds a URL that renders a barcode image from its inputs."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

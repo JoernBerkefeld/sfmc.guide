@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "TransformXML"
+title: "AMPscript TransformXML"
 description: "Transforms an XML document using an XSLT stylesheet. Covers the argument order and the way any bad input takes the whole page down."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

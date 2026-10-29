@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "HTTPRequestHeader"
+title: "AMPscript HTTPRequestHeader"
 description: "Returns the value of a specified HTTP request header from the inbound request. Notes that custom headers are returned even though the docs restrict it to standard headers."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

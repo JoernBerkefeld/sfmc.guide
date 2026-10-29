@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "UpsertData"
+title: "AMPscript UpsertData"
 description: "Inserts a row if no match exists, otherwise updates the matching rows, and returns the number of rows affected. The second argument is the search-pair count."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

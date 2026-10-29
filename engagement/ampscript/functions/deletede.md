@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "DeleteDE"
+title: "AMPscript DeleteDE"
 description: "Deletes matching rows from a data extension and returns an empty string. The email-context twin of DeleteData."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

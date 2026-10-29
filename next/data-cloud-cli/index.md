@@ -8,6 +8,63 @@ permalink: /next/data-cloud-cli/
 verification: verified
 platforms:
   - next
+crud_rows:
+  - path: next/data-cloud-cli/data-model-object.md
+    label: DMOs
+    anchor: data-model-object-dmo-customobject-dlm
+    scope: 'XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
+  - path: next/data-cloud-cli/data-lake-object.md
+    label: DLOs
+    anchor: data-lake-object-dlo-customobject-dll
+    scope: 'Owned Ingestion API stream creates the DLO; one existing-target Text-field addition via source-schema sync and later read-only full-preservation checks; no cross-org proof; accepted cleanup remained `DELETING`.'
+  - path: next/data-cloud-cli/object-source-target-map.md
+    label: Mappings
+    anchor: dlo-to-dmo-mapping-objectsourcetargetmap
+    scope: 'Existing compatible objects; label-only update; standalone deletion is not established.'
+  - path: next/data-cloud-cli/field-source-target-relationship.md
+    label: Relationships
+    anchor: field-relationship-fieldsrctrgtrelationship
+    scope: 'Exact standard API 65 definition retrieval reverified in one source org; no prerequisite or portability proof. Writes remain bounded to empty custom DMOs, owned `ManyToOne` lookup, label-only update and sole-use lookup cascade deletion.'
+  - path: next/data-cloud-cli/data-source-object.md
+    label: Source object definitions
+    anchor: source-object-configuration-datasourceobject
+    scope: '`DataSourceObject` XML, not a complete connector or credential export.'
+  - path: next/data-cloud-cli/data-stream-definition.md
+    label: Stream definitions
+    anchor: data-stream-configuration-datastreamdefinition
+    scope: '`DataStreamDefinition` XML only; runtime Ingestion API results are in the DLO section.'
+  - path: next/data-cloud-cli/calculated-insights.md
+    label: Calculated insights
+    anchor: retrieve
+    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required.'
+  - path: next/data-cloud-cli/segments.md
+    label: Segments
+    anchor: retrieve
+    scope: 'XML definition and runtime reads; source-only DBT XML label-only update or API 65 live empty-audience creation and full-definition label/description update; exact runtime and metadata deletion checks.'
+  - path: next/data-cloud-cli/segment-members.md
+    label: Segment members
+    anchor: segment-members-runtime-data-not-metadata
+    scope: 'Bounded membership/query pages, not a verified full-population export or member writes.'
+  - path: next/data-cloud-cli/data-graphs.md
+    label: Data Graphs
+    anchor: operational-data-graphs
+    scope: 'API 67 facade root-only projection update; bounded existing-IR-owner target LastName append, full preservation and comparison-before-write repeat qualified; not portable creation or arbitrary edits; deletion does not prove generated-object cleanup.'
+  - path: next/data-cloud-cli/identity-resolution.md
+    label: Identity Resolution
+    anchor: operational-identity-resolution
+    scope: 'API 67 facade source-only ruleset lifecycle and bounded reconciliation change; two-org owner/twelve-output correlation and preservation during dependent Graph update, with no IR mutation; not portable IR creation/update, successful IR data run or universal cleanup.'
+  - path: next/data-cloud-cli/data-kit-object-template.md
+    label: Kit templates
+    anchor: kit-template-datakitobjecttemplate
+    scope: 'Stored Data Graph snapshot and description update; no reproducible standard CLI delete invocation supplied.'
+  - path: next/data-cloud-cli/data-package-kit-definition.md
+    label: Kit definitions
+    anchor: kit-definition-datapackagekitdefinition
+    scope: 'Owned Identity Resolution definition/template/membership created and deleted together; no runtime installation proof.'
+  - path: next/data-cloud-cli/data-package-kit-object.md
+    label: Kit membership
+    anchor: kit-membership-datapackagekitobject
+    scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
 *Last updated: October 29, 2026, 14:35 (UTC+1).*
@@ -30,31 +87,37 @@ The resource pages group complete workflows into independent operation tabs. **C
 
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
 - **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
-- **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The overview's **No** rating does not by itself mean blocked.
+- **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
 - **sf-plugin-data:** a disabled **Unknown** future option throughout this guide. No plugin workflow or support claim is supplied by these tabs.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
 **Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources.
 
-The ratings describe **verified vanilla Salesforce CLI workflows on this page**, including REST API calls—not dedicated native commands or universal API support. **Yes** means the shown retrieval works; **Partial** means only a bounded variant, combined operation or incomplete asynchronous lifecycle is demonstrated; **No** means no verified usable workflow is supplied here, not that the API cannot do it. Write permissions, dependencies and processing warnings still apply.
+{% include crud-legend.html %}
 
-| Configuration or runtime data | Retrieve | Create | Update | Delete | Verified scope / limits |
-|---|---|---|---|---|---|
-| [DMOs](/next/data-cloud-cli/data-model-object/#data-model-object-dmo-customobject-dlm) | Yes | Partial | Partial | Partial | XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks. |
-| [DLOs](/next/data-cloud-cli/data-lake-object/#data-lake-object-dlo-customobject-dll) | Yes | Partial | Partial | Partial | Owned Ingestion API stream creates the DLO; one existing-target Text-field addition via source-schema sync and later read-only full-preservation checks; no cross-org proof; accepted cleanup remained `DELETING`. |
-| [Mappings](/next/data-cloud-cli/object-source-target-map/#dlo-to-dmo-mapping-objectsourcetargetmap) | Yes | Partial | Partial | No | Existing compatible objects; label-only update; standalone deletion is not established. |
-| [Relationships](/next/data-cloud-cli/field-source-target-relationship/#field-relationship-fieldsrctrgtrelationship) | Yes | Partial | Partial | Partial | Exact standard API 65 definition retrieval reverified in one source org; no prerequisite or portability proof. Writes remain bounded to empty custom DMOs, owned `ManyToOne` lookup, label-only update and sole-use lookup cascade deletion. |
-| [Source object definitions](/next/data-cloud-cli/data-source-object/#source-object-configuration-datasourceobject) | Yes | No | No | No | `DataSourceObject` XML, not a complete connector or credential export. |
-| [Stream definitions](/next/data-cloud-cli/data-stream-definition/#data-stream-configuration-datastreamdefinition) | Yes | No | No | No | `DataStreamDefinition` XML only; runtime Ingestion API results are in the DLO section. |
-| [Calculated insights](/next/data-cloud-cli/calculated-insights/#retrieve) | Yes | Partial | Partial | Partial | XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required. |
-| [Segments](/next/data-cloud-cli/segments/#retrieve) | Yes | Partial | Partial | Partial | XML definition and runtime reads; source-only DBT XML label-only update or API 65 live empty-audience creation and full-definition label/description update; exact runtime and metadata deletion checks. |
-| [Segment members](/next/data-cloud-cli/segment-members/#segment-members-runtime-data-not-metadata) | Partial | No | No | No | Bounded membership/query pages, not a verified full-population export or member writes. |
-| [Data Graphs](/next/data-cloud-cli/data-graphs/#operational-data-graphs) | Yes | Partial | Partial | Partial | API 67 facade root-only projection update; bounded existing-IR-owner target LastName append, full preservation and comparison-before-write repeat qualified; not portable creation or arbitrary edits; deletion does not prove generated-object cleanup. |
-| [Identity Resolution](/next/data-cloud-cli/identity-resolution/#operational-identity-resolution) | Yes | Partial | Partial | Partial | API 67 facade source-only ruleset lifecycle and bounded reconciliation change; two-org owner/twelve-output correlation and preservation during dependent Graph update, with no IR mutation; not portable IR creation/update, successful IR data run or universal cleanup. |
-| [Kit templates](/next/data-cloud-cli/data-kit-object-template/#kit-template-datakitobjecttemplate) | Yes | Partial | Partial | No | Stored Data Graph snapshot and description update; no reproducible standard CLI delete invocation supplied. |
-| [Kit definitions](/next/data-cloud-cli/data-package-kit-definition/#kit-definition-datapackagekitdefinition) | Yes | Partial | No | Partial | Owned Identity Resolution definition/template/membership created and deleted together; no runtime installation proof. |
-| [Kit membership](/next/data-cloud-cli/data-package-kit-object/#kit-membership-datapackagekitobject) | Yes | Partial | No | Partial | Combined metadata transport with its definition/template; no independent member creation/deletion proof. |
+The ratings cover usable workflows supplied in this guide, not every observed operation. Observations remain background evidence: DMO creation and DLO writes have no supplied recipe, while some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
+
+<table class="crud-overview">
+  <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Retrieve</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified scope / limits</th></tr></thead>
+  <tbody>
+  {% for row in page.crud_rows %}
+    {% assign resource = site.pages | where: 'path', row.path | first %}
+    {% if resource %}
+      {% unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
+    <tr>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
+      <td>{% include crud-cell.html capability=resource.crud.retrieve %}</td>
+      <td>{% include crud-cell.html capability=resource.crud.create %}</td>
+      <td>{% include crud-cell.html capability=resource.crud.update %}</td>
+      <td>{% include crud-cell.html capability=resource.crud.delete %}</td>
+      <td>{{ row.scope | markdownify }}</td>
+    </tr>
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>
 
 ## Before you start
 

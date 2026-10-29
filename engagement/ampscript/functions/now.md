@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Now"
+title: "AMPscript Now"
 description: "Returns the current system date and time in Central Standard Time. Covers that every call in one render returns the same frozen instant."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

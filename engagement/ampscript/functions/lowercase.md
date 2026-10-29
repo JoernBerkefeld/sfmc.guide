@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Lowercase"
+title: "AMPscript Lowercase"
 description: "Converts a value to lower case. Covers the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

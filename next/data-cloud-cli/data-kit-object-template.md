@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli] }
+  create: { status: "partial", methods: [cli] }
+  update: { status: "partial", methods: [cli] }
+  delete: { status: "unknown", methods: [] }
 ---
 
 *Last updated: October 28, 2026, 17:17 (UTC+1).*
@@ -26,6 +31,8 @@ platforms:
 A **data kit** groups configuration for reuse. Its definition describes the kit, templates store component settings, and membership files link the two. **Instantiation** or installation creates live components from that saved configuration; copying files alone does not do this. A **payload** is simply the content carried inside a field or request.
 
 A kit template is a **snapshot**, not the live component. A Data Graph template can contain projected fields, joins and refresh settings; an Identity Resolution template can contain matching and reconciliation rules. Segment templates omit live publish schedule/status.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 

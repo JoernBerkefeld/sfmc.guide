@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "TreatAsContentArea"
+title: "AMPscript TreatAsContentArea"
 description: "Stores a content string under a key for the duration of a send and renders it, evaluating any embedded AMPscript. Covers that it renders the inline second argument rather than looking the key up."
 parent: AMPscript Function Reference
 parent_url: /engagement/ampscript/functions/

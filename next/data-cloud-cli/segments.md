@@ -9,6 +9,11 @@ verification: verified
 operation_tabs: true
 platforms:
   - next
+crud:
+  retrieve: { status: "yes", methods: [cli, api] }
+  create: { status: "partial", methods: [cli, api] }
+  update: { status: "partial", methods: [cli, api] }
+  delete: { status: "partial", methods: [api] }
 ---
 
 *Last updated: October 28, 2026, 17:17 (UTC+1).*
@@ -28,6 +33,8 @@ The examples distinguish `UI` criteria built in Salesforce's visual interface fr
 This API 65 runtime route creates a live segment. Unlike saving XML alone, it can begin processing immediately: **`NoRefresh` can transition `PROCESSING` → `ACTIVE`**. Empty-result SQL does not prevent scanning or processing either. Get permission for those effects before creating or updating a segment.
 
 The example does not set up a send destination, export members or prove cross-org migration.
+
+{% include crud-summary.html %}
 
 ## Retrieve
 
