@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 28, 2026, 19:23 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -79,6 +79,8 @@ The PATCH returned HTTP `200`, but its response still showed the old seven field
 Removing only `AddedValue__c` from each readback made the entire runtime object and entire Metadata object equal to baseline, comparing fields by exact identity and without excluding unfamiliar properties. All old field properties, primary-key and key-qualifier settings, system fields, object properties and the empty relationship inventory were preserved. The new Metadata field was Text, length `60`, `required=false`, `isDynamicLookup=false`, with no primary designation.
 
 This qualifies only that addition-only, nonprimary Text variant. Do not add primary/dynamic flags, descriptions, category changes or mixed edits to this request. Populated, mapped or related DMOs, other types/categories/dataspaces/API versions, arbitrary schema changes and universal nullable/default semantics remain **unverified**. The test object was retained; no deletion or processing/ingestion claim follows from this update.
+
+An existing DMO needs a separate, authoritative eligibility check before applying this empty-object-only result. Disabled or unmapped flags, ownership and schema presence do **not** prove zero records. A native SQL query against an existing DMO can return SQLSTATE `42P01` (table does not exist), even when runtime and Metadata reads find its configuration; an explicit default-data-space query can fail the same way. That error is **not** an empty result or proof that no record store exists. No authoritative zero-record or record-store-absence check was established for that nonqueryable variant, so do not use this example as a general update recipe for existing objects. Even a successful fresh zero-row query would be a point-in-time observation, not an atomic guarantee against concurrent ingestion before PATCH.
 
 ## Delete
 

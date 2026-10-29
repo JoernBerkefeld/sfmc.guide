@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 28, 2026, 21:58 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -60,6 +60,10 @@ We tried adding a Text field directly with `d360_dlo_update`. It failed because 
 The successful route was to read the complete owned connection schema, retain both original source fields and add one Text field with `d360_connection_schema_put_ingestion_api`, then invoke `d360_datastream_patch_ingestion_api` with the exact returned stream identity and `syncSchema: true`. These are the same API 67 facade operations called through vanilla `sf api request rest`, not Metadata API updates. The stream entered `PROCESSING`, and separate stream/DLO reads reached `ACTIVE` with seven persisted fields.
 
 The comparison preserved all six original field definitions, including primary-key, generated qualifier and system settings, plus source bindings, original mappings/formulas and refresh configuration. Only the new Text field and its source mapping were added. Custom qualifier lists remained empty. This does not establish arbitrary field removal, type changes, direct DLO updates, nonempty custom qualifier preservation or cross-org replay. Shared connections were not changed.
+
+A separate existing-target check confirmed the same bounded update: exactly one complete connection-schema PUT and one owning-stream schema sync added one Text field. Independent reads reached stream/DLO `ACTIVE` and preserved the full original configuration. Later read-only comparisons confirmed the three source Text fields and all seven persisted fields, including their original key/system settings, mappings and refresh configuration, with no further mutation or processing job. The successful update was **not repeated** to obtain those comparisons.
+
+Persisted DLO reads can also include a last-refresh timestamp and a numeric record count. These are runtime observations, not schema changes or proof of a new ingestion run; in this check the count was zero. Compare the complete configuration separately from those observations and verify `ACTIVE` independently. This remains one existing-target Text-field addition in the source org—not proof of portable creation, completed deletion, populated-data behavior or cross-org deployment.
 
 ## Delete
 

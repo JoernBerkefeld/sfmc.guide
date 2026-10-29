@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 29, 2026, 09:17 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -45,6 +45,10 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 ```
 
 This is a read despite the HTTP POST transport. Check the root, fields/key flags, description and refresh settings, not just `ready`. We also read the generated ID, VALUE and root-fragment DMOs through API 65, using the exact names returned by the graph. That confirms those objects could be read in the source org, not that the graph's processing finished or that the same configuration works in another org. Nested graphs remain untested. Capture the exact generated object/transform references for checking deletion later; do not guess names. The consumer-detail flags do not promise a complete list of every external dependency.
+
+**IR-owned roots:** For a graph rooted in an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#retrieve), correlate the graph's logical root with the exact unified Individual DMO returned by its owning ruleset. Read the ruleset independently through the facade and native API, and verify all twelve returned output/link DMOs through separate API 65 Connect REST and Metadata API reads. Check the root's actual Text field definitions and explicit Id key; do not guess generated names or reuse source-org IDs. A returned `sourceObject.devName` can identify the graph's own node rather than the logical DMO, so it is not by itself an owner or root binding.
+
+A bounded qualification established this correlation for retained owned IR rulesets in two orgs: the portable API identities matched while the org-local IDs differed. One separately created setup graph in each org reached `ready`, with its exact returned transform reporting `ACTIVE` / `SUCCESS` and a completed run. Independent checks also matched the transform's input fields/key, grouping and generated outputs to that graph and root. The source graph projected Id, FirstName and LastName; the target projected Id and FirstName. These are setup and read/schema/lineage observations, **not a completed cross-org configuration deployment or portable graph creation workflow**.
 
 ## Create
 
@@ -105,6 +109,8 @@ Read back with `graph-get.json`. The graph can pass through `processing` and `ed
 Independent readback confirmed the ordered Id, FirstName and LastName Text projections, only Id marked as the key, and the unchanged logical root, empty paths/related objects, seven-day schedule and disabled incremental refresh. GET omitted `creationMode`. A separate complete root-only update **omitting optional `creationMode`**, as illustrated above, also succeeded: fresh independent reads reached `ready`, version `"1"`, with a new completed owner-transform run reporting `ACTIVE` / `SUCCESS`. The create-to-final-read observation took about nine minutes; it is not a deadline or guarantee. Complete comparison retained all existing field properties, root/node and generated bindings, and refresh settings, with only LastName appended. You do not need a saved creation-time value to compare the persisted configuration: do not invent a missing GET value or require a past creation record for this bounded omission workflow. This does not establish preservation of an unreadable creation mode for arbitrary graphs or other update variants. Its generated `sourceObject.devName` was an owner-node binding, not the logical root name to copy blindly into a new request.
 
 An identical repeat can preserve identities, version and configuration, but does not guarantee zero writes or no processing. Templates in your project are not automatically refreshed by this update.
+
+**Separate cross-org limit:** The paired IR-owned setup/read qualification above does not extend this source-only update proof to a portable target update. At this evidence checkpoint, no such target update request was dispatched; consequently, its settled full-preservation readback and identical repeat remain **unproven**. A pre-write refusal is not a successful API update, and a comparison that identifies the intended LastName addition is not evidence that Salesforce applied it. Do not infer zero-write repeat behavior or broaden these operation ratings from setup success alone.
 
 ## Delete
 

@@ -10,7 +10,7 @@ platforms:
   - next
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 29, 2026, 09:17 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -51,6 +51,10 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_
 ```
 
 Compare identity, matching rules, reconciliation values and generated references. **Wait for `PUBLISHED` before updating**; an update during `PUBLISHING` can fail inside an otherwise successful response. Both reads print to stdout and leave the ruleset unchanged.
+
+**Using an IR-generated output as a [Data Graph root](/next/data-cloud-cli/data-graphs/#retrieve):** Read the exact ruleset through both the facade and native endpoint. Its returned reconciliation entries identify the unified DMOs (`unifiedDmoName`); correlate the exact returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or a DMO ID. Independently read the generated outputs through API 65 Connect REST and Metadata API, then compare the root's actual field names, Text types and explicit Id key. A matching object name alone is insufficient.
+
+In the bounded two-org qualification, retained owned `PUBLISHED` rulesets and all twelve returned output/link DMOs were independently correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had the compatible Id, FirstName and LastName Text fields and explicit Id key required for the root-only graphs. This establishes existing-owner/output/schema compatibility, **not cross-org ruleset creation or migration**, a successful IR data run, or permission to reuse source IDs in the target. Resolve the owner and its returned outputs afresh in each org; do not provision or modify missing prerequisites merely to match this example.
 
 ## Create
 
