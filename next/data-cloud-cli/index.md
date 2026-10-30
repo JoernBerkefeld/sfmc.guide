@@ -36,7 +36,7 @@ crud_rows:
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
     anchor: retrieve
-    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit; asynchronous deletion checks required.'
+    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit, including target-bound ACTIVE/NOT_SCHEDULED preservation; not unchanged-source cross-org deployment or successful calculation proof; asynchronous deletion checks required.'
   - path: next/data-cloud-cli/segments.md
     label: Segments
     anchor: retrieve
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: October 29, 2026, 17:27 (UTC+1).*
+*Last updated: October 29, 2026, 19:43 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -92,7 +92,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
-**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources. The 17:27 synchronization adds the October 29 source-only mapping XML comparison; it records retained evidence, not a new live check or broader write qualification.
+**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources. The 17:27 synchronization adds the October 29 source-only mapping XML comparison; it records retained evidence, not a new live check or broader write qualification. The 19:43 synchronization adds the retained target-bound calculated-insight expression update and preservation result; it does not record new Graph/Identity Resolution live verification, a schedule change or a successful calculation run.
 
 {% include crud-legend.html %}
 

@@ -16,7 +16,7 @@ crud:
   delete: { status: "partial", methods: [api] }
 ---
 
-*Last updated: October 28, 2026, 17:08 (UTC+1).*
+*Last updated: October 29, 2026, 19:43 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -163,6 +163,24 @@ We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` while keeping the same m
 A later **expression-only API 65 PATCH** succeeded: we retained `WHERE 1 = 0` and added a fully qualified `DeviceId IS NOT NULL` predicate, keeping `APPROX_COUNT_DISTINCT`, output aliases and the grouped application dimension unchanged. Use the exact actual field name, such as `ssot__DeviceApplicationEngagement__dlm.ssot__DeviceId__c`, not the shortened name in this explanation. Send only `expression` in the PATCH body through the same vanilla `sf api request rest` update route above.
 
 After `PROCESSING`, independent runtime reads reached `ACTIVE`, and a separate Metadata read contained the exact edited SQL. The aggregate formula, dimension/measure names, types, roles and aggregability, label and schedule/settings were retained. The returned fields' derived `dataSource` attribution changed despite stable formulas; do not treat that attribution as an unchanged dependency identifier. This proves the bounded predicate edit, not arbitrary SQL or schema editing, general omitted-field preservation, an identical-repeat guarantee or completed computation. The empty-result filter also cannot demonstrate a change in output rows.
+
+**Separate target-bound check — October 29, 2026:** an existing `ACTIVE` insight
+with `NOT_SCHEDULED` received one API 65 PATCH containing only `expression`.
+The original `WHERE 1 = 0` filter was retained and the fully qualified
+`DeviceId IS NOT NULL` predicate added without changing the aggregation or
+output schema. HTTP 200 was followed by independent runtime, Metadata XML and
+referenced-DMO checks: the exact edited SQL was present, non-expression settings
+and dependency bindings were preserved, and the insight remained `ACTIVE` with
+`NOT_SCHEDULED`. This is distinct from the earlier `SYSTEM_MANAGED` evidence;
+no schedule change was sent or qualified by this check.
+
+Before sending an expression PATCH, independently read and compare the current
+expression and preserved settings with the desired definition. If they already
+match, skip the unnecessary PATCH yourself. This is comparison-before-write
+guidance, not an automatic no-op or identical-repeat guarantee from the API.
+The target-bound result does not establish unchanged-source cross-org deployment,
+arbitrary SQL edits, scheduled-processing behavior or a successful calculation:
+`lastRunStatus` remained null, so `ACTIVE` alone is not computation evidence.
 
 {% endcapture %}
 {% capture update_cli %}
