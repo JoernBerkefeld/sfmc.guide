@@ -16,7 +16,7 @@ crud:
   delete: { status: "partial", methods: [api] }
 ---
 
-*Last updated: October 28, 2026, 17:17 (UTC+1).*
+*Last updated: October 30, 2026, 15:50 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -33,6 +33,8 @@ The examples distinguish `UI` criteria built in Salesforce's visual interface fr
 This API 65 runtime route creates a live segment. Unlike saving XML alone, it can begin processing immediately: **`NoRefresh` can transition `PROCESSING` → `ACTIVE`**. Empty-result SQL does not prevent scanning or processing either. Get permission for those effects before creating or updating a segment.
 
 The example does not set up a send destination, export members or prove cross-org migration.
+
+**Route-specific SQL limits:** Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) documents WHERE-only single-column subqueries and an optional key-qualifier join condition. The separately discovered MCP segment-create description is narrower: it disallows subqueries and compound join conditions. The native guide's API version and the discovery provider's underlying API version were not supplied. Do not transfer those rules between native API 65 examples, the API 67 org-local facade and hosted MCP, or treat documentation as live qualification of broader SQL edits.
 
 {% include crud-summary.html %}
 
@@ -180,7 +182,25 @@ sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --metho
 
 GET again until `ACTIVE`, then compare the changed label/description and all preserved values. In one owned DBT update, separate reads observed **`PROCESSING` → `COUNTING` → `ACTIVE`** without intervention. `COUNTING` was not final success or proof of failure. The later `ACTIVE` read was about nine minutes after the observed `COUNTING` read; the exact transition time between those checks is unknown.
 
-Independent runtime and standard XML retrieval then confirmed the exact updated label/description, original model/SQL/type, identities, dataspace, segment-on object, schedule/lookback and generated membership references. Description is runtime-only; the XML label agreed with runtime. The first command had already stopped with an unknown outcome: later API settlement does not retroactively make that command successful. Do not replay an update with an unknown outcome; reconcile it with reads. This narrow result does not establish arbitrary omitted-field preservation, SQL/UI criteria updates or schedule/lookback editing.
+Independent runtime and standard XML retrieval then confirmed the exact updated label/description, original model/SQL/type, identities, dataspace, segment-on object, schedule/lookback and generated membership references. Description is runtime-only; the XML label agreed with runtime. The first command had already stopped with an unknown outcome: later API settlement does not retroactively make that command successful. Do not replay an update with an unknown outcome; reconcile it with reads. This label/description result does not establish arbitrary omitted-field preservation, general SQL/UI criteria updates or schedule/lookback editing.
+
+A separate source-org existing-owner check correlated the runtime segment and its Metadata definition as one stable pair. Repeating the comparison against the unchanged desired definition found no further change to apply. Read and compare both views before deciding whether to PATCH; skip an already-matching update yourself. This is source-only comparison-before-write evidence, not API idempotency, processing-free deployment or unchanged-source cross-org replay.
+
+Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) requires the segment-on primary key and any applicable key qualifiers in the projection. It documents WHERE-only, single-column subqueries and an optional key-qualifier join comparison. Those rules differ from the discovered MCP operation description; the discovery contract's API version was not supplied. Keep native API and facade/hosted-MCP validation rules separate rather than treating either description as universal. These broader SQL forms were not live-qualified by the bounded updates on this page.
+
+### Qualified forward empty-audience predicate change
+
+One separate **source-only native API 65** update was verified on an existing owned **ACTIVE**, single-model DBT segment in the default dataspace. Its selected field was independently bound to the same PROFILE object's primary key. Starting from the existing `WHERE 1 = 0`, the only SQL change appended `AND <same selected object.field> IS NOT NULL`:
+
+```sql
+SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0 AND UnifiedCustomer__dlm.CustomerKey__c IS NOT NULL
+```
+
+The object and field above are placeholders: use the exact existing selected object and independently verified primary field, not a different field or a newly created segment. Keep the original model name, label, description, segment-on object and complete definition from the label-update request above, changing only its SQL. Continue to omit the schedule fields as described above. Obtain permission for possible processing before PATCH; the false predicate and `NO_REFRESH` do not guarantee processing-free execution.
+
+After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact desired SQL, and separate standard Metadata retrieval confirmed that same SQL in the definition. `NO_REFRESH`, `P90D`, labels, owner identities, generated membership references and the PROFILE primary-field dependency binding were preserved. This establishes that narrow persisted definition edit, **not audience membership or successful computation**. It does not qualify the reverse change, another predicate/field, simultaneous SQL and label changes, arbitrary SQL, UI criteria, CREATE or cross-org replay. Read and compare the current definition before writing; this result does not prove that sending an identical PATCH is mutation-free.
+
+A separate source-only existing-owner check retained the same runtime/metadata identity pair, and an unchanged comparison repeat retained that pair and the complete configuration. This is bounded stable-owner/readback evidence, not a guarantee that an identical API PATCH is mutation-free or that the definition can be deployed to another org unchanged.
 
 {% endcapture %}
 {% capture update_cli %}
@@ -196,7 +216,7 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 Expect `changed: true` for the label change. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
 
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update only; reconcile unknown outcomes with reads." api_body=update_api %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update or qualified forward empty-audience selected-primary-key predicate addition; reconcile unknown outcomes with reads." api_body=update_api %}
 
 ## Delete
 

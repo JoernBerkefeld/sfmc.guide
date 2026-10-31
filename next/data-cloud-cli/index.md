@@ -16,7 +16,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
-    scope: 'Owned Ingestion API stream creates the DLO; one existing-target Text-field addition via source-schema sync and later read-only full-preservation checks; no cross-org proof; accepted cleanup remained `DELETING`.'
+    scope: 'Owned ingestion-chain observation and existing-target Text-field schema sync; documented explicit-PK CREATE contract is not safe public CREATE qualification; October 30 empty stream controls remain unknown, not completed cleanup or cross-org proof.'
   - path: next/data-cloud-cli/object-source-target-map.md
     label: Mappings
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -32,7 +32,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-stream-definition.md
     label: Stream definitions
     anchor: data-stream-configuration-datastreamdefinition
-    scope: '`DataStreamDefinition` XML only; runtime Ingestion API results are in the DLO section.'
+    scope: '`DataStreamDefinition` XML retrieval; documented native stream POST availability and ingestion PK-only rule are not qualified CREATE support; runtime facade observations remain in the DLO section.'
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
     anchor: retrieve
@@ -40,7 +40,7 @@ crud_rows:
   - path: next/data-cloud-cli/segments.md
     label: Segments
     anchor: retrieve
-    scope: 'XML definition and runtime reads; source-only DBT XML label-only update or API 65 live empty-audience creation and full-definition label/description update; exact runtime and metadata deletion checks.'
+    scope: 'XML/runtime reads; source-only DBT XML label edit or API 65 live empty-audience creation, full-definition label/description update and one existing-owner forward selected-primary-key IS NOT NULL predicate addition after WHERE 1 = 0; independently ACTIVE with preserved settings/bindings, not general SQL or cross-org proof; exact deletion checks.'
   - path: next/data-cloud-cli/segment-members.md
     label: Segment members
     anchor: segment-members-runtime-data-not-metadata
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: October 29, 2026, 19:43 (UTC+1).*
+*Last updated: October 30, 2026, 15:50 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -93,6 +93,10 @@ The resource pages group complete workflows into independent operation tabs. **C
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
 **Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources. The 17:27 synchronization adds the October 29 source-only mapping XML comparison; it records retained evidence, not a new live check or broader write qualification. The 19:43 synchronization adds the retained target-bound calculated-insight expression update and preservation result; it does not record new Graph/Identity Resolution live verification, a schedule change or a successful calculation run.
+
+**October 30 documentation reconciliation:** the DLO/stream pages now distinguish documented ingestion CREATE inputs from qualified workflows and retain the inconclusive stream readback as unknown. Segment guidance adds the source-only stable-owner comparison and native/MCP DBT rule differences. The native stream reference now adds documented POST availability, the ingestion primary-key-only field-array rule and the native/facade list-filter distinction; it supplies no qualified ingestion CREATE recipe. CRUD ratings are unchanged. Synchronized overview, Segment, calculated-insight, Graph and Identity Resolution timestamps do not represent new live tests of those resources.
+
+**October 30 Segment predicate reconciliation:** retained native API 65 evidence now qualifies one source-only existing-owner forward addition of `AND <same selected primary field> IS NOT NULL` after `WHERE 1 = 0`. Independent ACTIVE runtime and Metadata reads agreed on the desired SQL and preserved settings, identities and bindings. This is not general SQL, cross-org, membership or computation proof. The Segment API update method was already Partial; no CRUD status or method is promoted. The synchronized timestamps record this documentation reconciliation, not new live tests of the other resources.
 
 {% include crud-legend.html %}
 
@@ -226,6 +230,8 @@ For a request such as `--body '@ci-create.json'`, create `ci-create.json` in the
 **REST** is the API request style used for the live components below. The quoted `/services/data/...` path is an **endpoint**, an address within the org selected by `--target-org`, not a folder on your computer. `GET` reads; `PATCH` changes selected settings; `DELETE` requests removal. `POST` submits an operation and can create or process data, but some explicitly named operations below are reads. `--header` supplies request context, such as `Data-Space:default`; `--body` supplies the request's input. A response body is the data Salesforce sends back. Do not assume that a response can be reused as a request.
 
 Some examples call an **API 67 MCP facade** at `/services/data/v67.0/ssot/mcp/execute`: one REST endpoint that accepts a named operation in `toolName` and its inputs in `paramsJson`. You invoke it through vanilla `sf api request rest`; these operations are not native `sf` commands or proof of equivalent native CRUD endpoints. You do not need an AI assistant or an MCP client. A **native endpoint** instead addresses the component directly. Here `paramsJson` contains JSON serialized **once** as a string inside outer JSON, so inner quotes appear as `\"`. Keep that escaping; an object in its place is not equivalent.
+
+**Keep evidence surfaces separate:** API 65 native examples, the API 67 org-local facade and hosted MCP are not interchangeable interfaces. October 29 MCP contract discovery supplied no provider or underlying API version; it does not establish native HTTP payload equivalence. A returned URL containing API 68 identifies that link's version, not the version or support level of the request that produced it. Follow only documented routes and verify the intended org/path before using returned links. The [native stream reference](/next/data-cloud-cli/data-stream-definition/#documented-native-stream-api-availability) documents POST since 60.0 in its API 67 reference, but does not establish a safe ingestion creation workflow. Its native list has no documented `sourceObjectName` parameter; the facade filter is not transferable. General-purpose stream CREATE remains unqualified here.
 
 All responses are **sanitized, shortened illustrations**, not complete response contracts. XML with an “omitted” comment is an excerpt: keep the complete retrieved file when deploying. Likewise, `<redacted-member-id>` and similar response markers stand for removed values, not inputs to copy.
 

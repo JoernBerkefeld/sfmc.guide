@@ -16,7 +16,7 @@ crud:
   delete: { status: "unknown", methods: [] }
 ---
 
-*Last updated: October 28, 2026, 21:58 (UTC+1).*
+*Last updated: October 30, 2026, 15:50 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -65,6 +65,14 @@ Separate connection, schema, stream and DLO reads confirmed `CONNECTED`, then st
 
 The DLO had six fields: the two source fields and four generated key-qualifier/system fields. The custom key-qualifier designation list was empty, so this does not establish preservation of nonempty custom qualifiers. Initial processing happened automatically, with zero records and no explicit ingestion or refresh request. This is a narrow source-only result, not a portable recipe for every connector or category.
 
+### Documented ingestion creation contract
+
+The October 29 contract discovery documents a specialized connection → complete event schema → ingestion stream route. Its stream operation requires `connectionName`, `event` and `streamName`; for a new DLO, the description additionally requires `category`, `dloName`, `dloLabel` and the primary key's field name, label and data type. Select the primary key explicitly from the existing event schema; do not infer it from field order or an Id-like name. New-DLO inputs and `existingDloName` are alternatives, not inputs to combine. Read the complete connection schema before a schema PUT and preserve every existing object and field.
+
+This is a **documented contract, not a qualified safe public CREATE workflow**. Discovery did not establish duplicate-create safety, complete absence checks, cross-org identity correlation or processing completion guarantees. The discovery provider and underlying API versions were not supplied; the API 67 facade used in the earlier observation does not version these contracts. Direct `d360_dlo_create` discovery does not establish an equivalent source-backed connection/schema/stream setup, and generic stream payloads are not interchangeable with the specialized ingestion inputs. No native HTTP CREATE payload is inferred here. Separately, the [native stream reference discussion](/next/data-cloud-cli/data-stream-definition/#documented-native-stream-api-availability) now identifies documented POST availability since 60.0 in the API 67 reference, its required top-level inputs and `INGEST_API` type. Native new-DLO and existing-DLO inputs are alternatives; for ingestion, `dataLakeFieldInputRepresentations` contains **only the primary key field**. That rule is not an instruction to truncate the complete connection schema. The extracted reference's S3-only `200`/`PROCESSING` example and unresolved nested ingestion input shapes do not qualify native ingestion creation, event binding or settled success. Duplicate/nonoverwrite safety, authoritative absence and restart-safe settlement remain unknown.
+
+Salesforce's [Ingestion API stream setup guide](https://developer.salesforce.com/docs/data/data-cloud-int/guide/c360-a-create-ingestion-data-stream.md) separately describes selecting an existing connector and uploaded schema, choosing a primary key/category and configuring refresh mode. That UI guidance does not qualify a CLI/API creation recipe. The unknown CREATE rating therefore remains unchanged.
+
 {% include operation-tabs.html id="dlo-create" label="Create" cli_state="unknown" cli_reason="DLO creation through Metadata API has not been verified." api_state="unknown" api_reason="The owned ingestion-chain result is observational, not a supplied portable creation recipe." %}
 
 ## Update
@@ -84,6 +92,8 @@ Persisted DLO reads can also include a last-refresh timestamp and a numeric reco
 ## Delete
 
 For the new owned ingestion chain, one owning-stream delete with `shouldDeleteDataLakeObject: true` was accepted, but separate stream and DLO reads still showed `DELETING` at the last check. The connection remained `CONNECTED` and its schema in use. This is not completed cleanup or a verified full lifecycle; do not repeat the delete or remove generated objects yourself while it is pending.
+
+**October 30 readback limit:** the retained owned source connection and schema were still readable, but the earlier stream had been `DELETING` and all stream-control inventories in this check were empty. This does not independently correlate a settled stream/DLO lifecycle or establish absence. The result remains **unknown**, not unsupported, and adds no new creation, update or completed-deletion proof. Do not use an empty inventory to justify recreating the chain or deleting its connection.
 
 There is no verified completed standard delete recipe here. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
 
