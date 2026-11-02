@@ -80,9 +80,9 @@ This proves joint metadata creation only, not independent member creation, runti
 
 ## Update
 
-Definition updates have **not been verified**.
-
 {% include operation-tabs.html id="kit-definition-update" label="Update" cli_state="unknown" cli_reason="Definition updates have not been verified; no workflow is supplied." api_state="unknown" api_reason="No API definition-update workflow is supplied." %}
+
+Definition updates have **not been verified**.
 
 ## Delete
 

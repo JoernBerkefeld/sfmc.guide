@@ -124,11 +124,11 @@ API `61.0`–`67.0` returned HTTP `200` with a direct object and `fields` array 
 
 ## Create
 
+{% capture create_api %}
 Creating a DMO by deploying its XML has **not been verified**. Downloading an object does not mean you can recreate it that way.
 
 A native API `65.0` `POST /services/data/v65.0/ssot/data-model-objects` returned HTTP `201` for a newly owned custom DMO in category `Other`, default dataspace, with a Text primary key, two nonprimary Text fields and four generated system/key-qualifier fields. This was an empty object without mappings or relationships. That bounded creation supported the additive update test below; it is not a general XML-deployment or arbitrary-schema creation recipe.
 
-{% capture create_api %}
 The [Salesforce-owned POST example](https://www.postman.com/salesforce-developers/salesforce-developers/request/lxdbfg4/create-data-model-object) documents this route. For the tested API `61.0`–`67.0` variant, save the following as `dmo-create.json`, replacing the name with a fresh owned unique name and independently confirming absence before creation:
 
 ```json
@@ -146,9 +146,9 @@ POST returned `201`; independent GET returned `200`, six fields, `isEnabled=fals
 
 ## Update
 
+{% capture update_api %}
 General DMO XML updates, including schema changes through Metadata API, have **not been verified** either.
 
-{% capture update_api %}
 The completed API `61.0`–`67.0` matrix tested label and additive-field updates separately. The [Salesforce-owned PATCH example](https://www.postman.com/salesforce-developers/salesforce-developers/request/rschuxv/update-data-model-object) documents the route. Use the returned owned developer name including `__dlm`. The tested bodies were:
 
 ```json
@@ -198,9 +198,9 @@ An existing DMO needs a separate, authoritative eligibility check before applyin
 
 ## Delete
 
+{% capture delete_cli %}
 The deletion route is limited to an **empty custom DMO that you own**, after a fresh dependency check. It can also delete the DMO's sole owned mapping. It does not delete the DLO, and it is not a safe recipe for arbitrary business objects or shared dependencies.
 
-{% capture delete_cli %}
 The integration supplies an empty `package.xml`:
 
 ```xml

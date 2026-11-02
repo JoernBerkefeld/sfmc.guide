@@ -96,9 +96,9 @@ The owned Identity Resolution membership link was created together with its defi
 
 ## Update
 
-Member updates have **not been verified**.
-
 {% include operation-tabs.html id="kit-member-update" label="Update" cli_state="unknown" cli_reason="Member updates have not been verified; no workflow is supplied." api_state="unknown" api_reason="No API member-update workflow is supplied." %}
+
+Member updates have **not been verified**.
 
 ## Delete
 

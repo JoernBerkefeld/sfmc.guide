@@ -203,9 +203,9 @@ Retrieve again to confirm the label and unchanged SQL. Expression updates, ident
 
 ## Delete
 
+{% capture delete_api %}
 **Shared safety:** Confirm ownership and dependencies before either deletion workflow. Definition deletion is not runtime or generated-data cleanup.
 
-{% capture delete_api %}
 ### Delete the live insight and check its definition
 
 After checking ownership and dependencies, save `ci-delete.json`. If a DELETE without `--body` fails with `No 'mode' found in 'body' entry`, use a whole-request file with an explicit empty raw body, as below. This workaround was verified with Salesforce CLI 2.151.7.

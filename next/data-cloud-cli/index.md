@@ -17,8 +17,8 @@ crud_rows:
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
     scope: 'Standard Metadata retrieval worked at requested API65–68; full-schema redeploy hit primary-key/qualifier failures. Native API61–68 standalone CRUD succeeded separately; plugin guard and public acceptance remain API68/default. Portable JSON, auto POST/PATCH and explicit read-only preview; default delete has no prompt. Not ingestion, cascade or cross-org portability.'
-  - path: next/data-cloud-cli/object-source-target-map.md
-    label: Mappings
+  - path: next/data-cloud-cli/dlo-dmo-mapping.md
+    label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
     scope: 'Exact standard API 65 mapping XML retrieval independently reverified in one source org; no semantic key/qualifier, prerequisite or cross-org proof. Existing bounded writes: compatible objects and label-only update; standalone deletion is not established.'
   - path: next/data-cloud-cli/field-source-target-relationship.md

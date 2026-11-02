@@ -58,6 +58,7 @@ Retrieving this file does **not** start a refresh. The connector, source, DLO an
 
 ## Create
 
+{% capture create_evidence %}
 Creation through `DataStreamDefinition` XML has **not been verified**. The [DLO creation discussion](/next/data-cloud-cli/data-lake-object/#create) separates the documented specialized Ingestion API connection/schema/stream contract, including an explicit primary key, from the earlier bounded runtime observation. Neither establishes a safe general-purpose stream creation workflow.
 
 ### Documented native stream API availability
@@ -72,16 +73,27 @@ Conflict-safe duplicate creation, permission-aware authoritative absence, restar
 
 Salesforce also documents native API 67 stream GET/PATCH in its [CRM field-disablement guide](https://developer.salesforce.com/docs/data/connectapi/guide/data-stream-use-case.md). That connector-specific update use case is not an ingestion CREATE contract or proof that arbitrary connector payloads can be replayed.
 
+{% endcapture %}
 {% include operation-tabs.html id="stream-definition-create" label="Create" cli_state="unknown" cli_reason="DataStreamDefinition creation has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API DataStreamDefinition creation workflow is supplied." %}
+
+{{ create_evidence | markdownify }}
 
 ## Update
 
+{% capture update_evidence %}
 Updates through this Metadata API definition, explicit activation and explicit refresh have **not been verified** here. The [DLO section](/next/data-cloud-cli/data-lake-object/#data-lake-object-dlo-customobject-dll) describes the separately tested API 67 Ingestion API stream creation and additive schema-sync route; it is not a `DataStreamDefinition` XML deployment.
 
+{% endcapture %}
 {% include operation-tabs.html id="stream-definition-update" label="Update" cli_state="unknown" cli_reason="Definition updates, activation and refresh have not been verified here." api_state="unknown" api_reason="The linked ingestion schema-sync route is separate; no DataStreamDefinition API update workflow is supplied." %}
+
+{{ update_evidence | markdownify }}
 
 ## Delete
 
+{% capture delete_evidence %}
 Deletion has **not been verified**. In the October 30 Ingestion API readback, the retained source connection/schema did not resolve a previously `DELETING` stream's outcome, and stream-list controls were empty. This remains **unknown**, not proof that stream operations are unsupported or that deletion completed. See the [DLO deletion limitations](/next/data-cloud-cli/data-lake-object/#delete).
 
+{% endcapture %}
 {% include operation-tabs.html id="stream-definition-delete" label="Delete" cli_state="unknown" cli_reason="DataStreamDefinition deletion has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API DataStreamDefinition deletion workflow is supplied." %}
+
+{{ delete_evidence | markdownify }}

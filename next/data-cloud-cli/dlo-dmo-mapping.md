@@ -1,10 +1,12 @@
 ---
 layout: page
-title: "DLO-to-DMO mapping"
+title: "DLO-DMO-mapping"
 description: "Salesforce CLI workflows and verified operation limits for DLO-to-DMO mapping: ObjectSourceTargetMap."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/object-source-target-map/
+permalink: /next/data-cloud-cli/dlo-dmo-mapping/
+redirect_from:
+  - /next/data-cloud-cli/object-source-target-map/
 verification: verified
 operation_tabs: true
 platforms:
@@ -113,6 +115,10 @@ The file entry can report `Changed`; sending the same file again can report `Unc
 
 ## Delete
 
+{% capture delete_evidence %}
 Standalone mapping deletion is not supported by this example. It can fail with an internal server error or a restriction on removing the sole mapping. Deleting an empty, owned parent DMO can remove its sole owned mapping, as described above; do not delete an arbitrary parent as a workaround.
 
+{% endcapture %}
 {% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction." api_state="unknown" api_reason="No standalone API mapping deletion workflow is supplied; parent-deletion observations are not a recipe." %}
+
+{{ delete_evidence | markdownify }}

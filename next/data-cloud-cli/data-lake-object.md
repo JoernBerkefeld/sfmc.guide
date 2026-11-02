@@ -10,10 +10,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli, api] }
-  create: { status: "yes", methods: [api] }
-  update: { status: "yes", methods: [api] }
-  delete: { status: "yes", methods: [api] }
+  retrieve: { status: "yes", methods: [cli, api, plugin] }
+  create: { status: "yes", methods: [api, plugin] }
+  update: { status: "yes", methods: [api, plugin] }
+  delete: { status: "yes", methods: [api, plugin] }
 ---
 
 *Last updated: November 2, 2026, 14:00 (UTC+1).*
@@ -494,6 +494,7 @@ Replace the sanitized developer name with the exact returned name of your DLO. O
 
 ## Create
 
+{% capture create_evidence %}
 ### Standard Metadata CREATE comparison: requested API 65–68
 
 **The unchanged retrieved test schema failed standard creation at all four requested versions.** On November 2, 2026, four sequential standard `sf project deploy start` attempts used four distinct synthetic names independently confirmed absent in the test target org before deployment. These were genuine CREATE attempts, not updates: only the object directory and `.object-meta.xml` filename were renamed from the retrieved fixture; all nine XML file contents remained byte-for-byte identical to the complete samples above. The existing `McpMappingProbe_20261027__dll` was not deployed or changed.
@@ -584,10 +585,14 @@ This is a **documented contract, not a qualified safe public CREATE workflow**. 
 
 Salesforce's [Ingestion API stream setup guide](https://developer.salesforce.com/docs/data/data-cloud-int/guide/c360-a-create-ingestion-data-stream.md) separately describes selecting an existing connector and uploaded schema, choosing a primary key/category and configuring refresh mode. That UI guidance does not qualify a CLI/API creation recipe. The unknown CREATE rating therefore remains unchanged.
 
-{% include operation-tabs.html id="dlo-create" label="Create" cli_state="blocked" cli_reason="The unchanged retrieved test schema failed standard CREATE at requested API 65–68; this is fixture-specific, not universal unsupported CREATE." api_state="unknown" api_reason="The manual standalone native creation payload is documented above; the earlier ingestion-chain result remains inconclusive." plugin_state="available" plugin_reason="Confirmed-404 native API68 standalone create passed public-command acceptance." plugin_body=create_plugin %}
+{% endcapture %}
+{% include operation-tabs.html id="dlo-create" label="Create" cli_state="blocked" cli_reason="The unchanged retrieved test schema failed standard CREATE at requested API 65–68; this is fixture-specific, not universal unsupported CREATE." api_state="unknown" api_reason="The manual standalone native creation payload is documented below; the earlier ingestion-chain result remains inconclusive." plugin_state="available" plugin_reason="Confirmed-404 native API68 standalone create passed public-command acceptance." plugin_body=create_plugin %}
+
+{{ create_evidence | markdownify }}
 
 ## Update
 
+{% capture update_api %}
 We tried adding a Text field directly with `d360_dlo_update`. It failed because this DLO belonged to a stream: Salesforce required field addition through the Data Stream API. The facade returned HTTP `201` and CLI exit `0` with a nested error; an independent read confirmed the original six fields were unchanged.
 
 The successful route was to read the complete owned connection schema, retain both original source fields and add one Text field with `d360_connection_schema_put_ingestion_api`, then invoke `d360_datastream_patch_ingestion_api` with the exact returned stream identity and `syncSchema: true`. These are the same API 67 facade operations called through vanilla `sf api request rest`, not Metadata API updates. The stream entered `PROCESSING`, and separate stream/DLO reads reached `ACTIVE` with seven persisted fields.
@@ -598,7 +603,6 @@ A separate existing-target check confirmed the same bounded update: exactly one 
 
 Persisted DLO reads can also include a last-refresh timestamp and a numeric record count. These are runtime observations, not schema changes or proof of a new ingestion run; in this check the count was zero. Compare the complete configuration separately from those observations and verify `ACTIVE` independently. This remains one existing-target Text-field addition in the source org—not proof of portable creation, completed deletion, populated-data behavior or cross-org deployment.
 
-{% capture update_api %}
 ### Standalone native API update: verified API 68
 
 The stream-owned restriction above does not describe every DLO. A separate PATCH on the **owned standalone test DLO** returned HTTP `200` after changing its label and adding one non-key Text field. Save this exact body as `dlo-patch.json`:
@@ -626,6 +630,7 @@ This verifies only this standalone label change and Text-field addition at **API
 
 ## Delete
 
+{% capture delete_api %}
 For the new owned ingestion chain, one owning-stream delete with `shouldDeleteDataLakeObject: true` was accepted, but separate stream and DLO reads still showed `DELETING` at the last check. The connection remained `CONNECTED` and its schema in use. This is not completed cleanup or a verified full lifecycle; do not repeat the delete or remove generated objects yourself while it is pending.
 
 **October 30 readback limit:** the retained owned source connection and schema were still readable, but the earlier stream had been `DELETING` and all stream-control inventories in this check were empty. This does not independently correlate a settled stream/DLO lifecycle or establish absence. The result remains **unknown**, not unsupported, and adds no new creation, update or completed-deletion proof. Do not use an empty inventory to justify recreating the chain or deleting its connection.
@@ -638,7 +643,6 @@ The historical Metadata definition-delete route below was refused; it is separat
 
 That is a refusal, not a successful delete. Check the actual state after a failure; do not try an assumed instance-delete workaround. This does not mean every possible DLO deletion route is unsupported.
 
-{% capture delete_api %}
 ### Standalone native API delete: verified API 68
 
 **Destructive: use only an explicitly authorized object.** The November 2 experiment deleted only the fresh standalone test DLO created by that experiment, not the original retrieval fixture or any shared connection/stream. Immediately before deletion, org identity and the exact ID/name were rechecked against the original create ownership receipts and a fresh GET. A read-only dependency check returned `dependencies=[]`, `totalSize=0`; this check used the API 67 `d360_dlo_dependencies_list` facade and is not direct API 68 CRUD evidence. Empty dependencies alone are not deletion authorization. Stop if identity, ownership, permission or dependency state is unresolved; no cascade was requested.

@@ -225,20 +225,32 @@ Choose a real restricted path outside metadata source. This writes API response 
 
 ## Create
 
+{% capture create_evidence %}
 Creating membership rows is not qualified here. A segment's rules and processing determine its audience; this page supplies only reads.
 
+{% endcapture %}
 {% include operation-tabs.html id="members-create" label="Create" cli_state="unknown" cli_reason="No membership-row creation workflow is supplied." api_state="unknown" api_reason="Membership-row creation is not qualified here." %}
+
+{{ create_evidence | markdownify }}
 
 ## Update
 
+{% capture update_evidence %}
 Updating membership rows, refreshing or publishing through this resource is not qualified here.
 
+{% endcapture %}
 {% include operation-tabs.html id="members-update" label="Update" cli_state="unknown" cli_reason="No membership-row update workflow is supplied." api_state="unknown" api_reason="Membership updates, refresh and publication are not qualified here." %}
+
+{{ update_evidence | markdownify }}
 
 ## Delete
 
+{% capture delete_evidence %}
 Deleting membership rows is not qualified here. Do not delete generated membership tables as a substitute.
 
+{% endcapture %}
 {% include operation-tabs.html id="members-delete" label="Delete" cli_state="unknown" cli_reason="No membership-row deletion workflow is supplied." api_state="unknown" api_reason="Membership-row deletion is not qualified here; do not delete generated tables." %}
+
+{{ delete_evidence | markdownify }}
 
 > Official reference: [Segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).

@@ -220,9 +220,9 @@ Expect `changed: true` for the label change. An identical repeat can report `Unc
 
 ## Delete
 
+{% capture delete_api %}
 Do not delete shared unified DMOs or membership tables as extra cleanup. Previously downloaded source files remain local.
 
-{% capture delete_api %}
 ### Delete the live segment and check its definition
 
 For the owned segment, save `segment-delete.json`:

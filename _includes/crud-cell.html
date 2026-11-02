@@ -3,7 +3,9 @@
 {%- if capability.status == 'yes' or capability.status == 'partial' -%}
   <div>{{ capability.status | capitalize }}</div>
   {%- for method in capability.methods %}
-  <img src="{{ '/assets/icons/' | append: method | append: '.svg' | relative_url }}" width="20" height="20" alt="{{ method | upcase }}" title="{{ method | upcase }}">
+  {%- assign method_label = method | upcase -%}
+  {%- if method == 'plugin' -%}{%- assign method_label = 'sf-plugin-data' -%}{%- endif %}
+  <img src="{{ '/assets/icons/' | append: method | append: '.svg' | relative_url }}" width="20" height="20" alt="{{ method_label }}" title="{{ method_label }}">
   {%- endfor -%}
 {%- elsif capability.status == 'no' -%}
   <abbr title="Proven unavailable in the explicit scope">No</abbr>

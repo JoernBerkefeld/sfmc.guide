@@ -95,8 +95,12 @@ This updates stored template content, not an instantiated graph. Retrieve and co
 
 ## Delete
 
+{% capture delete_evidence %}
 Removing a stored Data Graph template has been demonstrated, but an exact reproducible standard CLI delete invocation is not established here. No command is offered. Template deletion would not by itself prove runtime graph or supporting-artifact cleanup.
 
+{% endcapture %}
 {% include operation-tabs.html id="kit-template-delete" label="Delete" cli_state="unknown" cli_reason="Deletion was demonstrated, but no exact reproducible standard CLI invocation is established here." api_state="unknown" api_reason="No API template-deletion workflow is supplied." %}
+
+{{ delete_evidence | markdownify }}
 
 For the shared distinction between metadata transport and runtime installation, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).

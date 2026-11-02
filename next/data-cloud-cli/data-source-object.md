@@ -56,18 +56,18 @@ This tells you which source record the configuration refers to. It does not incl
 
 ## Create
 
-Creation has **not been verified**.
-
 {% include operation-tabs.html id="source-object-create" label="Create" cli_state="unknown" cli_reason="Source-object creation has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API source-object creation workflow is supplied." %}
+
+Creation has **not been verified**.
 
 ## Update
 
-Updates have **not been verified**.
-
 {% include operation-tabs.html id="source-object-update" label="Update" cli_state="unknown" cli_reason="Source-object updates have not been verified; no workflow is supplied." api_state="unknown" api_reason="No API source-object update workflow is supplied." %}
+
+Updates have **not been verified**.
 
 ## Delete
 
-Deletion has **not been verified**.
-
 {% include operation-tabs.html id="source-object-delete" label="Delete" cli_state="unknown" cli_reason="Source-object deletion has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API source-object deletion workflow is supplied." %}
+
+Deletion has **not been verified**.

@@ -1008,8 +1008,8 @@
     "description": "Salesforce CLI workflows and verified operation limits for Data stream configuration: DataStreamDefinition."
   },
   {
-    "name": "DLO-to-DMO mapping",
-    "url": "/next/data-cloud-cli/object-source-target-map/",
+    "name": "DLO-DMO-mapping",
+    "url": "/next/data-cloud-cli/dlo-dmo-mapping/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for DLO-to-DMO mapping: ObjectSourceTargetMap."

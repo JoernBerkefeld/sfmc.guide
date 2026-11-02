@@ -122,9 +122,9 @@ Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, 
 
 ## Delete
 
+{% capture delete_cli %}
 **Deleting this relationship also removes its owned, sole-use lookup field.** Do not apply this to a shared lookup.
 
-{% capture delete_cli %}
 Use the generated empty `package.xml` from the DMO section. The integration supplies `relationship-delete.xml`:
 
 ```xml
