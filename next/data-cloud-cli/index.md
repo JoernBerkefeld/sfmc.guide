@@ -16,7 +16,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
-    scope: 'Standard CLI retrieval verified with requested API 65–68 on one test fixture: nine identical XML files, complete saved samples on the DLO page, no disk manifest; no effective-version echo or cross-org proof. Unchanged retrieved schema failed four standard CREATE attempts at requested API 65–68; not universal unsupported CREATE. Owned ingestion-chain observations do not qualify general writes or completed cleanup.'
+    scope: 'Standard Metadata retrieval worked at requested API65–68; full-schema redeploy hit primary-key/qualifier failures. Native API61–68 standalone CRUD succeeded separately; plugin guard and public acceptance remain API68/default. Portable JSON, auto POST/PATCH and explicit read-only preview; default delete has no prompt. Not ingestion, cascade or cross-org portability.'
   - path: next/data-cloud-cli/object-source-target-map.md
     label: Mappings
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: November 2, 2026, 10:54 (UTC+1).*
+*Last updated: November 2, 2026, 14:03 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -88,7 +88,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
 - **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
 - **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
-- **sf-plugin-data:** a disabled **Unknown** future option in these operation tabs. No plugin workflow is supplied by the tabs. Separately, the DLO page records one live API 68 wrapper definition retrieve with nine files identical to the standard snapshot; numeric API 65–68 pass-through tests do not establish live wrapper qualification across all four versions.
+- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. Other resource tabs remain Unknown: no plugin workflow is supplied by those tabs. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
@@ -100,11 +100,11 @@ CLI is selected first when available, otherwise API. When neither method has a w
 
 **November 2 DLO retrieval reconciliation:** retained standard CLI runs with requested API 65.0–68.0 each succeeded on the same source test fixture, saving one object and eight field XML files with identical bytes and parsed XML. The [DLO Retrieve section](/next/data-cloud-cli/data-lake-object/#retrieve) includes the complete saved fixture files and one command example. No disk manifest was generated, and the CLI response did not independently report an effective API version. This adds retrieval evidence only: CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged.
 
-**November 2 DLO CREATE reconciliation:** four real standard deployments of the unchanged retrieved schema under independently absent synthetic names failed at requested API 65–68, with the same generic internal error signature at `Id__c` (combined object line 54, column 13). Independent post-failure Metadata reads could not find each name. The DLO CLI Create tab is blocked for this tested schema; overall CREATE remains unknown, not universally unsupported. Distinct earlier API ingestion-chain observations are retained, not promoted to a general creation workflow. No other resource was reverified.
+**November 2 DLO CREATE reconciliation:** four real standard deployments of the unchanged retrieved schema under independently absent synthetic names failed at requested API 65–68, with the same generic internal error signature at `Id__c` (combined object line 54, column 13). Independent post-failure Metadata reads could not find each name. The DLO CLI Create tab is blocked for this tested schema; this did not establish universally unsupported CREATE. The separate native API68 standalone plugin workflow now qualifies bounded creation. Distinct earlier API ingestion-chain observations are retained, not promoted to a general creation workflow. No other resource was reverified.
 
 {% include crud-legend.html %}
 
-The ratings cover usable workflows supplied in this guide, not every observed operation. Observations remain background evidence: DMO creation and DLO writes have no supplied recipe, while some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
+The ratings cover usable workflows supplied in this guide, not every observed operation. Observations remain background evidence: DMO creation has no supplied recipe; DLO native API68 standalone definition workflows are supplied separately, while some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
 
 <table class="crud-overview">
   <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Retrieve</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified scope / limits</th></tr></thead>

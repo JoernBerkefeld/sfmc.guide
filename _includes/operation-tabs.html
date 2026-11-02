@@ -1,6 +1,7 @@
 {% comment %}
-Contract: id (unique page-local slug), label, cli/api_state (available|blocked|unknown),
-cli/api_reason (plain text), cli/api_body (captured Markdown for available methods only).
+Contract: id (unique page-local slug), label, cli/api/plugin_state (available|blocked|unknown),
+cli/api/plugin_reason (plain text), cli/api/plugin_body (captured Markdown for available methods only).
+Plugin state defaults to unknown; only explicitly qualified pages enable its panel.
 Keep shared safety and detailed disabled-method evidence outside this include.
 Use unique explicit IDs for new body headings; retain existing heading IDs for legacy links.
 {% endcomment %}
@@ -12,6 +13,7 @@ Use unique explicit IDs for new body headings; retain existing heading IDs for l
       {% assign name = 'sf-plugin-data' %}
       {% if method == 'cli' %}{% assign state = include.cli_state %}{% assign name = 'CLI' %}{% endif %}
       {% if method == 'api' %}{% assign state = include.api_state %}{% assign name = 'API' %}{% endif %}
+      {% if method == 'plugin' %}{% assign state = include.plugin_state | default: 'unknown' %}{% endif %}
       <button type="button" id="{{ include.id }}-tab-{{ method }}" data-method="{{ method }}" aria-describedby="{{ include.id }}-reason-{{ method }}"{% unless state == 'available' %} disabled{% endunless %}>
         {% if state == 'blocked' %}<svg class="operation-tabs__icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m4 4 8 8"/></svg>{% elsif state != 'available' %}<svg class="operation-tabs__icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M6 6a2 2 0 1 1 3 1.7L8 9M8 11v1"/></svg>{% endif %}
         {{ name }}<span class="visually-hidden"> — {% if state == 'available' %}Available{% elsif state == 'blocked' %}Blocked{% else %}Unknown{% endif %}</span>
@@ -21,7 +23,7 @@ Use unique explicit IDs for new body headings; retain existing heading IDs for l
   <ul class="operation-tabs__reasons">
     <li id="{{ include.id }}-reason-cli"><strong>CLI — {{ include.cli_state | capitalize }}:</strong> {{ include.cli_reason | escape }}</li>
     <li id="{{ include.id }}-reason-api"><strong>API — {{ include.api_state | capitalize }}:</strong> {{ include.api_reason | escape }}</li>
-    <li id="{{ include.id }}-reason-plugin"><strong>sf-plugin-data — Unknown:</strong> Not implemented in this guide; no workflow is supplied.</li>
+    <li id="{{ include.id }}-reason-plugin"><strong>sf-plugin-data — {{ include.plugin_state | default: 'unknown' | capitalize }}:</strong> {{ include.plugin_reason | default: 'Not implemented in this guide; no workflow is supplied.' | escape }}</li>
   </ul>
   {% if include.cli_state == 'available' %}
   <section id="{{ include.id }}-panel-cli" data-method-panel="cli" aria-label="{{ include.label | escape }} — CLI">
@@ -33,6 +35,12 @@ Use unique explicit IDs for new body headings; retain existing heading IDs for l
   <section id="{{ include.id }}-panel-api" data-method-panel="api" aria-label="{{ include.label | escape }} — API">
     <h3 class="operation-tabs__fallback-label">API</h3>
     {{ include.api_body | markdownify }}
+  </section>
+  {% endif %}
+  {% if include.plugin_state == 'available' %}
+  <section id="{{ include.id }}-panel-plugin" data-method-panel="plugin" aria-label="{{ include.label | escape }} — sf-plugin-data">
+    <h3 class="operation-tabs__fallback-label">sf-plugin-data</h3>
+    {{ include.plugin_body | markdownify }}
   </section>
   {% endif %}
 </div>
