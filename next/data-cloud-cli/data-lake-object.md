@@ -30,6 +30,15 @@ crud:
 
 A DLO holds data brought in from a source, before it is mapped into the data model. It uses `__dll`, not `__dlm`. Its XML describes the lake object, not the whole connection that brings data into it. Bringing data in is **ingestion**; a **connector** supplies the connection, a **stream** controls the incoming data flow, and a **transform** reshapes data.
 
+**API family:** The native JSON route `/services/data/vXX.0/ssot/data-lake-objects`
+(and its item routes) belongs to the **Data 360 Connect REST API**, as listed in the
+[Salesforce reference](https://developer.salesforce.com/docs/data/connectapi/references/spec).
+The native API and plugin examples use this family through authenticated
+`sf api request rest`; they do **not** use the SOAP-based Metadata API. The XML
+`sf project` workflows in the CLI sections use Metadata API instead. Calling either
+API through Salesforce CLI does not make it a dedicated out-of-the-box DLO command
+or broaden the operation/version qualification recorded below.
+
 {% include crud-summary.html %}
 
 {% capture retrieve_plugin %}
@@ -247,6 +256,9 @@ response contract for the other's.
 ## Retrieve
 
 {% capture retrieve_cli %}
+**Metadata API (XML):** `sf project` retrieves the `CustomObject` and `CustomField`
+definitions; this is separate from the native Connect REST JSON route.
+
 ```sh
 sf project retrieve start --metadata CustomObject:McpMappingProbe_20261027__dll --target-org SOURCE_ALIAS --api-version 68.0 --wait 5 --json
 ```

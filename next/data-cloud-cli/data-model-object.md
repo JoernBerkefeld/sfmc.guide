@@ -30,6 +30,16 @@ crud:
 
 A DMO is the model your data is mapped into, such as a customer or order. It uses the suffix `__dlm`. Salesforce CLI treats its definition as a `CustomObject`, with a separate XML file for each field.
 
+**API family:** The native JSON route `/services/data/vXX.0/ssot/data-model-objects`
+(and its item routes) belongs to the **Data 360 Connect REST API**, independently
+listed for DMOs in the
+[Salesforce reference](https://developer.salesforce.com/docs/data/connectapi/references/spec).
+The native API and plugin examples use this family through authenticated
+`sf api request rest`, not the SOAP-based Metadata API. The CLI sections' XML
+`sf project` workflows use Metadata API instead. Salesforce CLI is the authenticated
+request runner here, not a dedicated out-of-the-box DMO CRUD command; endpoint
+attribution does not expand the tested versions or plugin qualification below.
+
 {% include crud-summary.html %}
 
 ## Native API contracts and completed version comparison
@@ -87,6 +97,9 @@ The completed matrix includes same-version Metadata readbacks of each owned fixt
 ## Retrieve
 
 {% capture retrieve_cli %}
+**Metadata API (XML):** `sf project` retrieves the `CustomObject` and `CustomField`
+definitions; this is separate from the native Connect REST JSON route.
+
 ```sh
 sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
 ```
