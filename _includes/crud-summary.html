@@ -8,4 +8,24 @@
     <td>{% include crud-cell.html capability=page.crud.delete %}</td>
   </tr></tbody>
 </table>
+{% assign operations = 'retrieve,create,update,delete' | split: ',' %}
+{% assign has_method_statuses = false %}
+{% for operation in operations %}{% if page.crud[operation].method_statuses %}{% assign has_method_statuses = true %}{% endif %}{% endfor %}
+{% if has_method_statuses %}
+<table class="crud-methods">
+  <caption>Coverage by method for {{ page.title | escape }}</caption>
+  <thead><tr><th scope="col">Method</th>{% for operation in operations %}<th scope="col">{{ operation | capitalize }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% assign methods = 'cli,api,plugin' | split: ',' %}
+  {% for method in methods %}
+    <tr><th scope="row">{% if method == 'plugin' %}sf-plugin-data{% else %}{{ method | upcase }}{% endif %}</th>
+    {% for operation in operations %}
+      {% assign method_status = page.crud[operation].method_statuses[method] | default: 'unknown' %}
+      <td>{% include crud-cell.html status=method_status %}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% include crud-legend.html %}

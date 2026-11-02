@@ -12,13 +12,13 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "partial", methods: [cli, api, plugin] }
-  create: { status: "partial", methods: [cli, api, plugin] }
-  update: { status: "partial", methods: [cli, api, plugin] }
-  delete: { status: "partial", methods: [api, plugin] }
+  retrieve: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
+  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
 ---
 
-*Last updated: November 2, 2026, 20:17 (UTC+1).*
+*Last updated: November 3, 2026, 00:36 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -54,11 +54,23 @@ guards, read-only mixed preview, reverse-order mixed create, canonical retrieval
 zero-write unchanged redeployment, one additive field-pair update and guarded
 non-last deletion. Last-mapping preview and execution were blocked without writes.
 This qualifies only the operation-specific scopes below, not general CRUD,
-arbitrary schemas, cross-org portability or field-pair removal. All four ratings
-remain partial because these limitations still apply.
+arbitrary schemas, cross-org portability or field-pair removal. Retrieve and Create
+are Yes for the supplied definition and names-only custom-mapping workflows.
+Plugin Retrieve Yes qualifies exact `mapping:Name` selection only. Current type-only
+`sf data360 retrieve -m mapping` and bare `sf data360 retrieve` inventory reads failed
+with `NATIVE_INVENTORY_UNCONFIRMED` and produced zero artifacts; their fix has not yet
+passed acceptance. This is an unresolved inventory failure, not a successful guard.
+The current Update rating remains Partial: CLI label-only changes, native API68
+one-pair and qualified two-pair additions, or plugin exactly-one-pair additions.
+Delete remains Partial for the qualified non-last case. CLI deletion
+is Unknown in the coverage table because no usable standalone workflow is supplied;
+the blocked tab describes the observed restriction, not universal unavailability.
+These are the current evidenced grades, not a prediction of further qualification.
+This presentation reconciliation records no new live-org test.
 
 **Native API evidence:** separate API68 experiments proved mapping create and GET,
-a selector-free additive field-pair PATCH, and conditional non-last deletion. They
+selector-free additive field-pair PATCHes including one qualified two-pair request,
+and conditional non-last deletion. They
 are distinct from the installed plugin acceptance above and do not qualify API61–67 mapping writes. Default/`auto` selects
 API68; explicit numeric `>=61.0` admission is not a live-tested version range.
 Mapping DELETE is currently restricted by the implementation to API68.
@@ -109,8 +121,14 @@ the retrieved file unchanged also passed with zero writes. Select that file with
 `--source-dir ./project/data360/mapping/CustomerMapping.mapping-meta.json` **instead
 of** `-m`; do not combine both selection modes. `--overwrite` permits replacing
 changed local output only.
+
+This passed **exact-selection retrieval**, not inventory discovery. Current
+`sf data360 retrieve -m mapping` and bare `sf data360 retrieve` attempts failed with
+`NATIVE_INVENTORY_UNCONFIRMED`, producing zero artifacts. Their separate fix is not
+yet acceptance-qualified. Do not treat these failures as successful read-only guards
+or infer that all mapping reads work from the exact retrieval above.
 {% endcapture %}
-{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="available" api_reason="Independent native API68 mapping GET verified." api_body=retrieve_api plugin_state="available" plugin_reason="Installed API68 canonical JSON retrieval and unchanged zero-write redeployment passed." plugin_body=retrieve_plugin %}
+{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="available" api_reason="Independent native API68 mapping GET verified." api_body=retrieve_api plugin_state="available" plugin_reason="Exact mapping:Name API68 canonical JSON retrieval and unchanged redeployment passed; type-only and bare inventory reads currently fail NATIVE_INVENTORY_UNCONFIRMED with zero artifacts." plugin_body=retrieve_plugin %}
 
 ## Create
 
@@ -168,7 +186,11 @@ sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 
 
 Installed API68/default mixed creation passed with reverse-order selectors;
 execution still created DLO → DMO → Mapping. This is a bounded fresh-fixture result,
-not arbitrary-schema or cross-org lifecycle qualification.
+not arbitrary-schema or cross-org lifecycle qualification. Separate installed
+API68 creation against existing compatible parents also passed with nonidentical
+field names: `Alpha__c` → `Label__c`, alongside `Id__c` → `Id__c`. One POST returned
+`201`; independent GET confirmed `ACTIVE` and all six pairs, including four generated
+pairs. Matching source and target field names are not a prerequisite of this result.
 Deploy/delete require exact `type:ApiName` selections, not bare types or wildcards.
 Mixed deploy orders DLO → DMO → Mapping regardless of selector order and must
 independently verify the requested parent definitions before mapping access.
@@ -216,6 +238,15 @@ confirmed the addition and preserved prior pairs/selectors. Replaying the same A
 addition was idempotent, not proof that the plugin performs zero writes. Attempts
 to replace an existing target pair could return `200` while ignoring the request;
 adding another target for an existing source was additive, not replacement.
+
+A separate native API68 request added **two independent Text pairs in one PATCH**:
+`Beta__c` → `Beta__c` and `Gamma__c` → `Gamma__c`. HTTP `200` was followed by independent
+`ACTIVE` readback: six pairs became eight, each new pair appeared exactly once, and
+all six prior pair objects and selectors were preserved. Both DLO representations
+were unchanged; the DMO schema, keys, identity and other properties were preserved,
+allowing the expected per-field `isMapped` flags. This qualifies that two-pair
+request, not arbitrary batch sizes, replacement or removal. The plugin still rejects
+multi-pair additions; its separate limit is described below.
 {% endcapture %}
 
 {% capture update_plugin %}
@@ -237,9 +268,23 @@ label were unchanged; the DMO's derived `Beta__c.isMapped: true` flag appeared a
 expected, so the entire raw DMO was **not** unchanged across this update.
 Unchanged redeployment both before and after the addition passed with zero writes
 after fresh reads. Saved source selectors are never replayed as target IDs.
+
+Separate installed API68 checks confirmed the distinction from the native batch:
+adding `Beta__c` and `Gamma__c` together was refused with
+`UNSUPPORTED_MAPPING_MULTI_PAIR_UPDATE`, zero actual writes and an independently
+unchanged mapping. After the native two-pair addition, deploying the complete
+canonical definition was unchanged with zero writes.
+
+A compatible **Number** pair, `Count__c` → `Count__c`, then passed as a single
+plugin addition: one names-only PATCH `200`, independent `ACTIVE` readback from eight
+to nine pairs, and preservation of all eight prior pair objects/selectors. Parent
+definitions were preserved with only expected DMO `isMapped` flag changes allowed.
+Repeating that deployment was unchanged with zero writes. This qualifies one
+compatible Number addition, not every data type, Number-based creation or plugin
+multi-pair updates.
 {% endcapture %}
 
-{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="available" api_reason="Native API68 selector-free single-pair addition only; not replacement." api_body=update_api plugin_state="available" plugin_reason="Installed API68 selector-free single-pair addition and zero-write unchanged redeployment passed; not removal or replacement." plugin_body=update_plugin %}
+{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="available" api_reason="Native API68 selector-free one-pair and qualified two-independent-Text-pair additions passed; not arbitrary batch sizes, replacement or removal." api_body=update_api plugin_state="available" plugin_reason="Installed API68 exactly-one-pair Text and compatible Number additions and zero-write repeats passed; multi-pair addition refused without writes, not removal or replacement." plugin_body=update_plugin %}
 
 ### Individual field-pair removal: separate API67 facade evidence
 

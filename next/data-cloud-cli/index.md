@@ -20,7 +20,7 @@ crud_rows:
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Exact standard API 65 mapping XML retrieval independently reverified in one source org; no semantic key/qualifier, prerequisite or cross-org proof. Existing bounded writes: compatible objects and label-only update; standalone deletion is not established.'
+    scope: 'Exact standard API 65 mapping XML retrieval independently reverified in one source org; no semantic key/qualifier, prerequisite or cross-org proof. Compatible-object creation; CLI label-only update; native API68 one-pair and qualified two-independent-Text-pair additions; plugin exactly-one-pair Text/compatible Number additions with zero-write repeats and multi-add refusal. Plugin retrieval qualifies exact selections; type-only/bare inventory reads currently fail NATIVE_INVENTORY_UNCONFIRMED with zero artifacts; guarded non-last API68 deletion with a distinct-DLO survivor to the same DMO. Last-mapping deletion is blocked; not general retargeting, pair replacement or cross-org qualification.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: November 2, 2026, 14:03 (UTC+1).*
+*Last updated: November 3, 2026, 00:36 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -88,7 +88,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
 - **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
 - **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
-- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. Other resource tabs remain Unknown: no plugin workflow is supplied by those tabs. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
+- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. Other resource plugin tabs remain Unknown. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
@@ -104,7 +104,7 @@ CLI is selected first when available, otherwise API. When neither method has a w
 
 {% include crud-legend.html %}
 
-The ratings cover usable workflows supplied in this guide, not every observed operation. Observations remain background evidence: DMO creation has no supplied recipe; DLO native API68 standalone definition workflows are supplied separately, while some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
+The ratings cover usable workflows supplied in this guide, not every observed operation. DMO creation and DLO native API68 standalone definition workflows are supplied on their resource pages within their stated scopes; other observations remain background evidence. Some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
 
 <table class="crud-overview">
   <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Retrieve</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified scope / limits</th></tr></thead>
