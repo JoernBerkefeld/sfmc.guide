@@ -16,7 +16,7 @@ crud:
   delete: { status: "unknown", methods: [] }
 ---
 
-*Last updated: October 30, 2026, 15:50 (UTC+1).*
+*Last updated: November 2, 2026, 10:54 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -36,28 +36,269 @@ A DLO holds data brought in from a source, before it is mapped into the data mod
 
 {% capture retrieve_cli %}
 ```sh
-sf project retrieve start --metadata CustomObject:CustomerSource__dll --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata CustomObject:McpMappingProbe_20261027__dll --target-org SOURCE_ALIAS --api-version 68.0 --wait 5 --json
 ```
 
-This writes `force-app/main/default/objects/CustomerSource__dll/CustomerSource__dll.object-meta.xml` and the individual files under `objects/CustomerSource__dll/fields/`.
+Replace `SOURCE_ALIAS` with your authenticated source alias and the fixture name with your existing DLO's exact metadata name. Run from the prepared Salesforce project described in the overview; retrieval can overwrite local files.
+
+**Verified requested API 65–68 on test fixture:** on November 2, 2026, four sequential standard Salesforce CLI retrieves of `McpMappingProbe_20261027__dll` in one source org each exited `0`, with `success: true` and `status: Succeeded`. Every run saved nine XML components: one object and eight fields. All nine corresponding files were **byte-for-byte identical**, and parsed XML comparisons also agreed across 65.0, 66.0, 67.0 and 68.0. The explicit requested versions are recorded in the commands; the CLI JSON did **not independently echo an effective API version**.
+
+**Actual differences:** job IDs, response `package.xml` timestamps and absolute local file paths varied. No `package.xml` was emitted to disk. The prepared `sfdx-project.json` differed by configured version; it was an input, not a retrieved component. There were no saved-component differences by version, so the command and sample files are shown only once.
+
+The response identifies the object as `type: CustomObject` and `fullName: McpMappingProbe_20261027__dll` and lists its field files separately. Keep all retrieved attributes, including primary-index and key-qualifier settings. This is definition retrieval, not connector credentials, the whole ingestion setup, row data or runtime processing. It establishes neither cross-org deployability nor CREATE, UPDATE, DELETE or wrapper support.
+
+### Complete saved test-fixture files
+
+These are the complete XML contents saved by the API 68 requested-version run, not abbreviated illustrative XML. The same contents were saved by all four runs. They are a reader sample of this synthetic fixture, not a universal DLO template or a verified creation recipe.
+
+```text
+force-app/main/default/objects/McpMappingProbe_20261027__dll/
+  McpMappingProbe_20261027__dll.object-meta.xml
+  fields/
+    cdp_sys_SourceVersion__c.field-meta.xml
+    DataSource__c.field-meta.xml
+    DataSourceObject__c.field-meta.xml
+    Id__c.field-meta.xml
+    InternalOrganization__c.field-meta.xml
+    KQ_Id__c.field-meta.xml
+    Name__c.field-meta.xml
+    Note__c.field-meta.xml
+```
+
+<details markdown="1">
+<summary>McpMappingProbe_20261027__dll.object-meta.xml</summary>
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-  <label>Customer Source</label>
-  <mktDataLakeAttributes>
-    <!-- Retrieved DLO attributes omitted. -->
-  </mktDataLakeAttributes>
+    <label>MCP Mapping Probe 20261027</label>
+    <mktDataLakeAttributes>
+        <creationType>Custom</creationType>
+        <isEnabled>true</isEnabled>
+        <objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</objectCategory>
+    </mktDataLakeAttributes>
 </CustomObject>
 ```
 
-The response uses `type: CustomObject` and `fullName: CustomerSource__dll`. Keep the complete attributes and field definitions. Connector credentials and the rest of the ingestion setup are not included in this object export.
+</details>
+
+<details markdown="1">
+<summary>fields/cdp_sys_SourceVersion__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>cdp_sys_SourceVersion__c</fullName>
+    <label>cdp_sys_SourceVersion</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>System</definitionCreationType>
+        <externalName>cdp_sys_SourceVersion</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/DataSource__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DataSource__c</fullName>
+    <label>Data Source</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>System</definitionCreationType>
+        <externalName>DataSource</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/DataSourceObject__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DataSourceObject__c</fullName>
+    <label>Data Source Object</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>System</definitionCreationType>
+        <externalName>DataSourceObject</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/Id__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Id__c</fullName>
+    <label>Id</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>Custom</definitionCreationType>
+        <externalName>Id</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <primaryIndexOrder>1</primaryIndexOrder>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/InternalOrganization__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InternalOrganization__c</fullName>
+    <label>Internal Organization</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>System</definitionCreationType>
+        <externalName>InternalOrganization</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/KQ_Id__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>KQ_Id__c</fullName>
+    <label>KQ_Id</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>System</definitionCreationType>
+        <externalName>KQ_Id</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>KEY_QUALIFIER</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/Name__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Name__c</fullName>
+    <label>Name</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>Custom</definitionCreationType>
+        <externalName>Name</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
+
+<details markdown="1">
+<summary>fields/Note__c.field-meta.xml</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Note__c</fullName>
+    <label>Note</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>Custom</definitionCreationType>
+        <externalName>Note</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+</details>
 
 {% endcapture %}
 {% include operation-tabs.html id="dlo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the lake object and fields, not credentials or the whole ingestion setup." cli_body=retrieve_cli api_state="unknown" api_reason="No API retrieval workflow is supplied here." %}
 
+**Separate wrapper readback (November 2, 2026):** the public `sf-plugin-data` source CLI entry point retrieved this same fixture with requested API `68.0`, selector `dlo:McpMappingProbe_20261027__dll` and an isolated output directory. It exited `0`, reported `success` / `retrieved`, and had empty diagnostic errors, warnings and stderr. Its nine XML files used the same standard decomposed paths and were byte-for-byte identical to the standard API 68 snapshot: zero missing, extra or different files. This is definition-only retrieval, not portable deployment, ID resolution, row export or operational ingestion. Numeric API 65–68 pass-through is implemented and covered by implementation tests, but **only API 68 was live-verified for this wrapper**. The earlier API 65 wrapper refusal predates that implementation change; it is historical, not the current result. This separate observation does not enable the guide's plugin tab or change any CREATE qualification.
+
 ## Create
 
-Creating a DLO through Metadata API has **not been verified**. Do not remove primary-key or system qualifier fields to make a deployment pass.
+### Standard Metadata CREATE comparison: requested API 65–68
+
+**The unchanged retrieved test schema failed standard creation at all four requested versions.** On November 2, 2026, four sequential standard `sf project deploy start` attempts used four distinct synthetic names independently confirmed absent in the test target org before deployment. These were genuine CREATE attempts, not updates: only the object directory and `.object-meta.xml` filename were renamed from the retrieved fixture; all nine XML file contents remained byte-for-byte identical to the complete samples above. The existing `McpMappingProbe_20261027__dll` was not deployed or changed.
+
+One representative **historical failed deployment command—not a successful creation recipe**:
+
+```sh
+sf project deploy start --metadata CustomObject:McpDloCreate68_XJ0GCE__dll --target-org TARGET_ALIAS --api-version 68.0 --test-level NoTestRun --wait 5 --json
+```
+
+This is an actual deployment, not a dry run. Each requested version (65.0, 66.0, 67.0 and 68.0) returned CLI exit `1`, terminal `Failed`, `done: true`, `success: false`, `checkOnly: false` and `rollbackOnError: true`. All reported a `CustomField` failure at `<testname>.Id__c`, line `54`, column `13`, in the deployment's combined object file. The generic internal error had the same signature `(-1644920076)` in every run. This location identifies the reported primary-field failure; it does **not establish its underlying cause**.
+
+**Actual differences by run:** the synthetic object names, job IDs, timestamps and individual support error IDs differed. The shared error signature, field location and failed outcome did not differ by requested version. The pins are command evidence, not an independently established effective server version.
+
+Independent exact-name Metadata retrieves after each failure reported that the named object could not be found. No retained new metadata DLO was observed for those four names; this is not a global runtime inventory or universal rollback guarantee. No fields were stripped, no stream was provisioned and no deployment was retried. This bounded result does **not mean all DLO CREATE is unsupported**, and does not qualify an operational ingestion chain. Do not remove primary-key or system qualifier fields to make a deployment pass.
+
+### Distinct API ingestion-chain observation
 
 We did create a new, owned Ingestion API connection without external credentials, add a one-event schema with two Text fields, and create its stream and DLO. This used the **API 67 `/ssot/mcp/execute` facade through vanilla `sf api request rest`**, with operations `d360_connection_create_ingestion_api`, `d360_connection_schema_put_ingestion_api` and `d360_datastream_create_ingestion_api`—not native CLI DLO commands or native CRUD parity.
 
@@ -73,7 +314,7 @@ This is a **documented contract, not a qualified safe public CREATE workflow**. 
 
 Salesforce's [Ingestion API stream setup guide](https://developer.salesforce.com/docs/data/data-cloud-int/guide/c360-a-create-ingestion-data-stream.md) separately describes selecting an existing connector and uploaded schema, choosing a primary key/category and configuring refresh mode. That UI guidance does not qualify a CLI/API creation recipe. The unknown CREATE rating therefore remains unchanged.
 
-{% include operation-tabs.html id="dlo-create" label="Create" cli_state="unknown" cli_reason="DLO creation through Metadata API has not been verified." api_state="unknown" api_reason="The owned ingestion-chain result is observational, not a supplied portable creation recipe." %}
+{% include operation-tabs.html id="dlo-create" label="Create" cli_state="blocked" cli_reason="The unchanged retrieved test schema failed standard CREATE at requested API 65–68; this is fixture-specific, not universal unsupported CREATE." api_state="unknown" api_reason="The owned ingestion-chain result is observational, not a supplied portable creation recipe." %}
 
 ## Update
 

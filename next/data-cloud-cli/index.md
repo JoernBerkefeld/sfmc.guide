@@ -16,7 +16,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
-    scope: 'Owned ingestion-chain observation and existing-target Text-field schema sync; documented explicit-PK CREATE contract is not safe public CREATE qualification; October 30 empty stream controls remain unknown, not completed cleanup or cross-org proof.'
+    scope: 'Standard CLI retrieval verified with requested API 65–68 on one test fixture: nine identical XML files, complete saved samples on the DLO page, no disk manifest; no effective-version echo or cross-org proof. Unchanged retrieved schema failed four standard CREATE attempts at requested API 65–68; not universal unsupported CREATE. Owned ingestion-chain observations do not qualify general writes or completed cleanup.'
   - path: next/data-cloud-cli/object-source-target-map.md
     label: Mappings
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: October 30, 2026, 15:50 (UTC+1).*
+*Last updated: November 2, 2026, 10:54 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -88,7 +88,7 @@ The resource pages group complete workflows into independent operation tabs. **C
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
 - **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
 - **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
-- **sf-plugin-data:** a disabled **Unknown** future option throughout this guide. No plugin workflow or support claim is supplied by these tabs.
+- **sf-plugin-data:** a disabled **Unknown** future option in these operation tabs. No plugin workflow is supplied by the tabs. Separately, the DLO page records one live API 68 wrapper definition retrieve with nine files identical to the standard snapshot; numeric API 65–68 pass-through tests do not establish live wrapper qualification across all four versions.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
@@ -97,6 +97,10 @@ CLI is selected first when available, otherwise API. When neither method has a w
 **October 30 documentation reconciliation:** the DLO/stream pages now distinguish documented ingestion CREATE inputs from qualified workflows and retain the inconclusive stream readback as unknown. Segment guidance adds the source-only stable-owner comparison and native/MCP DBT rule differences. The native stream reference now adds documented POST availability, the ingestion primary-key-only field-array rule and the native/facade list-filter distinction; it supplies no qualified ingestion CREATE recipe. CRUD ratings are unchanged. Synchronized overview, Segment, calculated-insight, Graph and Identity Resolution timestamps do not represent new live tests of those resources.
 
 **October 30 Segment predicate reconciliation:** retained native API 65 evidence now qualifies one source-only existing-owner forward addition of `AND <same selected primary field> IS NOT NULL` after `WHERE 1 = 0`. Independent ACTIVE runtime and Metadata reads agreed on the desired SQL and preserved settings, identities and bindings. This is not general SQL, cross-org, membership or computation proof. The Segment API update method was already Partial; no CRUD status or method is promoted. The synchronized timestamps record this documentation reconciliation, not new live tests of the other resources.
+
+**November 2 DLO retrieval reconciliation:** retained standard CLI runs with requested API 65.0–68.0 each succeeded on the same source test fixture, saving one object and eight field XML files with identical bytes and parsed XML. The [DLO Retrieve section](/next/data-cloud-cli/data-lake-object/#retrieve) includes the complete saved fixture files and one command example. No disk manifest was generated, and the CLI response did not independently report an effective API version. This adds retrieval evidence only: CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged.
+
+**November 2 DLO CREATE reconciliation:** four real standard deployments of the unchanged retrieved schema under independently absent synthetic names failed at requested API 65–68, with the same generic internal error signature at `Id__c` (combined object line 54, column 13). Independent post-failure Metadata reads could not find each name. The DLO CLI Create tab is blocked for this tested schema; overall CREATE remains unknown, not universally unsupported. Distinct earlier API ingestion-chain observations are retained, not promoted to a general creation workflow. No other resource was reverified.
 
 {% include crud-legend.html %}
 
