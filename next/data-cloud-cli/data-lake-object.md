@@ -60,7 +60,7 @@ sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 
 ```
 
 An existing exact name selects PATCH of the resolved target ID. Only label changes
-and ordinary field additions are admitted. Preview reports `outcome: "update"`;
+and nonprimary Text-field additions are admitted. Preview reports `outcome: "update"`;
 execution reports `outcome: "updated"`, `mutation: "confirmed-updated"`. Existing
 field/primary-key edits stop. No schema removal or ingestion is qualified.
 {% endcapture %}

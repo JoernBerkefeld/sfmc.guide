@@ -10,13 +10,13 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli] }
-  create: { status: "unknown", methods: [] }
+  retrieve: { status: "yes", methods: [cli, api] }
+  create: { status: "partial", methods: [api] }
   update: { status: "partial", methods: [api] }
-  delete: { status: "unknown", methods: [] }
+  delete: { status: "partial", methods: [cli, api] }
 ---
 
-*Last updated: October 28, 2026, 19:23 (UTC+1).*
+*Last updated: November 2, 2026, 13:57 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -31,6 +31,58 @@ crud:
 A DMO is the model your data is mapped into, such as a customer or order. It uses the suffix `__dlm`. Salesforce CLI treats its definition as a `CustomObject`, with a separate XML file for each field.
 
 {% include crud-summary.html %}
+
+## Native API contracts and completed version comparison
+
+The [Salesforce Data 360 Connect API reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) supplies the documented contract. The completed November 2, 2026 comparison independently tested native DMO CRUD sequentially at API `60.0`–`67.0` on source org `mcnext-sdo` (`00Daj000010xkZNEAY`). **API `61.0`–`67.0` each returned POST `201`, GET `200`, label PATCH `200`, additive-field PATCH `200` and DELETE `204`.** API `61.0` is the lowest live-tested successful version for each operation in this org, not a universal minimum or a plugin guard. API `68.0` DMO CRUD was not tested in this matrix.
+
+API `60.0` returned four HTTP `404` responses (`NOT_FOUND`, `The requested resource does not exist`): POST, GET, PATCH and DELETE. The item operations targeted a verified-existing owned DMO provisioned at API `61.0`; that fallback fixture was also cleaned up via `61.0`. Its provisioning and cleanup are not API `60.0` successes.
+
+Each successful version used its own fresh owned fixture, with no semantic request changes beyond route version, unique name and labels. POST and GET returned direct DMO objects with a `fields` array (not the DLO array wrapper). PATCH returned a direct object containing the **pre-update state**: the old label, or six fields without the added field. Separate same-version GET and Metadata retrieval, not that echo, confirmed persistence.
+
+Creation produced six fields: `Id__c`, `Note__c`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` and `KQ_Id__c`. Adding `UpdateNote` produced seven. No DLO source-version field was generated. Label PATCH changed only object XML `label`, `labelOverride` and `masterLabel`; additive PATCH added only `fields/UpdateNote__c.field-meta.xml`, leaving existing object and field XML byte-identical. Primary-index order `1` and key-qualifier attributes survived.
+
+All matrix fixtures, including the API `60.0` fallback, were independently confirmed absent after deletion by Connect GET `404` and explicit Metadata absence. Dependency checks were deliberately scoped: the API `67.0` mapping facade returned the exact-target `Object Source Target Map not found` error, and native relationship GET at `67.0` returned HTTP `204` with no relationships. These are not exhaustive dependency discovery. The default dataspace check used read-only API `68.0`; neither auxiliary version qualifies target-version CRUD.
+
+These results qualify only fresh, empty custom `Other`/default DMOs created without mappings, relationships or ingestion. They do not establish populated-object safety, ingestion/queryable storage, cross-org portability, Metadata deployment, key changes, arbitrary schemas or plugin implementation/acceptance. The historical seven-to-eight-field experiment below is separate; its retained fixture is not part of this matrix's cleanup claim.
+
+### Routes and target identity
+
+Prefix the following routes with `/services/data/v68.0/ssot` when investigating API `68.0`:
+
+- `GET /data-model-objects` lists DMOs.
+- `POST /data-model-objects` creates a custom DMO. The reference documents HTTP `200`; the historical API `65.0` trial below observed `201`. Keep those distinct rather than assuming one universal success code.
+- `GET /data-model-objects/{dataModelObjectName}` reads one DMO as a direct object, not the DLO array wrapper.
+- `PATCH /data-model-objects/{dataModelObjectName}` updates a custom DMO. The reference warns that its HTTP `200` response can contain the **pre-update state**. Use a separate GET to confirm persistence; do not repeat PATCH merely because its response looks old.
+- `DELETE /data-model-objects/{dataModelObjectName}` documents HTTP `204`. The matrix below qualifies deletion of its fresh owned empty fixtures only, not permission to delete a business object.
+
+The item-path parameter is documented as the **developer name**, including `__dlm`, not a promise that a source-org record ID works in that path. The input schema has no body `id`. Bind names in the target org instead of replaying source IDs. GET `404` can also mean the caller cannot access the DMO: it is not, by itself, sufficient absence evidence for automatic creation. The reference marks these standalone operations available since API `61.0`; that is documented introduction, not a live-tested minimum version.
+
+Salesforce CLI authentication can be reused without implementing another login flow. This is a read-only request shape, not a result from this research:
+
+```sh
+sf api request rest /services/data/v68.0/ssot/data-model-objects/Customer__dlm --target-org SOURCE_ALIAS --method GET --include
+```
+
+### Input, output and generated fields
+
+Creation input uses `name`, `label`, `category`, `dataSpaceName` and `fields`. Field input uses `name`, `label`, `dataType` and `isPrimaryKey`, with properties such as `description` and `isDynamicLookup` where applicable. The documented create example sends an object name without `__dlm` and field names without `__c`; its output adds those suffixes. The exact acceptance of already-suffixed input remains a separate test, not a normalization rule inferred from the example.
+
+**Tested casing:** API `61.0`–`67.0` accepted input category `Other` and returned `OTHER`. The same runs accepted bare object and field input names and returned `__dlm` and `__c` suffixes. This does not qualify all category spellings, already-suffixed inputs or API `68.0`. `Engagement` additionally requires `eventDateTimeFieldName`; `recordModifiedFieldName` is another documented input. `dataSpaceName` defaults to `default` when omitted and is not the DLO property's `dataspaceInfo` spelling.
+
+Responses use field `type` where requests use `dataType`. They can include object `id`, `creationType`, editability/enabled/segmentability observations, field `keyQualifierName` and generated fields such as `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` and a primary-key qualifier. Preserve that inventory when retrieving; construct separate create/send and update/send representations rather than posting the whole response. Omit source resource IDs, duplicate representations and response-only observations from portable input, but never remove an authored primary-key field just because its name contains `Id`.
+
+The official create response example has `isEnabled: false`. That example alone does not establish failed DMO creation or a universal ingestion prerequisite. Definition existence, queryable record storage, mappings and ingestion are different observations; the SQL caveat in the bounded update evidence below still applies.
+
+The [Salesforce-maintained Data 360 tooling reference](https://github.com/salesforce/sf-pi/blob/main/extensions/sf-data360/references/data-shapes.md) describes PATCH fields as additive. This is documentation, not general field-update acceptance: the live result below establishes only its exact nonprimary Text-field addition. Changing an existing key, removing fields, arbitrary types and mixed edits still need their own evidence. A documented PATCH input may contain object `name`, but the reference explicitly rejects changing the developer name; the URL identifies the target independently of any body property.
+
+### Relationships are separate definitions
+
+DMO field relationships use `GET` and `POST /data-model-objects/{dataModelObjectName}/relationships?dataspace=default`, documented since API `64.0`. The path names either participating DMO. Creation takes a `relationships` array with entries identifying `sourceObjectName`, `targetObjectName`, `sourceFieldName`, `targetFieldName`, `cardinality`, `creationType` and `owner`; the reference example uses `ManyToOne`, `Custom` and `DataCloud`. These are names to resolve in the target, not source record IDs. Existing relationships are documented as skipped on creation. Relationship definitions and DLO-to-DMO mappings are not automatically recreated by POSTing a standalone DMO.
+
+### Remaining comparisons
+
+The completed matrix includes same-version Metadata readbacks of each owned fixture, not an unchanged-source export comparison across API `65.0`–`68.0`. That comparison and native DMO CRUD at `68.0` remain unverified. A plugin version guard is not evidence of a server limitation. This documentation update reused retained evidence and ran no extra live tests.
 
 ## Retrieve
 
@@ -61,7 +113,14 @@ The object file contains information such as the label and dataspace:
 Keep the field files too. In particular, preserve the primary-key and key-qualifier attributes rather than trying to reconstruct them from field names. This export is not a complete set of mappings, relationships or ingestion settings. An `isEnabled` flag alone does not tell you whether processing is active.
 
 {% endcapture %}
-{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="unknown" api_reason="No API retrieval workflow is supplied here." %}
+{% capture retrieve_api %}
+```sh
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_NAME --target-org SOURCE_ALIAS --method GET --include
+```
+
+API `61.0`–`67.0` returned HTTP `200` with a direct object and `fields` array for each owned fixture. Preserve generated fields and key qualifiers; this is a definition read, not a complete ingestion/mapping/relationship export.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Independent native definition GET verified at API61–67." api_body=retrieve_api %}
 
 ## Create
 
@@ -69,13 +128,48 @@ Creating a DMO by deploying its XML has **not been verified**. Downloading an ob
 
 A native API `65.0` `POST /services/data/v65.0/ssot/data-model-objects` returned HTTP `201` for a newly owned custom DMO in category `Other`, default dataspace, with a Text primary key, two nonprimary Text fields and four generated system/key-qualifier fields. This was an empty object without mappings or relationships. That bounded creation supported the additive update test below; it is not a general XML-deployment or arbitrary-schema creation recipe.
 
-{% include operation-tabs.html id="dmo-create" label="Create" cli_state="unknown" cli_reason="DMO creation by XML deployment has not been verified." api_state="unknown" api_reason="A bounded native API creation was observed, but no creation recipe is supplied." %}
+{% capture create_api %}
+The [Salesforce-owned POST example](https://www.postman.com/salesforce-developers/salesforce-developers/request/lxdbfg4/create-data-model-object) documents this route. For the tested API `61.0`–`67.0` variant, save the following as `dmo-create.json`, replacing the name with a fresh owned unique name and independently confirming absence before creation:
+
+```json
+{"name":"OWNED_UNIQUE_NAME","label":"DMO CRUD probe","category":"Other","dataSpaceName":"default","fields":[{"name":"Id","label":"Id","dataType":"Text","isPrimaryKey":true,"isDynamicLookup":false},{"name":"Note","label":"Note","dataType":"Text","isPrimaryKey":false,"isDynamicLookup":false}]}
+```
+
+```sh
+sf api request rest /services/data/v61.0/ssot/data-model-objects --target-org SOURCE_ALIAS --method POST --include --body @dmo-create.json --header Content-Type:application/json
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_UNIQUE_NAME__dlm --target-org SOURCE_ALIAS --method GET --include
+```
+
+POST returned `201`; independent GET returned `200`, six fields, `isEnabled=false`, `isEditable=true` and `isSegmentable=false`. Responses use field `type`, not input `dataType`. Save the returned inventory, but do not replay response-only IDs or observations as create input. The same request semantics worked through API `67.0`; no ingestion or record-store availability follows.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-create" label="Create" cli_state="unknown" cli_reason="DMO creation by XML deployment has not been verified." api_state="available" api_reason="Fresh owned empty custom Other/default DMO; native API61–67 only." api_body=create_api %}
 
 ## Update
 
 General DMO XML updates, including schema changes through Metadata API, have **not been verified** either.
 
 {% capture update_api %}
+The completed API `61.0`–`67.0` matrix tested label and additive-field updates separately. The [Salesforce-owned PATCH example](https://www.postman.com/salesforce-developers/salesforce-developers/request/rschuxv/update-data-model-object) documents the route. Use the returned owned developer name including `__dlm`. The tested bodies were:
+
+```json
+{"label":"DMO CRUD updated"}
+```
+
+```json
+{"fields":[{"name":"UpdateNote","label":"Update Note","dataType":"Text"}]}
+```
+
+Save one body at a time as `dmo-update.json`, then independently read back each operation before the next:
+
+```sh
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_NAME --target-org SOURCE_ALIAS --method PATCH --include --body @dmo-update.json --header Content-Type:application/json
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_NAME --target-org SOURCE_ALIAS --method GET --include
+```
+
+Each PATCH returned `200` with the pre-update state. Independent GET and Metadata reads confirmed the new label and then six-to-seven fields, with the XML preservation described above. Do not replay the write just because its response looks old.
+
+### Separate historical API65 field-addition experiment
+
 A separate native API `65.0` fields-only PATCH did add **one nonprimary Text field** to the newly owned, empty custom `Other`/default DMO described above. It was not mapped or related, and its existing fields were not dynamic lookups.
 
 Save this addition-only body as `dmo-add-field.json` beside `force-app`, omitting all existing fields and object properties:
@@ -143,4 +237,14 @@ A completed deletion can look like this:
 
 Check afterward that the exact DMO and its owned mapping are gone and the DLO remains. Downstream insights, segments, identity resolution and activations can block deletion; no single dependency list is guaranteed to show everything. Local object, field and mapping XML remain. `sf project delete source` is not an interchangeable verified alternative and would also remove local files.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="unknown" api_reason="No API deletion workflow is supplied here." %}
+{% capture delete_api %}
+**Destructive:** only for the exact fresh owned empty fixture after identity/ownership recheck and fresh scoped mapping/relationship checks. No cascade was used. These checks do not establish that arbitrary business DMOs are safe to delete.
+
+```sh
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_NAME --target-org SOURCE_ALIAS --method DELETE --include
+sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_NAME --target-org SOURCE_ALIAS --method GET --include
+```
+
+API `61.0`–`67.0` each returned DELETE `204`; independent final GET `404` and explicit Metadata absence established completion. DELETE's response alone is insufficient. All matrix fixtures were absent afterward; the historical API65 retained fixture is outside this claim. Mapping and relationship inventories used API `67.0`, not every tested lifecycle version.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="available" api_reason="Exact owned empty matrix fixtures; native API61–67, no cascade." api_body=delete_api %}
