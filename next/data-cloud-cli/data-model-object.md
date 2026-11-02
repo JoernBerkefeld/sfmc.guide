@@ -10,13 +10,13 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli, api] }
-  create: { status: "partial", methods: [api] }
-  update: { status: "partial", methods: [api] }
-  delete: { status: "partial", methods: [cli, api] }
+  retrieve: { status: "yes", methods: [cli, api, plugin] }
+  create: { status: "yes", methods: [api, plugin] }
+  update: { status: "yes", methods: [api, plugin] }
+  delete: { status: "yes", methods: [cli, api, plugin] }
 ---
 
-*Last updated: November 2, 2026, 13:57 (UTC+1).*
+*Last updated: November 2, 2026, 19:58 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -41,6 +41,17 @@ request runner here, not a dedicated out-of-the-box DMO CRUD command; endpoint
 attribution does not expand the tested versions or plugin qualification below.
 
 {% include crud-summary.html %}
+
+**Plugin qualification:** Yes denotes the bounded standalone native DMO definition
+workflow, not unrestricted schema CRUD. Public retrieve/create/update/delete were
+qualified before the mapping integration. Updates cover label changes and additive
+nonprimary Text fields, not key changes, field removal, arbitrary schemas,
+ingestion or cross-org portability. The native API matrix below remains separate
+from public-command qualification. The current implementation selects API `68.0`
+for default/`auto` and admits explicit numeric versions `>=61.0` without upgrading
+them; admission does not extend live-tested versions. Bounded installed API68
+mixed mapping-batch acceptance also passed (see [DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/));
+it does not broaden standalone DMO CRUD or its tested versions.
 
 ## Native API contracts and completed version comparison
 
@@ -147,10 +158,12 @@ custom qualifiers and `keyQualifierName` references remain unchanged; raw API
 responses remain complete. Separate API68 empirical evidence showed six raw fields
 → five saved after CREATE and seven raw → six saved after PATCH. The DMO API marks
 this field `creationType=System` / `usageTag=KeyQualifier`, unlike DLO Metadata's
-`usageTag=KEY_QUALIFIER`. This is not new live plugin acceptance or a version-range
-claim: the DMO plugin remains API65/default only.
+`usageTag=KEY_QUALIFIER`. This qualifier-policy evidence is not new live plugin
+acceptance or a version-range claim. Current default/`auto` is API68; explicit
+numeric versions `>=61.0` are admitted, not automatically live-qualified.
+Changed saved content requires `--overwrite`; identical content is unchanged.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Independent native definition GET verified at API61–67." api_body=retrieve_api plugin_state="available" plugin_reason="Implemented API65/default canonical JSON retrieval; separate API68 evidence does not broaden the guard." plugin_body=retrieve_plugin %}
+{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Independent native definition GET verified at API61–67." api_body=retrieve_api plugin_state="available" plugin_reason="Qualified standalone canonical JSON retrieval; admitted versions are not a live-tested range." plugin_body=retrieve_plugin %}
 
 ## Create
 
@@ -172,7 +185,22 @@ sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_UNIQUE_NA
 
 POST returned `201`; independent GET returned `200`, six fields, `isEnabled=false`, `isEditable=true` and `isSegmentable=false`. Responses use field `type`, not input `dataType`. Save the returned inventory, but do not replay response-only IDs or observations as create input. The same request semantics worked through API `67.0`; no ingestion or record-store availability follows.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-create" label="Create" cli_state="unknown" cli_reason="DMO creation by XML deployment has not been verified." api_state="available" api_reason="Fresh owned empty custom Other/default DMO; native API61–67 only." api_body=create_api %}
+{% capture create_plugin %}
+Run from the project containing `data360/dmo/Customer__dlm.dmo-meta.json`:
+
+```sh
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --json
+```
+
+Deploy resolves the exact target developer name. Only confirmed absence permits
+POST; authentication, permission or ambiguous lookup failures stop rather than
+falling through to creation. The canonical JSON definition is not a Metadata XML
+fallback or a raw retrieve-response POST. Independent GET confirms the definition;
+creation does not establish ingestion or queryable storage. This qualified scope
+is a fresh owned custom `Other` DMO in the default dataspace, not arbitrary schemas.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-create" label="Create" cli_state="unknown" cli_reason="DMO creation by XML deployment has not been verified." api_state="available" api_reason="Fresh owned empty custom Other/default DMO; native API61–67 only." api_body=create_api plugin_state="available" plugin_reason="Qualified bounded standalone native create, not XML deployment or arbitrary schemas." plugin_body=create_plugin %}
 
 ## Update
 
@@ -224,7 +252,23 @@ This qualifies only that addition-only, nonprimary Text variant. Do not add prim
 An existing DMO needs a separate, authoritative eligibility check before applying this empty-object-only result. Disabled or unmapped flags, ownership and schema presence do **not** prove zero records. A native SQL query against an existing DMO can return SQLSTATE `42P01` (table does not exist), even when runtime and Metadata reads find its configuration; an explicit default-data-space query can fail the same way. That error is **not** an empty result or proof that no record store exists. No authoritative zero-record or record-store-absence check was established for that nonqueryable variant, so do not use this example as a general update recipe for existing objects. Even a successful fresh zero-row query would be a point-in-time observation, not an atomic guarantee against concurrent ingestion before PATCH.
 
 {% endcapture %}
-{% include operation-tabs.html id="dmo-update" label="Update" cli_state="unknown" cli_reason="General DMO XML and Metadata API schema updates have not been verified." api_state="available" api_reason="Only the addition-only nonprimary Text-field PATCH on the qualified owned empty DMO." api_body=update_api %}
+{% capture update_plugin %}
+Edit the canonical JSON label or add an ordinary nonprimary Text field, preserving
+existing fields and key settings, then use the same deploy selection:
+
+```sh
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --json
+```
+
+An existing target selects PATCH, not replacement. The bounded qualification covers
+label changes and additive nonprimary Text fields only. Existing-field removal,
+key changes, arbitrary type/schema changes and populated-object safety are not
+qualified. Independent GET, not PATCH's possibly stale echo, confirms persistence
+and preservation, including the generated qualifier omitted from saved input.
+Preview is read-only; no-op comparison is not a reason to replay a mutation.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-update" label="Update" cli_state="unknown" cli_reason="General DMO XML and Metadata API schema updates have not been verified." api_state="available" api_reason="Only the addition-only nonprimary Text-field PATCH on the qualified owned empty DMO." api_body=update_api plugin_state="available" plugin_reason="Qualified label and additive nonprimary Text-field updates only; no schema replacement." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -277,4 +321,19 @@ sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_N
 
 API `61.0`–`67.0` each returned DELETE `204`; independent final GET `404` and explicit Metadata absence established completion. DELETE's response alone is insufficient. All matrix fixtures were absent afterward; the historical API65 retained fixture is outside this claim. Mapping and relationship inventories used API `67.0`, not every tested lifecycle version.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="available" api_reason="Exact owned empty matrix fixtures; native API61–67, no cascade." api_body=delete_api %}
+{% capture delete_plugin %}
+**Destructive:** recheck exact identity, ownership and dependencies first. The
+qualified standalone case is a fresh owned empty custom DMO, not a business object.
+
+```sh
+sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
+sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS --json
+```
+
+Deletion executes by default without a separate confirmation prompt. Preview makes
+no writes. The plugin targets the full developer name including `__dlm`, verifies
+absence independently, and does not cascade or delete the local JSON. Permission
+or ambiguous reads stop. This is not permission to delete a parent to bypass a
+mapping restriction, nor proof of arbitrary dependency or populated-object safety.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="available" api_reason="Exact owned empty matrix fixtures; native API61–67, no cascade." api_body=delete_api plugin_state="available" plugin_reason="Qualified exact owned empty standalone DMO deletion; no cascade or local-file deletion." plugin_body=delete_plugin %}

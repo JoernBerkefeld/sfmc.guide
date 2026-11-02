@@ -12,13 +12,13 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli] }
-  create: { status: "partial", methods: [cli] }
-  update: { status: "partial", methods: [cli] }
-  delete: { status: "unknown", methods: [] }
+  retrieve: { status: "partial", methods: [cli, api, plugin] }
+  create: { status: "partial", methods: [cli, api, plugin] }
+  update: { status: "partial", methods: [cli, api, plugin] }
+  delete: { status: "partial", methods: [api, plugin] }
 ---
 
-*Last updated: October 29, 2026, 17:27 (UTC+1).*
+*Last updated: November 2, 2026, 20:17 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -48,6 +48,21 @@ support at an untested version.
 
 {% include crud-summary.html %}
 
+**Partial Plugin coverage — bounded installed API68 acceptance passed:** a fresh
+local tarball, verified against the unchanged compiled tree, passed strict-selection
+guards, read-only mixed preview, reverse-order mixed create, canonical retrieval,
+zero-write unchanged redeployment, one additive field-pair update and guarded
+non-last deletion. Last-mapping preview and execution were blocked without writes.
+This qualifies only the operation-specific scopes below, not general CRUD,
+arbitrary schemas, cross-org portability or field-pair removal. All four ratings
+remain partial because these limitations still apply.
+
+**Native API evidence:** separate API68 experiments proved mapping create and GET,
+a selector-free additive field-pair PATCH, and conditional non-last deletion. They
+are distinct from the installed plugin acceptance above and do not qualify API61–67 mapping writes. Default/`auto` selects
+API68; explicit numeric `>=61.0` admission is not a live-tested version range.
+Mapping DELETE is currently restricted by the implementation to API68.
+
 ## Retrieve
 
 {% capture retrieve_cli %}
@@ -70,7 +85,32 @@ processing were performed in this check; it does not requalify the bounded
 write examples below.
 
 {% endcapture %}
-{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="unknown" api_reason="No API mapping retrieval workflow is supplied." %}
+{% capture retrieve_api %}
+```sh
+sf api request rest /services/data/v68.0/ssot/data-model-object-mappings/ACTUAL_MAPPING_NAME?dataspace=default --target-org SOURCE_ALIAS --method GET --include
+```
+
+Use the server-returned mapping name. Independent API68 GET confirmed `ACTIVE`,
+exact DLO/DMO bindings and all field pairs; the CLI is an API request runner here.
+{% endcapture %}
+{% capture retrieve_plugin %}
+```sh
+sf data360 retrieve -m mapping:CustomerMapping -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
+```
+
+Saves `./project/data360/mapping/CustomerMapping.mapping-meta.json`, a versioned
+native JSON definition, not an `ObjectSourceTargetMap` XML fallback. Retrieval
+preserves logical source/target bindings and returned field pairs, including
+server-generated system/qualifier pairs. Saved mapping names and source selectors
+are not target identity: deploy resolves a unique target mapping by its DLO/DMO
+bindings and uses the target's server-generated name/selectors. Installed API68
+canonical retrieval passed and preserved all six returned pairs/selectors. Deploying
+the retrieved file unchanged also passed with zero writes. Select that file with
+`--source-dir ./project/data360/mapping/CustomerMapping.mapping-meta.json` **instead
+of** `-m`; do not combine both selection modes. `--overwrite` permits replacing
+changed local output only.
+{% endcapture %}
+{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="available" api_reason="Independent native API68 mapping GET verified." api_body=retrieve_api plugin_state="available" plugin_reason="Installed API68 canonical JSON retrieval and unchanged zero-write redeployment passed." plugin_body=retrieve_plugin %}
 
 ## Create
 
@@ -108,7 +148,38 @@ sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --targe
 Read the mapping back and compare the source, target and every runtime field pair. Salesforce can generate system qualifier pairs such as `KQ_Id__c` that were not in the XML; do not add guessed pairs yourself. This example does not cover arbitrary formulas or filters, and it does not guarantee that mapping creation performs no internal processing.
 
 {% endcapture %}
-{% include operation-tabs.html id="mapping-create" label="Create" cli_state="available" cli_reason="Complete mapping between existing custom objects; formulas, filters and processing-free creation are not established." cli_body=create_cli api_state="unknown" api_reason="No API mapping creation workflow is supplied." %}
+{% capture create_api %}
+Native API68 POST to `/services/data/v68.0/ssot/data-model-object-mappings?dataspace=default`
+with explicit source/target developer names and names-only `fieldMapping` pairs
+returned `201`. A separate GET confirmed the server-generated mapping name,
+`ACTIVE`, requested pairs and generated system/qualifier pairs. Both parents
+already existed; this is not a complete ingestion or arbitrary formula recipe.
+{% endcapture %}
+
+{% capture create_plugin %}
+### Plugin create — bounded API68 qualification
+
+From the project containing `data360/mapping/CustomerMapping.mapping-meta.json`:
+
+```sh
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+```
+
+Installed API68/default mixed creation passed with reverse-order selectors;
+execution still created DLO → DMO → Mapping. This is a bounded fresh-fixture result,
+not arbitrary-schema or cross-org lifecycle qualification.
+Deploy/delete require exact `type:ApiName` selections, not bare types or wildcards.
+Mixed deploy orders DLO → DMO → Mapping regardless of selector order and must
+independently verify the requested parent definitions before mapping access.
+Preview reports planned dependencies without writes; that installed check passed.
+The corrected actual run independently confirmed parent definitions before mapping
+creation and returned confirmed-created outcomes for all three families: native
+DLO POST `201` → DMO POST `201` → mapping POST `201`. Do not
+assume a DMO must report `ACTIVE` or be enabled merely because a DLO does.
+{% endcapture %}
+
+{% include operation-tabs.html id="mapping-create" label="Create" cli_state="available" cli_reason="Complete mapping between existing custom objects; formulas, filters and processing-free creation are not established." cli_body=create_cli api_state="available" api_reason="Bounded native API68 create with independent ACTIVE readback." api_body=create_api plugin_state="available" plugin_reason="Installed API68 reverse-order mixed create passed with independent parent and mapping readbacks." plugin_body=create_plugin %}
 
 ## Update
 
@@ -138,7 +209,57 @@ sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --targe
 The file entry can report `Changed`; sending the same file again can report `Unchanged`. These are separate invocations, and neither proves that Salesforce performed no internal work. Read back the label and pairs. Retargeting, field removal and formula/filter updates have not been verified.
 
 {% endcapture %}
-{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="unknown" api_reason="No API mapping update workflow is supplied." %}
+{% capture update_api %}
+Native API68 `PATCH /services/data/v68.0/ssot/data-model-object-mappings/{serverMappingName}/field-mappings?dataspace=default`
+added one names-only field pair without a historical selector. Independent GET
+confirmed the addition and preserved prior pairs/selectors. Replaying the same API
+addition was idempotent, not proof that the plugin performs zero writes. Attempts
+to replace an existing target pair could return `200` while ignoring the request;
+adding another target for an existing source was additive, not replacement.
+{% endcapture %}
+
+{% capture update_plugin %}
+### Plugin update — bounded installed API68 qualification
+
+Preserve all saved pairs and bindings and add exactly one nonconflicting pair, then:
+
+```sh
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+```
+
+The implementation resolves fresh target bindings/name, compares logical pair sets
+and sends only a selector-free new-pair delta. It rejects removal, replacement,
+retargeting and multi-pair additions before mutation. Installed API68 acceptance
+added only `Beta__c` → `Beta__c` with exactly one selector-free PATCH `200`, preserving
+all six previous pairs/selectors. The DLO representation and DMO schema, key and
+label were unchanged; the DMO's derived `Beta__c.isMapped: true` flag appeared as
+expected, so the entire raw DMO was **not** unchanged across this update.
+Unchanged redeployment both before and after the addition passed with zero writes
+after fresh reads. Saved source selectors are never replayed as target IDs.
+{% endcapture %}
+
+{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="available" api_reason="Native API68 selector-free single-pair addition only; not replacement." api_body=update_api plugin_state="available" plugin_reason="Installed API68 selector-free single-pair addition and zero-write unchanged redeployment passed; not removal or replacement." plugin_body=update_plugin %}
+
+### Individual field-pair removal: separate API67 facade evidence
+
+A selector-aware **API67 MCP facade** operation removed ordinary `Alpha__c`, then
+`Beta__c` pairs: **7 → 6 → 5 pairs**. Each selector came from the observed target
+mapping, not a guessed name or source artifact. Independent API67 GETs after every
+attempt confirmed the mapping stayed `ACTIVE`, unchanged bindings and unaffected
+pairs/selectors, and preservation of both parents and their key/schema settings.
+
+Deleting primary-key `Id__c` was rejected. Deleting `KQ_Id__c`, `DataSource__c`,
+`DataSourceObject__c` and `InternalOrganization__c` was also rejected because they
+were system-generated mappings. Those five pairs remained: removing all ordinary
+nonkey pairs did **not** produce a zero-pair mapping or remove the relationship.
+This is one qualified fixture, not a universal minimum pair count.
+
+The facade returned HTTP `201` envelopes for both successful results and errors;
+that is **not the underlying native DELETE status**. Native API68 individual
+field-pair DELETE remains unqualified. The plugin still rejects field-pair removal;
+this facade evidence does not add Plugin removal support. The installed API68
+whole-mapping deletion below is a separate qualified operation.
 
 ### Completed API68 binding-retarget comparison
 
@@ -182,9 +303,49 @@ retarget comparison above did not provide a workaround for last-mapping deletion
 {: .mapping-shared-restriction }
 
 {% capture delete_evidence %}
-Standalone mapping deletion is not supported by this example. It can fail with an internal server error or a restriction on removing the sole mapping. Deleting an empty, owned parent DMO can remove its sole owned mapping, as described above; do not delete an arbitrary parent as a workaround.
+Whole-mapping deletion depends on the **target DMO's remaining DLO mappings**:
+adding a second DMO to the same DLO does **not** unlock deletion of the first
+mapping. Adding a second DLO mapped to the same DMO permits the qualified non-last
+mapping deletion while retaining its survivor.
+
+Deleting the qualified empty, owned DMO cascades its mapping and leaves the DLO
+intact. That bounded observation is not permission to delete a business or shared
+parent as a workaround for the last-mapping restriction. It does not establish a
+plugin cascade feature; the separate installed non-last deletion does not delete
+parents.
 
 {% endcapture %}
-{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction." api_state="unknown" api_reason="No standalone API mapping deletion workflow is supplied; parent-deletion observations are not a recipe." %}
+{% capture delete_api %}
+Native API68 DELETE to `/services/data/v68.0/ssot/data-model-object-mappings/{serverMappingName}?dataspace=default`
+returned `204` only in the qualified non-last case. Two independent exact GET
+`404` reads confirmed absence while the distinct-DLO survivor mapping and both
+parent definitions remained. The last-mapping failure above still applies; never
+delete a parent as a workaround.
+{% endcapture %}
+
+{% capture delete_plugin %}
+### Plugin delete — bounded installed API68 qualification
+
+**Destructive:** only the qualified non-last mapping case is supported.
+
+```sh
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+```
+
+Preview runs the same fresh guard without writes. Execution has no separate
+confirmation prompt. The guard requires another independently read `ACTIVE`
+mapping from a distinct DLO to the same DMO, verifies parents and survivor, and
+blocks the last mapping before DELETE. Execution must independently confirm exact
+absence and unchanged survivor/parents; it never cascades or removes local JSON.
+Installed API68 non-last preview passed with zero writes; execution issued exactly
+one DELETE `204`, followed by an independent typed `404` absence check. The survivor
+remained `ACTIVE` and byte-equivalent, and both DLOs and the DMO were byte-equivalent
+to their immediate pre-delete representations. Last-mapping preview **and** execution
+returned `MAPPING_LAST_MAPPING_DELETE_BLOCKED` with zero writes. There is no parent
+deletion fallback.
+{% endcapture %}
+
+{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction." api_state="available" api_reason="Native API68 non-last deletion only, with independent absence and preservation checks." api_body=delete_api plugin_state="available" plugin_reason="Installed API68 non-last DELETE/preservation passed; last-mapping preview and execution blocked without writes." plugin_body=delete_plugin %}
 
 {{ delete_evidence | markdownify }}
