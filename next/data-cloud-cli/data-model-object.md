@@ -82,7 +82,7 @@ DMO field relationships use `GET` and `POST /data-model-objects/{dataModelObject
 
 ### Remaining comparisons
 
-The completed matrix includes same-version Metadata readbacks of each owned fixture, not an unchanged-source export comparison across API `65.0`–`68.0`. That comparison and native DMO CRUD at `68.0` remain unverified. A plugin version guard is not evidence of a server limitation. This documentation update reused retained evidence and ran no extra live tests.
+The completed matrix includes same-version Metadata readbacks of each owned fixture, not an unchanged-source export comparison across API `65.0`–`68.0`. That comparison and a full native DMO CRUD lifecycle at `68.0` remain unverified; the separate API68 generated-qualifier CREATE/additive-PATCH evidence in the Retrieve plugin tab does not complete that matrix. A plugin version guard is not evidence of a server limitation. This documentation update reused retained evidence and ran no extra live tests.
 
 ## Retrieve
 
@@ -120,7 +120,24 @@ sf api request rest /services/data/v61.0/ssot/data-model-objects/OWNED_DMO_API_N
 
 API `61.0`–`67.0` returned HTTP `200` with a direct object and `fields` array for each owned fixture. Preserve generated fields and key qualifiers; this is a definition read, not a complete ingestion/mapping/relationship export.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Independent native definition GET verified at API61–67." api_body=retrieve_api %}
+{% capture retrieve_plugin %}
+```sh
+sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS --api-version 65.0 --output-dir ./project --json
+```
+
+Saves `./project/data360/dmo/Customer__dlm.dmo-meta.json`, omitting only the
+confirmed system-generated `KQ_Id__c` field definition from the saved field inventory.
+A key qualifier combines an ID with source context to avoid collisions. Native
+CREATE generates this definition and additive PATCH preserves it; save omission
+is not field deletion or proof of mapping auto-pair behavior. `Id__c`, other fields,
+custom qualifiers and `keyQualifierName` references remain unchanged; raw API
+responses remain complete. Separate API68 empirical evidence showed six raw fields
+→ five saved after CREATE and seven raw → six saved after PATCH. The DMO API marks
+this field `creationType=System` / `usageTag=KeyQualifier`, unlike DLO Metadata's
+`usageTag=KEY_QUALIFIER`. This is not new live plugin acceptance or a version-range
+claim: the DMO plugin remains API65/default only.
+{% endcapture %}
+{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Independent native definition GET verified at API61–67." api_body=retrieve_api plugin_state="available" plugin_reason="Implemented API65/default canonical JSON retrieval; separate API68 evidence does not broaden the guard." plugin_body=retrieve_plugin %}
 
 ## Create
 

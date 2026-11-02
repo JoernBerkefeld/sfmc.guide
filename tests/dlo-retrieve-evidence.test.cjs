@@ -225,7 +225,8 @@ test('standalone API68 PATCH supplies only earned label and field addition', () 
 
 test('standalone API68 DELETE retains working empty-raw request and independent absence', () => {
   const deletion = dlo.split('{% capture delete_api %}')[1].split('{% endcapture %}')[0];
-  const request = JSON.parse(deletion.match(/```json\n([\s\S]*?)\n```/)[1]);
+  const standalone = deletion.split('### Standalone native API delete: verified API 68')[1];
+  const request = JSON.parse(standalone.match(/```json\n([\s\S]*?)\n```/)[1]);
   assert.deepEqual(request, {
     url: '/services/data/v68.0/ssot/data-lake-objects/OWNED_DLO_ID',
     method: 'DELETE',
@@ -272,10 +273,10 @@ test('DLO requested-version evidence supplies one standard example without write
     retrieve,
     /neither cross-org deployability nor CREATE, UPDATE, DELETE or wrapper support/,
   );
-  assert.match(dlo, /retrieve: \{ status: "yes", methods: \[cli, api\] \}/);
-  assert.ok(dlo.includes('create: { status: "yes", methods: [api] }'));
+  assert.match(dlo, /retrieve: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
+  assert.ok(dlo.includes('create: { status: "yes", methods: [api, plugin] }'));
   for (const operation of ['update', 'delete']) {
-    assert.ok(dlo.includes(`${operation}: { status: "yes", methods: [api] }`));
+    assert.ok(dlo.includes(`${operation}: { status: "yes", methods: [api, plugin] }`));
   }
   assert.doesNotMatch(retrieve, /00D[a-zA-Z0-9]{12,15}|F:[/\\]Temp|access_token|\.sf[/\\]orgs/);
   assert.match(overview, /November 2 DLO retrieval reconciliation/);

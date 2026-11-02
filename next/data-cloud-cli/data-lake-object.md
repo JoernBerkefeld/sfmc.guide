@@ -37,10 +37,19 @@ A DLO holds data brought in from a source, before it is mapped into the data mod
 sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
 ```
 
-Saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`, preserving generated
-fields but excluding source IDs/runtime wrappers. The JSON envelope has contract
-`sf-data360-retrieve`; `result.items[]` reports `family: "dlo"`, `operation:
-"retrieve"`, `outcome: "retrieved"` (or `"unchanged"`) and `path`.
+Saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`, excluding source
+IDs/runtime wrappers and only the confirmed system-generated `KQ_Id__c` field
+definition. A key qualifier combines an ID with its source context to avoid
+collisions. Native CREATE generates this definition and additive PATCH preserves
+it, so omission from saved JSON is not field deletion or proof of mapping auto-pair
+behavior. `Id__c`, other fields, custom qualifiers and `keyQualifierName` references
+remain unchanged; the raw API response remains complete. API68 evidence showed
+seven raw fields → six saved after CREATE and eight raw → seven saved after PATCH;
+DLO Metadata identifies the qualifier with `definitionCreationType=System` and
+`usageTag=KEY_QUALIFIER`. This separate empirical evidence is not new live plugin
+acceptance. The JSON envelope has contract `sf-data360-retrieve`;
+`result.items[]` reports `family: "dlo"`, `operation: "retrieve"`,
+`outcome: "retrieved"` (or `"unchanged"`) and `path`.
 {% endcapture %}
 {% capture create_plugin %}
 ```sh
@@ -106,9 +115,10 @@ below API 60 were not tested. The plugin currently admits **API 68/default only*
 manual matrix success does not broaden its implementation guard.
 
 The November 2 public plugin acceptance created a fresh standalone DLO through
-automatic POST after confirmed absence, retrieved seven complete fields, previewed
+automatic POST after confirmed absence, retrieved seven raw readback fields, previewed
 and executed a label change plus ordinary Text-field addition, then independently
-retrieved all eight fields with the original primary key intact. Delete preview
+retrieved all eight raw fields with the original primary key intact. These are
+historical complete readback counts, not current saved-file counts. Delete preview
 left readback unchanged; default delete completed without a prompt, subsequent
 preview reported absence, and the local JSON file remained. This proves the bounded
 API68 definition workflow, not ingestion or cross-org portability.
@@ -119,8 +129,9 @@ The replacement workflow uses exact `dlo:CustomerSource__dll` selections with
 API `68.0` and the default data space. A full API name includes `__dll`; it is not
 the source object's record ID. The commands below were exercised through the public plugin on a fresh owned
 standalone fixture at API68/default on November 2. Separate readbacks confirmed
-seven fields after creation, eight after the label/field update, preservation after
-delete preview, and absence after default deletion; the local JSON remained.
+seven raw fields after creation, eight raw fields after the label/field update,
+preservation after delete preview, and absence after default deletion; the local
+JSON remained. Those historical readback counts are not current saved-file counts.
 
 ```sh
 sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
@@ -132,10 +143,11 @@ sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 
 
 Retrieve saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`. The file
 contains a versioned `dlo` definition with logical `identity` and `spec`; the spec
-contains the label, category and complete field definitions. It does not save the
-source DLO record ID, timestamps, runtime state or duplicate response envelopes.
-The complete saved seven-field shape below is from public-command acceptance,
-with only the synthetic fixture name substituted. It is a definition, not an HTTP
+contains the label, category and field definitions except the confirmed generated
+`KQ_Id__c` definition. It does not save the source DLO record ID, timestamps, runtime
+state or duplicate response envelopes. The six-field example below applies the
+current save policy to the historical public-command readback, with the synthetic
+fixture name substituted; it is not a newly live-accepted saved file or an HTTP
 CREATE request:
 
 ```json
@@ -147,7 +159,6 @@ CREATE request:
     "label": "Plugin DLO acceptance",
     "category": "Other",
     "fields": [
-      { "dataType": "Text", "isPrimaryKey": false, "label": "KQ_Id", "name": "KQ_Id__c" },
       { "dataType": "Text", "isPrimaryKey": true, "label": "Id", "name": "Id__c" },
       { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" },
       { "dataType": "Text", "isPrimaryKey": false, "label": "cdp_sys_SourceVersion", "name": "cdp_sys_SourceVersion__c" },
@@ -159,8 +170,9 @@ CREATE request:
 }
 ```
 
-Generated qualifier/system fields remain in this saved inventory, not in CREATE
-payloads. Changed existing output needs `--overwrite`; identical output is unchanged.
+Other generated system fields remain in this saved inventory; only the confirmed
+generated qualifier definition is omitted. Generated fields are not CREATE payloads.
+Changed existing output needs `--overwrite`; identical output is unchanged.
 
 Deploy resolves the exact API name in the target before selecting POST or PATCH.
 Only confirmed absence permits POST; permission/authentication errors and ambiguous
@@ -185,8 +197,10 @@ existing-target update after a read-only preview. The create result reported
 `outcome: updated`, `mutation: confirmed-updated`, with `target: existing`.
 These are request outcomes, not a claim that the response alone proves settlement.
 
-The retrieved file preserved these seven fields, with no source record ID. This is
-the complete portable definition from that create readback (synthetic name retained):
+The historical complete create readback had seven raw fields. This six-field
+portable example applies the current save policy, omitting only generated
+`KQ_Id__c` and the source record ID (synthetic name retained); it is not a new live
+plugin acceptance result:
 
 ```json
 {
@@ -197,7 +211,6 @@ the complete portable definition from that create readback (synthetic name retai
     "label": "Plugin DLO acceptance",
     "category": "Other",
     "fields": [
-      { "dataType": "Text", "isPrimaryKey": false, "label": "KQ_Id", "name": "KQ_Id__c" },
       { "dataType": "Text", "isPrimaryKey": true, "label": "Id", "name": "Id__c" },
       { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" },
       { "dataType": "Text", "isPrimaryKey": false, "label": "cdp_sys_SourceVersion", "name": "cdp_sys_SourceVersion__c" },
