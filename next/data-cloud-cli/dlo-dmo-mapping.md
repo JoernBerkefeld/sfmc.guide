@@ -15,10 +15,10 @@ crud:
   retrieve: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  delete: { status: "unknown", methods: [], method_statuses: { cli: "unknown", api: "unknown", plugin: "unknown" } }
 ---
 
-*Last updated: November 3, 2026, 00:36 (UTC+1).*
+*Last updated: November 3, 2026, 08:05 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -48,32 +48,40 @@ support at an untested version.
 
 {% include crud-summary.html %}
 
-**Partial Plugin coverage — bounded installed API68 acceptance passed:** a fresh
-local tarball, verified against the unchanged compiled tree, passed strict-selection
-guards, read-only mixed preview, reverse-order mixed create, canonical retrieval,
-zero-write unchanged redeployment, one additive field-pair update and guarded
-non-last deletion. Last-mapping preview and execution were blocked without writes.
-This qualifies only the operation-specific scopes below, not general CRUD,
-arbitrary schemas, cross-org portability or field-pair removal. Retrieve and Create
-are Yes for the supplied definition and names-only custom-mapping workflows.
-Plugin Retrieve Yes qualifies exact `mapping:Name` selection only. Current type-only
-`sf data360 retrieve -m mapping` and bare `sf data360 retrieve` inventory reads failed
-with `NATIVE_INVENTORY_UNCONFIRMED` and produced zero artifacts; their fix has not yet
-passed acceptance. This is an unresolved inventory failure, not a successful guard.
-The current Update rating remains Partial: CLI label-only changes, native API68
-one-pair and qualified two-pair additions, or plugin exactly-one-pair additions.
-Delete remains Partial for the qualified non-last case. CLI deletion
-is Unknown in the coverage table because no usable standalone workflow is supplied;
-the blocked tab describes the observed restriction, not universal unavailability.
-These are the current evidenced grades, not a prediction of further qualification.
-This presentation reconciliation records no new live-org test.
+**Partial Plugin coverage — keep installed acceptance separate from implementation:**
+earlier bounded installed API68 acceptance passed strict-selection guards, mixed
+preview/create, exact canonical retrieval, unchanged redeployment and single-pair
+Text/compatible Number additions. New installed API68 canonical JSON reconciliation
+passed bounded Text removal, two-pair Text batch addition and both Text field-pair
+retarget directions. Installed guarded deletion and last-for-DMO preview/execution
+guards passed at API61 and API68. These are empty-fixture results in one org,
+not general lifecycle qualification.
+Retrieve and Create remain Yes within their supplied scopes; Update remains Partial.
+Plugin Retrieve Yes qualifies exact `mapping:Name` selection only. Earlier type-only
+and bare inventory reads failed with `NATIVE_INVENTORY_UNCONFIRMED` and zero artifacts.
+The later mapping type-only acceptance attempt timed out, so it is not a pass;
+neither inventory mode is acceptance-qualified by the exact retrieval result.
 
-**Native API evidence:** separate API68 experiments proved mapping create and GET,
-selector-free additive field-pair PATCHes including one qualified two-pair request,
-and conditional non-last deletion. They
-are distinct from the installed plugin acceptance above and do not qualify API61–67 mapping writes. Default/`auto` selects
-API68; explicit numeric `>=61.0` admission is not a live-tested version range.
-Mapping DELETE is currently restricted by the implementation to API68.
+**Current implementation:** canonical JSON is desired state for bounded API68
+field-pair reconciliation: omitted eligible pairs are individually unmapped first,
+then additions are sent together in one names-only PATCH. Guarded whole-mapping
+deletion admits exact API61–68 pins, with default/`auto` selecting API68. The last
+mapping for the target DMO is refused **before any field unmap or other write**.
+The retired unconditional `MAPPING_DELETE_SAFETY_HOLD` is no longer the policy.
+Delete remains Unknown in the supplied-workflow ratings: native evidence is bounded,
+not a general-purpose deletion guarantee. This documentation
+reconciliation records the completed installed checks, not a new live-org test.
+
+**Native API evidence:** API68 create/GET, qualified batch additions, ordinary
+field unmaps and both Text field-pair retarget directions were independently
+observed. Unmap-first whole-mapping deletion preserved the bounded fixtures at
+API61 and API68. API62–67 deletion compatibility is a **user-accepted assumption**,
+covered synthetically, not live proof. API60 read-route rejection and the documented
+API61 floor do not prove an API60 DELETE failure: no such DELETE was attempted.
+A direct non-last DELETE previously removed DMO fields despite HTTP `204`; neither
+HTTP success nor survivor coverage alone guarantees preservation. See Delete for
+the guarded sequence and its limits. The deferred `totalSize` inventory issue
+remains a known issue; it was not investigated or requalified in this update.
 
 ## Retrieve
 
@@ -122,13 +130,14 @@ the retrieved file unchanged also passed with zero writes. Select that file with
 of** `-m`; do not combine both selection modes. `--overwrite` permits replacing
 changed local output only.
 
-This passed **exact-selection retrieval**, not inventory discovery. Current
+This passed **exact-selection retrieval**, not inventory discovery. Earlier
 `sf data360 retrieve -m mapping` and bare `sf data360 retrieve` attempts failed with
-`NATIVE_INVENTORY_UNCONFIRMED`, producing zero artifacts. Their separate fix is not
-yet acceptance-qualified. Do not treat these failures as successful read-only guards
-or infer that all mapping reads work from the exact retrieval above.
+`NATIVE_INVENTORY_UNCONFIRMED`, producing zero artifacts. A later mapping type-only
+acceptance attempt timed out, not passed. Inventory retrieval remains unqualified;
+do not treat an error or timeout as a successful guard, or infer inventory support
+from exact-selection retrieval.
 {% endcapture %}
-{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="available" api_reason="Independent native API68 mapping GET verified." api_body=retrieve_api plugin_state="available" plugin_reason="Exact mapping:Name API68 canonical JSON retrieval and unchanged redeployment passed; type-only and bare inventory reads currently fail NATIVE_INVENTORY_UNCONFIRMED with zero artifacts." plugin_body=retrieve_plugin %}
+{% include operation-tabs.html id="mapping-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the mapping XML using its actual metadata member name." cli_body=retrieve_cli api_state="available" api_reason="Independent native API68 mapping GET verified." api_body=retrieve_api plugin_state="available" plugin_reason="Exact mapping:Name API68 retrieval and unchanged redeployment passed. Earlier inventory errors and a later type-only timeout are not inventory acceptance." plugin_body=retrieve_plugin %}
 
 ## Create
 
@@ -245,35 +254,95 @@ A separate native API68 request added **two independent Text pairs in one PATCH*
 all six prior pair objects and selectors were preserved. Both DLO representations
 were unchanged; the DMO schema, keys, identity and other properties were preserved,
 allowing the expected per-field `isMapped` flags. This qualifies that two-pair
-request, not arbitrary batch sizes, replacement or removal. The plugin still rejects
-multi-pair additions; its separate limit is described below.
+request, not arbitrary batch sizes or unrestricted replacement. The current plugin
+passed the bounded installed Text batch-addition and reconciliation checks below.
 {% endcapture %}
 
 {% capture update_plugin %}
-### Plugin update — bounded installed API68 qualification
+### Plugin update — bounded installed API68 desired-state acceptance
 
-Preserve all saved pairs and bindings and add exactly one nonconflicting pair, then:
+Edit `fieldMappings` in the canonical JSON, preserving the DLO/DMO bindings and
+all protected pairs. Preview the exact selection before execution:
 
 ```sh
 sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
 sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
 ```
 
-The implementation resolves fresh target bindings/name, compares logical pair sets
-and sends only a selector-free new-pair delta. It rejects removal, replacement,
-retargeting and multi-pair additions before mutation. Installed API68 acceptance
-added only `Beta__c` → `Beta__c` with exactly one selector-free PATCH `200`, preserving
+The current implementation resolves fresh target bindings/name and compares exact
+logical pair sets; saved selectors are never target IDs. At API68, omitting an
+eligible authored pair from `fieldMappings` requests its removal, not just an
+addition-only delta. Preview lists ordered unmaps followed by additions. Execution
+uses freshly observed field selectors for individual DELETEs, verifies preservation
+after each, then sends additions in one selector-free PATCH (`fieldMapping` on the
+wire). It requires exact final desired pairs and preserved retained selectors,
+parents and inventory. There is no write retry or rollback; a failure after any
+write is failed/unknown, and a mixed batch stops at that item.
+
+This is deliberately narrow: removals require qualified custom nonkey identity
+Text/Number pairs with uniquely mapped targets. Additions in reconciliation are
+custom nonkey Text pairs with no special usage/qualifier or conflicting target.
+Both same-source/new-target and new-source/same-target **Text field-pair** retargets
+are implemented; they do not change the mapping's DLO/DMO bindings. Native API68
+evidence proved those two directions on the same fresh empty fixture in sequence,
+not on populated objects or arbitrary schemas. Protected primary-key, qualifier
+and system pairs cannot be omitted. The full desired plan and fresh evidence-bound
+parent policy must pass before the first write; later drift stops execution.
+API61–67 deletion admission does not widen this API68-only reconciliation path.
+The existing single compatible addition path, including Number, is preserved.
+
+In simple terms: remove an eligible custom pair from `spec.fieldMappings` and deploy
+that complete JSON file to remove the field mapping. The guarded operation removes
+the connection, not the DMO field itself, within the bounded scope described here.
+Keep the protected key, qualifier and system pairs. For a field-pair retarget,
+replace the old pair with the new one; execution removes the old connection before
+adding the new one. This does not retarget the source DLO or target DMO.
+
+Omit `--json` for readable output. Each component has its own action line with its
+type and API name. After a confirmed mapping update, separate comma-separated
+`Deleted field mappings: source -> target, ...` and
+`Added field mappings: source -> target, ...` lines show the changed pairs. Empty
+lists are omitted; a retarget appears in both. Preview lines say `Planned`;
+unchanged or failed updates do not claim completed field changes. `--json` retains
+the structured result without these human-readable lines.
+
+Execution finishes with `Deployed: n (x created / y updated / z failed)`; `n` counts
+only confirmed created and updated components, not unchanged items or individual
+field operations. A failed mapping counts once as failed, not as updated. Preview
+does not claim completed deployments. For example:
+`Deployed: 2 (1 created / 1 updated / 1 failed)`.
+
+Readable retrieval output lists each successful name, grouped by type, then
+`Downloaded mapping: n` after the mapping items. The count includes unchanged
+local files retrieved successfully, but excludes failed names. Named, type-only
+and bare selection use the same successful-component count, never API `totalSize`.
+This display change does not establish mapping inventory completeness or qualify
+the unconfirmed inventory workflows described above.
+
+**Historical installed acceptance:** the previous implementation added only
+`Beta__c` → `Beta__c` with exactly one selector-free PATCH `200`, preserving
 all six previous pairs/selectors. The DLO representation and DMO schema, key and
 label were unchanged; the DMO's derived `Beta__c.isMapped: true` flag appeared as
 expected, so the entire raw DMO was **not** unchanged across this update.
 Unchanged redeployment both before and after the addition passed with zero writes
 after fresh reads. Saved source selectors are never replayed as target IDs.
 
-Separate installed API68 checks confirmed the distinction from the native batch:
-adding `Beta__c` and `Gamma__c` together was refused with
-`UNSUPPORTED_MAPPING_MULTI_PAIR_UPDATE`, zero actual writes and an independently
-unchanged mapping. After the native two-pair addition, deploying the complete
-canonical definition was unchanged with zero writes.
+Earlier installed API68 checks refused adding `Beta__c` and `Gamma__c` together
+with `UNSUPPORTED_MAPPING_MULTI_PAIR_UPDATE`, zero writes and an unchanged mapping.
+That is historical behavior, not the current implementation's batch limit. After
+the native two-pair addition, deploying the complete canonical definition was
+unchanged with zero writes.
+
+**Completed installed API68 reconciliation:** one canonical JSON change removed
+`A__c` → `A__c` and batch-added `D__c` → `D__c` plus `E__c` → `E__c`.
+Execution used one observed-selector DELETE `204`, then one names-only PATCH `200`.
+Separate changes retargeted `B__c` → `B__c` to `B__c` → `C__c`, then
+`D__c` → `D__c` to `F__c` → `D__c`, each with DELETE `204` then PATCH `200`.
+These ran sequentially on the same fresh empty fixture, not independent pristine
+fixtures. Each preview and unchanged repeat performed zero writes. Independent
+GETs verified exact desired pairs, retained selectors, full DLO preservation,
+DMO schema/nonflag preservation and only expected mapped-flag changes.
+Installed removal coverage here is Text only, not Number removal.
 
 A compatible **Number** pair, `Count__c` → `Count__c`, then passed as a single
 plugin addition: one names-only PATCH `200`, independent `ACTIVE` readback from eight
@@ -284,7 +353,7 @@ compatible Number addition, not every data type, Number-based creation or plugin
 multi-pair updates.
 {% endcapture %}
 
-{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="available" api_reason="Native API68 selector-free one-pair and qualified two-independent-Text-pair additions passed; not arbitrary batch sizes, replacement or removal." api_body=update_api plugin_state="available" plugin_reason="Installed API68 exactly-one-pair Text and compatible Number additions and zero-write repeats passed; multi-pair addition refused without writes, not removal or replacement." plugin_body=update_plugin %}
+{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Label-only update; retargeting, field removal and formula/filter updates are not verified." cli_body=update_cli api_state="available" api_reason="Native API68 selector-free one-pair and qualified two-independent-Text-pair additions passed; not arbitrary batch sizes, replacement or removal." api_body=update_api plugin_state="available" plugin_reason="Historical installed single-pair Text/Number additions passed. Bounded installed API68 Text removal, two-pair Text batch addition and both Text pair-retarget directions passed; no general reconciliation guarantee." plugin_body=update_plugin %}
 
 ### Individual field-pair removal: separate API67 facade evidence
 
@@ -301,10 +370,12 @@ nonkey pairs did **not** produce a zero-pair mapping or remove the relationship.
 This is one qualified fixture, not a universal minimum pair count.
 
 The facade returned HTTP `201` envelopes for both successful results and errors;
-that is **not the underlying native DELETE status**. Native API68 individual
-field-pair DELETE remains unqualified. The plugin still rejects field-pair removal;
-this facade evidence does not add Plugin removal support. The installed API68
-whole-mapping deletion below is a separate qualified operation.
+that is **not the underlying native DELETE status**. Later independent native
+API61/API68 experiments returned `204` for observed-selector ordinary Text/Number
+unmaps and preserved the bounded parent schemas. Those native experiments, not
+this facade envelope, support the guarded implementation. Later installed API68
+Text reconciliation and API61/API68 two-Text-pair deletion passed as described below;
+they do not establish installed Number-removal coverage.
 
 ### Completed API68 binding-retarget comparison
 
@@ -336,61 +407,107 @@ contract. Do not infer a replacement or last-mapping-deletion workaround from it
 
 ## Delete
 
-**Shared restriction (CLI / API / Plugin):** the last-mapping removal restriction
-is a platform constraint, not merely a plugin limitation; see
+**Shared destructive-safety restriction:** deleting the last mapping for a target
+DMO remains blocked; see
 [Salesforce Help](https://help.salesforce.com/s/articleView?id=001993463&language=en_US&type=1).
-In the bounded native Connect REST API68 experiment, deleting the last mapping
-returned HTTP `500`; deleting a non-last mapping returned HTTP `204` with an empty
-body, followed by two exact mapping GET `404` readbacks while both parent objects
-remained. This does not establish that CLI, API and Plugin deletion were all
-experimentally tested, or authorize deleting a parent as a workaround. The completed
-retarget comparison above did not provide a workaround for last-mapping deletion.
+A direct non-last DELETE can return HTTP `204` and still remove DMO fields.
+A survivor alone is not a preservation guarantee. Never delete a parent or change
+object bindings as a workaround. The guarded implementation below is narrower
+than direct whole-mapping DELETE; installed acceptance is limited to the empty
+fixtures and versions below, not general-purpose deletion.
 {: .mapping-shared-restriction }
 
-{% capture delete_evidence %}
-Whole-mapping deletion depends on the **target DMO's remaining DLO mappings**:
-adding a second DMO to the same DLO does **not** unlock deletion of the first
-mapping. Adding a second DLO mapped to the same DMO permits the qualified non-last
-mapping deletion while retaining its survivor.
+{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction; CLI support remains Unknown." api_state="unknown" api_reason="Native API61/API68 unmap-first deletion preserved bounded empty fixtures; no general-purpose deletion recipe is qualified." plugin_state="unknown" plugin_reason="Bounded installed API61/API68 two-Text-pair unmap-first deletion and zero-write last-DMO guards passed; API62–67 remain assumed, not live-qualified." %}
 
-Deleting the qualified empty, owned DMO cascades its mapping and leaves the DLO
-intact. That bounded observation is not permission to delete a business or shared
-parent as a workaround for the last-mapping restriction. It does not establish a
-plugin cascade feature; the separate installed non-last deletion does not delete
-parents.
+### Plugin delete — guarded unmap-first implementation
 
-{% endcapture %}
-{% capture delete_api %}
-Native API68 DELETE to `/services/data/v68.0/ssot/data-model-object-mappings/{serverMappingName}?dataspace=default`
-returned `204` only in the qualified non-last case. Two independent exact GET
-`404` reads confirmed absence while the distinct-DLO survivor mapping and both
-parent definitions remained. The last-mapping failure above still applies; never
-delete a parent as a workaround.
-{% endcapture %}
+Exact `mapping:ApiName` deletion now uses a guarded sequence rather than an
+unconditional hold. Exact API61.0–68.0 pins are admitted; default/`auto` selects
+68.0. Native API61 and API68 fixtures proved the sequence. API62–67 compatibility
+is a user-accepted assumption with synthetic regression coverage, **not live
+qualification or an installed CLI pass**. Other versions are rejected for this
+path; numeric admission on unrelated read/create paths is not deletion support.
 
-{% capture delete_plugin %}
-### Plugin delete — bounded installed API68 qualification
+Before any write, the service verifies fresh complete mapping inventory, both
+parents, pair classification and an independent ACTIVE survivor targeting the
+same DMO. If this is the **last mapping for that DMO, it stops before even the
+first individual field DELETE**. Another DMO on the same DLO does not satisfy this
+check. Preview performs reads and reports the ordered plan without mutation; it
+is not itself deletion acceptance.
 
-**Destructive:** only the qualified non-last mapping case is supported.
+For an admitted non-last mapping, ordinary qualified custom nonkey identity
+Text/Number pairs with uniquely mapped targets are individually unmapped using
+observed target selectors. Each step must preserve field names, types, keys,
+other schema properties, DLOs, retained pairs and survivor mappings; only the
+specific expected target `isMapped: true` → absent change is allowed. Unknown
+classification, special usage/qualifiers, shared authored targets or drift blocks
+continuation. Only five metadata-qualified identity pairs may remain: primary
+`Id__c`, generated `KQ_Id__c`, `DataSource__c`, `DataSourceObject__c` and
+`InternalOrganization__c`. Each must remain covered by the independently verified
+survivor; generated pairs are not individually deleted.
 
-```sh
-sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
-```
+After a fresh full comparison, one exact whole-mapping DELETE is followed by typed
+absence and strict parent/survivor verification. A bounded read-only settlement
+may allow a survivor's transient CREATING status to return to ACTIVE, never changed
+pairs or schemas. A post-write failure is failed/unknown and stops the batch:
+there is no mutation retry, rollback, raw-delete bypass, parent deletion fallback
+or local JSON removal.
 
-Preview runs the same fresh guard without writes. Execution has no separate
-confirmation prompt. The guard requires another independently read `ACTIVE`
-mapping from a distinct DLO to the same DMO, verifies parents and survivor, and
-blocks the last mapping before DELETE. Execution must independently confirm exact
-absence and unchanged survivor/parents; it never cascades or removes local JSON.
-Installed API68 non-last preview passed with zero writes; execution issued exactly
-one DELETE `204`, followed by an independent typed `404` absence check. The survivor
-remained `ACTIVE` and byte-equivalent, and both DLOs and the DMO were byte-equivalent
-to their immediate pre-delete representations. Last-mapping preview **and** execution
-returned `MAPPING_LAST_MAPPING_DELETE_BLOCKED` with zero writes. There is no parent
-deletion fallback.
-{% endcapture %}
+**Completed installed API61/API68 deletion:** each fresh selected mapping had five
+protected pairs plus the identity Text pairs `A__c` and `B__c`; a distinct-DLO
+survivor retained the five protected pairs plus identity Text `E__c`. At each
+version, preview performed zero writes, and execution issued exactly three DELETEs
+returning `204`: the observed A selector, B selector, then the mapping. Independent
+GETs confirmed typed `404 NOT_FOUND` absence, exact survivor-only fixture inventory,
+full unchanged DLOs, preserved DMO schema/nonflags and only A/B mapped flags changing
+from true to absent. The survivor remained unchanged. Installed last-for-DMO preview
+and execution both refused with `MAPPING_LAST_MAPPING_DELETE_BLOCKED` at API61 and
+API68, before any unmap, with zero writes and independent unchanged readbacks.
+API61 fixtures were provisioned at API68; this is not API61 creation proof.
+These checks do not qualify installed Number removal, populated objects, arbitrary
+schemas, shared targets, cross-org operation or API62–67 live behavior.
 
-{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction." api_state="available" api_reason="Native API68 non-last deletion only, with independent absence and preservation checks." api_body=delete_api plugin_state="available" plugin_reason="Installed API68 non-last DELETE/preservation passed; last-mapping preview and execution blocked without writes." plugin_body=delete_plugin %}
+### Native unmap-first evidence and limits
 
-{{ delete_evidence | markdownify }}
+At API61 and API68, fresh owned empty fixtures removed unique ordinary Text and
+Number pairs one at a time (`204`), leaving the five protected pairs, then deleted
+the selected non-last mapping once (`204`). Typed GET absence, complete inventory,
+unchanged DLOs, preserved DMO schema and exact settled survivor equality confirmed
+the bounded result. The survivor initially reported CREATING, then returned to
+ACTIVE through read-only checks; it was not immediately byte-unchanged. The only
+baseline DMO differences were the expected mapped-flag removals during unmaps.
+API61 fixtures were provisioned at API68: this is API61 deletion/readback evidence,
+not API61 creation proof. Neither fixture qualifies populated objects, arbitrary
+pair types, shared targets, cross-org portability or universal preservation.
+
+### Historical API68 whole-mapping DELETE evidence
+
+Native DELETE used
+`/services/data/v68.0/ssot/data-model-object-mappings/{serverMappingName}?dataspace=default`.
+In the earlier bounded experiment, deleting the last mapping returned HTTP `500`;
+a non-last mapping returned HTTP `204` with an empty body, followed by two exact
+mapping GET `404` readbacks while both parent objects remained. Earlier installed
+API68 acceptance also recorded a non-last DELETE `204`, independent typed `404`
+absence, an `ACTIVE` byte-equivalent survivor and byte-equivalent parent definitions.
+Those are historical fixture observations, not current support or a preservation
+guarantee. They do not establish that CLI, API and Plugin deletion were all
+experimentally tested.
+
+A later observed non-last native DELETE HTTP `204` removed the selected mapping
+**and the DMO's `Count__c`/`Gamma__c` fields**. The surviving mapping and both DLOs
+remained unchanged, but the strict raw parent postcheck failed with
+`MAPPING_PARENT_CHANGED`; the command exited nonzero with mutation unknown. This
+was actual server-side field loss, not merely derived `isMapped` drift or readback
+uncertainty. The command sends no parent DELETE; that does not prevent server-side
+effects. This failure motivated the retired blanket hold and the later bounded
+unmap-first implementation; it remains a warning against direct deletion.
+
+The earlier comparison depended on the **target DMO's remaining DLO mappings**:
+adding a second DMO to the same DLO did **not** unlock deletion of the first
+mapping. A second DLO mapped to the same DMO allowed the observed non-last DELETE,
+not a guarantee of safe deletion or a bypass for the guarded sequence.
+
+Deleting the qualified empty, owned DMO cascaded its mapping and left the DLO
+intact in a separate bounded observation. This is not permission to delete a
+business or shared parent as a workaround, and does not establish a plugin cascade
+feature.

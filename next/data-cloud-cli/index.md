@@ -20,7 +20,7 @@ crud_rows:
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Exact standard API 65 mapping XML retrieval independently reverified in one source org; no semantic key/qualifier, prerequisite or cross-org proof. Compatible-object creation; CLI label-only update; native API68 one-pair and qualified two-independent-Text-pair additions; plugin exactly-one-pair Text/compatible Number additions with zero-write repeats and multi-add refusal. Plugin retrieval qualifies exact selections; type-only/bare inventory reads currently fail NATIVE_INVENTORY_UNCONFIRMED with zero artifacts; guarded non-last API68 deletion with a distinct-DLO survivor to the same DMO. Last-mapping deletion is blocked; not general retargeting, pair replacement or cross-org qualification.'
+    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps eligible omitted pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Guarded whole-mapping deletion admits API61–68/default68: installed61/68 each passed two Text unmaps then mapping deletion (three DELETE204), full parent/schema/survivor checks and zero-write last-DMO preview/execution guards; API61 fixtures were provisioned at68,62–67 user-assumed/synthetic only. Installed Number removal remains unqualified. Last mapping for the target DMO is blocked before all writes; protected pairs, full parents and survivor preservation are checked. Direct non-last DELETE previously lost DMO fields; survivor coverage alone is insufficient. Delete remains Unknown; no populated, general binding-retarget, cross-org or universal preservation qualification.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Last updated: November 3, 2026, 00:36 (UTC+1).*
+*Last updated: November 3, 2026, 08:05 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
