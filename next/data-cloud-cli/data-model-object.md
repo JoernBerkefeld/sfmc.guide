@@ -16,7 +16,7 @@ crud:
   delete: { status: "yes", methods: [cli, api, plugin] }
 ---
 
-*Last updated: November 2, 2026, 19:58 (UTC+1).*
+*Prior documentation record: November 2, 2026, 19:58 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 

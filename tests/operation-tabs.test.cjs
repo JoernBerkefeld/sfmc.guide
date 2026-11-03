@@ -280,11 +280,14 @@ for (const name of ['calculated-insights', 'segment-members']) {
       if (name === 'calculated-insights' && /^\*Last updated: .+\*$/u.test(line)) {
         continue;
       }
-      const expected = line === titleReplacement[0] ? titleReplacement[1] : line;
+      const expected = (line === titleReplacement[0] ? titleReplacement[1] : line).replace(
+        '*Last updated:',
+        '*Prior documentation record:',
+      );
       assert.ok(after.split('\n').includes(expected), `Original content retained: ${expected}`);
     }
     if (name === 'calculated-insights') {
-      assert.equal((after.match(/^\*Last updated: .+\*$/gmu) || []).length, 1);
+      assert.equal((after.match(/^\*Prior documentation record: .+\*$/gmu) || []).length, 1);
     }
     assert.equal((after.match(/include operation-tabs\.html/g) || []).length, 4);
   });
