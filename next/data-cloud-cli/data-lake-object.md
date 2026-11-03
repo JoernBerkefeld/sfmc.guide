@@ -134,6 +134,17 @@ API68 definition workflow, not ingestion or cross-org portability.
 
 ### Plugin command and saved-file contract
 
+**Documentation update: November 3, 2026; no new live check.** Native commands now
+accept optional `--dataspace NAME` (alias `--data-space`). The flag has no CLI
+default; use only one spelling. DLO CREATE still requires `dataspaceInfo`, derived
+from the validated saved identity even when the flag is omitted. An explicit scope
+must be an actual DLO membership and agree with the saved definition and fresh
+target checks. No new DLO URL filter or update-body scope is implied. See the
+[shared scope and readable-output rules](/next/data-cloud-cli/#native-plugin-scope-and-readable-results).
+Nondefault-space lifecycle behavior is not live-qualified by the default-space
+acceptance below. Readable retrieval counts successful DLO results, including
+unchanged files, not API `totalSize`; JSON output is unchanged.
+
 The replacement workflow uses exact `dlo:CustomerSource__dll` selections with
 API `68.0` and the default data space. A full API name includes `__dll`; it is not
 the source object's record ID. The commands below were exercised through the public plugin on a fresh owned

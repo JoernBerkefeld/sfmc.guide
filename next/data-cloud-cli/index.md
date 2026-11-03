@@ -20,7 +20,7 @@ crud_rows:
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps eligible omitted pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Guarded whole-mapping deletion admits API61–68/default68: installed61/68 each passed two Text unmaps then mapping deletion (three DELETE204), full parent/schema/survivor checks and zero-write last-DMO preview/execution guards; API61 fixtures were provisioned at68,62–67 user-assumed/synthetic only. Installed Number removal remains unqualified. Last mapping for the target DMO is blocked before all writes; protected pairs, full parents and survivor preservation are checked. Direct non-last DELETE previously lost DMO fields; survivor coverage alone is insufficient. Delete remains Unknown; no populated, general binding-retarget, cross-org or universal preservation qualification.'
+    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps eligible omitted pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Guarded whole-mapping deletion admits API61–68/default68: installed61/68 each passed two Text unmaps then mapping deletion (three DELETE204), full parent/schema/survivor checks and zero-write last-DMO preview/execution guards; API61 fixtures were provisioned at68,62–67 user-assumed/synthetic only. Installed Number removal remains unqualified. Last mapping for the target DMO is blocked before all writes; protected pairs, full parents and survivor preservation are checked. Direct non-last DELETE previously lost DMO fields; survivor coverage alone is insufficient. Delete is Partial for API and Plugin; out-of-the-box CLI deletion remains Unknown. No populated, general binding-retarget, cross-org or universal preservation qualification.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -126,6 +126,73 @@ The ratings cover usable workflows supplied in this guide, not every observed op
   {% endfor %}
   </tbody>
 </table>
+
+## Native plugin scope and readable results
+
+**Documentation update: November 3, 2026.** This section describes the current
+implementation and requested output format, not a new installed-plugin or live-org
+acceptance result. The resource pages retain their existing operation ratings and
+live-tested limits. In particular, mapping inventory acceptance and its deferred
+`totalSize` mismatch remain unresolved; API62–67 mapping deletion remains an
+accepted compatibility assumption, not live qualification.
+
+For guarded whole-mapping deletion, see the [mapping delete commands and safety limits](/next/data-cloud-cli/dlo-dmo-mapping/#delete).
+Removing selected field pairs instead uses the complete JSON deploy workflow under
+[Mapping Update](/next/data-cloud-cli/dlo-dmo-mapping/#update).
+
+### Optional dataspace
+
+Native `sf data360 retrieve`, `deploy` and `delete` accept `--dataspace NAME`.
+`--data-space NAME` is an alias; use one spelling, never both in the same command.
+The flag has no CLI default. Omitting it does not mean every request sends a
+`default` parameter:
+
+- Mapping requests add the `dataspace` query only when you supply the flag. Without
+  it, local identity checks use the documented default context, but the HTTP query
+  is omitted.
+- DMO create and update send `dataSpaceName` only with an explicit flag. Creating a
+  nondefault-space DMO without that flag is refused.
+- DLO creation must still send `dataspaceInfo`: its membership comes from the
+  validated saved definition, even without a flag. DLO update does not acquire a
+  scope property. DLO/DMO list, detail and delete URLs do not gain extra dataspace
+  filters that those routes do not support.
+
+Before a write, the requested scope, saved identity and fresh target/parent
+identities must agree. DLO checks use actual memberships; DMO checks use the
+returned `dataSpaceName`. Inventory filters returned memberships locally: omission
+keeps default-space discovery, not an all-space export. An explicit scope selects
+that space; ambiguous names are refused. The existing file layout is unchanged,
+and `--overwrite` does not permit replacing another dataspace's definition at the
+same filename. Legacy families and dependency adapters remain default-only.
+
+These are implemented scope checks and parameter handling, **not live-qualified
+nondefault-space CRUD**. They do not widen version guards, parent/survivor checks,
+ingestion support or destructive-operation permissions. The default-space command
+examples below remain the retained qualified examples, not nondefault recipes.
+
+### Human-readable output
+
+Leave off `--json` to see one action line per deployed or deleted component,
+identified by type and API name. Lines distinguish created, updated, deleted,
+unchanged, failed, blocked and not-attempted results; preview uses `Planned` rather
+than claiming a completed change. Confirmed mapping updates also show the
+[removed and added field-pair lists](/next/data-cloud-cli/dlo-dmo-mapping/#update).
+A field-pair retarget appears in both lists.
+
+Deployment execution ends with `Deployed: n (x created / y updated / z failed)`.
+Here `n` is the number of confirmed creations plus confirmed updates. Unchanged,
+blocked and unattempted components are excluded; a failed component counts once,
+not once per field operation. Preview does not print a completed-deployment total.
+
+Retrieval lists each successful component as
+`Downloaded <type>:<ApiName> (retrieved).` or
+`Downloaded <type>:<ApiName> (unchanged).`, then prints `Downloaded <type>: n`
+for that type. The total counts successful component results, including unchanged
+local files, not attempts, individual files or API `totalSize`. Failed names remain
+visible and are not counted. This display rule applies to exact, type-only and
+bare retrieval; it does not prove that an inventory is complete or that a pending
+retrieval implementation has passed installed acceptance. `--json` keeps its
+structured result without these human-readable lines.
 
 ## Before you start
 

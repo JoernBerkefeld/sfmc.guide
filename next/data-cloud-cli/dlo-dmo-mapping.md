@@ -15,7 +15,7 @@ crud:
   retrieve: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  delete: { status: "unknown", methods: [], method_statuses: { cli: "unknown", api: "unknown", plugin: "unknown" } }
+  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
 ---
 
 *Prior documentation record: November 3, 2026, 08:05 (UTC+1).*
@@ -68,8 +68,8 @@ then additions are sent together in one names-only PATCH. Guarded whole-mapping
 deletion admits exact API61–68 pins, with default/`auto` selecting API68. The last
 mapping for the target DMO is refused **before any field unmap or other write**.
 The retired unconditional `MAPPING_DELETE_SAFETY_HOLD` is no longer the policy.
-Delete remains Unknown in the supplied-workflow ratings: native evidence is bounded,
-not a general-purpose deletion guarantee. This documentation
+Delete is Partial for API and Plugin in the supplied-workflow ratings: native evidence is bounded,
+not a general-purpose deletion guarantee. Out-of-the-box CLI deletion remains Unknown. This documentation
 reconciliation records the completed installed checks, not a new live-org test.
 
 **Native API evidence:** API68 create/GET, qualified batch additions, ordinary
@@ -82,6 +82,18 @@ A direct non-last DELETE previously removed DMO fields despite HTTP `204`; neith
 HTTP success nor survivor coverage alone guarantees preservation. See Delete for
 the guarded sequence and its limits. The deferred `totalSize` inventory issue
 remains a known issue; it was not investigated or requalified in this update.
+
+### Optional plugin dataspace
+
+**Documentation update: November 3, 2026; no new live check.** Native commands accept
+optional `--dataspace NAME` (alias `--data-space`); use only one spelling. There is
+no CLI default. Mapping requests include the `dataspace` query only when explicitly
+supplied. Omission keeps the documented default context for local identity checks
+without injecting `dataspace=default` into HTTP requests. Requested scope, saved
+identity and fresh mapping/parent identities must agree before writes. See the
+[shared scope and output guidance](/next/data-cloud-cli/#native-plugin-scope-and-readable-results).
+This implementation support does not establish nondefault-space live acceptance,
+resolve inventory completeness or broaden the bounded mapping qualifications above.
 
 ## Retrieve
 
@@ -307,8 +319,8 @@ unchanged or failed updates do not claim completed field changes. `--json` retai
 the structured result without these human-readable lines.
 
 Execution finishes with `Deployed: n (x created / y updated / z failed)`; `n` counts
-only confirmed created and updated components, not unchanged items or individual
-field operations. A failed mapping counts once as failed, not as updated. Preview
+only confirmed created and updated components, not unchanged, blocked or
+unattempted items or individual field operations. A failed mapping counts once as failed, not as updated. Preview
 does not claim completed deployments. For example:
 `Deployed: 2 (1 created / 1 updated / 1 failed)`.
 
@@ -417,7 +429,45 @@ than direct whole-mapping DELETE; installed acceptance is limited to the empty
 fixtures and versions below, not general-purpose deletion.
 {: .mapping-shared-restriction }
 
-{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="blocked" cli_reason="Standalone mapping deletion can fail with an internal error or sole-mapping removal restriction; CLI support remains Unknown." api_state="unknown" api_reason="Native API61/API68 unmap-first deletion preserved bounded empty fixtures; no general-purpose deletion recipe is qualified." plugin_state="unknown" plugin_reason="Bounded installed API61/API68 two-Text-pair unmap-first deletion and zero-write last-DMO guards passed; API62–67 remain assumed, not live-qualified." %}
+{% capture delete_api %}
+**Partial coverage:** native API61/API68 unmap-first deletion preserved bounded empty
+fixtures. Follow the [guarded sequence](#plugin-delete--guarded-unmap-first-implementation)
+and its [native evidence and limits](#native-unmap-first-evidence-and-limits).
+This is not a standalone direct-DELETE recipe or general preservation guarantee.
+{% endcapture %}
+{% capture delete_plugin %}
+### Delete a whole mapping with the plugin
+
+Use the actual server-returned mapping API name, not a DLO or DMO name. First
+preview the exact target; this performs reads only:
+
+```sh
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
+```
+
+After reviewing the ordered plan and the safeguards below, execute by removing
+`--preview`:
+
+```sh
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+```
+
+**There is no confirmation prompt or extra execution flag.** The second command
+changes the org immediately if its guards pass. Bare `mapping` and wildcard
+selections are not accepted. This deletes the selected relationship, not a local
+JSON file or either parent object. To remove only eligible field pairs while
+keeping the mapping, edit `spec.fieldMappings` in the complete JSON and use
+[`sf data360 deploy` as described under Update](#update), not `delete`.
+
+Deletion is **Partial**, not unrestricted: API61 and API68 have bounded installed
+live acceptance; API62–67 are assumed compatible with synthetic coverage only.
+The plugin first unmaps eligible custom pairs, retaining protected key/system
+pairs, then deletes the mapping with parent-field preservation checks. The last
+mapping for a **DMO** is blocked before any write. Being last for a **DLO** is a
+different condition, not a global deletion block; the same-DMO survivor and every
+other safeguard must still pass. Read the detailed restrictions below before use.
+{% endcapture %}
+{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="unknown" cli_reason="No qualified standalone out-of-the-box CLI deletion workflow is supplied." api_state="available" api_reason="Partial: native API61/API68 unmap-first deletion preserved bounded empty fixtures; no general-purpose deletion guarantee." api_body=delete_api plugin_state="available" plugin_reason="Partial: guarded API61/API68 deletion and zero-write last-DMO guards passed; API62–67 are assumed, not live-qualified." plugin_body=delete_plugin %}
 
 ### Plugin delete — guarded unmap-first implementation
 

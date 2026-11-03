@@ -53,6 +53,20 @@ them; admission does not extend live-tested versions. Bounded installed API68
 mixed mapping-batch acceptance also passed (see [DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/));
 it does not broaden standalone DMO CRUD or its tested versions.
 
+### Optional plugin dataspace and output
+
+**Documentation update: November 3, 2026; no new live check.** Native commands accept
+optional `--dataspace NAME`, with `--data-space` as an alias; use only one spelling.
+There is no CLI default. DMO create/update includes `dataSpaceName` only when the
+flag is supplied, and creating a nondefault DMO without it is refused. Fresh
+response identities, the requested scope and the saved definition must agree
+before mutation. DMO list, detail and delete URLs gain no extra dataspace filter.
+This does not qualify nondefault-space CRUD or widen the existing empty-object,
+version and dependency limits. See the
+[shared scope and readable-output rules](/next/data-cloud-cli/#native-plugin-scope-and-readable-results)
+for per-component actions, successful retrieval counts and deploy totals.
+`--json` retains the structured result.
+
 ## Native API contracts and completed version comparison
 
 The [Salesforce Data 360 Connect API reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) supplies the documented contract. The completed November 2, 2026 comparison independently tested native DMO CRUD sequentially at API `60.0`–`67.0` on source org `mcnext-sdo` (`00Daj000010xkZNEAY`). **API `61.0`–`67.0` each returned POST `201`, GET `200`, label PATCH `200`, additive-field PATCH `200` and DELETE `204`.** API `61.0` is the lowest live-tested successful version for each operation in this org, not a universal minimum or a plugin guard. API `68.0` DMO CRUD was not tested in this matrix.
