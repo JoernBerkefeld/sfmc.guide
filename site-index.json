@@ -1001,11 +1001,11 @@
     "description": "Salesforce CLI workflows and verified operation limits for Data Model Object (DMO): CustomObject, __dlm."
   },
   {
-    "name": "Data stream configuration",
+    "name": "Data Streams",
     "url": "/next/data-cloud-cli/data-stream-definition/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "Salesforce CLI workflows and verified operation limits for Data stream configuration: DataStreamDefinition."
+    "description": "Data Stream ingestion, source-to-DLO mappings, saved definitions and qualified native API and plugin limits."
   },
   {
     "name": "DLO-DMO-mapping",

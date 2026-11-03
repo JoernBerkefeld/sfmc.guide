@@ -9,14 +9,18 @@ verification: verified
 platforms:
   - next
 crud_rows:
-  - path: next/data-cloud-cli/data-model-object.md
-    label: DMOs
-    anchor: data-model-object-dmo-customobject-dlm
-    scope: 'XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
+  - path: next/data-cloud-cli/data-stream-definition.md
+    label: Data Streams
+    anchor: data-stream-configuration-datastreamdefinition
+    scope: 'Ingestion starts here: source-to-DLO mappings belong to the stream, separate from DLO-to-DMO mappings. Standard CLI retrieves DataStreamDefinition XML. Native Ingestion API/Other/default evidence qualifies bounded creation, additive Text mapping updates and both delete modes at API65/68; API66 preserve-DLO deletion succeeded despite unresolved automatic processing failure. Plugin exact retrieve and guarded deploy are implemented and synthetically verified for auto/API68/default only; installed/live acceptance is pending and plugin delete is still being implemented.'
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
     scope: 'Standard Metadata retrieval worked at requested API65–68; full-schema redeploy hit primary-key/qualifier failures. Native API61–68 standalone CRUD succeeded separately; plugin guard and public acceptance remain API68/default. Portable JSON, auto POST/PATCH and explicit read-only preview; default delete has no prompt. Not ingestion, cascade or cross-org portability.'
+  - path: next/data-cloud-cli/data-model-object.md
+    label: DMOs
+    anchor: data-model-object-dmo-customobject-dlm
+    scope: 'XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -29,10 +33,6 @@ crud_rows:
     label: Source object definitions
     anchor: source-object-configuration-datasourceobject
     scope: '`DataSourceObject` XML, not a complete connector or credential export.'
-  - path: next/data-cloud-cli/data-stream-definition.md
-    label: Stream definitions
-    anchor: data-stream-configuration-datastreamdefinition
-    scope: '`DataStreamDefinition` XML retrieval; documented native stream POST availability and ingestion PK-only rule are not qualified CREATE support; runtime facade observations remain in the DLO section.'
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
     anchor: retrieve
