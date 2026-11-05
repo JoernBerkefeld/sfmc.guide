@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Segment members"
-description: "Salesforce CLI workflows and verified operation limits for Segment Members: runtime data, not metadata."
+description: "API workflows using Salesforce CLI authentication and transport for Segment Members: runtime data, not metadata."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/segment-members/
@@ -39,6 +39,8 @@ Member identifiers and profile fields are personal data. Keep request files and 
 {% capture retrieve_api %}
 ### Read basic membership
 
+**Deliberate CLI-envelope inspection:** the eight REST commands in this walkthrough retain `--json` to inspect HTTP status and body through `result.statusCode` and `result.body`. This is a structured-response teaching example, not a requirement for every API call or an automation pipeline. JSON request bodies alone do not require this output flag.
+
 First read the segment itself:
 
 ```sh
@@ -72,7 +74,7 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?
 }
 ```
 
-You get membership and audit information, **not the person's profile fields**. `1200` is just an illustrative count. A CLI invocation retrieves one page; it does not export the whole segment automatically. The documented maximum page size is **1000**.
+You get membership and audit information, **not the person's profile fields**. `1200` is just an illustrative count. One API request through the authenticated request runner retrieves one page; it does not export the whole segment automatically. The documented maximum page size is **1000**.
 
 For further pages, increase the offset by the number of returned rows. Check `offSet`, stable totals and nonempty progress, staying on the same validated org/path. Do not blindly follow a returned URL. Full-population export has not been verified here; if membership changes while you read it, reconcile the result rather than assuming a fixed snapshot.
 
@@ -89,8 +91,10 @@ There is **no standard CLI `--include-details` flag**. To get that result, you n
 Use the dataspace returned by the segment descriptor. For `default`:
 
 ```sh
-sf data query --target-org SOURCE_ALIAS --api-version 67.0 --query "SELECT Id, DataSpaceApiName FROM DataSpace WHERE DataSpaceApiName = 'default' LIMIT 2" --json
+sf data query --target-org SOURCE_ALIAS --api-version 67.0 --query "SELECT Id, DataSpaceApiName FROM DataSpace WHERE DataSpaceApiName = 'default' LIMIT 2"
 ```
+
+**Optional structured output (`--json`) for the SOQL command:**
 
 ```json
 { "status": 0, "result": { "totalSize": 1, "done": true, "records": [{ "DataSpaceApiName": "default" }] } }
@@ -206,7 +210,7 @@ sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=0&
 
 `returnedRows` is the page size; `status.rowCount` is the total for the bounded query. Advance offset by the actual number of validated and accepted rows, including any from submission. Require progress, a stable total and consistent metadata order/width; stop at the total and reject match counts above one before exporting.
 
-This example covers **two bounded SQL pages, not an unrestricted full export**. The CLI still returns array rows with the two internal columns. Validate and transform the results privately if you want named fields, normalized dates or output without those internal columns.
+This example covers **two bounded SQL pages, not an unrestricted full export**. The API response still contains array rows with the two internal columns. Validate and transform the results privately if you want named fields, normalized dates or output without those internal columns.
 
 ### Save output deliberately
 

@@ -963,7 +963,7 @@
     "url": "/next/data-cloud-cli/data-graphs/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "Salesforce CLI workflows and verified operation limits for Operational Data Graphs."
+    "description": "API workflows using Salesforce CLI authentication and transport for Data Graphs, with separate optional plugin capabilities and verified limits."
   },
   {
     "name": "Data Kit definition",
@@ -1117,7 +1117,7 @@
     "url": "/next/data-cloud-cli/identity-resolution/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "Salesforce CLI workflows and verified operation limits for Operational Identity Resolution."
+    "description": "API workflows using Salesforce CLI authentication and transport for Identity Resolution, with verified operation limits."
   },
   {
     "name": "Marketing Cloud Engagement",
@@ -1166,7 +1166,7 @@
     "url": "/next/data-cloud-cli/segment-members/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "Salesforce CLI workflows and verified operation limits for Segment Members: runtime data, not metadata."
+    "description": "API workflows using Salesforce CLI authentication and transport for Segment Members: runtime data, not metadata."
   },
   {
     "name": "Segments",

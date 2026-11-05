@@ -59,8 +59,10 @@ For the verified combined transport, the integration supplies `manifest/package.
 With that file supplied, retrieve the pieces together:
 
 ```sh
-sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10
 ```
+
+**Optional structured output (`--json`):**
 
 ```json
 { "status": 0, "result": { "success": true, "files": [

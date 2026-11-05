@@ -43,7 +43,7 @@ or broaden the operation/version qualification recorded below.
 
 {% capture retrieve_plugin %}
 ```sh
-sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
+sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project
 ```
 
 Saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`, excluding source
@@ -56,14 +56,14 @@ remain unchanged; the raw API response remains complete. API68 evidence showed
 seven raw fields → six saved after CREATE and eight raw → seven saved after PATCH;
 DLO Metadata identifies the qualifier with `definitionCreationType=System` and
 `usageTag=KEY_QUALIFIER`. This separate empirical evidence is not new live plugin
-acceptance. The JSON envelope has contract `sf-data360-retrieve`;
+acceptance. **Optional structured output (`--json`):** the JSON envelope has contract `sf-data360-retrieve`;
 `result.items[]` reports `family: "dlo"`, `operation: "retrieve"`,
 `outcome: "retrieved"` (or `"unchanged"`) and `path`.
 {% endcapture %}
 {% capture create_plugin %}
 ```sh
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
 Confirmed target-name absence selects POST with authored fields only. Preview
@@ -73,19 +73,23 @@ lookup failures stop without creation. This is standalone Other/default creation
 {% endcapture %}
 {% capture update_plugin %}
 ```sh
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
 An existing exact name selects PATCH of the resolved target ID. Only label changes
 and nonprimary Text-field additions are admitted. Preview reports `outcome: "update"`;
 execution reports `outcome: "updated"`, `mutation: "confirmed-updated"`. Existing
-field/primary-key edits stop. No schema removal or ingestion is qualified.
+field/primary-key edits stop. An equal label and preserved field inventory report
+`outcome: "unchanged"`; execution reports `mutation: "not-attempted"` and sends no
+POST or PATCH. Field ordering does not trigger a write, and the saved omission of
+ordinary generated `KQ_Id__c` does not count as removing that target field.
+No schema removal or ingestion is qualified.
 {% endcapture %}
 {% capture delete_plugin %}
 ```sh
-sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
 **The second command deletes immediately without confirmation.** Preview reports
@@ -132,6 +136,19 @@ left readback unchanged; default delete completed without a prompt, subsequent
 preview reported absence, and the local JSON file remained. This proves the bounded
 API68 definition workflow, not ingestion or cross-org portability.
 
+**November 4 installed cross-org acceptance:** an isolated locally packed plugin
+retrieved a fresh empty standalone Other/default DLO in `mcnext-sdo`, then created
+it in `mcnext-thuy` from the exact portable file. Org-local IDs differed; independent
+raw readbacks preserved generated fields and the primary key. A label change plus
+one nonprimary Text addition persisted. Repeated deploy returned `unchanged` /
+`not-attempted`; native-client capture recorded GET only, with no POST/PATCH/DELETE.
+Both exact owned fixtures were deleted after identity and empty-dependency checks,
+then independently returned 404 by name and ID. Source delete preview preserved
+its readback; the target campaign call omitted `--preview` and performed the
+authorized deletion, so this run does not qualify target delete preview. This is
+API68 standalone definition portability, not ingestion, populated data, mixed-family
+dependency deployment, lower-version or published-package qualification.
+
 ### Plugin command and saved-file contract
 
 **Documentation update: November 3, 2026; no new live check.** Native commands now
@@ -154,11 +171,11 @@ preservation after delete preview, and absence after default deletion; the local
 JSON remained. Those historical readback counts are not current saved-file counts.
 
 ```sh
-sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --json
-sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
+sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
 Retrieve saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`. The file
@@ -271,7 +288,7 @@ response contract for the other's.
 definitions; this is separate from the native Connect REST JSON route.
 
 ```sh
-sf project retrieve start --metadata CustomObject:McpMappingProbe_20261027__dll --target-org SOURCE_ALIAS --api-version 68.0 --wait 5 --json
+sf project retrieve start --metadata CustomObject:McpMappingProbe_20261027__dll --target-org SOURCE_ALIAS --api-version 68.0 --wait 5
 ```
 
 Replace `SOURCE_ALIAS` with your authenticated source alias and the fixture name with your existing DLO's exact metadata name. Run from the prepared Salesforce project described in the overview; retrieval can overwrite local files.
@@ -538,7 +555,7 @@ Replace the sanitized developer name with the exact returned name of your DLO. O
 One representative **historical failed deployment command—not a successful creation recipe**:
 
 ```sh
-sf project deploy start --metadata CustomObject:McpDloCreate68_XJ0GCE__dll --target-org TARGET_ALIAS --api-version 68.0 --test-level NoTestRun --wait 5 --json
+sf project deploy start --metadata CustomObject:McpDloCreate68_XJ0GCE__dll --target-org TARGET_ALIAS --api-version 68.0 --test-level NoTestRun --wait 5
 ```
 
 This is an actual deployment, not a dry run. Each requested version (65.0, 66.0, 67.0 and 68.0) returned CLI exit `1`, terminal `Failed`, `done: true`, `success: false`, `checkOnly: false` and `rollbackOnError: true`. All reported a `CustomField` failure at `<testname>.Id__c`, line `54`, column `13`, in the deployment's combined object file. The generic internal error had the same signature `(-1644920076)` in every run. This location identifies the reported primary-field failure; it does **not establish its underlying cause**.
@@ -554,7 +571,7 @@ These November 2 experiments used standard `CustomObject` and `CustomField` depl
 **Empty definition, then original fields in the target org:** a project containing only the original object XML, renamed to a fresh `ProbeTarget__dll` directory/file, successfully deployed one `CustomObject`. An independent retrieve returned the object and zero fields: no `Id__c` or other field was automatically generated. Submitted `isEnabled=true` read back as `false`; the original category was retained.
 
 ```sh
-sf project deploy start --metadata CustomObject:ProbeTarget__dll --api-version 68.0 --target-org TARGET_ALIAS --wait 5 --json
+sf project deploy start --metadata CustomObject:ProbeTarget__dll --api-version 68.0 --target-org TARGET_ALIAS --wait 5
 ```
 
 A separate fields-only project then submitted all eight unchanged field files, selecting each explicitly as `CustomField:ProbeTarget__dll.<field-name>` with repeated `--metadata` flags. The deployment failed at `Id__c` with signature `(-64830600)` and `rollbackOnError: true`. Seven component successes in the response were provisional: independent final retrieval still showed **zero persisted fields**, not seven.
@@ -562,8 +579,8 @@ A separate fields-only project then submitted all eight unchanged field files, s
 **Isolating custom fields on that retained empty definition:** remove only the line `<primaryIndexOrder>1</primaryIndexOrder>` from the original `Id__c.field-meta.xml`; keep the field itself and every other attribute. This changes the supplied sample from 655 to 606 bytes. Deploy just that field, then the unchanged original `Name__c` and `Note__c` files:
 
 ```sh
-sf project deploy start --metadata CustomField:ProbeTarget__dll.Id__c --api-version 68.0 --target-org TARGET_ALIAS --wait 5 --json
-sf project deploy start --metadata CustomField:ProbeTarget__dll.Name__c --metadata CustomField:ProbeTarget__dll.Note__c --api-version 68.0 --target-org TARGET_ALIAS --wait 5 --json
+sf project deploy start --metadata CustomField:ProbeTarget__dll.Id__c --api-version 68.0 --target-org TARGET_ALIAS --wait 5
+sf project deploy start --metadata CustomField:ProbeTarget__dll.Name__c --metadata CustomField:ProbeTarget__dll.Note__c --api-version 68.0 --target-org TARGET_ALIAS --wait 5
 ```
 
 Both deployments succeeded. Independent retrieval confirmed exactly **three persisted fields: `Id__c`, `Name__c`, `Note__c`**. Their XML bytes matched the respective submitted files; `Id__c` had no `primaryIndexOrder`. Restoring only that annotation by deploying the original 655-byte `Id__c` XML failed with signature `(883038728)`. Independent retrieval confirmed all three fields unchanged and no primary-index annotation. This isolates an annotation-sensitive failure in this context; it does not identify the missing prerequisite or prove that an annotation-free schema is equivalent to the source DLO.
@@ -571,7 +588,7 @@ Both deployments succeeded. Independent retrieval confirmed exactly **three pers
 **Single deployment in the source org:** a different fresh `ProbeSource__dll` received the original object plus all eight field files in one deployment, with only the same `primaryIndexOrder` line removed from `Id__c`. All seven other fields, including system and `KEY_QUALIFIER` attributes, were unchanged.
 
 ```sh
-sf project deploy start --metadata CustomObject:ProbeSource__dll --api-version 68.0 --target-org SOURCE_ALIAS --wait 5 --json
+sf project deploy start --metadata CustomObject:ProbeSource__dll --api-version 68.0 --target-org SOURCE_ALIAS --wait 5
 ```
 
 This failed at `KQ_Id__c` with signature `(2099634494)`, `success: false` and rollback enabled. Eight provisional component successes did not establish persistence: independent exact-name retrieval reported the object missing, and an independent Metadata listing had no matching name. **Removing the primary-index annotation alone was insufficient for this complete eight-field CREATE.** The result does not isolate the qualifier's name, system creation type or usage tag as its cause.

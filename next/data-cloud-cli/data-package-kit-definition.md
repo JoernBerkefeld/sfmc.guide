@@ -33,7 +33,7 @@ crud:
 ## Retrieve
 
 {% capture retrieve_cli %}
-Use the [combined kit retrieval](/next/data-cloud-cli/data-package-kit-object/#retrieve). Its `files` response includes `DataPackageKitDefinition:CustomerKit`, written to `force-app/main/default/dataPackageKitDefinitions/CustomerKit.dataPackageKitDefinition-meta.xml`. Keep the templates and membership links alongside it for a complete snapshot.
+Use the [combined kit retrieval](/next/data-cloud-cli/data-package-kit-object/#retrieve). Its saved files include `DataPackageKitDefinition:CustomerKit`, written to `force-app/main/default/dataPackageKitDefinitions/CustomerKit.dataPackageKitDefinition-meta.xml`. Keep the templates and membership links alongside it for a complete snapshot.
 
 ```xml
 <DataPackageKitDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -60,10 +60,10 @@ An owned Identity Resolution kit definition, substantive template and membership
 These are local project-relative paths; replace the illustrative names with your own. The complete Identity Resolution template content must already exist—these paths are not a template generator.
 
 ```sh
-sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 10
 ```
 
-Shortened illustrative response:
+**Optional structured output (`--json`), shortened illustration:**
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [
@@ -120,10 +120,10 @@ The generated local `manifest/destructiveChangesPost.xml` selects the exact thre
 With both files supplied at those project-relative paths, run:
 
 ```sh
-sf project deploy start --manifest manifest/empty.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10 --json
+sf project deploy start --manifest manifest/empty.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10
 ```
 
-Shortened illustrative response:
+**Optional structured output (`--json`), shortened illustration:**
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [

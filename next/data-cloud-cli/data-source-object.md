@@ -34,7 +34,7 @@ crud:
 
 {% capture retrieve_cli %}
 ```sh
-sf project retrieve start --metadata DataSourceObject:CustomerSource --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata DataSourceObject:CustomerSource --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
 The response points to `force-app/main/default/dataSourceObjects/CustomerSource.dataSourceObject-meta.xml`:

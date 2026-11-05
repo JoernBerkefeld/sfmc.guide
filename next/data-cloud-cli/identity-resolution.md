@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Identity Resolution"
-description: "Salesforce CLI workflows and verified operation limits for Operational Identity Resolution."
+description: "API workflows using Salesforce CLI authentication and transport for Identity Resolution, with verified operation limits."
 parent: Data Cloud with Salesforce CLI
 parent_url: /next/data-cloud-cli/
 permalink: /next/data-cloud-cli/identity-resolution/
@@ -42,7 +42,7 @@ Use compatible existing Individual/name/ContactPointEmail fields and an unused r
 Read through the native API 65 endpoint, or the API 67 facade where needed:
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method GET --json
+sf api request rest '/services/data/v65.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method GET --include
 ```
 
 For the facade, save `ir-get.json`:
@@ -52,7 +52,7 @@ For the facade, save `ir-get.json`:
 ```
 
 ```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json' --json
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json'
 ```
 
 ```json
@@ -83,14 +83,14 @@ Save `ir-create.json`. It matches on first name, last name and normalized email,
 ```
 
 ```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-create.json' --json
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-create.json' --include
 ```
 
 ```json
 { "objectApiName": "Individual_cust", "doesRunAutomatically": false, "rulesetStatus": "PUBLISHING" }
 ```
 
-Check nested `body.error` as well as the result: HTTP `201` and CLI exit `0` can still contain an operation error. Salesforce may add reconciliation entities beyond the one sent. Keep the returned identity and exact generated output/link references for later checks.
+The JSON illustrations here are decoded operation-result excerpts, not the complete raw server response or a CLI envelope. `--include` prints HTTP status and headers separately from the server body. Check nested `body.error` inside the server/facade response as well as the decoded result: HTTP `201` and CLI exit `0` can still contain an operation error. Salesforce may add reconciliation entities beyond the one sent. Keep the returned identity and exact generated output/link references for later checks.
 
 {% endcapture %}
 {% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." api_state="available" api_reason="Bounded API 67 facade creation enters publication; automatic-run false is not draft mode." api_body=create_api %}
@@ -108,7 +108,7 @@ Let's change the Individual reconciliation rule from `LastUpdated` to **`MostFre
 ```
 
 ```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-update.json' --json
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-update.json'
 ```
 
 ```json
@@ -130,8 +130,8 @@ After checking dependencies and ownership, save `ir-delete.json`:
 ```
 
 ```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-delete.json' --json
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json' --json
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-delete.json'
+sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json'
 ```
 
 The delete can return `{ "success": true }` while a following read still shows:

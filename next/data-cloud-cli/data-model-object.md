@@ -46,7 +46,11 @@ attribution does not expand the tested versions or plugin qualification below.
 workflow, not unrestricted schema CRUD. Public retrieve/create/update/delete were
 qualified before the mapping integration. Updates cover label changes and additive
 nonprimary Text fields, not key changes, field removal, arbitrary schemas,
-ingestion or cross-org portability. The native API matrix below remains separate
+ingestion or general cross-org portability. A bounded installed API68 workflow
+also supports transporting an unchanged source-retrieved Other/default empty Text
+definition into a target with its own local ID, then a label/additive Text update
+and zero-write repeat. This does not qualify mixed-family dependency migration,
+populated objects or other schemas. The native API matrix below remains separate
 from public-command qualification. The current implementation selects API `68.0`
 for default/`auto` and admits explicit numeric versions `>=61.0` without upgrading
 them; admission does not extend live-tested versions. Bounded installed API68
@@ -117,7 +121,7 @@ DMO field relationships use `GET` and `POST /data-model-objects/{dataModelObject
 
 ### Remaining comparisons
 
-The completed matrix includes same-version Metadata readbacks of each owned fixture, not an unchanged-source export comparison across API `65.0`–`68.0`. That comparison and a full native DMO CRUD lifecycle at `68.0` remain unverified; the separate API68 generated-qualifier CREATE/additive-PATCH evidence in the Retrieve plugin tab does not complete that matrix. A plugin version guard is not evidence of a server limitation. This documentation update reused retained evidence and ran no extra live tests.
+The completed matrix includes same-version Metadata readbacks of each owned fixture, not an unchanged-source export comparison across API `65.0`–`68.0`. That unchanged-source version comparison remains unverified. The bounded installed API68 standalone workflow described above is separate from this native version matrix; neither the installed lifecycle nor the separate generated-qualifier policy evidence completes the cross-version comparison. A plugin version guard is not evidence of a server limitation. This documentation update reused retained evidence and ran no extra live tests.
 
 ## Retrieve
 
@@ -126,7 +130,7 @@ The completed matrix includes same-version Metadata readbacks of each owned fixt
 definitions; this is separate from the native Connect REST JSON route.
 
 ```sh
-sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
 Look for these files:
@@ -160,7 +164,7 @@ API `61.0`–`67.0` returned HTTP `200` with a direct object and `fields` array 
 {% endcapture %}
 {% capture retrieve_plugin %}
 ```sh
-sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS --api-version 65.0 --output-dir ./project --json
+sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS --api-version 65.0 --output-dir ./project
 ```
 
 Saves `./project/data360/dmo/Customer__dlm.dmo-meta.json`, omitting only the
@@ -203,8 +207,8 @@ POST returned `201`; independent GET returned `200`, six fields, `isEnabled=fals
 Run from the project containing `data360/dmo/Customer__dlm.dmo-meta.json`:
 
 ```sh
-sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
-sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --json
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS
 ```
 
 Deploy resolves the exact target developer name. Only confirmed absence permits
@@ -271,11 +275,16 @@ Edit the canonical JSON label or add an ordinary nonprimary Text field, preservi
 existing fields and key settings, then use the same deploy selection:
 
 ```sh
-sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
-sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --json
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS --preview
+sf data360 deploy -m dmo:Customer__dlm -o TARGET_ALIAS
 ```
 
-An existing target selects PATCH, not replacement. The bounded qualification covers
+An existing target with a supported change selects PATCH, not replacement. Equal
+labels and no added fields return `outcome: "unchanged"` and
+`mutation: "not-attempted"`; comparison sends no POST or PATCH. Field order does
+not trigger a write, and the saved omission of ordinary generated `KQ_Id__c` is
+not field removal. Preservation and unsupported-addition checks still run first.
+The bounded qualification covers
 label changes and additive nonprimary Text fields only. Existing-field removal,
 key changes, arbitrary type/schema changes and populated-object safety are not
 qualified. Independent GET, not PATCH's possibly stale echo, confirms persistence
@@ -314,10 +323,10 @@ Its `destructiveChangesPost.xml` selects only the intended DMO:
 With those files and checks in place:
 
 ```sh
-sf project deploy start --manifest package.xml --post-destructive-changes destructiveChangesPost.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
+sf project deploy start --manifest package.xml --post-destructive-changes destructiveChangesPost.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
 ```
 
-A completed deletion can look like this:
+**Optional structured output (`--json`):** a completed deletion can look like this:
 
 ```json
 { "status": 0, "result": { "done": true, "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "CustomObject", "fullName": "Customer__dlm", "deleted": true, "success": true }] } } }
@@ -340,8 +349,8 @@ API `61.0`–`67.0` each returned DELETE `204`; independent final GET `404` and 
 qualified standalone case is a fresh owned empty custom DMO, not a business object.
 
 ```sh
-sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS --preview --json
-sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS --json
+sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS --preview
+sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS
 ```
 
 Deletion executes by default without a separate confirmation prompt. Preview makes

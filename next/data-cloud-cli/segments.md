@@ -28,7 +28,7 @@ A **segment** selects an audience using rules. Publishing prepares it for use; r
 
 The examples distinguish `UI` criteria built in Salesforce's visual interface from `DBT`/`Dbt`, a SQL-based pipeline representation. You do not need to install a separate dbt command-line tool for the requests here. **CRUD** simply abbreviates create, read, update and delete.
 
-`MarketSegmentDefinition` is the Metadata API XML definition of the **same segment**, not a separate segment type. Both metadata commands and runtime API requests below use Salesforce CLI. Saving XML alone need not create a usable live segment. The XML writes cover **source-only API 65 DBT Metadata definition CRUD**; cross-org replay and deployment without processing have not been verified. Being able to retrieve UI criteria does not establish UI-definition writes.
+`MarketSegmentDefinition` is the Metadata API XML definition of the **same segment**, not a separate segment type. Standard metadata commands supply the XML CLI workflow; runtime requests use Salesforce CLI as an authenticated API request runner. Saving XML alone need not create a usable live segment. The XML writes cover **source-only API 65 DBT Metadata definition CRUD**; cross-org replay and deployment without processing have not been verified. Being able to retrieve UI criteria does not establish UI-definition writes.
 
 This API 65 runtime route creates a live segment. Unlike saving XML alone, it can begin processing immediately: **`NoRefresh` can transition `PROCESSING` → `ACTIVE`**. Empty-result SQL does not prevent scanning or processing either. Get permission for those effects before creating or updating a segment.
 
@@ -46,7 +46,7 @@ The example does not set up a send destination, export members or prove cross-or
 For an existing segment:
 
 ```sh
-sf project retrieve start --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
 This writes `force-app/main/default/marketSegmentDefinitions/ActiveCustomers.marketSegmentDefinition-meta.xml`. A **UI retrieval example**, separate from the DBT creation example, looks like this:
@@ -64,10 +64,12 @@ The XML omits lookback, schedule, state and dataspace. It does not publish, coun
 
 {% endcapture %}
 {% capture retrieve_api %}
-### Read runtime state through the CLI
+<a id="read-runtime-state-through-the-cli"></a>
+
+### Read runtime state through the API
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS --json
+sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS
 ```
 
 The **lookback** is the time window used by the segment; `P90D` is duration notation for 90 days. Check the returned value rather than assuming every segment uses it.
@@ -107,7 +109,7 @@ Save `segment-create.json`, replacing the existing unified DMO/key and model nam
 ```
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments' --method POST --body '@segment-create.json' --target-org TARGET_ALIAS --json
+sf api request rest '/services/data/v65.0/ssot/segments' --method POST --body '@segment-create.json' --target-org TARGET_ALIAS
 ```
 
 ```json
@@ -136,9 +138,11 @@ Use a separate project containing only this owned definition, with a compatible 
 `includeCriteria` contains XML-escaped pipeline XML. This DBT form has no `segmentOn` element. Replace the model and DMO/key consistently, and obtain permission for possible processing even with the empty-result SQL.
 
 ```sh
-sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
-sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
+sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
+
+**Optional structured output (`--json`) for the deployment:**
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": true, "changed": true, "success": true }] } } }
@@ -173,7 +177,7 @@ Save `segment-update.json`:
 ```
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method PATCH --body '@segment-update.json' --target-org TARGET_ALIAS --json
+sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method PATCH --body '@segment-update.json' --target-org TARGET_ALIAS
 ```
 
 ```json
@@ -209,11 +213,11 @@ A separate source-only existing-owner check retained the same runtime/metadata i
 In the owned DBT file, change only `masterLabel` to `Customer Definition Updated`. Keep the criteria, model, SQL and type intact:
 
 ```sh
-sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
-sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
+sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
-Expect `changed: true` for the label change. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
+Check that the deployment reports the label change; optional `--json` output can report `changed: true`. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
 
 {% endcapture %}
 {% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update or qualified forward empty-audience selected-primary-key predicate addition; reconcile unknown outcomes with reads." api_body=update_api %}
@@ -232,12 +236,12 @@ For the owned segment, save `segment-delete.json`:
 ```
 
 ```sh
-sf api request rest --file segment-delete.json --target-org TARGET_ALIAS --json
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS --json
-sf org list metadata --metadata-type MarketSegmentDefinition --target-org TARGET_ALIAS --api-version 65.0 --json
+sf api request rest --file segment-delete.json --target-org TARGET_ALIAS --include
+sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS --include
+sf org list metadata --metadata-type MarketSegmentDefinition --target-org TARGET_ALIAS --api-version 65.0
 ```
 
-DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404` / `ITEM_NOT_FOUND` and the exact metadata member is absent:
+`--include` prints HTTP status and headers alongside the server body. DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404` / `ITEM_NOT_FOUND` and the exact metadata member is absent. This body excerpt excludes status and headers:
 
 ```json
 [{ "errorCode": "ITEM_NOT_FOUND", "message": "<segment not found>" }]
@@ -261,11 +265,11 @@ Use the integration-supplied empty `manifest/package.xml` and this exact `manife
 ```
 
 ```sh
-sf project deploy start --manifest manifest/package.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
-sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE_ALIAS --api-version 65.0 --json
+sf project deploy start --manifest manifest/package.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
+sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE_ALIAS --api-version 65.0
 ```
 
-The completed response reports `deleted: true`. Require independent inventory absence of `CustomerDefinition` as well. This deletes the definition only; it does not promise runtime or generated-data cleanup. The downloaded XML remains on your computer.
+Require a successful completed deletion; optional `--json` output reports `deleted: true`. Require independent inventory absence of `CustomerDefinition` as well. This deletes the definition only; it does not promise runtime or generated-data cleanup. The downloaded XML remains on your computer.
 
 {% endcapture %}
 {% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only deletion; runtime and generated-data cleanup are not promised." cli_body=delete_cli api_state="available" api_reason="Delete the owned live segment and independently confirm runtime and metadata absence." api_body=delete_api %}

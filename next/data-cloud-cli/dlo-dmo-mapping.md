@@ -32,6 +32,26 @@ crud:
 
 This is the definition that connects fields in a DLO to fields in a DMO. Both objects must already exist with matching fields, primary keys and key qualifiers.
 
+## Installed API61 mapping create and single addition — 2026-11-04
+
+Fresh empty custom Other/Text fixtures passed installed public mapping create, exact
+canonical retrieval, filtered target binding lookup, one additive Text identity pair
+and a GET-only unchanged repeat at explicit API61, with `--dataspace` omitted.
+Captured native routes retained v61.0 and omitted the dataspace query; mapping write
+bodies carried no scope field. Independent reads confirmed ACTIVE mapping settlement,
+all prior pairs/selectors, the full DLO and DMO field/key definitions; only the added
+Extra__c isMapped flag changed during update. Create/update previews were read-only.
+
+This closes the exercised API61 create/read/single-add omission path, not general
+CRUD or inventory pagination. API61 is the lowest live-tested success for these
+mapping operations in this record, not a universal introduction claim. API60 GET404
+is separate evidence, not POST/PATCH/DELETE rejection proof. API62–67 operation
+qualification remains open; their deletion compatibility is still assumed. Desired-state
+removal and retarget remain API68-only. No nondefault space, ingestion, populated data
+or released-package qualification follows. The fresh sole mapping and both parents
+are deliberately retained under the accepted last-mapping limitation; no delete,
+parent cascade or terminal cleanup was attempted.
+
 **API family:** The native JSON route
 `/services/data/vXX.0/ssot/data-model-object-mappings` (including its item and
 field-mapping routes) belongs to the **Data 360 Connect REST API**, not the
@@ -56,6 +76,20 @@ passed bounded Text removal, two-pair Text batch addition and both Text field-pa
 retarget directions. Installed guarded deletion and last-for-DMO preview/execution
 guards passed at API61 and API68. These are empty-fixture results in one org,
 not general lifecycle qualification.
+
+**November 4, 2026 bounded cross-org acceptance:** an installed API68/default
+workflow retrieved an exact source mapping, changed only its logical DLO/DMO
+bindings to compatible target-local empty Other/Text fixtures, then passed create,
+canonical retrieve, one additive Text pair and a GET-only unchanged repeat.
+Guarded selected deletion removed two authored pairs before deleting that mapping;
+independent typed name404 confirmed absence and the other-source ACTIVE survivor
+and parent schema/key definitions remained unchanged. Explicit previews were
+read-only. Last-for-DMO preview and execution refused with zero writes. Exact owned
+source/target final mappings and parents remain under the accepted platform
+limitation; no DMO-object deletion, cascade or complete cleanup was tested.
+This does not qualify general cross-org schemas, populated objects, inventory
+completeness, lower-version portability or the released package.
+
 Retrieve and Create remain Yes within their supplied scopes; Update remains Partial.
 Plugin Retrieve Yes qualifies exact `mapping:Name` selection only. Earlier type-only
 and bare inventory reads failed with `NATIVE_INVENTORY_UNCONFIRMED` and zero artifacts.
@@ -102,7 +136,7 @@ resolve inventory completeness or broaden the bounded mapping qualifications abo
 `ObjectSourceTargetMap` definitions, not the native Connect REST JSON route.
 
 ```sh
-sf project retrieve start --metadata ObjectSourceTargetMap:CustomerMapping --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata ObjectSourceTargetMap:CustomerMapping --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
 The response points to `force-app/main/default/objectSourceTargetMaps/CustomerMapping.objectSourceTargetMap-meta.xml`. Use the actual metadata member name from your org, not a name guessed from the source and target objects.
@@ -127,7 +161,7 @@ exact DLO/DMO bindings and all field pairs; the CLI is an API request runner her
 {% endcapture %}
 {% capture retrieve_plugin %}
 ```sh
-sf data360 retrieve -m mapping:CustomerMapping -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project --json
+sf data360 retrieve -m mapping:CustomerMapping -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project
 ```
 
 Saves `./project/data360/mapping/CustomerMapping.mapping-meta.json`, a versioned
@@ -177,8 +211,10 @@ Start with a complete retrieved mapping file at `force-app/main/default/objectSo
 Keep **all** field pairs in the real file. Once you have checked the existing custom objects and confirmed that this mapping does not already exist:
 
 ```sh
-sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
+sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
 ```
+
+**Optional structured output (`--json`) for the deployment:**
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [{ "fullName": "CustomerMapping", "type": "ObjectSourceTargetMap", "state": "Created" }] } }
@@ -201,8 +237,8 @@ already existed; this is not a complete ingestion or arbitrary formula recipe.
 From the project containing `data360/mapping/CustomerMapping.mapping-meta.json`:
 
 ```sh
-sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0
 ```
 
 Installed API68/default mixed creation passed with reverse-order selectors;
@@ -246,7 +282,7 @@ The verified change is the **label only**. Edit `masterLabel` in the complete fi
 Then deploy it:
 
 ```sh
-sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5 --json
+sf project deploy start --metadata ObjectSourceTargetMap:CustomerMapping --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
 ```
 
 The file entry can report `Changed`; sending the same file again can report `Unchanged`. These are separate invocations, and neither proves that Salesforce performed no internal work. Read back the label and pairs. Retargeting, field removal and formula/filter updates have not been verified.
@@ -277,8 +313,8 @@ Edit `fieldMappings` in the canonical JSON, preserving the DLO/DMO bindings and
 all protected pairs. Preview the exact selection before execution:
 
 ```sh
-sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
-sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview
+sf data360 deploy -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0
 ```
 
 The current implementation resolves fresh target bindings/name and compares exact
@@ -442,14 +478,14 @@ Use the actual server-returned mapping API name, not a DLO or DMO name. First
 preview the exact target; this performs reads only:
 
 ```sh
-sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview --json
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --preview
 ```
 
 After reviewing the ordered plan and the safeguards below, execute by removing
 `--preview`:
 
 ```sh
-sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0 --json
+sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0
 ```
 
 **There is no confirmation prompt or extra execution flag.** The second command

@@ -12,7 +12,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-stream-definition.md
     label: Data Streams
     anchor: data-stream-configuration-datastreamdefinition
-    scope: 'Ingestion starts here: source-to-DLO mappings belong to the stream, separate from DLO-to-DMO mappings. Standard CLI retrieves DataStreamDefinition XML. Native Ingestion API/Other/default evidence qualifies bounded creation, additive Text mapping updates and both delete modes at API65/68; API66 preserve-DLO deletion succeeded despite unresolved automatic processing failure. Plugin exact retrieve and guarded deploy are implemented and synthetically verified for auto/API68/default only; installed/live acceptance is pending and plugin delete is still being implemented.'
+    scope: 'Ingestion starts here: source-to-DLO mappings belong to the stream, separate from DLO-to-DMO mappings. Standard CLI retrieves DataStreamDefinition XML. Native Ingestion API/Other/default evidence qualifies bounded creation, additive Text mapping updates and both delete modes at API65/68; API66 preserve-DLO deletion succeeded despite unresolved automatic processing failure. Plugin exact retrieve, guarded deploy and delete are implemented for auto/API68/default only. Fresh installed API68 source create/retrieve, connectionName-only target remap/create/retrieve, additive Text update, zero-write repeat and both-org explicit cascade cleanup passed with protected resources unchanged. This is bounded cross-org qualification, not general connector, populated-data or other-version support.'
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
@@ -24,7 +24,7 @@ crud_rows:
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps eligible omitted pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Guarded whole-mapping deletion admits API61–68/default68: installed61/68 each passed two Text unmaps then mapping deletion (three DELETE204), full parent/schema/survivor checks and zero-write last-DMO preview/execution guards; API61 fixtures were provisioned at68,62–67 user-assumed/synthetic only. Installed Number removal remains unqualified. Last mapping for the target DMO is blocked before all writes; protected pairs, full parents and survivor preservation are checked. Direct non-last DELETE previously lost DMO fields; survivor coverage alone is insufficient. Delete is Partial for API and Plugin; out-of-the-box CLI deletion remains Unknown. No populated, general binding-retarget, cross-org or universal preservation qualification.'
+    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps eligible omitted pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Guarded whole-mapping deletion admits API61–68/default68: installed61/68 each passed two Text unmaps then mapping deletion (three DELETE204), full parent/schema/survivor checks and zero-write last-DMO preview/execution guards; API61 fixtures were provisioned at68,62–67 user-assumed/synthetic only. Installed Number removal remains unqualified. Last mapping for the target DMO is blocked before all writes; protected pairs, full parents and survivor preservation are checked. Direct non-last DELETE previously lost DMO fields; survivor coverage alone is insufficient. Delete is Partial for API and Plugin; out-of-the-box CLI deletion remains Unknown. No populated, general binding-retarget or universal preservation qualification. A separate installed API68/default empty Other/Text cross-org run passed exact source retrieval, target-local logical DLO/DMO rebinding, create/retrieve, additive Text update, GET-only repeat and guarded selected deletion with an unchanged survivor. Exact owned final mappings and parents remain under the accepted last-mapping limitation; this is not general cross-org schema or released-package qualification.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -36,7 +36,7 @@ crud_rows:
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
     anchor: retrieve
-    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit, including target-bound ACTIVE/NOT_SCHEDULED preservation; not unchanged-source cross-org deployment or successful calculation proof; asynchronous deletion checks required.'
+    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit, including target-bound ACTIVE/NOT_SCHEDULED preservation; historical API65 evidence is not unchanged-source cross-org deployment or successful calculation proof. Separately, optional sf-plugin-data explicit68/default installed cross-org draft create/publish, byte-identical paired retrieval, GET-only no-op and ACTIVE edit passed. Later seven-poll delete passed; two earlier unconfirmed completions remain unexplained, all fixtures independently absent. Plugin auto remains legacy65; no computation/general SQL guarantee; asynchronous deletion checks required.'
   - path: next/data-cloud-cli/segments.md
     label: Segments
     anchor: retrieve
@@ -48,7 +48,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-graphs.md
     label: Data Graphs
     anchor: operational-data-graphs
-    scope: 'API 67 facade root-only projection update; bounded existing-IR-owner target LastName append, full preservation and comparison-before-write repeat qualified; not portable creation or arbitrary edits; deletion does not prove generated-object cleanup.'
+    scope: 'Optional sf-plugin-data explicit68/default standard Individual NONE recursive retrieval and guarded label/description/additive projection/relationship UPDATE with retained multihop bindings; strict root-only absent creation and exact-artifact confirmed deletion. Installed description UPDATE and zero-write repeats passed; general cross-org portability is unqualified. Fresh ready/identity/root/known-empty dependencies required; exhaustive external consumers unverified. Independent graph-definition absence confirmed, not generated-resource/storage/credits cleanup. Auto/API67 facade retains bounded existing-IR-owner LastName append, full preservation and zero-write repeat; GUI UPDATE does not qualify public REST/plugin UPDATE.'
   - path: next/data-cloud-cli/identity-resolution.md
     label: Identity Resolution
     anchor: operational-identity-resolution
@@ -67,7 +67,7 @@ crud_rows:
     scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
 ---
 
-*Prior documentation record: November 3, 2026, 08:05 (UTC+1).*
+*Prior documentation record: November 3, 2026, 23:05 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
@@ -79,16 +79,16 @@ This page explains the difference and shows the commands next to the files and r
 
 <!-- Keep this capability table, all linked type-page details and their visible last-updated timestamps synchronized with every substantive update across this guide. -->
 
-Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. CLI and API are not competing alternatives: the CLI also sends API requests. XML definitions and runtime state are views of the same resource, not separate feature types.
+Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. Using Salesforce CLI as a request runner does not make an API workflow standard resource-specific CLI support. XML definitions and runtime state are views of the same resource, not separate feature types.
 
 ### Choose a method for each operation
 
-The resource pages group complete workflows into independent operation tabs. **CLI** means dedicated standard metadata retrieval or deployment commands. **API** means requests such as `sf api request rest`, including any supporting CLI reads needed by that workflow. Both methods use Salesforce CLI; they differ in the interface they call and the files or responses they return. Switching a tab changes the method's prose, payloads, commands and checks together, not just its code blocks. Shared prerequisites, safety warnings and detailed evidence for disabled methods remain visible.
+The resource pages group complete workflows into independent operation tabs. **CLI** means a supplied supported Metadata retrieval/deployment workflow or a resource-specific standard command. **API** means requests such as `sf api request rest`, including any supporting CLI reads needed by that workflow. Generic REST or SOAP request runners, request bodies supplied by file or stdin, MCP/facade/Aura calls and authentication helpers never establish resource-specific standard CLI support. Their use of Salesforce CLI for authentication or transport does not change the API classification. Separately identified custom plugin commands remain plugin workflows, not standard CLI support. Switching a tab changes the method's prose, payloads, commands and checks together, not just its code blocks. Shared prerequisites, safety warnings and detailed evidence for disabled methods remain visible.
 
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
 - **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
 - **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
-- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. Other resource plugin tabs remain Unknown. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
+- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The Data Stream, DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. The calculated-insight page separately documents the bounded explicit68 draft/publish/source-paired-delete workflow, installed cross-org equality/no-op evidence and unresolved historical deletion-confirmation failures; its standard-CLI/API tabs remain separate. The Graph page separately documents explicit68/default recursive native retrieval and bounded label/description/additive projection/relationship UPDATE with preservation, distinct native artifacts, strict root-only CREATE, zero-write equality and guarded confirmed deletion. Installed description UPDATE and zero-write output checks passed; general cross-org portability is not qualified and auto/API67 facade behavior is preserved. Exhaustive external consumers and generated-resource/storage/credits cleanup are unverified. Other resource plugin tabs remain Unknown. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
@@ -130,8 +130,9 @@ The ratings cover usable workflows supplied in this guide, not every observed op
 ## Native plugin scope and readable results
 
 **Documentation update: November 3, 2026.** This section describes the current
-implementation and requested output format, not a new installed-plugin or live-org
-acceptance result. The resource pages retain their existing operation ratings and
+implementation and requested output format. The stream detail and summary above
+also include the fresh bounded installed API68 cross-org result; this does not
+requalify other resources or API versions. The resource pages retain their existing operation ratings and
 live-tested limits. In particular, mapping inventory acceptance and its deferred
 `totalSize` mismatch remain unresolved; API62–67 mapping deletion remains an
 accepted compatibility assumption, not live qualification.
@@ -169,6 +170,31 @@ These are implemented scope checks and parameter handling, **not live-qualified
 nondefault-space CRUD**. They do not widen version guards, parent/survivor checks,
 ingestion support or destructive-operation permissions. The default-space command
 examples below remain the retained qualified examples, not nondefault recipes.
+
+### Safe operation diagnostics
+
+Native stream, DLO, DMO and mapping failures distinguish plugin verification from
+a confirmed Salesforce API rejection. Protected-state mismatches can identify the
+check, resource and first differing path. Only bounded schema identifiers, enums
+and flags are shown as expected/observed values; IDs, labels, free text and unknown
+properties are redacted. Raw remote payloads, arbitrary exception messages and stack
+traces are not forwarded. A confirmed rejection may report its HTTP status without
+the response body; otherwise the plugin does not claim Salesforce rejected the
+request. Diagnostics leave safety checks and error codes intact and do not
+permit retrying an unknown mutation.
+
+For Connect API failures, the plugin identifies HTTP 429 **Too Many Requests**
+as rate limiting. HTTP 503 **Service Unavailable** can mean a Connect rate limit,
+maintenance, load or another availability issue; it does not confirm the cause.
+Human-readable and JSON diagnostics show a server `Retry-After` value only when
+it passes validation. Reduce request frequency and try later because effective
+limits can vary with load and change. Before rerunning a write with an unknown
+outcome, inspect the target. The plugin does not automatically replay the write.
+
+For ingestion provisioning, start with the [Data Stream and landing DLO](/next/data-cloud-cli/data-stream-definition/),
+prepare the DMO and its required fields independently, then create the DLO-to-DMO
+mapping last. Add a supported stream-linked DLO field through its owning stream,
+not standalone DLO CRUD; that update does not create DMO fields or downstream mappings.
 
 ### Human-readable output
 
@@ -217,7 +243,7 @@ npm install --global @salesforce/cli
 sf --version
 ```
 
-The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. You do not need to build or install a custom plugin, Yarn or TypeScript for this page. A **plugin** adds commands to the CLI; these examples use Salesforce's standard commands.
+The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. The standard Metadata and API request-runner examples do not require a custom plugin, Yarn or TypeScript. A **plugin** adds commands to the CLI; the separately identified optional `sf data360` workflows require installing `sf-plugin-data` and following their linked prerequisites.
 
 To see what a command accepts without running it, append `--help`, for example `sf org login web --help`. Words starting with `--` are **flags**: options that change how a command runs.
 
@@ -276,7 +302,7 @@ A component's **label** is its friendly display text. Its **API name** is the ex
 To find an existing metadata member before your first download, ask the component owner for its API name or list the relevant type. For example, this read lists `CustomObject` definitions visible to your user:
 
 ```sh
-sf org list metadata --metadata-type CustomObject --target-org SOURCE_ALIAS --api-version 65.0 --json
+sf org list metadata --metadata-type CustomObject --target-org SOURCE_ALIAS --api-version 65.0
 ```
 
 Look for the exact `fullName` of your intended DMO ending in `__dlm`. The list can include other kinds of objects; do not pick the first entry blindly. If you cannot identify the intended component, stop and ask its owner. Later sections give the corresponding metadata type to list.
@@ -311,7 +337,7 @@ All responses are **sanitized, shortened illustrations**, not complete response 
 Use the DMO name you identified above in place of `Customer__dlm`:
 
 ```sh
-sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
 Here's how to read that command:
@@ -320,13 +346,13 @@ Here's how to read that command:
 - `--metadata CustomObject:Customer__dlm` selects **type:name**. `CustomObject` is Salesforce's metadata type here, not an instruction to create an object.
 - `--target-org` chooses the authenticated connection; `--api-version` selects the interface version.
 - `--wait 5` waits up to five minutes for results, not five seconds. Returning to the prompt is not proof that a job finished.
-- `--json` asks for structured output with named properties rather than a human-oriented table. It does not save an output file.
+Interactive CLI and plugin examples use human-readable output by default. Optionally append `--json` for structured output with named properties; it does not save an output file. Samples explicitly labelled optional structured output illustrate that format, not the flag-free command's default display. REST responses can inherently remain JSON without this flag.
 
 Later, `--source-dir` selects a local file or folder to deploy; selecting a folder includes its subfolders. `--manifest` selects components listed in an XML file instead. `--test-level NoTestRun` concerns Salesforce Apex code tests, **not** a simulation or permission to skip checking the result. `--dry-run`, where supported, validates rather than saving the change; these examples otherwise perform the requested operation.
 
 ### What does a successful response look like?
 
-For example, retrieving a DMO can return:
+In human output, check the retrieval's completion status and saved file paths. **Optional structured output (`--json`):** retrieving a DMO can return this shortened illustration:
 
 ```json
 {
@@ -351,12 +377,12 @@ The outer `status: 0` says the CLI command reported success; a nonzero status me
 
 For deployments, wait for the whole job to succeed and then read the component again to check the result. A component listed as successful inside a failed deployment is not enough. Likewise, `Unchanged` means the configuration did not change; the deployment job still ran.
 
-For REST, check the HTTP status **and the response body**. HTTP is the request/response protocol: codes such as `200` and `201` indicate a successful request, `204` has no response body, and `404` means the requested resource was not found. Authentication or permission failures are not evidence of deletion. With `--json`, look for `result.statusCode` and `result.body` where provided. The API 67 MCP facade used below is an API that runs named operations. It can return an error inside an otherwise successful HTTP/CLI response. Its examples show the decoded result, not the complete enclosing response.
+For REST, check the HTTP status **and the response body**. HTTP is the request/response protocol: codes such as `200` and `201` indicate a successful request, `204` has no response body, and `404` means the requested resource was not found. Authentication or permission failures are not evidence of deletion. Use `--include` when the walkthrough needs visible HTTP status and headers alongside the server body; these are separate from decoded operation results. Only the explicitly labelled Segment Members envelope walkthrough deliberately keeps `--json` to inspect `result.statusCode` and `result.body`. The API 67 MCP facade used below is an API that runs named operations. It can return an error inside an otherwise successful HTTP/CLI response. Its examples show the decoded result, not the complete enclosing response.
 
 **Asynchronous** work continues on Salesforce after your command returns. **Polling** means repeating a read/status request, not repeating the create, update or delete. For a deployment that has not finished, use its returned job ID in place of `JOB_ID` and the same org:
 
 ```sh
-sf project deploy report --job-id JOB_ID --target-org TARGET_ALIAS --wait 5 --json
+sf project deploy report --job-id JOB_ID --target-org TARGET_ALIAS --wait 5
 ```
 
 For a retrieval that times out, follow the installed command's recovery guidance rather than assuming all files arrived or inventing a deploy-report command for it. For live components, use that section's read command to check progress. Allow time between checks; if the state stays unresolved or reports an error, stop and ask the administrator instead of resubmitting writes. Later **terminal checks** mean checks for a final state, not simply text appearing in your terminal window.
@@ -368,10 +394,10 @@ A collection or query may return only a **page** of results. **Pagination** mean
 You can repeat `--metadata`; there is no need for a manifest just to select two components:
 
 ```sh
-sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5 --json
+sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
-The `files` list then contains both definitions:
+Check the saved paths for both definitions. **Optional structured output (`--json`):** the `files` list contains both definitions:
 
 ```json
 {
