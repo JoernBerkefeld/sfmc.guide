@@ -1117,7 +1117,7 @@
     "url": "/next/data-cloud-cli/identity-resolution/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "API workflows using Salesforce CLI authentication and transport for Identity Resolution, with verified operation limits."
+    "description": "API workflows using Salesforce CLI authentication and transport for Identity Resolution, with optional native API68 sf-plugin-data capabilities and verified limits."
   },
   {
     "name": "Marketing Cloud Engagement",

@@ -205,6 +205,16 @@ than claiming a completed change. Confirmed mapping updates also show the
 [removed and added field-pair lists](/next/data-cloud-cli/dlo-dmo-mapping/#update).
 A field-pair retarget appears in both lists.
 
+Successful CRUD lines use `created|updated|deleted <type> <apiName>`. The suffix
+` (server is still processing)` identifies positively acknowledged, unsettled
+work: an explicit DLO `PROCESSING` write response, unless an existing independent
+read confirms `ACTIVE` and the requested definition, or the guarded Identity
+Resolution deletion acknowledgement. HTTP 204 alone and `--allow-processing` do
+not establish ongoing processing. A suffix-free line does not prove activation
+or physical cleanup; some operations confirm only a definition or accepted
+receipt. Failed or unknown outcomes are not successful queued operations. This
+output change has synthetic regression coverage only, not new live-org acceptance.
+
 Deployment execution ends with `Deployed: n (x created / y updated / z failed)`.
 Here `n` is the number of confirmed creations plus confirmed updates. Unchanged,
 blocked and unattempted components are excluded; a failed component counts once,
