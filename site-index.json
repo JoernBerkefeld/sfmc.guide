@@ -1008,6 +1008,13 @@
     "description": "Data Stream ingestion, source-to-DLO mappings, saved definitions and qualified native API and plugin limits."
   },
   {
+    "name": "Data Transforms: native API qualification",
+    "url": "/next/data-cloud-cli/data-transforms/",
+    "section": "Data Cloud with Salesforce CLI",
+    "type": "page",
+    "description": "A bounded API68 experiment demonstrates a directly created DLO as a precreated batch transform output, not plugin command support."
+  },
+  {
     "name": "DLO-DMO-mapping",
     "url": "/next/data-cloud-cli/dlo-dmo-mapping/",
     "section": "Data Cloud with Salesforce CLI",

@@ -10,15 +10,17 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli, api] }
-  create: { status: "partial", methods: [cli, api] }
-  update: { status: "partial", methods: [cli, api] }
-  delete: { status: "partial", methods: [api] }
+  retrieve: { status: "yes", methods: [cli, api, plugin] }
+  create: { status: "partial", methods: [cli, api, plugin] }
+  update: { status: "partial", methods: [cli, api, plugin] }
+  delete: { status: "partial", methods: [api, plugin] }
 ---
 
-*Prior documentation record: October 30, 2026, 15:50 (UTC+1).*
+*Prior documentation record: November 8, 2026, 05:48 (UTC+1).*
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
+
+**Native JSON qualification:** the optional `sf-plugin-data` tabs document bounded API68/default retrieval, creation, update and deletion. They are custom plugin/API workflows, not out-of-the-box resource-specific Salesforce CLI support. Installed receipts bind distinct earlier worktree tarballs, not the final offline guard refinement or a released package. Historical API65 Metadata/native workflows below remain separate evidence. This November 8 documentation reconciliation uses November 7 installed live receipts and adds no org calls.
 
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
 
@@ -39,6 +41,18 @@ The example does not set up a send destination, export members or prove cross-or
 {% include crud-summary.html %}
 
 ## Retrieve
+
+{% capture retrieve_plugin %}
+### Native JSON API68 retrieval
+
+```sh
+sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --api-version 68.0 --output-dir retrieved
+```
+
+This optional **sf-plugin-data** workflow saves `data360/segments/OwnedSegment.segment.json`, with no companion Segment XML. Default/`auto` selects API68. Installed source/default acceptance saved one portable JSON; repeating retrieval was byte-stable and reported unchanged. Same-version DMO detail and Metadata reads validate the selected PROFILE model and Text primary field; this is not a Segment XML retrieval.
+
+Qualification is limited to the selected single-model DBT empty-audience definition with `NO_REFRESH`/`P90D`. Runtime/private IDs are not portable source identities. Neither this read nor the later writes prove general SQL, UI criteria, cross-org deployment or a released artifact.
+{% endcapture %}
 
 {% capture retrieve_cli %}
 ### Save the XML definition
@@ -83,9 +97,24 @@ GET wraps the segment in a `segments` array:
 Check the exact segment, SQL/model, type, dataspace, segment-on object, lookback and schedule. Wait for processing to settle before the next change. REST does not write the XML file for you. For audience rows rather than configuration, see [Segment members](/next/data-cloud-cli/segment-members/#retrieve).
 
 {% endcapture %}
-{% include operation-tabs.html id="segments-retrieve" label="Retrieve" cli_state="available" cli_reason="Save the XML definition; runtime settings and audience rows are not included." cli_body=retrieve_cli api_state="available" api_reason="Read runtime configuration, not an XML file or audience export." api_body=retrieve_api %}
+{% include operation-tabs.html id="segments-retrieve" label="Retrieve" cli_state="available" cli_reason="Save the XML definition; runtime settings and audience rows are not included." cli_body=retrieve_cli api_state="available" api_reason="Read runtime configuration, not an XML file or audience export." api_body=retrieve_api plugin_state="available" plugin_reason="Bounded installed native JSON API68/default retrieval and byte-stable repeat; no companion XML." plugin_body=retrieve_plugin %}
 
 ## Create
+
+{% capture create_plugin %}
+### Native JSON API68 absent-target creation
+
+Use the exact retrieved native JSON in a separately owned, compatible project; preserve its admitted single-model DBT shape and resolve dependencies in the target. Do not replay a source record ID or treat a complete GET response as a create payload.
+
+```sh
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --allow-processing
+```
+
+Only authoritative exact native absence permits one CREATE; an existing target takes the bounded UPDATE path, and lookup errors stop rather than fall through. Installed API68/default acceptance observed a zero-write preview, one POST201 PROCESSING and independent full GET200 confirming configuration, private identities and generated membership references. A later GET observed COUNTING. The output `created segment ... (server is still processing)` acknowledges queued configuration, **not completed computation**. `--allow-processing` acknowledges possible server work even for empty-result SQL and `NO_REFRESH`.
+
+A separate native duplicate-name experiment returned409; it is not installed duplicate-create acceptance. Conflict or uncertain writes must not trigger PATCH/upsert, retry, fallback or rollback. Reconcile uncertain outcomes with reads. This is not lower-version JSON CREATE, populated-audience or cross-org qualification.
+{% endcapture %}
 
 {% capture create_api %}
 ### Create a live segment
@@ -151,9 +180,24 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 The second command downloads the definition for comparison. Check the decoded model/SQL, label and type. A successful deploy can still leave runtime GET returning `ITEM_NOT_FOUND`; `--dry-run` would not store anything at all. The project-wide selector above is why this project must contain no unrelated files.
 
 {% endcapture %}
-{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Source-only API 65 DBT definition creation; runtime creation and processing-free deployment are not established." cli_body=create_cli api_state="available" api_reason="Live API 65 DBT creation can begin processing even with NoRefresh." api_body=create_api %}
+{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Source-only API 65 DBT definition creation; runtime creation and processing-free deployment are not established." cli_body=create_cli api_state="available" api_reason="Live API 65 DBT creation can begin processing even with NoRefresh." api_body=create_api plugin_state="available" plugin_reason="Installed API68/default absent-target JSON CREATE with independent readback and processing acknowledgement; not finished computation." plugin_body=create_plugin %}
 
 ## Update
+
+{% capture update_plugin %}
+### Native JSON API68 bounded update
+
+Edit only the intended supported setting in the saved JSON, keeping the admitted definition and bindings intact. Preview the exact file before execution:
+
+```sh
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --allow-processing
+```
+
+Installed API68/default acceptance demonstrated one description-only PATCH with positive PROCESSING acknowledgement plus independent full GET confirming the desired definition and every nonedited identity/setting. `updated segment ... (server is still processing)` means queued configuration acceptance, not finished computation; complete desired-definition reads during COUNTING do not prove audience correctness. A settled identical deploy without `--allow-processing` was a zero-configuration-write no-op.
+
+Earlier installed UPDATE attempts returned `SEGMENT_UPDATE_UNCONFIRMED` despite later independent ACTIVE preservation reads. Those failed/unknown command outcomes remain historical; later success does not retroactively change them. Do not replay an uncertain write. The separately qualified API65 forward empty-audience selected-primary-key predicate edit below is not general SQL, reverse-edit, schedule/lookback, UI-criteria or cross-org qualification.
+{% endcapture %}
 
 {% capture update_api %}
 ### Change the live segment
@@ -220,9 +264,24 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 Check that the deployment reports the label change; optional `--json` output can report `changed: true`. An identical repeat can report `Unchanged`. **Unchanged is not zero writes**: a deployment job still runs and package metadata can change. Broader SQL/criteria edits and live segment updates are not established by this route.
 
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update or qualified forward empty-audience selected-primary-key predicate addition; reconcile unknown outcomes with reads." api_body=update_api %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Only the owned DBT XML masterLabel change is qualified; Unchanged is not zero writes." cli_body=update_cli api_state="available" api_reason="Bounded full-definition label/description update or qualified forward empty-audience selected-primary-key predicate addition; reconcile unknown outcomes with reads." api_body=update_api plugin_state="available" plugin_reason="Installed API68/default description UPDATE and zero-write settled no-op; earlier unknown receipts retained." plugin_body=update_plugin %}
 
 ## Delete
+
+{% capture delete_plugin %}
+### Native JSON API68 guarded definition deletion
+
+Supply both the exact selector and matching saved JSON. Preview performs reads only; execution requires explicit destructive confirmation:
+
+```sh
+sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
+sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --confirm-delete
+```
+
+Fresh identity, full configuration and dependency checks must agree with the selected source. Installed API68/default acceptance proved zero-write preview and unconfirmed rejection, then exactly one DELETE204 followed by internal independent exact GET404 and a separate external exact GET404. HTTP204 alone is not terminal absence. No shared membership DMO was deleted; generated-resource, physical storage and credit cleanup remain unproven.
+
+The **later conservative fresh-predispatch processing guard is offline-qualified only**, not separately installed/live-tested. Preserved DELETING/new PROCESSING acknowledgement branches are synthetic-only; the installed deletion reached terminal404 and did not exercise those branches. Preexisting PROCESSING is not proof of deletion progress. Unknown outcomes stop without replay, retry, fallback or rollback. No lower-version JSON DELETE, exhaustive external-consumer exclusion or general cross-org qualification is claimed. Local files remain after deletion.
+{% endcapture %}
 
 {% capture delete_api %}
 Do not delete shared unified DMOs or membership tables as extra cleanup. Previously downloaded source files remain local.
@@ -272,4 +331,4 @@ sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE
 Require a successful completed deletion; optional `--json` output reports `deleted: true`. Require independent inventory absence of `CustomerDefinition` as well. This deletes the definition only; it does not promise runtime or generated-data cleanup. The downloaded XML remains on your computer.
 
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only deletion; runtime and generated-data cleanup are not promised." cli_body=delete_cli api_state="available" api_reason="Delete the owned live segment and independently confirm runtime and metadata absence." api_body=delete_api %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only deletion; runtime and generated-data cleanup are not promised." cli_body=delete_cli api_state="available" api_reason="Delete the owned live segment and independently confirm runtime and metadata absence." api_body=delete_api plugin_state="available" plugin_reason="Installed API68/default confirmed exact deletion; later conservative guard offline-only, transitional branches synthetic-only; not physical cleanup." plugin_body=delete_plugin %}

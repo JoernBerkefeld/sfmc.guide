@@ -118,6 +118,24 @@ selecting PATCH for an existing target or POST only after confirmed absence. Thi
 avoids handcrafting each API request or blindly replaying generated response fields.
 Plugin command acceptance is distinct from the historical API experiments below.
 
+### Direct creation for a transform output
+
+Direct DLO creation has a demonstrated use as a **precreated transform output**,
+without a DataStream for that output. A native API68 `CUSTOM` / `BATCH` transform
+with an `STL` definition bound that directly created output DLO and completed a
+run with `SUCCESS` in 47 seconds, processing and writing zero rows. The source
+DLO was also directly created as an empty test fixture; ordinary transform sources
+may instead contain ingested data. The output binding is the practical reason for
+direct creation, not a requirement to create every source this way.
+
+This qualifies only the tested precreated-output path: precreation was **not proven
+mandatory**, and automatic output provisioning was **not tested**. A zero-row run
+does not qualify populated transformations, other API versions or cross-org replay.
+The transform, source DLO and output DLO were removed after the experiment.
+**Data Transform plugin commands are not implemented**; see the
+[Data Transforms qualification](/next/data-cloud-cli/data-transforms/) for this
+native API evidence, not an available plugin transform workflow.
+
 ### Native API minimum and plugin qualification
 
 The separately completed native CRUD matrix establishes **API 61 as the minimum
