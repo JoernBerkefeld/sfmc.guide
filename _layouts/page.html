@@ -23,7 +23,7 @@ layout: default
     {% include platform-badges.html %}
     {% if page.data_cloud_git_date_scoped %}
       <p>Latest committed page edit: {% if page.data_cloud_git_date %}<time datetime="{{ page.data_cloud_git_date | escape }}">{{ page.data_cloud_git_date | date: '%B %-d, %Y, %H:%M UTC' }}</time>{% else %}unavailable (Git history not available){% endif %}.</p>
-      <p>The “Prior documentation record” below retains an earlier documentation timestamp; neither date establishes when live verification occurred. See the retained verification evidence for its specific scope and dates.</p>
+      {% if content contains 'Prior documentation record' %}<p>The “Prior documentation record” below retains an earlier documentation timestamp; neither date establishes when live verification occurred. See the retained verification evidence for its specific scope and dates.</p>{% endif %}
     {% endif %}
   </div>
 

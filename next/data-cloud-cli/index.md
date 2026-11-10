@@ -20,7 +20,7 @@ crud_rows:
   - path: next/data-cloud-cli/data-model-object.md
     label: DMOs
     anchor: data-model-object-dmo-customobject-dlm
-    scope: 'XML retrieval; native API 65 creation and one nonprimary Text addition only for an empty, unmapped, unrelated custom Other/default DMO; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
+    scope: 'XML retrieval. Native API61–68 create, label update, Text-field addition and delete on empty, unmapped custom DMOs in the default data space; API60 returns 404. At API68: categories Profile, Engagement and Other, ten field data types, object label and description updates, existing field label updates and added fields; data-type and key changes are silently ignored by the API and fields cannot be removed. The plugin keeps no local allowlists and refuses those changes and all writes to standard or generated DMOs. Mapped or data-bearing DMOs, non-default data spaces, relationships and other versions for the API68 breadth are unverified; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
