@@ -16,8 +16,6 @@ crud:
   delete: { status: "partial", methods: [api, plugin] }
 ---
 
-*Prior documentation record: November 8, 2026, 05:48 (UTC+1).*
-
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
 **Native JSON qualification:** the optional `sf-plugin-data` tabs document bounded API68/default retrieval, creation, update and deletion. They are custom plugin/API workflows, not out-of-the-box resource-specific Salesforce CLI support. Installed receipts bind distinct earlier worktree tarballs, not the final offline guard refinement or a released package. Historical API65 Metadata/native workflows below remain separate evidence. This November 8 documentation reconciliation uses November 7 installed live receipts and adds no org calls.

@@ -16,8 +16,6 @@ crud:
   delete: { status: "unknown", methods: [] }
 ---
 
-*Prior documentation record: October 29, 2026, 14:35 (UTC+1).*
-
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
