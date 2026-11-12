@@ -44,17 +44,20 @@ or broaden the operation/version qualification recorded below.
 sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project
 ```
 
-Saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`, excluding source
-IDs/runtime wrappers and only the confirmed system-generated `KQ_Id__c` field
-definition. A key qualifier combines an ID with its source context to avoid
-collisions. Native CREATE generates this definition and additive PATCH preserves
-it, so omission from saved JSON is not field deletion or proof of mapping auto-pair
-behavior. `Id__c`, other fields, custom qualifiers and `keyQualifierName` references
-remain unchanged; the raw API response remains complete. API68 evidence showed
-seven raw fields → six saved after CREATE and eight raw → seven saved after PATCH;
+Saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json` with the authored
+fields only, without source IDs or runtime wrappers. The fields Salesforce generates
+are left out: `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c`,
+`InternalOrganization__c`, `cdp_sys_PartitionDate__c` and the key qualifier of the
+primary key (`KQ_<Key>__c`, for example `KQ_Id__c`). A key qualifier combines an ID
+with its source context to avoid collisions. The field named by
+`eventDateTimeFieldName` always stays, and so does the primary key `Id__c`. Native
+CREATE generates the left-out fields and deploy keeps them from the org, so their
+omission is not field deletion or proof of mapping auto-pair behavior, and a
+retrieved file deploys back `unchanged`. Custom qualifiers and `keyQualifierName`
+references in authored fields stay as read; the raw API response remains complete.
 DLO Metadata identifies the qualifier with `definitionCreationType=System` and
-`usageTag=KEY_QUALIFIER`. This separate empirical evidence is not new live plugin
-acceptance. **Optional structured output (`--json`):** the JSON envelope has contract `sf-data360-retrieve`;
+`usageTag=KEY_QUALIFIER`. Observed at API68 through the plugin in one org: retrieved
+files held only the authored fields and deployed back `unchanged`. **Optional structured output (`--json`):** the JSON envelope has contract `sf-data360-retrieve`;
 `result.items[]` reports `family: "dlo"`, `operation: "retrieve"`,
 `outcome: "retrieved"` (or `"unchanged"`) and `path`.
 {% endcapture %}
@@ -91,8 +94,8 @@ and nonprimary field additions are admitted; Salesforce decides the type of an a
 field. Preview reports `outcome: "update"`; execution reports `outcome: "updated"`,
 `mutation: "confirmed-updated"`. An equal label and preserved field inventory report
 `outcome: "unchanged"`; execution reports `mutation: "not-attempted"` and sends no
-POST or PATCH. Field ordering does not trigger a write, and the saved omission of
-ordinary generated `KQ_Id__c` does not count as removing that target field.
+POST or PATCH. Field ordering does not trigger a write, and the omission of the
+generated fields from a retrieved file does not count as removing them.
 
 Salesforce changes neither the category nor the event field of an existing DLO: a
 PATCH naming either is rejected with HTTP 400 (unrecognized field). The plugin
@@ -127,8 +130,14 @@ sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 **The second command deletes immediately without confirmation.** Preview reports
 `outcome: "delete"`, `mutation: "not-attempted"`; execution reports `"deleted"` /
 `"confirmed-deleted"`. Confirmed absence reports `"unchanged"` /
-`"not-attempted"`. Only the resolved DLO target is deleted; no cascade or local-file
-removal. Unknown writes stop without retry. Contract: `sf-data360-delete`.
+`"not-attempted"`. Only the resolved DLO target is deleted; no cascade. After a
+confirmed deletion (`"deleted"`, or `"deletion-processing"` while Salesforce finishes)
+the plugin removes the local `data360/dlo/<Name>.dlo-meta.json` and lists it in
+`removedLocalFiles`; `--keep-local-files` keeps it, and preview lists it as
+`localFiles`. A failed removal keeps the org result and exits nonzero with
+`LOCAL_FILE_REMOVAL_FAILED`. Observed at API68 through the plugin: a DLO delete with
+`--keep-local-files` kept its file, and a DMO plus DLO delete removed both files.
+Unknown writes stop without retry. Contract: `sf-data360-delete`.
 {% endcapture %}
 
 ### Why use a native API plugin workflow?
@@ -230,12 +239,12 @@ sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 
 Retrieve saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`. The file
 contains a versioned `dlo` definition with logical `identity` and `spec`; the spec
-contains the label, category and field definitions except the confirmed generated
-`KQ_Id__c` definition. It does not save the source DLO record ID, timestamps, runtime
-state or duplicate response envelopes. The six-field example below applies the
-current save policy to the historical public-command readback, with the synthetic
-fixture name substituted; it is not a newly live-accepted saved file or an HTTP
-CREATE request:
+contains the label, category and the authored field definitions; the fields
+Salesforce generates are left out. It does not save the source DLO record ID,
+timestamps, runtime state or duplicate response envelopes. The two-field example
+below applies the current save policy to the historical public-command readback,
+with the synthetic fixture name substituted; it is not a newly live-accepted saved
+file or an HTTP CREATE request:
 
 ```json
 {
@@ -247,18 +256,14 @@ CREATE request:
     "category": "Other",
     "fields": [
       { "dataType": "Text", "isPrimaryKey": true, "label": "Id", "name": "Id__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "cdp_sys_SourceVersion", "name": "cdp_sys_SourceVersion__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Data Source", "name": "DataSource__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Data Source Object", "name": "DataSourceObject__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Internal Organization", "name": "InternalOrganization__c" }
+      { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" }
     ]
   }
 }
 ```
 
-Other generated system fields remain in this saved inventory; only the confirmed
-generated qualifier definition is omitted. Generated fields are not CREATE payloads.
+The generated system fields and the qualifier stay in the org and are not part of
+the file. Generated fields are not CREATE payloads.
 Changed existing output needs `--overwrite`; identical output is unchanged.
 
 Deploy resolves the exact API name in the target before selecting POST or PATCH.
@@ -269,7 +274,8 @@ schema-replacement operation or proof of cross-org ingestion portability.
 
 **Deletion executes by default, without a separate confirmation prompt.** It
 resolves and deletes only the selected target ID. There is no cascade, related
-stream/source/DMO deletion or local-file deletion. Both deploy and delete provide
+stream/source/DMO deletion. After a confirmed deletion the local
+`data360/dlo/<Name>.dlo-meta.json` is removed unless `--keep-local-files` is set. Both deploy and delete provide
 explicit `--preview` for read-only target comparison/reporting with zero mutations;
 preview is never the default. Unknown write outcomes stop without automatic retry
 or rollback; inspect the actual target before trying again.
@@ -284,10 +290,10 @@ existing-target update after a read-only preview. The create result reported
 `outcome: updated`, `mutation: confirmed-updated`, with `target: existing`.
 These are request outcomes, not a claim that the response alone proves settlement.
 
-The historical complete create readback had seven raw fields. This six-field
-portable example applies the current save policy, omitting only generated
-`KQ_Id__c` and the source record ID (synthetic name retained); it is not a new live
-plugin acceptance result:
+The historical complete create readback had seven raw fields. This two-field
+portable example applies the current save policy, omitting the generated fields and
+the source record ID (synthetic name retained); it is not a new live plugin
+acceptance result:
 
 ```json
 {
@@ -299,11 +305,7 @@ plugin acceptance result:
     "category": "Other",
     "fields": [
       { "dataType": "Text", "isPrimaryKey": true, "label": "Id", "name": "Id__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "cdp_sys_SourceVersion", "name": "cdp_sys_SourceVersion__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Data Source", "name": "DataSource__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Data Source Object", "name": "DataSourceObject__c" },
-      { "dataType": "Text", "isPrimaryKey": false, "label": "Internal Organization", "name": "InternalOrganization__c" }
+      { "dataType": "Text", "isPrimaryKey": false, "label": "Note", "name": "Note__c" }
     ]
   }
 }
@@ -324,7 +326,8 @@ and confirmed absence after delete. Stop at the chosen attempt/time limit and
 report pending or unknown rather than declaring completion, retrying a write or
 cascading cleanup. Plugin `created`, `updated` and `deleted` report accepted or
 confirmed request outcomes; they do not replace an independent terminal-state
-check. Keep the retrieved local definition when deletion is still settling.
+check. A delete that Salesforce accepted and is still settling already removes the
+retrieved local definition; pass `--keep-local-files` to keep it.
 
 This differs from the DMO API contract warning that PATCH may return the
 pre-update representation: the DLO observation here is an explicit `PROCESSING`

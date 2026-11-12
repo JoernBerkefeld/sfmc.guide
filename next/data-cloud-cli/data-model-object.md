@@ -261,16 +261,20 @@ API `61.0`–`68.0` return HTTP `200` with a direct object and `fields` array. P
 sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS --output-dir ./project
 ```
 
-Saves `./project/data360/dmo/Customer__dlm.dmo-meta.json`, omitting only the
-system-generated `KQ_Id__c` field definition from the saved field inventory.
-A key qualifier combines an ID with source context to avoid collisions. Native
-CREATE generates this definition and PATCH preserves it; save omission
-is not field deletion or proof of mapping auto-pair behavior. `Id__c`, other fields,
-custom qualifiers and `keyQualifierName` references remain unchanged; raw API
-responses remain complete. At API68, a created DMO returns six raw fields
-→ five saved, and after one added field seven raw → six saved. The DMO API marks
-this field `creationType=System` / `usageTag=KeyQualifier`, unlike DLO Metadata's
-`usageTag=KEY_QUALIFIER`. Current default/`auto` is API68; explicit
+Saves `./project/data360/dmo/Customer__dlm.dmo-meta.json` with the authored fields
+only. Generated fields are left out: every field read as `creationType=System`, the
+system fields `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`,
+and key qualifiers such as `KQ_Id__c`. A key qualifier combines an ID with source
+context to avoid collisions. The primary key `Id__c` always stays, and so do the
+standard fields of a standard DMO, which a deploy compares when they are listed.
+Native CREATE generates the left-out fields and deploy keeps them from the org, so
+their omission is not field deletion or proof of mapping auto-pair behavior, and a
+retrieved file deploys back `unchanged`. Custom qualifiers and `keyQualifierName`
+references in kept fields stay as read; raw API responses remain complete. The DMO
+API marks the qualifier `creationType=System` / `usageTag=KeyQualifier`, unlike DLO
+Metadata's `usageTag=KEY_QUALIFIER`. Observed at API68 through the plugin in one
+org: a retrieved custom DMO held only its authored fields and deployed back
+`unchanged`. Current default/`auto` is API68; explicit
 numeric versions `>=61.0` are kept as given, not automatically live-qualified.
 Changed saved content requires `--overwrite`; identical content is unchanged.
 
@@ -413,8 +417,8 @@ can:
 
 An equal definition returns `outcome: "unchanged"` and
 `mutation: "not-attempted"`; comparison sends no POST or PATCH. Field order does
-not trigger a write, and the saved omission of ordinary generated `KQ_Id__c` is
-not field removal: a definition may leave out generated and system fields.
+not trigger a write, and leaving out generated fields, as retrieve does, is not
+field removal: a definition may leave out generated and system fields.
 Preservation and unsupported-addition checks still run first.
 
 **Refused before any write:**
@@ -479,7 +483,8 @@ and prints the commands to use. There are three ways to do it:
   file that has one and the field from the DMO file, then run one command. Every
   mapping that holds the pair must be part of the command and no longer list it;
   otherwise the whole command is refused before any write. Keep all other authored
-  pairs in the mapping files; the generated pairs may be listed or left out.
+  pairs in the mapping files; the generated pairs may be listed or left out (retrieve
+  leaves them out).
 
   ```sh
   sf data360 retrieve -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm --overwrite
@@ -608,8 +613,14 @@ sf data360 delete -m dmo:Customer__dlm -o TARGET_ALIAS
 
 Deletion executes by default without a separate confirmation prompt. Preview makes
 no writes. The plugin targets the full developer name including `__dlm`, verifies
-absence independently, and does not cascade or delete the local JSON. Salesforce
-itself may remove the DMO's mapping together with the DMO. Permission
+absence independently, and does not cascade. After a confirmed deletion it removes
+the local `data360/dmo/<Name>.dmo-meta.json` and lists it in `removedLocalFiles`;
+`--keep-local-files` keeps it, preview lists it as `localFiles`, and a failed
+removal keeps the org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`.
+Salesforce itself may remove the DMO's mapping together with the DMO; the local
+files of such mappings are not removed, because they are not part of the command.
+Observed at API68 through the plugin: a DMO plus DLO delete removed both local files
+(28 seconds). Permission
 or ambiguous reads stop. This is not permission to delete a parent to bypass a
 mapping restriction, nor proof of arbitrary dependency or populated-object safety.
 The last mapping of a custom DMO cannot be deleted on its own
@@ -640,7 +651,8 @@ because mappings change; preview lists one step per pair that Salesforce drops w
 the field, one per field and the files, and writes nothing. The primary key and
 generated fields are refused. The destructive change is sent once and never rolled
 back. For a field mapped by two mappings the command takes about 28 seconds.
-This is the only delete operation that writes project files. On a standard DMO it
+This is the only delete operation that rewrites project files; it removes none, and
+the refreshed files have the same lean form retrieve writes. On a standard DMO it
 removes custom fields only; standard and system fields are refused. Any field-level
 delete on a namespaced or platform-generated DMO is refused.
 

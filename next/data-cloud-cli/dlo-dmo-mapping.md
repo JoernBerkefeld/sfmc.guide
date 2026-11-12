@@ -161,12 +161,20 @@ sf data360 retrieve -m mapping:CustomerMapping -o SOURCE_ALIAS --api-version 68.
 
 Saves `./project/data360/mapping/CustomerMapping.mapping-meta.json`, a versioned
 native JSON definition, not an `ObjectSourceTargetMap` XML fallback. Retrieval
-preserves logical source/target bindings and returned field pairs, including
-server-generated system/qualifier pairs. Saved mapping names and source selectors
-are not target identity: deploy resolves a unique target mapping by its DLO/DMO
-bindings and uses the target's server-generated name/selectors. Installed API68
-canonical retrieval passed and preserved all six returned pairs/selectors. Deploying
-the retrieved file unchanged also passed with zero writes. Select that file with
+preserves logical source/target bindings and the authored field pairs, including
+the key pair. The pairs Salesforce generates are left out: the system pairs and the
+key-qualifier pair, which on a standard DMO are the pairs onto
+`ssot__DataSourceId__c`, `ssot__DataSourceObjectId__c`,
+`ssot__InternalOrganizationId__c` and `KQ_Id__c`. Retrieve and deploy decide which
+pairs are generated with one shared rule, from fresh reads of the source DLO and the
+target DMO, so a pair left out of a retrieved file is never read as a removal. When
+those reads fail, retrieve refuses with `MAPPING_GENERATED_PAIRS_UNPROVEN` and writes
+nothing. Saved mapping names and source selectors are not target identity: deploy
+resolves a unique target mapping by its DLO/DMO bindings and uses the target's
+server-generated name/selectors. Observed at API68 through the plugin in one org:
+a custom mapping retrieved with its four authored pairs only and a mapping onto
+`ssot__Brand__dlm` with `Name__c` → `ssot__Name__c` and `Id__c` → `ssot__Id__c`;
+both deployed back `unchanged`, and the org still held every generated pair. Select that file with
 `--source-dir ./project/data360/mapping/CustomerMapping.mapping-meta.json` **instead
 of** `-m`; do not combine both selection modes. `--overwrite` permits replacing
 changed local output only.
@@ -307,8 +315,8 @@ passed the bounded installed Text batch-addition and reconciliation checks below
 Edit `fieldMappings` in the canonical JSON, preserving the DLO/DMO bindings and
 the primary-key pair. The file may list only the authored pairs: the pairs
 Salesforce generated (three system pairs and the key qualifier pair) are taken from
-the org's copy and treated as part of the file. A hand-written file and a retrieved
-file, which lists the generated pairs, behave the same. Preview the exact selection
+the org's copy and treated as part of the file. A retrieved file lists exactly the
+authored pairs, so it behaves like a hand-written one. Preview the exact selection
 before execution:
 
 ```sh
@@ -522,8 +530,11 @@ sf data360 delete -m mapping:CustomerMapping -o TARGET_ALIAS --api-version 68.0
 
 **There is no confirmation prompt or extra execution flag.** The second command
 changes the org immediately. Bare `mapping` and wildcard
-selections are not accepted. This deletes the selected relationship, not a local
-JSON file or either parent object. To remove only single field pairs while
+selections are not accepted. This deletes the selected relationship, not either
+parent object. After a confirmed deletion the plugin removes the local mapping file
+(`data360/mapping/<Name>.mapping-meta.json`, or a hand-written file whose binding
+matches) and lists it in `removedLocalFiles`; `--keep-local-files` keeps it, and
+preview lists it as `localFiles` with `exists`. To remove only single field pairs while
 keeping the mapping, edit `spec.fieldMappings` in the JSON file and use
 [`sf data360 deploy` as described under Update](#update), not `delete`.
 
@@ -571,7 +582,10 @@ and the DMO's field names are exactly what they were.
 | `MAPPING_DELETION_UNCONFIRMED` | The deployment was confirmed, but the mapping was still readable after the last poll. |
 | `MAPPING_DELETE_SIDE_EFFECT` | The mapping is gone, but another mapping of the DMO or the DMO's field names changed. |
 
-There is no rollback, no parent deletion and no local JSON removal.
+There is no rollback and no parent deletion. After a confirmed deletion the local
+mapping file is removed unless `--keep-local-files` is set; a failed removal keeps
+the org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. Observed at API68:
+the preview listed the mapping file, and the delete removed it (27 seconds).
 
 **Observed at API68 through the plugin, on empty objects in the default data space:**
 
