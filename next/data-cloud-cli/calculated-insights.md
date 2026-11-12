@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
+  read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
   create: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
   delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
@@ -18,66 +18,43 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
+[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
+
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
+A calculated insight computes values from your data, for example a customer count grouped by application. You define it with an SQL query. `GROUP BY` fields are dimensions, and calculated values are measures.
 
-A calculated insight computes values from your data, for example a customer count grouped by application. The expression uses **SQL**, a language for querying tables: `SELECT` chooses fields/calculations, `FROM` names the source, `WHERE` filters rows and `GROUP BY` groups results. Grouping fields are **dimensions**; calculated values are **measures**. You need compatible existing objects and fields, and someone who can check the query if you are not familiar with SQL.
+**Example used in every chapter:** `CustomerActivity__cio`, which counts customers per application from the `CustomerEvent__dlm` object.
 
-`MktCalcInsightObjectDef` is the Metadata API XML definition of the **same calculated insight**, not another type of insight. Saving that definition alone need not create a live component. Use the runtime creation workflow below when you need a live insight; use standard metadata commands to save or compare its XML. Standard metadata commands supply the XML CLI workflow; runtime requests use Salesforce CLI as an authenticated API request runner.
-
-**Important:** deploying a definition can reserve the API name without creating a runtime insight. Runtime creation then finds the name taken, while PATCH cannot attach the missing runtime. Do not deploy an XML shell first if your goal is a live insight, and do not delete someone else's definition to free a name.
+**Warning:** Saving a definition can reserve the insight's name without creating a live insight. Do not deploy an XML file first if you need a live insight.
 
 {% include crud-summary.html %}
 
-## Retrieve
+**Plugin qualification:** The plugin workflows work only in the tested scope listed under Evidence.
 
-{% capture retrieve_plugin %}
-<a id="optional-sf-plugin-data-native-lifecycle"></a>
+## Read
 
-The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data)
-adds a bounded paired XML/JSON workflow; these are API-led plugin operations, not
-out-of-the-box Salesforce CLI commands. Use explicit `--api-version 68.0` and default
-data space. Default/auto remains its legacy65 existing-ACTIVE workflow. Native
-runtime requests use68; standard XML, Metadata and dependency bindings use65.
-Internal native64–68 feasibility does not qualify public lifecycle at every version.
-
-```sh
-sf data360 retrieve -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --api-version 68.0 -d ./project
-```
-
-Retrieve exports settled ACTIVE only, writing the correlated pair under the configured
-source package: `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`
-and `force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json`.
-Installed retrieval produced byte-identical XML/JSON. ACTIVE is not calculation proof;
-this is not populated-data or released-package qualification. Standard CLI/API panels
-retain separate research workflows and their historical limits.
-{% endcapture %}
-
-{% capture retrieve_cli %}
-<a id="standard-cli-and-api-retrieval"></a>
-
-### Save the XML definition
+{% capture read_cli %}
+Saves the insight's XML definition to your project. It does not save the full runtime state.
 
 ```sh
 sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
-This writes `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`, including the SQL, label and creation type. Use the **metadata name**, not the runtime name ending in `__cio`.
+This writes `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`. The file holds the SQL, label and creation type. It does not hold the enabled state, the schedule or the data space.
 
-The file does not include enabled state, schedule, definition type, dimensions/measures or dataspace. Keep the referenced DMO fields in mind when comparing environments.
+Use the metadata name, `CustomerActivity`, not the runtime name that ends in `__cio`.
 
+A sample of the retrieved file is not in this guide yet.
 {% endcapture %}
-{% capture retrieve_api %}
+
+{% capture read_connect %}
 <a id="read-runtime-state-through-the-cli"></a>
 
-### Read runtime state through the API
-
-Read the live state, then download its XML separately if you want it in your project:
+Reads the live configuration of the insight. Nothing in the org changes.
 
 ```sh
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method GET --target-org TARGET_ALIAS
-sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --target-org TARGET_ALIAS --api-version 65.0 --wait 5
 ```
 
 Server body excerpt (not a CLI envelope):
@@ -86,39 +63,73 @@ Server body excerpt (not a CLI envelope):
 { "apiName": "CustomerActivity__cio", "status": "DRAFT", "dataSpace": "default", "publishScheduleInterval": "NOT_SCHEDULED", "lastRunStatus": null }
 ```
 
-The REST request prints the live configuration. The retrieve writes the XML file above. Compare the expression and label, but remember the XML is not the complete runtime state.
-
+To download the XML too, run the retrieve command from the CLI tab. The XML does not include the full runtime state, so compare the expression and label only.
 {% endcapture %}
-{% include operation-tabs.html id="ci-retrieve" label="Retrieve" cli_state="available" cli_reason="Save the XML definition, not the complete runtime state." cli_body=retrieve_cli api_state="available" api_reason="Read runtime configuration and retrieve its XML separately." api_body=retrieve_api plugin_state="available" plugin_reason="Explicit API68 settled-ACTIVE paired XML/JSON retrieval only." plugin_body=retrieve_plugin %}
+
+{% capture read_plugin %}
+Plugin runtime requests use68; standard XML, Metadata and dependency bindings use65.
+
+Default/auto remains its legacy65 existing-ACTIVE workflow.
+
+Installed retrieval produced byte-identical XML/JSON.
+
+These are API-led plugin operations, not out-of-the-box Salesforce CLI commands. The plugin command uses an explicit `--api-version 68.0` and default data space.
+
+<a id="optional-sf-plugin-data-native-lifecycle"></a>
+
+Saves a settled `ACTIVE` insight as a paired XML and JSON file. Use an explicit API version of 68.0.
+
+```sh
+sf data360 retrieve -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --api-version 68.0 -d ./project
+```
+
+The command writes these files under the source package:
+
+- `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`
+- `force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json`
+
+A sample of the JSON file is not in this guide yet.
+{% endcapture %}
+
+{% include operation-tabs.html id="ci-read" label="Read" cli_state="available" cli_reason="Saves the XML definition, not the complete runtime state." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads the runtime configuration. The XML is saved separately." connect_body=read_connect plugin_state="available" plugin_reason="Saves an ACTIVE insight as a paired XML and JSON file, using API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
-{% capture create_plugin %}
-Start with a validated correlated XML/JSON pair in `./ci-pair`, using the source
-layout described in Retrieve, and compatible existing target-local DMO fields.
-Create requires exact runtime and Metadata absence, not an XML-only shell.
+{% capture create_cli %}
+Saves the definition as an XML file, then deploys it. The deploy stores the definition only. It does not guarantee that no processing happens.
 
-```sh
-sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --preview
-sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --allow-processing
+Write this file at `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<MktCalcInsightObjectDef xmlns="http://soap.sforce.com/2006/04/metadata">
+  <creationType>Custom</creationType>
+  <expression>SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY app_id__c</expression>
+  <masterLabel>Customer Activity</masterLabel>
+</MktCalcInsightObjectDef>
 ```
 
-`--draft` creates/edits DRAFT without implicit publication. Preview is read-only;
-mutation requires `--allow-processing`, not a processing-free guarantee. Only the
-qualified engagement APPROX_COUNT_DISTINCT false-predicate expression and its
-DeviceId non-null variant are admitted, not the generic SQL example below or
-arbitrary schema/schedule edits. Installed cross-org API68 create passed; this does
-not qualify arbitrary SQL or released packages. Use [Update](#update) for the separate
-explicit publication step, never deploy an XML shell first.
+Use DMO fields that already exist. `WHERE 1 = 0` returns no rows. It does not stop processing.
+
+```sh
+sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5
+```
+
+The result reports the component as created:
+
+```json
+{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": true, "success": true }] } } }
+```
+
+**Known failures:**
+
+- A successful deploy does not create a live insight. A runtime lookup can still show that the insight is not found.
 {% endcapture %}
-{% capture create_api %}
-### Create a live calculated insight
 
-Creation uses the **API 67 MCP facade**; subsequent reads, updates and deletion use **API 65 REST**. This is not a dedicated CLI insight command or a verified direct public API 65 POST create endpoint.
+{% capture create_connect %}
+Creates a live insight through the MCP route. The insight starts as a draft.
 
-Use compatible existing DMO fields and an unused name ending in `__cio`. Check both runtime and metadata names first. The route creates its own metadata definition, so do not deploy one beforehand. You need permission for processing/publication; cross-org migration and processing-free creation are not established.
-
-Save `ci-create.json` outside metadata source. `paramsJson` is a **JSON string**, not an object. Its contents are wrapped in `input`:
+Save `ci-create.json` outside your metadata folder. `paramsJson` is a JSON string, not an object:
 
 ```json
 {
@@ -131,94 +142,56 @@ Save `ci-create.json` outside metadata source. `paramsJson` is a **JSON string**
 sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@ci-create.json' --target-org TARGET_ALIAS
 ```
 
-A decoded operation-result excerpt can contain the following (not the complete server response or a CLI envelope):
-
-Server body excerpt (not a CLI envelope):
+Server body excerpt (the operation result, not the full response):
 
 ```json
 { "apiName": "CustomerActivity__cio", "status": "DRAFT", "isEnabled": true, "publishScheduleInterval": "NOT_SCHEDULED", "dimensions": [], "measures": [] }
 ```
 
-Use the **returned `apiName`** from now on. `DRAFT` does not prove successful computation, and `NOT_SCHEDULED` does not mean disabled or guarantee no processing. Check for embedded errors before treating the request as successful.
-
+Use the returned `apiName` from now on. `DRAFT` does not show that the insight has computed.
 {% endcapture %}
-{% capture create_cli %}
-### Store only an XML definition
 
-Definition-only creation requires compatible existing DMO fields and permission for possible processing. Save `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`:
+{% capture create_plugin %}
+Installed cross-org API68 publish passed.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<MktCalcInsightObjectDef xmlns="http://soap.sforce.com/2006/04/metadata">
-  <creationType>Custom</creationType>
-  <expression>SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY app_id__c</expression>
-  <masterLabel>Customer Activity</masterLabel>
-</MktCalcInsightObjectDef>
-```
+Installed cross-org API68 create passed. This does not qualify arbitrary SQL or released packages.
 
-Replace the DMO and fields consistently. `WHERE 1 = 0` gives an empty result; it does **not** prevent scanning or processing.
-
-```sh
-sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5
-```
-
-**Optional structured output (`--json`) for the deployment:**
-
-```json
-{ "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": true, "success": true }] } } }
-```
-
-That success means the definition was stored. Runtime GET can still return `ITEM_NOT_FOUND`. This route is not suitable when you need a guarantee of no processing.
-
-{% endcapture %}
-{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition-only; can reserve a name and does not guarantee no processing." cli_body=create_cli api_state="available" api_reason="Bounded API 67 MCP facade workflow; not a public API 65 POST recipe." api_body=create_api plugin_state="available" plugin_reason="Bounded API68 DRAFT creation from a correlated pair; no implicit publish." plugin_body=create_plugin %}
-
-## Update
-
-{% capture update_plugin %}
-### Edit a paired definition
-
-For an existing DRAFT, retain `--draft` for an expression edit without publication:
+Creates a draft insight from a checked XML and JSON pair in `./ci-pair`. It does not publish the insight. Run the preview first.
 
 ```sh
 sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --preview
 sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --allow-processing
 ```
 
-ACTIVE edits omit --draft and preserve publication state:
+Create requires exact runtime and Metadata absence, not an XML-only shell. Preview is read-only. The second command changes the org and needs `--allow-processing`.
 
-```sh
-sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --preview
-sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --allow-processing
-```
-
-Only the two qualified same-aggregation false-predicate expressions, with or without
-the fully qualified DeviceId non-null predicate, are admitted. This is not arbitrary
-SQL, label, schema or schedule conversion. Full equality is GET-only unchanged without
-processing acknowledgement. Installed GET-only unchanged deployment and ACTIVE edit
-passed. Default/auto remains the separate legacy API65 existing-ACTIVE route.
-
-### Publish separately
-
-Publishing is a separate explicit NOT_SCHEDULED operation for the matching never-run
-pair. Select **one exact paired member, not a directory**; with the Retrieve layout
-under `./ci-pair`, use its JSON member (the corresponding XML member also selects the pair):
-
-```sh
-sf data360 publish -o TARGET_ALIAS --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --preview
-sf data360 publish -o TARGET_ALIAS --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --allow-processing
-```
-
-A matching already-ACTIVE publish is unchanged. Preview is read-only; a mutation
-requires `--allow-processing`. Installed cross-org API68 publish passed, but ACTIVE
-is not calculation proof and neither publication nor the false predicate guarantees
-no processing or successful computation. Runtime68 and Metadata/dependency65 remain
-distinct; no released-package qualification follows.
+The sample output is not in this guide yet.
 {% endcapture %}
-{% capture update_api %}
-### Change runtime settings or the qualified expression
 
-**Publish the draft:** save `ci-publish.json`:
+{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Creates a live insight through the API 67 MCP route." connect_body=create_connect plugin_state="available" plugin_reason="Creates a draft insight from a correlated XML and JSON pair, using API 68.0." plugin_body=create_plugin %}
+
+## Update
+
+{% capture update_cli %}
+Changes the label in the XML definition, then deploys the same file.
+
+```sh
+sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5
+```
+
+The result reports the component as changed:
+
+```json
+{ "status": 0, "result": { "success": true, "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": false, "changed": true, "success": true }] } } }
+```
+
+Retrieve the file again to confirm the new label and the unchanged SQL.
+{% endcapture %}
+
+{% capture update_connect %}
+Publishes a draft, or changes the label and schedule of an existing insight. Send one kind of change per request, then read the insight again.
+
+To publish the draft, save `ci-publish.json`:
 
 ```json
 { "displayName": "Customer Activity", "draft": false, "publishScheduleInterval": "SystemManaged" }
@@ -234,9 +207,9 @@ Server body excerpt (not a CLI envelope):
 { "apiName": "CustomerActivity__cio", "status": "PROCESSING", "publishScheduleInterval": "SYSTEM_MANAGED" }
 ```
 
-Read the insight again until it reaches `ACTIVE`, checking the expression and expected dimensions/measures. Stop on errors or an unresolved transition rather than repeating the PATCH. `ACTIVE` means an operational definition, **not a completed calculation or materialized output**.
+Read the insight again until its status is `ACTIVE`. Stop on errors instead of repeating the PATCH. `ACTIVE` does not mean the calculation has finished.
 
-**Change its label and schedule:** save `ci-update.json`. Leave `definitionType` out of updates:
+To change the label and schedule, save `ci-update.json`. Leave `definitionType` out:
 
 ```json
 { "displayName": "Customer Activity Updated", "publishScheduleInterval": "NotScheduled" }
@@ -246,111 +219,55 @@ Read the insight again until it reaches `ACTIVE`, checking the expression and ex
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-update.json' --target-org TARGET_ALIAS
 ```
 
-The result can return `PROCESSING` again, with the new label and `NOT_SCHEDULED`. Read it back to confirm the change and preserved SQL/dimensions/measures. `NotScheduled` does not disable the insight.
+To change only the expression, send `expression` alone in the PATCH body. Keep the same aggregation and output names.
 
-We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` while keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail.
+**Known failures:**
 
-A later **expression-only API 65 PATCH** succeeded: we retained `WHERE 1 = 0` and added a fully qualified `DeviceId IS NOT NULL` predicate, keeping `APPROX_COUNT_DISTINCT`, output aliases and the grouped application dimension unchanged. Use the exact actual field name, such as `ssot__DeviceApplicationEngagement__dlm.ssot__DeviceId__c`, not the shortened name in this explanation. Send only `expression` in the PATCH body through the same vanilla `sf api request rest` update route above.
-
-After `PROCESSING`, independent runtime reads reached `ACTIVE`, and a separate Metadata read contained the exact edited SQL. The aggregate formula, dimension/measure names, types, roles and aggregability, label and schedule/settings were retained. The returned fields' derived `dataSource` attribution changed despite stable formulas; do not treat that attribution as an unchanged dependency identifier. This proves the bounded predicate edit, not arbitrary SQL or schema editing, general omitted-field preservation, an identical-repeat guarantee or completed computation. The empty-result filter also cannot demonstrate a change in output rows.
-
-**Separate target-bound check — October 29, 2026:** an existing `ACTIVE` insight
-with `NOT_SCHEDULED` received one API 65 PATCH containing only `expression`.
-The original `WHERE 1 = 0` filter was retained and the fully qualified
-`DeviceId IS NOT NULL` predicate added without changing the aggregation or
-output schema. HTTP 200 was followed by independent runtime, Metadata XML and
-referenced-DMO checks: the exact edited SQL was present, non-expression settings
-and dependency bindings were preserved, and the insight remained `ACTIVE` with
-`NOT_SCHEDULED`. This is distinct from the earlier `SYSTEM_MANAGED` evidence;
-no schedule change was sent or qualified by this check.
-
-Before sending an expression PATCH, independently read and compare the current
-expression and preserved settings with the desired definition. If they already
-match, skip the unnecessary PATCH yourself. This is comparison-before-write
-guidance, not an automatic no-op or identical-repeat guarantee from the API.
-The target-bound result does not establish unchanged-source cross-org deployment,
-arbitrary SQL edits, scheduled-processing behavior or a successful calculation:
-`lastRunStatus` remained null, so `ACTIVE` alone is not computation evidence.
-
+- Changing `APPROX_COUNT_DISTINCT` to `COUNT` with the same measure alias is refused.
+- A PATCH can return `PROCESSING` again. Read the insight until it returns to `ACTIVE`.
 {% endcapture %}
-{% capture update_cli %}
-### Change only the XML definition's label
 
-The verified change is the definition's **`masterLabel` change**. Keep the expression and creation type, edit the label, and deploy the same file:
+{% capture update_plugin %}
+Installed cross-org API68 publish passed.
+
+Installed GET-only unchanged deployment and ACTIVE edit passed.
+
+Edits a paired definition, then publishes it as a separate step. Preview each command first.
+
+For a draft, keep `--draft`:
 
 ```sh
-sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5
+sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --preview
+sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --draft --allow-processing
 ```
 
-**Optional structured output (`--json`) for the deployment:**
+For an `ACTIVE` insight, leave out `--draft`. The publication state stays the same:
 
-```json
-{ "status": 0, "result": { "success": true, "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": false, "changed": true, "success": true }] } } }
+```sh
+sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --preview
+sf data360 deploy -o TARGET_ALIAS --source-dir ./ci-pair --api-version 68.0 --allow-processing
 ```
 
-Retrieve again to confirm the label and unchanged SQL. Expression updates, identical-repeat semantics and runtime updates are not qualified by this Metadata route.
+To publish, select the JSON file of the pair, not its folder:
 
+```sh
+sf data360 publish -o TARGET_ALIAS --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --preview
+sf data360 publish -o TARGET_ALIAS --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --allow-processing
+```
+
+Only the qualified expression edits are admitted. They are not arbitrary SQL, label, schema or schedule changes. A matching `ACTIVE` publish is unchanged.
+
+The sample output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only the metadata masterLabel change is verified." cli_body=update_cli api_state="available" api_reason="Runtime settings and the bounded predicate edit only; retain all qualifications." api_body=update_api plugin_state="available" plugin_reason="Qualified DRAFT/ACTIVE expression edits and separate exact-member publish; not arbitrary SQL." plugin_body=update_plugin %}
+
+{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Changes runtime settings and one qualified expression edit." connect_body=update_connect plugin_state="available" plugin_reason="Qualified draft and ACTIVE expression edits, then a separate publish. Not arbitrary SQL." plugin_body=update_plugin %}
 
 ## Delete
 
-{% capture delete_plugin %}
-Select the exact matching JSON member from the correlated pair, not its directory:
-
-```sh
-sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --preview
-sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --confirm-delete
-```
-
-Delete binds the exact selector to its paired expected never-run NOT_SCHEDULED
-content and fresh dependencies; it does not cascade, delete local files or prove
-original creator ownership. Preview is read-only; a present owner needs
-`--confirm-delete`. Reconcile independent runtime and Metadata absence after writing.
-
-Two initial public deletes returned CI_DELETION_UNCONFIRMED; later independent
-runtime/Metadata absence confirmed cleanup. A later installed delete passed in35.2
-seconds after six DELETING polls and dual absence on poll7. The earlier failures
-remain unexplained; this is neither reliable-every-time completion nor a
-version-specific deletion defect. Reconcile an unknown deletion with independent
-reads, never replay DELETE. All owned CI fixtures are confirmed absent. One observer
-harness journal was recovered from independent observations after a stale parent
-overwrite; detailed child CLI output was lost, so the retained evidence is not a
-complete raw public-response archive. ACTIVE is not calculation proof; no
-populated-data, storage/credit cleanup or released-package qualification follows.
-Native64 asynchronous deletion evidence likewise does not identify a version-specific
-defect.
-{% endcapture %}
-{% capture delete_api %}
-**Shared safety:** Confirm ownership and dependencies before either deletion workflow. Definition deletion is not runtime or generated-data cleanup.
-
-### Delete the live insight and check its definition
-
-After checking ownership and dependencies, save `ci-delete.json`. If a DELETE without `--body` fails with `No 'mode' found in 'body' entry`, use a whole-request file with an explicit empty raw body, as below. This workaround was verified with Salesforce CLI 2.151.7.
-
-```json
-{ "url": "/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
-```
-
-```sh
-sf api request rest --file ci-delete.json --target-org TARGET_ALIAS --include
-sf api request rest '/services/data/v65.0/ssot/calculated-insights' --method GET --target-org TARGET_ALIAS --include
-sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0
-```
-
-`--include` prints HTTP status and headers alongside the server body. An empty response can mean deletion has started, not finished. The collection body excerpt below excludes status and headers and may still show:
-
-```json
-{ "items": [{ "apiName": "CustomerActivity__cio", "status": "DELETING" }] }
-```
-
-**Terminal checks:** read the full collection, including continuation pages, until this insight is absent. Also check that its metadata member is gone. Do not send another DELETE while removal is underway. Generated-data cleanup is not guaranteed, and any downloaded XML still needs local reconciliation.
-
-{% endcapture %}
 {% capture delete_cli %}
-### Delete an owned definition-only component
+Deletes an owned definition through a deployment manifest. It does not remove a live insight or its generated data. Check ownership and dependencies first.
 
-For an owned definition whose dependencies have been checked, the integration supplies the empty `manifest/package.xml` and this `manifest/destructiveChangesPost.xml`:
+Create the manifest files. `destructiveChangesPost.xml` names the definition:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -368,6 +285,96 @@ sf project deploy start --manifest manifest/package.xml --post-destructive-chang
 sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0
 ```
 
-Require a successful completed deletion; optional `--json` component output reports `deleted: true`. Confirm the exact definition is absent from the inventory. This is definition deletion, not a promise to clean up a runtime insight or its generated data.
+The deletion must complete successfully. The second command confirms that the definition is gone.
+
+A sample of the deletion result is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Owned definition-only component deletion; not runtime cleanup." cli_body=delete_cli api_state="available" api_reason="Runtime deletion requires terminal collection and metadata checks." api_body=delete_api plugin_state="available" plugin_reason="Guarded exact-pair deletion with independent dual absence; uncertain outcomes must not be replayed." plugin_body=delete_plugin %}
+
+{% capture delete_connect %}
+Deletes the live insight, then checks that it is gone. Check ownership and dependencies first.
+
+Save `ci-delete.json`. The request uses an explicit empty raw body:
+
+```json
+{ "url": "/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
+```
+
+```sh
+sf api request rest --file ci-delete.json --target-org TARGET_ALIAS --include
+sf api request rest '/services/data/v65.0/ssot/calculated-insights' --method GET --target-org TARGET_ALIAS --include
+sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0
+```
+
+A collection excerpt while removal is still running (without the status and headers):
+
+```json
+{ "items": [{ "apiName": "CustomerActivity__cio", "status": "DELETING" }] }
+```
+
+Read the full collection, including any further pages, until the insight is absent. Also check that its metadata entry is gone. Do not send another DELETE while removal is running.
+
+**Known failures:**
+
+- A DELETE without a body can fail with a missing `mode` error. Use the whole-request file shown above.
+- An empty response can mean that deletion has started but not finished. Read the collection again.
+{% endcapture %}
+
+{% capture delete_plugin %}
+Deletes one insight, using the exact JSON file from its pair. Run the preview first.
+
+```sh
+sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --preview
+sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --source-dir ./ci-pair/force-app/main/default/data360/calculatedInsights/CustomerActivity__cio.calculatedInsight.json --api-version 68.0 --confirm-delete
+```
+
+Deletion does not cascade. It does not delete local files. Preview is read-only. Without `--confirm-delete`, an owned insight is not deleted. Check the runtime and metadata afterwards.
+
+The sample output is not in this guide yet.
+
+**Known failures:**
+
+- A delete can return an unconfirmed result. Check the runtime and metadata with reads.
+- Do not run the delete again after an unconfirmed result.
+{% endcapture %}
+
+{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Deletes the runtime insight, then checks the runtime and metadata." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one exact pair member after a guarded check. Uncertain results are not replayed." plugin_body=delete_plugin %}
+
+<details>
+<summary>Evidence: tested scope, versions and error codes</summary>
+
+
+
+**Plugin scope:** The plugin uses explicit `--api-version 68.0` and the default data space. Default and `auto` remain its legacy65 existing-ACTIVE workflow. Native runtime requests use 68; standard XML, Metadata and dependency bindings use 65. Internal native 64 to 68 feasibility does not qualify the public lifecycle at every version.
+
+**Plugin evidence:**
+
+- Retrieve exports settled ACTIVE only. Installed retrieval produced byte-identical XML/JSON.
+- Installed cross-org API68 create passed. This does not qualify arbitrary SQL or released packages.
+- Installed GET-only unchanged deployment and ACTIVE edit passed. Default and `auto` remain the separate legacy API 65 route.
+- Installed cross-org API68 publish passed.
+- Two initial public deletes returned CI_DELETION_UNCONFIRMED. Later runtime and Metadata reads confirmed that the insight was absent.
+- A later installed delete passed in 35.2 seconds after six `DELETING` polls and dual absence on poll 7. The two unconfirmed results remain unexplained. This is not reliable completion every time, and not a version-specific defect.
+- Native 64 asynchronous deletion evidence does not identify a version-specific defect.
+- One observer harness journal was recovered from independent observations. Child CLI output was lost, so the retained evidence is not a complete raw response archive.
+
+**Separate target-bound check:** An existing `ACTIVE` insight with `NOT_SCHEDULED` received one API 65 PATCH containing only `expression`. The `WHERE 1 = 0` filter was kept. A fully qualified `DeviceId IS NOT NULL` predicate was added. The aggregation and output schema did not change. HTTP 200 was followed by independent runtime, Metadata XML and referenced-DMO checks. The exact edited SQL was present, non-expression settings and dependency bindings were preserved, and the insight remained `ACTIVE` with `NOT_SCHEDULED`. No schedule change was sent or qualified by this check. `lastRunStatus` remained null, so `ACTIVE` is not computation evidence. This does not establish unchanged-source cross-org deployment, arbitrary SQL edits, scheduled-processing behavior or a successful calculation. This is distinct from the earlier `SYSTEM_MANAGED` evidence; no schedule change was sent or qualified.
+
+**Create and update routes:**
+
+- The API 67 MCP route creates the definition. Reads, updates and deletes use API 65 REST. The route is not a dedicated CLI command or a verified direct API 65 POST.
+- The expression-only API 65 PATCH used the exact field name, `ssot__DeviceApplicationEngagement__dlm.ssot__DeviceId__c`. Output aliases and the grouped application dimension were kept. This proves the bounded predicate edit, not arbitrary SQL or schema editing.
+- After `PROCESSING`, runtime reads reached `ACTIVE`, and a separate Metadata read showed the edited SQL. Dimension and measure names, types and roles were kept.
+- The returned fields' derived `dataSource` changed, although formulas were stable. Do not use that attribution as a dependency identifier.
+- We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT`, keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail.
+- Before sending an expression PATCH, read the current expression and settings. If they already match, skip the unnecessary PATCH yourself. This is comparison guidance, not an automatic no-op or identical-repeat guarantee from the API.
+
+**Deletion routes:**
+
+- Delete binds the exact selector to its expected never-run `NOT_SCHEDULED` content and fresh dependencies.
+- The plugin does not prove the original creator owns the insight. A present owner needs `--confirm-delete`.
+- After a write, reconcile runtime and Metadata absence with reads. Do not replay DELETE.
+- All owned CI fixtures are confirmed absent.
+
+**Not verified:** populated-data calculations, storage or credit cleanup, released-package qualification, unchanged-source cross-org deployment, arbitrary SQL edits, scheduled-processing behavior, successful calculation, and the Metadata API read of the insight directly.
+
+</details>

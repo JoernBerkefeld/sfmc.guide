@@ -2,10 +2,14 @@
 Contract: id (unique page-local slug), label, cli/api/plugin_state (available|blocked|unknown),
 cli/api/plugin_reason (plain text), cli/api/plugin_body (captured Markdown for available methods only).
 Plugin state defaults to unknown; only explicitly qualified pages enable its panel.
+split_api=true replaces the single API tab with two tabs, Metadata API and Connect API, each with its own
+metadata_state/metadata_reason/metadata_body and connect_state/connect_reason/connect_body. Both still count as
+"API" in the overview badges; each is checked and listed on its own.
+Every method has a panel. Its reason is shown inside that panel, so a method explains itself when selected.
 Keep shared safety and detailed disabled-method evidence outside this include.
 Use unique explicit IDs for new body headings; retain existing heading IDs for legacy links.
 {% endcomment %}
-{% assign methods = 'cli,api,plugin' | split: ',' %}
+{% if include.split_api %}{% assign methods = 'cli,metadata,connect,plugin' | split: ',' %}{% else %}{% assign methods = 'cli,api,plugin' | split: ',' %}{% endif %}
 <div class="operation-tabs" data-operation-tabs id="{{ include.id | escape }}-methods">
   <div class="operation-tabs__controls" data-tab-list aria-label="{{ include.label | escape }} methods" hidden>
     {% for method in methods %}
@@ -13,34 +17,63 @@ Use unique explicit IDs for new body headings; retain existing heading IDs for l
       {% assign name = 'sf-plugin-data' %}
       {% if method == 'cli' %}{% assign state = include.cli_state %}{% assign name = 'CLI' %}{% endif %}
       {% if method == 'api' %}{% assign state = include.api_state %}{% assign name = 'API' %}{% endif %}
+      {% if method == 'metadata' %}{% assign state = include.metadata_state | default: 'unknown' %}{% assign name = 'Metadata API' %}{% endif %}
+      {% if method == 'connect' %}{% assign state = include.connect_state | default: 'unknown' %}{% assign name = 'Connect API' %}{% endif %}
       {% if method == 'plugin' %}{% assign state = include.plugin_state | default: 'unknown' %}{% endif %}
-      <button type="button" id="{{ include.id }}-tab-{{ method }}" data-method="{{ method }}" aria-describedby="{{ include.id }}-reason-{{ method }}"{% unless state == 'available' %} disabled{% endunless %}>
-        {% if state == 'blocked' %}<svg class="operation-tabs__icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m4 4 8 8"/></svg>{% elsif state != 'available' %}<svg class="operation-tabs__icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M6 6a2 2 0 1 1 3 1.7L8 9M8 11v1"/></svg>{% endif %}
-        {{ name }}<span class="visually-hidden"> — {% if state == 'available' %}Available{% elsif state == 'blocked' %}Blocked{% else %}Unknown{% endif %}</span>
+      {% assign kind = 'untested' %}{% if state == 'available' %}{% assign kind = 'available' %}{% elsif state == 'blocked' %}{% assign kind = 'unsupported' %}{% endif %}
+      <button type="button" class="operation-tabs__tab operation-tabs__tab--{{ kind }}" id="{{ include.id }}-tab-{{ method }}" data-method="{{ method }}" data-available="{% if state == 'available' %}true{% else %}false{% endif %}" aria-describedby="{{ include.id }}-reason-{{ method }}">
+        {% if state == 'blocked' %}<svg class="operation-tabs__icon operation-tabs__icon--unsupported" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m4 4 8 8"/></svg>{% elsif state != 'available' %}<svg class="operation-tabs__icon operation-tabs__icon--untested" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M6 6a2 2 0 1 1 3 1.7L8 9M8 11v1"/></svg>{% endif %}
+        {{ name }}<span class="visually-hidden"> — {% if state == 'available' %}Available{% elsif state == 'blocked' %}Not supported{% else %}Not tested{% endif %}</span>
       </button>
     {% endfor %}
   </div>
-  <ul class="operation-tabs__reasons">
-    <li id="{{ include.id }}-reason-cli"><strong>CLI — {{ include.cli_state | capitalize }}:</strong> {{ include.cli_reason | escape }}</li>
-    <li id="{{ include.id }}-reason-api"><strong>API — {{ include.api_state | capitalize }}:</strong> {{ include.api_reason | escape }}</li>
-    <li id="{{ include.id }}-reason-plugin"><strong>sf-plugin-data — {{ include.plugin_state | default: 'unknown' | capitalize }}:</strong> {{ include.plugin_reason | default: 'Not implemented in this guide; no workflow is supplied.' | escape }}</li>
-  </ul>
-  {% if include.cli_state == 'available' %}
   <section id="{{ include.id }}-panel-cli" data-method-panel="cli" aria-label="{{ include.label | escape }} — CLI">
     <h3 class="operation-tabs__fallback-label">CLI</h3>
+    {% if include.cli_state == 'available' %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-cli">{{ include.cli_reason | escape }}</p>
     {{ include.cli_body | markdownify }}
+    {% else %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-cli"><strong>{% if include.cli_state == 'blocked' %}Not supported{% else %}Not tested{% endif %}.</strong> {{ include.cli_reason | escape }}</p>
+    {% endif %}
   </section>
-  {% endif %}
-  {% if include.api_state == 'available' %}
+  {% unless include.split_api %}
   <section id="{{ include.id }}-panel-api" data-method-panel="api" aria-label="{{ include.label | escape }} — API">
     <h3 class="operation-tabs__fallback-label">API</h3>
+    {% if include.api_state == 'available' %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-api">{{ include.api_reason | escape }}</p>
     {{ include.api_body | markdownify }}
+    {% else %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-api"><strong>{% if include.api_state == 'blocked' %}Not supported{% else %}Not tested{% endif %}.</strong> {{ include.api_reason | escape }}</p>
+    {% endif %}
+  </section>
+  {% endunless %}
+  {% if include.split_api %}
+  <section id="{{ include.id }}-panel-metadata" data-method-panel="metadata" aria-label="{{ include.label | escape }} — Metadata API">
+    <h3 class="operation-tabs__fallback-label">Metadata API</h3>
+    {% if include.metadata_state == 'available' %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-metadata">{{ include.metadata_reason | escape }}</p>
+    {{ include.metadata_body | markdownify }}
+    {% else %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-metadata"><strong>{% if include.metadata_state == 'blocked' %}Not supported{% else %}Not tested{% endif %}.</strong> {{ include.metadata_reason | default: 'Not tested for this operation.' | escape }}</p>
+    {% endif %}
+  </section>
+  <section id="{{ include.id }}-panel-connect" data-method-panel="connect" aria-label="{{ include.label | escape }} — Connect API">
+    <h3 class="operation-tabs__fallback-label">Connect API</h3>
+    {% if include.connect_state == 'available' %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-connect">{{ include.connect_reason | escape }}</p>
+    {{ include.connect_body | markdownify }}
+    {% else %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-connect"><strong>{% if include.connect_state == 'blocked' %}Not supported{% else %}Not tested{% endif %}.</strong> {{ include.connect_reason | default: 'Not tested for this operation.' | escape }}</p>
+    {% endif %}
   </section>
   {% endif %}
-  {% if include.plugin_state == 'available' %}
   <section id="{{ include.id }}-panel-plugin" data-method-panel="plugin" aria-label="{{ include.label | escape }} — sf-plugin-data">
     <h3 class="operation-tabs__fallback-label">sf-plugin-data</h3>
+    {% if include.plugin_state == 'available' %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-plugin">{{ include.plugin_reason | default: 'Available.' | escape }}</p>
     {{ include.plugin_body | markdownify }}
+    {% else %}
+    <p class="operation-tabs__reasons" id="{{ include.id }}-reason-plugin"><strong>{% if include.plugin_state == 'blocked' %}Not supported{% else %}Not tested{% endif %}.</strong> {{ include.plugin_reason | default: 'Not implemented in this guide; no workflow is supplied.' | escape }}</p>
+    {% endif %}
   </section>
-  {% endif %}
 </div>

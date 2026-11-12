@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "partial", methods: [cli, plugin] }
+  read: { status: "partial", methods: [cli, plugin] }
   create: { status: "partial", methods: [plugin] }
   update: { status: "partial", methods: [plugin] }
   delete: { status: "partial", methods: [plugin] }
@@ -18,45 +18,31 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
-
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
+[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Read its setup and placeholder notes before you run these examples.
 
 <a id="data-stream-configuration-datastreamdefinition"></a>
 
-**Data Streams** bring data from a source into a [Data Lake Object (DLO)](/next/data-cloud-cli/data-lake-object/). Start here when following the ingestion flow. `DataStreamDefinition` is the saved XML definition; the running stream also has its own native API identity and processing state.
+**Data Stream** brings data from a source into a [Data Lake Object (DLO)](/next/data-cloud-cli/data-lake-object/). Its saved XML definition is a `DataStreamDefinition`. A stream maps source fields into DLO fields. A separate [DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/) connects the DLO to a Data Model Object.
 
-### Two different kinds of mapping
-
-- **Source to DLO:** the stream contains the mappings from source fields into DLO fields. These mappings belong to the stream, not to a separate mapping resource. Creating or updating a stream can also create or extend its DLO schema.
-- **DLO to DMO:** a separate [DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/) connects ingested DLO fields to a Data Model Object. Changing a stream mapping does not deploy that separate mapping, create a DMO or prove that downstream data is ready.
-
-For the bounded ingestion setup described here, **provision the Data Stream and its landing DLO first, independently prepare the DMO and its required fields, then create the DLO-to-DMO mapping last**. The DMO can be prepared independently; both objects and the required fields must be ready before mapping them. This is a provisioning prerequisite, not just the order in which data flows. Mapping creation is not qualified to create missing DMO fields.
-
-The supported stream PATCH maps an **existing source-event Text field** to a new nonprimary Text DLO field, creating that landing field. It does not extend the source event schema, create DMO fields or create the downstream mapping. For stream-owned schema, use the owning stream's qualified update path: direct DLO changes were previously refused. The separate standalone DLO create/update workflows are limited definition operations, not a complete ingestion setup or permission to edit a stream-owned DLO directly.
-
-### Support and qualification
-
-The summary below retains the supplied standard XML workflow. The later native evidence describes a narrower running-stream lifecycle, not general `DataStreamDefinition` XML CRUD.
-
-- **Standard Salesforce CLI:** the verified dedicated workflow retrieves XML with `sf project retrieve start`. Calling a native endpoint through `sf api request rest` is API use, not a dedicated standard stream CRUD command.
-- **Native API:** bounded Ingestion API streams in the default dataspace, with a newly created `Other` DLO, have live evidence for creation, reads and one additive nonprimary Text mapping update. API65 and API68 also have qualified evidence for both stream deletion modes. This does not qualify arbitrary connectors, populated data, nondefault dataspaces or cross-org replay.
-- **`sf-plugin-data`:** exact-name retrieve, guarded create/additive update/unchanged deploy and exact deletion are implemented. Admission is only `--api-version auto` or `68.0`, default dataspace and the supported Ingestion API subset. Fresh installed API68 qualification passed source create/retrieve, changing only `spec.connectionName` for a compatible existing target connection, target create/retrieve, one additive nonprimary Text mapping update, a zero-write repeat and explicit cascade cleanup in both orgs. Independent reads confirmed cleanup and protected resources unchanged. This does not qualify other connectors, populated data, other API versions, full migration or a published release. The earlier unexplained run is disregarded as qualification evidence; fresh success does not establish its cause.
-
-The lower-version native evidence does **not** widen the plugin's API68 guard. Neither ACTIVE status nor zero processing counters proves that a DLO has no stored rows. The API66 automatic processing failure remains unresolved even though definition-only preserve-DLO deletion succeeded.
+**Example used in every chapter:** `CustomerStream`, the stream that feeds the DLO `CustomerSource__dll`. Each method below works on this same stream.
 
 {% include crud-summary.html %}
 
-## Retrieve
+**Plugin qualification:** The plugin works for one Ingestion API stream at API 68.0 in the default data space, with a compatible existing connection.
 
-The plugin's implemented exact-name selector is `data-stream:API_NAME`. Its portable file is `data360/data-stream/API_NAME.data-stream-meta.json`, separate from the standard XML layout below. It projects supported stream settings and embedded source-to-DLO mappings, checks the linked DLO independently and rejects unsupported shapes rather than claiming a complete connector export. Type-only inventory, wildcard selection and dependency expansion are not supported for this stream subset. The fresh installed API68 run qualified retrieval in both source and target orgs within this subset.
+## Read
 
-{% capture retrieve_cli %}
+<p>The plugin’s implemented exact-name selector is <code>data-stream:API_NAME</code>.</p>
+
+
+{% capture read_cli %}
+Retrieves the stream's XML definition. The command does not start a refresh, and it does not set up ingestion.
+
 ```sh
-sf project retrieve start --metadata DataStreamDefinition:CustomerStream --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
+sf project retrieve start --metadata DataStreamDefinition:CustomerStream --target-org SOURCE_ALIAS
 ```
 
-Look for `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStreamDefinition-meta.xml`:
+The file is `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStreamDefinition-meta.xml`. This excerpt shows its shape. Other attributes are left out.
 
 ```xml
 <DataStreamDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -70,72 +56,52 @@ Look for `force-app/main/default/dataStreamDefinitions/CustomerStream.dataStream
 </DataStreamDefinition>
 ```
 
-Retrieving this file does **not** start a refresh. The connector, source, DLO and transform still need to exist for a working stream. This and the source-object example show file shapes, not a complete ingestion setup.
-
+The connector, source, DLO and transform must already exist for a working stream.
 {% endcapture %}
-{% capture retrieve_plugin %}
-Run from your local project root, replacing `StreamName` with the actual stream API name:
+
+{% capture read_plugin %}
+Saves the stream's settings and its source-to-DLO mappings as one JSON file. It selects one stream by its exact API name.
+
+Run this from your local project root:
 
 ```sh
-sf data360 retrieve -o SOURCE_ALIAS -m data-stream:StreamName --api-version 68.0 --data-space default -d .
+sf data360 retrieve -o SOURCE_ALIAS -m data-stream:CustomerStream -d .
 ```
 
-Inspect `data360/data-stream/StreamName.data-stream-meta.json`. It is a strict portable JSON document, not XML or a raw GET response. Preserve its read-only `observed` content and actual retrieved settings. Exact selection only; this does not export credentials or provision connections.
+Inspect `data360/data-stream/CustomerStream.data-stream-meta.json`. It is a strict JSON file, not XML or a raw API response. Keep the read-only `observed` section unchanged. The command does not export credentials or create connections. A sample of the file is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="stream-definition-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve stream XML without starting a refresh; not a complete ingestion setup." cli_body=retrieve_cli api_state="unknown" api_reason="No API DataStreamDefinition retrieval workflow is supplied." plugin_state="available" plugin_reason="Exact installed API68/default Ingestion API subset only." plugin_body=retrieve_plugin %}
+
+{% include operation-tabs.html id="stream-definition-read" label="Read" split_api=true cli_state="available" cli_reason="Retrieves the stream XML. It does not start a refresh (see Evidence)." cli_body=read_cli metadata_state="unknown" metadata_reason="Direct Metadata API reads of streams have not been tested." connect_state="unknown" connect_reason="No tested Connect API read is supplied for this page." plugin_state="available" plugin_reason="Exact stream name, installed API 68.0 and default data space only (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 
-{% capture create_evidence %}
-Creation through `DataStreamDefinition` XML has **not been verified**. Native API68 creation was separately qualified for a fresh Ingestion API stream and its new `Other` DLO in the default dataspace. The existing connection and source schema were checked first; the create request supplied only the primary key in the DLO field array. Independent stream and DLO reads, not the create response alone, established their identities and ACTIVE state. Salesforce generated the actual names, which differed from the proposed names.
-
-This narrow result does not turn XML retrieval into a deployable ingestion setup. The [DLO creation discussion](/next/data-cloud-cli/data-lake-object/#create) retains the separate connection/schema requirements. Do not replay a complete GET response as a create body, create missing connections implicitly or infer cross-org portability.
-
-The plugin deploy implementation resolves the logical source binding before choosing create, update or unchanged. It requires `--allow-processing` for changes and supports read-only `--preview`. It blocks mixed resource families, dependency expansion, Git selection and unsupported versions or scopes for streams. The fresh installed API68 run exercised source creation and target creation after a connection-name-only remap, with existing compatible connections and source schemas. This is a bounded portability result, not permission to replay arbitrary stream documents.
-
-### Documented native stream API availability
-
-The [Data 360 Connect REST API reference, version 67.0](https://developer.salesforce.com/docs/data/connectapi/references/spec?meta=type%3AData+Stream+Source+Field+Output), documents native `POST /ssot/data-streams` as available since **60.0**. Its marked required top-level inputs are `connectorInfo`, `label`, `mappings`, `name`, `refreshConfig` and `sourceFields`; `datastreamType` includes `INGEST_API`. New `dataLakeObjectInfo` and `existingDataLakeObjectInfo` are alternatives. For Ingestion API streams, `dataLakeFieldInputRepresentations` must contain **only the primary key field**, not the complete event schema. This is distinct from preserving the complete connection schema before a schema PUT.
-
-These are **reference inputs, not a general ingestion CREATE recipe**. The narrow API68 qualification above is separate from this API67 reference and its S3 example. The readable reference describes `dataLakeObjectInfo` as an array while its S3 request example uses an object; no shape is chosen here. The extracted endpoint section did not supply nested ingestion connector/event inputs or an Ingestion API request/response example, so no native ingestion payload is inferred. POST lists `200` success; the visible S3 response has stream `id`, `name`, `recordId` and `status`, plus DLO `id`, `name` and `status`, with both statuses `PROCESSING`. That example does not establish ingestion identity correlation or settled success.
-
-Native `GET /ssot/data-streams` and `GET /ssot/data-streams/{recordIdOrDeveloperName}` are also documented since 60.0. The native list documents `connectionName`, `filter`, `includeMappings`, `limit` (1–200, default 10), `offset` and `orderBy`. **No `sourceObjectName` query parameter is documented in that list**; do not transfer the facade discovery's filter to native REST. Its Salesforce CRM examples are not an ingestion event-binding contract.
-
-The reference alone does not establish conflict-safe duplicate creation, permission-aware authoritative absence, restart/lost-response recovery or terminal processing settlement. A unique-name description, an empty list or list-then-create is not a nonoverwrite or ownership guarantee. The narrow implementation checks described above do not establish general recovery or API67 native/facade parity.
-
-Salesforce also documents native API 67 stream GET/PATCH in its [CRM field-disablement guide](https://developer.salesforce.com/docs/data/connectapi/guide/data-stream-use-case.md). That connector-specific update use case is not an ingestion CREATE contract or proof that arbitrary connector payloads can be replayed.
-
-{% endcapture %}
 {% capture create_plugin %}
-Use the supported source-retrieved JSON from Retrieve, with empty `spec.additiveFieldMappings`, a Text primary key, `UPSERT`, category `Other` and default dataspace. The target must already have a compatible Ingestion API connection and matching source event/schema. Change only `spec.connectionName` to that target connection's actual name; do not invent connection IDs or replay a raw response. Stop if these prerequisites cannot be verified.
+Creates the stream and its landing DLO from a local file. Provision the stream and DLO first, prepare the DMO fields next, and create the DLO-to-DMO mapping last.
 
-Select that exact local file, preview, then explicitly allow processing:
+Start from the file retrieved from the source org. Change only `spec.connectionName`, to the name of an existing compatible connection in the target. The file must have empty `spec.additiveFieldMappings`, a Text primary key, `UPSERT`, category `Other` and the default data space.
+
+Preview the change, then allow processing:
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS --api-version 68.0 --data-space default -d data360/data-stream/StreamName.data-stream-meta.json --preview
-sf data360 deploy -o TARGET_ALIAS --api-version 68.0 --data-space default -d data360/data-stream/StreamName.data-stream-meta.json --allow-processing
+sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --preview
+sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
 ```
 
-Creation also provisions the landing DLO. Use the actual generated names returned and independently retrieved, not the proposed name, for later selection. Retrieve the target document before editing it. This does not provision a DMO or downstream mapping, extend the source schema, or qualify arbitrary connectors. Run stream commands separately from other resource families.
-{% endcapture %}
-{% include operation-tabs.html id="stream-definition-create" label="Create" cli_state="unknown" cli_reason="DataStreamDefinition creation has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API DataStreamDefinition creation workflow is supplied." plugin_state="available" plugin_reason="Installed API68/default compatible-connection remap only; processing acknowledgement required." plugin_body=create_plugin %}
+Creation also creates the landing DLO. Use the generated names that Salesforce returns, not the proposed names. A sample of the output is not in this guide yet.
 
-{{ create_evidence | markdownify }}
+**Known failures:**
+
+- At API 66, a stream had an automatic processing failure. Its cause is not known. The plugin admits only `auto` or `68.0`.
+{% endcapture %}
+
+{% include operation-tabs.html id="stream-definition-create" label="Create" split_api=true cli_state="unknown" cli_reason="Creating a stream from XML has not been verified." metadata_state="unknown" metadata_reason="No Metadata API create workflow for streams has been tested." connect_state="unknown" connect_reason="Native creation was qualified for one fresh stream (see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Installed API 68.0 and default data space, with an existing compatible connection (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
-{% capture update_evidence %}
-Updates through `DataStreamDefinition` XML, explicit activation and explicit refresh have **not been verified** here.
-
-The separately qualified native API68 update adds one mapping from an existing source Text field into a new nonprimary DLO Text field. Independent reads confirmed the new stream mapping and DLO field, unchanged prior mappings and fields, the original primary key, source schema, settings and identities, and both stream and DLO ACTIVE. The returned mapping used a `formula` containing the source field label; this is not evidence for arbitrary formula expressions. A label PATCH returned success without changing the label, so label editing is not qualified.
-
-The plugin implementation follows this additive subset: add eligible missing Text mappings, preserve omitted existing mappings, and perform no write when the target already matches. It does not remove mappings or fields, retarget existing pairs, change keys or labels, rewrite the connection schema, or deploy a DLO-to-DMO mapping. Retrieved actual target settings must agree; a proposal label that differs from the generated target label is blocked rather than silently treated as unchanged. The fresh installed API68 target run independently confirmed one such additive mapping and its new DLO field, preserved prior fields, then repeated the same document without another write.
-
-The older [DLO discussion](/next/data-cloud-cli/data-lake-object/#data-lake-object-dlo-customobject-dll) also describes a separate API67 ingestion schema-sync observation. Do not confuse that route with native API68 stream PATCH or XML deployment.
-
-{% endcapture %}
 {% capture update_plugin %}
-Retrieve the actual target stream first using Retrieve with `TARGET_ALIAS`. Keep its settings, labels, identities and read-only `observed` section. Append one entry to `spec.additiveFieldMappings`, retaining existing entries. This is an entry example, not a complete document:
+Adds one nonprimary Text field to the stream's mappings. It also creates the matching DLO field.
+
+Retrieve the target stream first, using the Read command with `TARGET_ALIAS`. Keep its settings, labels and `observed` section. Then append one entry to `spec.additiveFieldMappings`, and keep the existing entries:
 
 ```json
 {
@@ -145,39 +111,93 @@ Retrieve the actual target stream first using Retrieve with `TARGET_ALIAS`. Keep
 }
 ```
 
-Replace `ContactEmail` with an existing uniquely resolved, nonprimary source-event Text field label. Use a new ordinary target field name without `__c`; the resulting DLO field is `ExtraContactEmail__c`. Do not use a primary, generated/system or existing source-field name as the target.
+Replace `ContactEmail` with an existing, uniquely named, nonprimary Text field of the source event. Use a new name without `__c`. The new DLO field is `ExtraContactEmail__c`. Do not reuse a primary, generated or existing source field name.
 
-Run the same exact-file preview and deploy commands from Create, now using the target-retrieved document. Changes require `--allow-processing`; an unchanged repeat does not. The plugin verifies the additive mapping and linked-DLO field independently. Removing entries does not remove existing mappings or fields. Retargeting, label/key/type changes and destructive schema reconciliation are not supported. Prepare the DMO field separately and deploy the DLO-to-DMO mapping last.
+Preview the change, then allow processing:
+
+```sh
+sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --preview
+sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
+```
+
+An unchanged repeat writes nothing. Removing an entry does not remove the mapping or field. Prepare the DMO field first, and deploy the DLO-to-DMO mapping last. A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="stream-definition-update" label="Update" cli_state="unknown" cli_reason="Definition updates, activation and refresh have not been verified here." api_state="unknown" api_reason="The linked ingestion schema-sync route is separate; no DataStreamDefinition API update workflow is supplied." plugin_state="available" plugin_reason="Installed API68/default additive nonprimary Text mapping and zero-write repeat only." plugin_body=update_plugin %}
 
-{{ update_evidence | markdownify }}
+{% include operation-tabs.html id="stream-definition-update" label="Update" split_api=true cli_state="unknown" cli_reason="Definition updates through XML have not been verified." metadata_state="unknown" metadata_reason="Metadata API updates for streams have not been tested." connect_state="unknown" connect_reason="The native additive mapping was qualified (see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Installed API 68.0 and default data space; additive nonprimary Text mappings only (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
-{% capture delete_evidence %}
-Deletion through `DataStreamDefinition` XML remains **unverified**. Native stream deletion is a separate operation with two importantly different outcomes:
-
-- **Preserve the DLO — the default plugin behavior:** remove only the stream, using the native `shouldDeleteDataLakeObject=false` mode. The DLO and its fields remain. Removing the stream does not erase the retained data or schema.
-- **Explicitly delete the DLO too:** the native `shouldDeleteDataLakeObject=true` mode requests stream and linked-DLO removal together. The plugin uses `--delete-dlo` for this explicit choice. Fresh installed API68 cross-org cleanup qualified this mode on both owned fixture pairs, with fresh binding/dependency checks and independent stream and DLO absence checks. The DLO removal was a cascade effect of stream deletion, not a separate direct DLO DELETE.
-
-Native API65 and API68 evidence qualified both modes on owned Ingestion API fixtures in the default dataspace, with dependency checks and independent final-state reads. Preserve mode required stream absence plus an unchanged surviving DLO. Delete-DLO mode required stream absence plus linked-DLO absence by both name and persisted ID, with unselected survivors preserved. HTTP204 alone, or an intermediate `DELETING` state, was not completion evidence. No separate direct DLO DELETE or automatic retry was used.
-
-At API66, preserve-DLO deletion succeeded and the full DLO schema survived. That stream had an automatic processing failure whose cause remains unresolved; reported zero row counters are **not** proof of an empty DLO. API66 delete-DLO mode and other lower pins remain unqualified. This is definition-deletion evidence, not proof that automatic processing was harmless or successful.
-
-The older October 30 readback could not resolve a different `DELETING` stream. It remains inconclusive historical evidence; it neither cancels the later bounded successes nor establishes general deletion support. See also the [DLO deletion limitations](/next/data-cloud-cli/data-lake-object/#delete).
-
-{% endcapture %}
 {% capture delete_plugin %}
-Select only an owned stream by its actual API name. The default preserves its DLO; preview first and check ownership, bindings and dependencies:
+Deletes one owned stream and keeps its DLO. Preview first. Check that you own the stream and that nothing depends on it.
 
 ```sh
-sf data360 delete -o TARGET_ALIAS -m data-stream:StreamName --api-version 68.0 --data-space default --preview
-sf data360 delete -o TARGET_ALIAS -m data-stream:StreamName --api-version 68.0 --data-space default
+sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream --preview
+sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream
 ```
 
-**To remove the linked DLO too**, add `--delete-dlo` to both commands. This is destructive cascade removal, not a routine refresh or permission to delete shared/populated resources. The fresh cross-org installed run qualified this explicit mode on its owned fixture pairs; preserve mode has separate bounded evidence, not fresh cross-org qualification. The plugin requires fresh identity/binding/dependency checks and independently verifies final absence (plus unchanged DLO in preserve mode). HTTP204 or `DELETING` alone is not completion. Unknown outcomes stop without automatic retry or rollback.
-{% endcapture %}
-{% include operation-tabs.html id="stream-definition-delete" label="Delete" cli_state="unknown" cli_reason="DataStreamDefinition deletion has not been verified; no workflow is supplied." api_state="unknown" api_reason="No API DataStreamDefinition deletion workflow is supplied." plugin_state="available" plugin_reason="Guarded exact API68/default deletion; explicit cascade separately selected with --delete-dlo." plugin_body=delete_plugin %}
+A sample of the output is not in this guide yet.
 
-{{ delete_evidence | markdownify }}
+<details>
+<summary>Delete the linked DLO too</summary>
+
+Add `--delete-dlo` to both commands to remove the linked DLO with the stream. The DLO is removed as a cascade. Use this only for owned fixtures that no other resource uses.
+
+```sh
+sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream --delete-dlo --preview
+sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream --delete-dlo
+```
+
+The command checks that the stream and the DLO are both gone. A DELETE response alone is not proof.
+
+</details>
+{% endcapture %}
+
+{% include operation-tabs.html id="stream-definition-delete" label="Delete" split_api=true cli_state="unknown" cli_reason="Stream deletion through XML has not been verified." metadata_state="unknown" metadata_reason="A raw Metadata API delete of a stream has not been tested." connect_state="unknown" connect_reason="Native deletion was qualified on owned fixtures (see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Deletes one owned stream; the DLO stays unless you add --delete-dlo (see Evidence)." plugin_body=delete_plugin %}
+
+<details>
+<summary>Evidence: tested scope, versions and error codes</summary>
+
+**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limits still apply. This badge does not verify untested writes or general CRUD support.
+
+**Mapping order:** Changing a stream mapping does not deploy the DLO-to-DMO mapping, create a DMO or prove that downstream data is ready. Mapping creation does not create missing DMO fields. The DLO discussion is in [Data Lake Object](/next/data-cloud-cli/data-lake-object/#create).
+
+**Stream XML:** The `sf project retrieve start` command uses the Metadata API. The tested retrieve used `--api-version 65.0` and `--wait 5`. Retrieving the file does not start a refresh.
+
+**Native API family:** The `/ssot/data-streams` routes belong to the Data 360 Connect REST API, listed in the [Salesforce reference](https://developer.salesforce.com/docs/data/connectapi/references/spec). The CLI only sends the authenticated request.
+
+<a id="documented-native-stream-api-availability"></a>
+
+**Documented native stream API availability:** The [Data 360 Connect REST API reference, version 67.0](https://developer.salesforce.com/docs/data/connectapi/references/spec?meta=type%3AData+Stream+Source+Field+Output) documents native `POST /ssot/data-streams` as available since **60.0**. Its marked required top-level inputs are `connectorInfo`, `label`, `mappings`, `name`, `refreshConfig` and `sourceFields`. `datastreamType` includes `INGEST_API`. `dataLakeObjectInfo` and `existingDataLakeObjectInfo` are alternatives. For Ingestion API streams, `dataLakeFieldInputRepresentations` must contain **only the primary key field**, not the full event schema.
+
+These are reference inputs, not a general ingestion create recipe. The reference describes `dataLakeObjectInfo` as an array while its S3 request example uses an object. No shape is chosen here. The reference does not supply nested ingestion connector or event inputs, so no native ingestion payload is inferred. The POST reference lists `200` as success. The S3 example response lists stream `id`, `name`, `recordId` and `status`, and DLO `id`, `name` and `status`. The visible S3 response shows both statuses as `PROCESSING`. That example does not establish ingestion identity correlation or settled success.
+
+Native `GET /ssot/data-streams` and `GET /ssot/data-streams/{recordIdOrDeveloperName}` are also documented since 60.0. The list documents `connectionName`, `filter`, `includeMappings`, `limit` (1–200, default 10), `offset` and `orderBy`. No `sourceObjectName` query parameter is documented in that list. Do not transfer the facade discovery filter to native REST.
+
+The reference alone does not establish conflict-safe duplicate creation, permission-aware authoritative absence, restart/lost-response recovery or terminal processing settlement. A unique name, an empty list or list-then-create is not an overwrite or ownership guarantee. The narrow implementation checks described above do not establish general recovery or API67 native/facade parity.
+
+Salesforce documents native API 67 stream GET and PATCH in its [CRM field-disablement guide](https://developer.salesforce.com/docs/data/connectapi/guide/data-stream-use-case.md). That connector-specific update use case is not an ingestion CREATE contract or proof that arbitrary connector payloads can be replayed.
+
+**Create (native, API 68.0):** One fresh Ingestion API stream and its new `Other` DLO were created in the default data space. The existing connection and source schema were checked first. The create request supplied only the primary key in the DLO field array. Independent stream and DLO reads confirmed their identities and ACTIVE state. Salesforce generated names that differed from the proposed names. The create response alone did not confirm the result. Do not replay a complete GET response as a create body, and do not create missing connections implicitly.
+
+**Update (native, API 68.0):** One additive mapping from an existing source Text field into a new nonprimary DLO Text field was added. Independent reads confirmed the new mapping and DLO field, unchanged prior mappings and fields, the original primary key, the source schema, settings, identities, and ACTIVE state for both stream and DLO. The returned mapping used a `formula` containing the source field label. This is not evidence for arbitrary formula expressions. A label PATCH returned success without changing the label, so label editing is not qualified.
+
+**Delete (native, API 65.0 and 68.0):** Both modes were qualified on owned Ingestion API fixtures in the default data space, with dependency checks and independent final-state reads. Preserve mode required the stream to be absent and the DLO to be unchanged. Delete-DLO mode required the stream and the linked DLO to be absent, by name and by persisted ID. Unselected resources stayed in place. An HTTP 204 alone, or an intermediate `DELETING` state, was not completion evidence. No separate direct DLO DELETE and no automatic retry was used. The DLO removal in delete-DLO mode was a cascade of stream deletion.
+
+**API 66:** Preserve-DLO deletion succeeded, and the full DLO schema survived. That stream had an automatic processing failure whose cause is not known. Its zero row counters do not prove that the DLO is empty. Delete-DLO mode and other lower API pins are not qualified. This is definition-deletion evidence only. It does not show that automatic processing was harmless.
+
+**Other readbacks:** One readback could not resolve a different stream in `DELETING` state. It does not change the results above and does not establish general deletion support. One unexplained run is not used as qualification evidence. A fresh successful run does not establish its cause.
+
+**Plugin behaviour:**
+
+- The plugin keeps no local allowlists. It checks the saved file's shape. Category, data types, labels and descriptions are sent as written, and Salesforce decides.
+- The plugin admits only `--api-version auto` or `68.0`, the default data space, and the supported Ingestion API subset. Other versions and scopes are blocked.
+- Deploy resolves the source binding before it chooses create, update or unchanged. Changes require `--allow-processing`. `--preview` writes nothing. Mixed resource families, dependency expansion and Git selection are blocked.
+- Read selects one stream by exact name. It checks the linked DLO independently and rejects unsupported shapes. Type-only inventory, wildcard selection and dependency expansion are not supported.
+- A repeat of an unchanged file writes nothing.
+- A proposal label that differs from the generated target label is blocked before any write.
+- Removing an entry from `spec.additiveFieldMappings` does not remove any mapping or field.
+- Fresh installed API 68 qualification passed these steps in both orgs: source create and retrieve; a `spec.connectionName`-only remap to a compatible target connection; target create and retrieve; one additive nonprimary Text mapping update; a zero-write repeat; and explicit cascade cleanup. Independent reads confirmed that cleanup left protected resources unchanged.
+
+**Not verified:** Other connectors, populated data, nondefault data spaces, other API versions, full migration, a published plugin release, XML create, update, activation, refresh or delete, label edits, and cross-org replay of arbitrary stream documents. Downstream DLO-to-DMO mapping provisioning is not verified here.
+
+</details>

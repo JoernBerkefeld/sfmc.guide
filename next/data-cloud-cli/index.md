@@ -12,59 +12,59 @@ crud_rows:
   - path: next/data-cloud-cli/data-stream-definition.md
     label: Data Streams
     anchor: data-stream-configuration-datastreamdefinition
-    scope: 'Ingestion starts here: source-to-DLO mappings belong to the stream, separate from DLO-to-DMO mappings. Standard CLI retrieves DataStreamDefinition XML. Native Ingestion API/Other/default evidence qualifies bounded creation, additive Text mapping updates and both delete modes at API65/68; API66 preserve-DLO deletion succeeded despite unresolved automatic processing failure. Plugin exact retrieve, guarded deploy and delete are implemented for auto/API68/default only. Fresh installed API68 source create/retrieve, connectionName-only target remap/create/retrieve, additive Text update, zero-write repeat and both-org explicit cascade cleanup passed with protected resources unchanged. This is bounded cross-org qualification, not general connector, populated-data or other-version support.'
+    failures: 'API 66 preserve-DLO deletion: automatic processing failed and stayed unresolved.'
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
-    scope: 'Standard Metadata retrieval worked at requested API65–68; full-schema redeploy hit primary-key/qualifier failures. Native API61–68 standalone CRUD succeeded separately; plugin guard and public acceptance remain API68/default. Portable JSON, auto POST/PATCH and explicit read-only preview; default delete has no prompt. Not ingestion, cascade or cross-org portability.'
+    failures: 'Full-schema standard redeploy failed with primary-key/qualifier errors. CLI create failed for the tested schema.'
   - path: next/data-cloud-cli/data-model-object.md
     label: DMOs
     anchor: data-model-object-dmo-customobject-dlm
-    scope: 'XML retrieval. Native API61–68 create, label update, Text-field addition and delete on empty, unmapped custom DMOs in the default data space; API60 returns 404. At API68: categories Profile, Engagement and Other, ten field data types, object label and description updates, existing field label updates and added fields; data-type and key changes are silently ignored by the API, which has no field removal; custom fields are removed through the Metadata API. The plugin keeps no local allowlists, refuses type and key changes and all writes to generated DMOs, and removes custom fields only when the field-removal flag is set, a mapped field only together with its mapping pairs. On a standard DMO it writes custom fields, the object label and the description only and never deletes the object; a first mapping activates a standard DMO permanently. Data-bearing DMOs, standard DMOs in active use, non-default data spaces, relationships and other versions for the API68 breadth are unverified; authoritative emptiness admission for existing nonqueryable objects is unresolved (`42P01` is not empty); owned deletion requires dependency checks.'
+    failures: 'A changed field type is accepted (HTTP 200) but silently ignored. API 60.0 returns 404 for every method.'
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    scope: 'Exact standard API65 XML and installed API68 exact-selection JSON retrieval; inventory acceptance remains unresolved (earlier errors, later mapping type-only timeout, not pass). Compatible-object creation; CLI label-only update; historical installed single Text/Number additions. Current API68 desired-state implementation unmaps omitted authored pairs first, then batch-adds Text pairs; installed Text removal, two-pair batch addition and both Text pair-retarget directions passed sequentially on one empty fixture, with zero-write previews/repeats. Whole-mapping deletion admits API61–68/default68: the plugin sends one Metadata API destructive deployment and then checks that the mapping is absent and that the other mappings and field names of the DMO are unchanged; observed at API68 on empty objects in two orgs, including the only mapping of a standard DMO. Installed Number removal remains unqualified. The last mapping of a custom DMO is refused before all writes; delete the DMO instead. A direct non-last native DELETE can remove DMO fields. Delete is Partial for API and Plugin; out-of-the-box CLI deletion remains Unknown. No populated, general binding-retarget or universal preservation qualification. A separate installed API68/default empty Other/Text cross-org run passed exact source retrieval, target-local logical DLO/DMO rebinding, create/retrieve, additive Text update and GET-only repeat; this is not general cross-org schema or released-package qualification.'
+    failures: 'Inventory acceptance: earlier runs failed and it is not passed. A direct native DELETE of a non-last mapping can remove DMO fields.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
-    scope: 'Exact standard API 65 definition retrieval reverified in one source org; no prerequisite or portability proof. Writes remain bounded to empty custom DMOs, owned `ManyToOne` lookup, label-only update and sole-use lookup cascade deletion.'
+    failures: '—'
   - path: next/data-cloud-cli/data-source-object.md
     label: Source object definitions
     anchor: source-object-configuration-datasourceobject
-    scope: '`DataSourceObject` XML, not a complete connector or credential export.'
+    failures: '—'
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
-    anchor: retrieve
-    scope: 'XML definition and runtime reads; definition-only XML writes or API 67 facade runtime creation; API 65 publication/settings and bounded predicate edit, including target-bound ACTIVE/NOT_SCHEDULED preservation; historical API65 evidence is not unchanged-source cross-org deployment or successful calculation proof. Separately, optional sf-plugin-data explicit68/default installed cross-org draft create/publish, byte-identical paired retrieval, GET-only no-op and ACTIVE edit passed. Later seven-poll delete passed; two earlier unconfirmed completions remain unexplained, all fixtures independently absent. Plugin auto remains legacy65; no computation/general SQL guarantee; asynchronous deletion checks required.'
+    anchor: read
+    failures: 'Two earlier deletions could not be confirmed; the cause is unexplained.'
   - path: next/data-cloud-cli/segments.md
     label: Segments
-    anchor: retrieve
-    scope: 'Native JSON API68/default installed plugin retrieve/repeat, absent-target CREATE, description UPDATE with independent full preservation reads and acknowledged processing, zero-write no-op, and confirmed exact DELETE204 plus internal/external GET404. Later conservative predispatch DELETE guard is offline-only; transitional DELETE branches synthetic-only. Historical API65 XML/native evidence remains separate, including one existing-owner forward selected-primary-key IS NOT NULL predicate addition. No arbitrary SQL, lower-version JSON CREATE/DELETE, cross-org, completed computation, generated-resource or physical cleanup qualification.'
+    anchor: read
+    failures: '—'
   - path: next/data-cloud-cli/segment-members.md
     label: Segment members
     anchor: segment-members-runtime-data-not-metadata
-    scope: 'Bounded membership/query pages, not a verified full-population export or member writes.'
+    failures: '—'
   - path: next/data-cloud-cli/data-graphs.md
     label: Data Graphs
     anchor: operational-data-graphs
-    scope: 'Optional sf-plugin-data explicit68/default standard Individual NONE recursive retrieval and guarded label/description/additive projection/relationship UPDATE with retained multihop bindings; strict root-only absent creation and exact-artifact confirmed deletion. Installed description UPDATE and zero-write repeats passed; general cross-org portability is unqualified. Fresh ready/identity/root/known-empty dependencies required; exhaustive external consumers unverified. Independent graph-definition absence confirmed, not generated-resource/storage/credits cleanup. Auto/API67 facade retains bounded existing-IR-owner LastName append, full preservation and zero-write repeat; GUI UPDATE does not qualify public REST/plugin UPDATE.'
+    failures: '—'
   - path: next/data-cloud-cli/identity-resolution.md
     label: Identity Resolution
     anchor: operational-identity-resolution
-    scope: 'API 67 facade source-only ruleset lifecycle and bounded reconciliation change; two-org owner/twelve-output correlation and preservation during dependent Graph update, with no IR mutation; not portable IR creation/update, successful IR data run or universal cleanup.'
+    failures: '—'
   - path: next/data-cloud-cli/data-kit-object-template.md
     label: Kit templates
     anchor: kit-template-datakitobjecttemplate
-    scope: 'Stored Data Graph snapshot and description update; no reproducible standard CLI delete invocation supplied.'
+    failures: '—'
   - path: next/data-cloud-cli/data-package-kit-definition.md
     label: Kit definitions
     anchor: kit-definition-datapackagekitdefinition
-    scope: 'Owned Identity Resolution definition/template/membership created and deleted together; no runtime installation proof.'
+    failures: '—'
   - path: next/data-cloud-cli/data-package-kit-object.md
     label: Kit membership
     anchor: kit-membership-datapackagekitobject
-    scope: 'Combined metadata transport with its definition/template; no independent member creation/deletion proof.'
+    failures: '—'
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -89,9 +89,9 @@ Each linked page covers one logical resource, with Retrieve, Create, Update and 
 The resource pages group complete workflows into independent operation tabs. **CLI** means a supplied supported Metadata retrieval/deployment workflow or a resource-specific standard command. **API** means requests such as `sf api request rest`, including any supporting CLI reads needed by that workflow. Generic REST or SOAP request runners, request bodies supplied by file or stdin, MCP/facade/Aura calls and authentication helpers never establish resource-specific standard CLI support. Their use of Salesforce CLI for authentication or transport does not change the API classification. Separately identified custom plugin commands remain plugin workflows, not standard CLI support. Switching a tab changes the method's prose, payloads, commands and checks together, not just its code blocks. Shared prerequisites, safety warnings and detailed evidence for disabled methods remain visible.
 
 - **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
-- **Blocked:** the disabled tab has a circle-slash icon and a known limitation explained beneath the controls.
-- **Unknown:** the disabled tab has a question-mark icon because a workflow is undocumented, untested or not implemented here. The summary's **?** rating does not by itself mean blocked.
-- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The Data Stream, DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. The calculated-insight page separately documents the bounded explicit68 draft/publish/source-paired-delete workflow, installed cross-org equality/no-op evidence and unresolved historical deletion-confirmation failures; its standard-CLI/API tabs remain separate. The Graph page separately documents explicit68/default recursive native retrieval and bounded label/description/additive projection/relationship UPDATE with preservation, distinct native artifacts, strict root-only CREATE, zero-write equality and guarded confirmed deletion. Installed description UPDATE and zero-write output checks passed; general cross-org portability is not qualified and auto/API67 facade behavior is preserved. Exhaustive external consumers and generated-resource/storage/credits cleanup are unverified. The Segment page now supplies four bounded native JSON API68/default plugin workflows: installed retrieve/repeat, absent-target CREATE, description UPDATE with acknowledged processing and independent preservation reads, settled zero-write no-op and confirmed exact deletion. Its later conservative predispatch DELETE guard is offline-qualified only; transitional DELETE branches are synthetic-only. Historical API65 evidence remains separate, with no general SQL, cross-org, completed computation or physical cleanup claim. Other resource plugin tabs remain Unknown. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
+- **Not supported:** we tested this method in the stated scope and it did not work. The disabled tab has a solid red circle-slash icon, and the reason is shown beneath the tabs.
+- **Not tested:** nothing has been tested or researched for this method. The disabled tab has a dashed grey question-mark icon. This is not the same as "does not work".
+- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The Data Stream, DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. The calculated-insight page separately documents the bounded explicit68 draft/publish/source-paired-delete workflow, installed cross-org equality/no-op evidence and unresolved historical deletion-confirmation failures; its standard-CLI/API tabs remain separate. The Graph page separately documents explicit68/default recursive native retrieval and bounded label/description/additive projection/relationship UPDATE with preservation, distinct native artifacts, strict root-only CREATE, zero-write equality and guarded confirmed deletion. Installed description UPDATE and zero-write output checks passed; general cross-org portability is not qualified and auto/API67 facade behavior is preserved. Exhaustive external consumers and generated-resource/storage/credits cleanup are unverified. The Segment page now supplies four bounded native JSON API68/default plugin workflows: installed retrieve/repeat, absent-target CREATE, description UPDATE with acknowledged processing and independent preservation reads, settled zero-write no-op and confirmed exact deletion. Its later conservative predispatch DELETE guard is offline-qualified only; transitional DELETE branches are synthetic-only. Historical API65 evidence remains separate, with no general SQL, cross-org, completed computation or physical cleanup claim. Other resource plugin tabs remain not tested. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
 
 CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
 
@@ -101,7 +101,7 @@ CLI is selected first when available, otherwise API. When neither method has a w
 
 **October 30 Segment predicate reconciliation:** retained native API 65 evidence now qualifies one source-only existing-owner forward addition of `AND <same selected primary field> IS NOT NULL` after `WHERE 1 = 0`. Independent ACTIVE runtime and Metadata reads agreed on the desired SQL and preserved settings, identities and bindings. This is not general SQL, cross-org, membership or computation proof. The Segment API update method was already Partial; no CRUD status or method is promoted. The synchronized timestamps record this documentation reconciliation, not new live tests of the other resources.
 
-**November 2 DLO retrieval reconciliation:** retained standard CLI runs with requested API 65.0–68.0 each succeeded on the same source test fixture, saving one object and eight field XML files with identical bytes and parsed XML. The [DLO Retrieve section](/next/data-cloud-cli/data-lake-object/#retrieve) includes the complete saved fixture files and one command example. No disk manifest was generated, and the CLI response did not independently report an effective API version. This adds retrieval evidence only: CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged.
+**November 2 DLO retrieval reconciliation:** retained standard CLI runs with requested API 65.0–68.0 each succeeded on the same source test fixture, saving one object and eight field XML files with identical bytes and parsed XML. The [DLO Retrieve section](/next/data-cloud-cli/data-lake-object/#read) includes the complete saved fixture files and one command example. No disk manifest was generated, and the CLI response did not independently report an effective API version. This adds retrieval evidence only: CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged.
 
 **November 2 DLO CREATE reconciliation:** four real standard deployments of the unchanged retrieved schema under independently absent synthetic names failed at requested API 65–68, with the same generic internal error signature at `Id__c` (combined object line 54, column 13). Independent post-failure Metadata reads could not find each name. The DLO CLI Create tab is blocked for this tested schema; this did not establish universally unsupported CREATE. The separate native API68 standalone plugin workflow now qualifies bounded creation. Distinct earlier API ingestion-chain observations are retained, not promoted to a general creation workflow. No other resource was reverified.
 
@@ -110,7 +110,7 @@ CLI is selected first when available, otherwise API. When neither method has a w
 The ratings cover usable workflows supplied in this guide, not every observed operation. DMO creation and DLO native API68 standalone definition workflows are supplied on their resource pages within their stated scopes; other observations remain background evidence. Some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
 
 <table class="crud-overview">
-  <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Retrieve</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified scope / limits</th></tr></thead>
+  <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Read</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified failures</th></tr></thead>
   <tbody>
   {% for row in page.crud_rows %}
     {% assign resource = site.pages | where: 'path', row.path | first %}
@@ -118,11 +118,11 @@ The ratings cover usable workflows supplied in this guide, not every observed op
       {% unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
     <tr>
       <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
-      <td>{% include crud-cell.html capability=resource.crud.retrieve %}</td>
+      <td>{% include crud-cell.html capability=resource.crud.read %}</td>
       <td>{% include crud-cell.html capability=resource.crud.create %}</td>
       <td>{% include crud-cell.html capability=resource.crud.update %}</td>
       <td>{% include crud-cell.html capability=resource.crud.delete %}</td>
-      <td>{{ row.scope | markdownify }}</td>
+      <td>{{ row.failures | default: '—' | markdownify }}</td>
     </tr>
       {% endunless %}
     {% endif %}

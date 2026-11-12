@@ -1,0 +1,36 @@
+@use 'variables' as *;
+
+// Overview and summary cells: "Not tested" (dashed, neutral) is kept visually apart from
+// "Not supported" (solid, red), which means the workflow was tried and failed in its scope.
+.crud-state {
+  display: inline-block;
+  padding: 0.1em 0.5em;
+  font-size: $text-sm;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: $radius-sm;
+
+  &--untested {
+    color: #475569;
+    border: 1px dashed #64748b;
+  }
+
+  &--unsupported {
+    color: #b42318;
+    background: #fef3f2;
+    border: 1px solid #b42318;
+  }
+}
+
+[data-theme='dark'] .crud-state {
+  &--untested {
+    color: #cbd5e1;
+    border-color: #94a3b8;
+  }
+
+  &--unsupported {
+    color: #fca5a5;
+    background: #3b1212;
+    border-color: #fca5a5;
+  }
+}

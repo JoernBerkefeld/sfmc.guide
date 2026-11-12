@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli] }
+  read: { status: "yes", methods: [cli] }
   create: { status: "partial", methods: [cli] }
   update: { status: "partial", methods: [cli] }
   delete: { status: "unknown", methods: [] }
@@ -18,28 +18,28 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
-
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
+[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
 
 <a id="kit-template-datakitobjecttemplate"></a>
 
-**Data Kit template** — `DataKitObjectTemplate`.
+A **data kit** groups configuration so it can be reused. A **data kit template** (`DataKitObjectTemplate`) stores the settings of one component in that kit. The template is a saved copy, not the live component.
 
-A **data kit** groups configuration for reuse. Its definition describes the kit, templates store component settings, and membership files link the two. **Instantiation** or installation creates live components from that saved configuration; copying files alone does not do this. A **payload** is simply the content carried inside a field or request.
-
-A kit template is a **snapshot**, not the live component. A Data Graph template can contain projected fields, joins and refresh settings; an Identity Resolution template can contain matching and reconciliation rules. Segment templates omit live publish schedule/status.
+**Example used in every chapter:** `CustomerGraph`, a Data Graph template.
 
 {% include crud-summary.html %}
 
-## Retrieve
+**Plugin qualification:** No `sf-plugin-data` workflow is tested for this template. Only the Salesforce CLI workflows below apply.
 
-{% capture retrieve_cli %}
+## Read
+
+{% capture read_cli %}
+Downloads the stored template into your project folder.
+
 ```sh
 sf project retrieve start --metadata DataKitObjectTemplate:CustomerGraph --target-org SOURCE_ALIAS --api-version 65.0 --wait 10
 ```
 
-The response points to `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`. Its `entityPayload` is XML-escaped JSON:
+The file is written to `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`. Its `entityPayload` element holds the template content as escaped JSON:
 
 ```xml
 <DataKitObjectTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -50,59 +50,78 @@ The response points to `force-app/main/default/dataKitObjectTemplates/CustomerGr
 </DataKitObjectTemplate>
 ```
 
-Other template types use `IdentityResolution` or `MarketSegment`. Preserve complete payloads and references: source IDs, generated objects/transforms and external DLO references can prevent replay elsewhere. Existing snapshots do not automatically update when a live component changes.
+A Data Graph template can hold projected fields, joins and refresh settings. An Identity Resolution template can hold matching and reconciliation rules. Segment templates omit the live publish schedule and status.
+
+Keep the full payload and every reference. Source IDs and external data lake object references can stop the template from working in another org. The saved template does not update when the live component changes.
 
 {% endcapture %}
-{% include operation-tabs.html id="kit-template-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the stored template snapshot, not the live component." cli_body=retrieve_cli api_state="unknown" api_reason="No separate API retrieval workflow is supplied." %}
+{% include operation-tabs.html id="kit-template-read" label="Read" cli_state="available" cli_reason="Retrieves the stored template. It does not retrieve the live component." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No separate API retrieval workflow is supplied." %}
 
 ## Create
 
 {% capture create_cli %}
-A complete Data Graph template can be stored without a parent kit. Use the existing, dependency-reviewed file at `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`:
+Stores the existing template file in the target org.
 
 ```sh
 sf project deploy start --metadata DataKitObjectTemplate:CustomerGraph --target-org TARGET_ALIAS --api-version 65.0 --wait 10
 ```
 
-**Optional structured output (`--json`):**
+The command reads `force-app/main/default/dataKitObjectTemplates/CustomerGraph.dataKitObjectTemplate-meta.xml`. The template is stored only. No live graph is created and no kit is installed.
+
+Sample result (structure from a test run that used `--json`):
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [{ "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Created" }] } }
 ```
 
-This stores the template; **it does not create a runtime graph or install a kit**. Retrieve it again to compare the decoded payload. The excerpt under Retrieve is not a complete creation file.
+The XML excerpt under Read is not a complete creation file. Retrieve the template again to compare its decoded payload.
 
 {% endcapture %}
-{% include operation-tabs.html id="kit-template-create" label="Create" cli_state="available" cli_reason="Store a complete existing Data Graph template only; no runtime creation or kit installation." cli_body=create_cli api_state="unknown" api_reason="No separate API creation workflow is supplied." %}
+{% include operation-tabs.html id="kit-template-create" label="Create" cli_state="available" cli_reason="Stores a complete existing Data Graph template only. No live graph is created and no kit is installed." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No separate API creation workflow is supplied." %}
 
 ## Update
 
 {% capture update_cli %}
-The verified edit is the **description inside `entityPayload`** of a Data Graph template. Decode the JSON, change only the description, then encode it as XML text again. Keep the root, fields, keys, types and other settings:
+Changes the description inside the `entityPayload` of a Data Graph template, then deploys it.
+
+Decode the JSON, change only the description, then encode it as XML text again. Leave the root, fields, keys, types and other settings as they are.
 
 ```sh
 sf project deploy start --metadata DataKitObjectTemplate:CustomerGraph --target-org TARGET_ALIAS --api-version 65.0 --wait 10
 ```
 
-**Optional structured output (`--json`):**
+Sample result (structure from a test run that used `--json`):
 
 ```json
 { "status": 0, "result": { "success": true, "files": [{ "fullName": "CustomerGraph", "type": "DataKitObjectTemplate", "state": "Changed" }] } }
 ```
 
-This updates stored template content, not an instantiated graph. Retrieve and compare the decoded payload. Arbitrary payload changes, full graph updates through templates, and whole-container repeat/update behavior have not been verified.
+The update changes the stored template only. It does not change a live graph. Retrieve the template and compare the decoded payload to confirm the change.
 
 {% endcapture %}
-{% include operation-tabs.html id="kit-template-update" label="Update" cli_state="available" cli_reason="Only the description inside a Data Graph template payload is verified; not runtime graph updates." cli_body=update_cli api_state="unknown" api_reason="No separate API update workflow is supplied." %}
+{% include operation-tabs.html id="kit-template-update" label="Update" cli_state="available" cli_reason="Changes only the description in a Data Graph template. It does not change a live graph." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No separate API update workflow is supplied." %}
 
 ## Delete
 
-{% capture delete_evidence %}
-Removing a stored Data Graph template has been demonstrated, but an exact reproducible standard CLI delete invocation is not established here. No command is offered. Template deletion would not by itself prove runtime graph or supporting-artifact cleanup.
+{% include operation-tabs.html id="kit-template-delete" label="Delete" cli_state="unknown" cli_reason="No reproducible standard CLI delete command is established yet." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API template-deletion workflow is supplied." %}
 
-{% endcapture %}
-{% include operation-tabs.html id="kit-template-delete" label="Delete" cli_state="unknown" cli_reason="Deletion was demonstrated, but no exact reproducible standard CLI invocation is established here." api_state="unknown" api_reason="No API template-deletion workflow is supplied." %}
+For how moving a kit differs from installing it, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
 
-{{ delete_evidence | markdownify }}
+<details>
+<summary>Evidence: tested scope, versions and error codes</summary>
 
-For the shared distinction between metadata transport and runtime installation, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
+**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limits still apply. This badge does not verify untested writes or general CRUD support.
+
+**Versions and aliases:** Every command in this guide uses API version `65.0`. `SOURCE_ALIAS` and `TARGET_ALIAS` are placeholders for your own org aliases.
+
+**Read:** The command retrieves the stored template, not the live component. The excerpt shows only some attributes; other retrieved attributes are omitted.
+
+**Create:** Only a complete, existing Data Graph template was stored. The command does not create a runtime graph or install a kit.
+
+**Update:** Only the description inside a Data Graph template payload was verified. The update does not change a runtime graph.
+
+**Delete:** Removing a stored Data Graph template has been demonstrated. An exact, reproducible standard CLI delete invocation is not established, so no command is offered. Deleting a template would not by itself prove runtime graph or supporting-artifact cleanup. No API template-deletion workflow was supplied.
+
+**Not verified:** Runtime creation and kit installation. Arbitrary payload changes. Full graph updates through templates. Whole-container repeat or update behavior. Runtime cleanup after template deletion.
+
+</details>

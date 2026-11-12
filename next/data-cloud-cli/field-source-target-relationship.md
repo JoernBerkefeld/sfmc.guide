@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "yes", methods: [cli] }
+  read: { status: "yes", methods: [cli] }
   create: { status: "partial", methods: [cli] }
   update: { status: "partial", methods: [cli] }
   delete: { status: "unknown", methods: [] }
@@ -18,36 +18,34 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
+[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
+This badge does not verify untested writes or general CRUD support.
 
 <a id="field-relationship-fieldsrctrgtrelationship"></a>
 
-**Field relationship** — `FieldSrcTrgtRelationship`.
+A field relationship links a source field to a target field. Many records in the source object can point to one record in the target object.
 
-The following example links an order's customer field to a customer DMO. It covers a custom, DataCloud-owned `ManyToOne` relationship between existing **empty custom DMOs** in the default dataspace, not managed relationships or shared lookup fields.
+**Example used in every chapter:** the `OrderCustomer` relationship from `Order__dlm` to `Customer__dlm`.
+
+**Plugin qualification:** No `sf-plugin-data` workflow is covered on this page.
 
 {% include crud-summary.html %}
 
-## Retrieve
+## Read
 
-{% capture retrieve_cli %}
+{% capture read_cli %}
+Downloads the relationship definition as an XML file.
+
 ```sh
-sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
+sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org SOURCE_ALIAS --wait 5
 ```
 
-The retrieval saves `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`, containing the elements illustrated under Create. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
+The file is saved to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`. It contains the elements shown in the Create chapter. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
 
-An independent exact-name standard Metadata API 65 retrieve was reverified on
-October 29, 2026 against a retained standard relationship in one source org,
-using a separately configured package source directory. The returned XML is a
-definition export, not proof of prerequisite compatibility, cross-org portability
-or safe deployment. This read did not create, update or delete any relationship;
-it does not requalify the bounded write examples below.
-
+A sample of the retrieved file is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve relationship XML; retrieve object definitions separately." cli_body=retrieve_cli api_state="unknown" api_reason="No API relationship retrieval workflow is supplied." %}
+{% include operation-tabs.html id="relationship-read" label="Read" cli_state="available" cli_reason="Retrieves the relationship XML. Retrieve the object definitions separately." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship retrieval workflow is supplied." %}
 
 ## Create
 
@@ -85,10 +83,10 @@ Do not leave out `fullName`. Second, the relationship at `force-app/main/default
 Deploy both together:
 
 ```sh
-sf project deploy start --metadata CustomField:Order__dlm.CustomerLookup__c --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
+sf project deploy start --metadata CustomField:Order__dlm.CustomerLookup__c --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --test-level NoTestRun --wait 5
 ```
 
-**Optional structured output (`--json`) for the deployment:**
+The result includes:
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "files": [
@@ -97,35 +95,33 @@ sf project deploy start --metadata CustomField:Order__dlm.CustomerLookup__c --me
 ] } }
 ```
 
-This creates the lookup and relationship, **not the DMOs or their key fields**. Read back the exact relationship, field references and cardinality. No explicit activation command is included, but that is not a guarantee of no internal processing.
-
+The deployment creates the lookup and the relationship. It does not create the DMOs or their key fields. Read back the relationship, field references and cardinality to confirm them.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-create" label="Create" cli_state="available" cli_reason="Owned ManyToOne relationship and lookup between existing empty custom DMOs only." cli_body=create_cli api_state="unknown" api_reason="No API relationship creation workflow is supplied." %}
+{% include operation-tabs.html id="relationship-create" label="Create" cli_state="available" cli_reason="Creates a ManyToOne relationship and lookup between two existing empty custom DMOs." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship creation workflow is supplied." %}
 
 ## Update
 
 {% capture update_cli %}
-Change only the relationship's label:
+Change only the relationship label:
 
 ```xml
 <masterLabel>Order Customer Updated</masterLabel>
 ```
 
 ```sh
-sf project deploy start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
+sf project deploy start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org TARGET_ALIAS --test-level NoTestRun --wait 5
 ```
 
-Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, source, target and cardinality stayed the same. Retargeting, cardinality changes and `OneToOne` updates have not been verified.
-
+Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, source, target and cardinality stayed the same.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-update" label="Update" cli_state="available" cli_reason="Label-only change; retargeting, cardinality changes and OneToOne updates are not verified." cli_body=update_cli api_state="unknown" api_reason="No API relationship update workflow is supplied." %}
+{% include operation-tabs.html id="relationship-update" label="Update" cli_state="available" cli_reason="Changes the relationship label. The other fields stay the same." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship update workflow is supplied." %}
 
 ## Delete
 
 {% capture delete_cli %}
-**Deleting this relationship also removes its owned, sole-use lookup field.** Do not apply this to a shared lookup.
+**Deleting this relationship also removes its owned, sole-use lookup field.** Do not use this on a shared lookup.
 
-Use the generated empty `package.xml` from the DMO section. The integration supplies `relationship-delete.xml`:
+Your integration supplies an empty `package.xml`. Its `relationship-delete.xml` names the relationship:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -139,17 +135,32 @@ Use the generated empty `package.xml` from the DMO section. The integration supp
 ```
 
 ```sh
-sf project deploy start --manifest package.xml --post-destructive-changes relationship-delete.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
+sf project deploy start --manifest package.xml --post-destructive-changes relationship-delete.xml --target-org TARGET_ALIAS --test-level NoTestRun --wait 5
 ```
 
-**Optional structured output (`--json`) for the deployment:**
+The result includes:
 
 ```json
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "FieldSrcTrgtRelationship", "fullName": "OrderCustomer", "deleted": true, "success": true }] } } }
 ```
 
-Confirm that the relationship and lookup are gone, but both DMOs and their original key fields remain.
-{% endcapture %}
-{% include operation-tabs.html id="relationship-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned relationship and its sole-use lookup; verify both DMOs and key fields remain." cli_body=delete_cli api_state="unknown" api_reason="No API relationship deletion workflow is supplied." %}
+Check that the relationship and lookup are gone. Both DMOs and their key fields remain.
 
-**Avoid stale-source redeployment:** the local relationship and lookup files are still there. Reconcile them before another deploy. Leftover lookup XML can make later deletion fail; use an isolated empty source project rather than suppressing warnings.
+**Known failures:**
+
+- Stale-source redeployment: leftover lookup XML in the local project can make a later deletion fail. Use an isolated, empty source project rather than suppressing warnings.
+{% endcapture %}
+{% include operation-tabs.html id="relationship-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned relationship and its sole-use lookup. Both DMOs and key fields remain." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship deletion workflow is supplied." %}
+
+<details>
+<summary>Evidence: tested scope, versions and error codes</summary>
+
+**Read verification:** An independent exact-name standard Metadata API 65 retrieve was reverified against a retained standard relationship in one source org. It used a separately configured package source directory. The returned XML is a definition export. It is not proof of prerequisite compatibility, cross-org portability or safe deployment. That read did not create, update or delete any relationship, and it does not requalify the bounded write examples.
+
+**Write scope:** The create, update and delete examples cover custom, DataCloud-owned `ManyToOne` relationships between existing empty custom DMOs in the default dataspace. The command examples were run with API version 65.0.
+
+**Activation:** No explicit activation command is included. That is not a guarantee of no internal processing.
+
+**Not verified:** Retargeting, cardinality changes and `OneToOne` updates. Managed relationships and shared lookup fields are outside this scope.
+
+</details>

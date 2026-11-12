@@ -2,8 +2,9 @@
   <strong>Yes</strong>: a usable scoped workflow is supplied. <strong>Partial</strong>: a usable
   workflow is supplied, but some operation variants, independent steps or asynchronous completion
   remain unsupported or unqualified. Neither means universal capability. <strong>No</strong>: proven
-  unavailable in an explicit scope. <strong>?</strong>: unknown, untested or no usable workflow
-  supplied. Neither No nor ? displays method icons.
+  unavailable in an explicit scope. <span class="crud-state crud-state--unsupported">Not supported</span>: tested in the stated scope and not supported.
+  <span class="crud-state crud-state--untested">Not tested</span>: nothing has been tested or researched here. Neither
+  Not supported nor Not tested displays method icons.
   <img src="{{ '/assets/icons/cli.svg' | relative_url }}" width="20" height="20" alt="CLI" /> means
   dedicated CLI commands;
   <img src="{{ '/assets/icons/api.svg' | relative_url }}" width="20" height="20" alt="API" /> means

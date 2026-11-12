@@ -6,10 +6,10 @@
     const list = root.querySelector('[data-tab-list]');
     const tabs = [...list.querySelectorAll('[data-method]')];
     const panels = [...root.querySelectorAll('[data-method-panel]')];
-    const enabled = tabs.filter((tab) => !tab.disabled);
+    // Every method is selectable, so an unavailable method (Not tested / Not supported) explains itself in its own panel.
     // eslint-disable-next-line unicorn/consistent-function-scoping -- Selection closes over this operation's tabs and panels.
     const select = (tab, focus = false) => {
-      if (!enabled.includes(tab)) {
+      if (!tabs.includes(tab)) {
         return;
       }
       for (const item of tabs) {
@@ -23,54 +23,49 @@
         tab.focus();
       }
     };
-    // Only add tab semantics when there is an actual selectable panel.
-    if (enabled.length > 0) {
-      list.setAttribute('role', 'tablist');
-      for (const tab of tabs) {
-        tab.setAttribute('role', 'tab');
-        tab.setAttribute('aria-selected', 'false');
-        tab.tabIndex = -1;
-        const panel = panels.find((item) => item.dataset.methodPanel === tab.dataset.method);
-        if (panel) {
-          tab.setAttribute('aria-controls', panel.id);
-          panel.setAttribute('role', 'tabpanel');
-          panel.setAttribute('aria-labelledby', tab.id);
-          panel.tabIndex = 0;
-        }
-        tab.addEventListener('click', () => select(tab));
-        tab.addEventListener('keydown', (event) => {
-          if (!enabled.includes(tab)) {
+    list.setAttribute('role', 'tablist');
+    for (const tab of tabs) {
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', 'false');
+      tab.tabIndex = -1;
+      const panel = panels.find((item) => item.dataset.methodPanel === tab.dataset.method);
+      if (panel) {
+        tab.setAttribute('aria-controls', panel.id);
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tab.id);
+        panel.tabIndex = 0;
+      }
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (event) => {
+        const index = tabs.indexOf(tab);
+        let next;
+        switch (event.key) {
+          case 'ArrowRight': {
+            next = tabs[(index + 1) % tabs.length];
+            break;
+          }
+          case 'ArrowLeft': {
+            next = tabs[(index + tabs.length - 1) % tabs.length];
+            break;
+          }
+          case 'Home': {
+            next = tabs[0];
+            break;
+          }
+          case 'End': {
+            next = tabs.at(-1);
+            break;
+          }
+          default: {
             return;
           }
-          const index = enabled.indexOf(tab);
-          let next;
-          switch (event.key) {
-            case 'ArrowRight': {
-              next = enabled[(index + 1) % enabled.length];
-              break;
-            }
-            case 'ArrowLeft': {
-              next = enabled[(index + enabled.length - 1) % enabled.length];
-              break;
-            }
-            case 'Home': {
-              next = enabled[0];
-              break;
-            }
-            case 'End': {
-              next = enabled.at(-1);
-              break;
-            }
-            default: {
-              return;
-            }
-          }
-          event.preventDefault();
-          select(next, true);
-        });
-      }
-      select(enabled[0]);
+        }
+        event.preventDefault();
+        select(next, true);
+      });
     }
+    // Open the first method that has a workflow; otherwise the first method, which explains why it is not available.
+    select(tabs.find((tab) => tab.dataset.available === 'true') ?? tabs[0]);
     list.hidden = false;
     root.classList.add('operation-tabs--enhanced');
     groups.push({ tabs, panels, select });

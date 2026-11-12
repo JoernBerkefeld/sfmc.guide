@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  retrieve: { status: "partial", methods: [api] }
+  read: { status: "partial", methods: [api] }
   create: { status: "unknown", methods: [] }
   update: { status: "unknown", methods: [] }
   delete: { status: "unknown", methods: [] }
@@ -18,38 +18,38 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
-
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
+[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Read its setup, placeholders and safety guidance first.
 
 <a id="segment-members-runtime-data-not-metadata"></a>
 
-**Segment members are runtime data, not metadata.**
+A **segment member** is a person in a segment. These examples read the members of a segment through the Salesforce CLI's authenticated API request runner.
 
-These **API `67.0`** examples read the people in a segment, rather than its definition. They do not publish or refresh it, and they do not write anything under `force-app/main/default/`.
+Membership is runtime data, not metadata. These examples do not publish or refresh the segment. They write nothing under `force-app/main/default/`.
 
-Member identifiers and profile fields are personal data. Keep request files and exports in a private working directory, restrict access and retention, and avoid Git, shared logs and screenshots.
+Member IDs and profile fields are personal data. Keep request files and exports in a private folder, out of Git, shared logs and screenshots.
+
+**Example used in every chapter:** the segment `ActiveCustomers` in the source org (`SOURCE_ALIAS`).
 
 {% include crud-summary.html %}
 
-## Retrieve
+**Plugin qualification:** No plugin workflow is tested for segment members.
 
-{% capture retrieve_api %}
+## Read
+
+{% capture read_connect %}
 ### Read basic membership
 
-**Deliberate CLI-envelope inspection:** the eight REST commands in this walkthrough retain `--json` to inspect HTTP status and body through `result.statusCode` and `result.body`. This is a structured-response teaching example, not a requirement for every API call or an automation pipeline. JSON request bodies alone do not require this output flag.
-
-First read the segment itself:
+Reads the segment, then one page of its members.
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers' --target-org SOURCE_ALIAS --json
 ```
 
-Keep the returned `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName`. You will need them if you want profile details later; do not guess a table name from the display name.
+Keep `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName`. You need them for profile details. Do not guess a table name from the display name.
 
-The returned configuration is also called the segment **descriptor**. In a path, `?` starts query parameters and `&` separates them: `limit=1&offset=0` asks for one row starting at the beginning. Keep the quotes around the full path so the shell does not interpret `&` as an instruction.
+The segment response sample is not in this guide yet.
 
-Now request one member:
+The path is quoted so the shell does not read `&` as an operator. Next, request one member:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?limit=1&offset=0' --target-org SOURCE_ALIAS --json
@@ -72,21 +72,19 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?
 }
 ```
 
-You get membership and audit information, **not the person's profile fields**. `1200` is just an illustrative count. One API request through the authenticated request runner retrieves one page; it does not export the whole segment automatically. The documented maximum page size is **1000**.
+The sample shows membership and audit fields, not profile fields. The `totalCount` of `1200` is illustrative. Each request returns one page of up to **1000** rows. It does not export the whole segment.
 
-For further pages, increase the offset by the number of returned rows. Check `offSet`, stable totals and nonempty progress, staying on the same validated org/path. Do not blindly follow a returned URL. Full-population export has not been verified here; if membership changes while you read it, reconcile the result rather than assuming a fixed snapshot.
+For the next page, increase `offset` by the number of rows returned. Stay on the same org and path. Do not follow a returned URL blindly.
 
 ### Include profile details
 
-The following is an advanced read example, not a requirement for downloading configuration. A **join** combines rows from two tables using related keys; an incorrect key can return the wrong person's details. If you cannot validate the relationship and SQL, stop at basic membership and ask a data specialist to help.
+This advanced read joins membership rows to a profile table. A join matches rows by key, so a wrong key can return another person's details. If you cannot validate the keys and SQL, stop at basic membership.
 
-There is **no standard CLI `--include-details` flag**. To get that result, you need to discover the tables, join membership to the detail DMO, and read the query pages. This is orchestration of several API reads, not a plugin implementation.
+There is no standard CLI flag for profile details. The steps below chain several API reads.
 
 #### 1. Check the dataspace
 
-**SOQL** (Salesforce Object Query Language) queries core Salesforce records, while Data 360 SQL queries Data Cloud tables. They use different commands and are not interchangeable. The next command uses SOQL only to identify the dataspace record.
-
-Use the dataspace returned by the segment descriptor. For `default`:
+This command uses core SOQL. It identifies the dataspace only. It is not the Data 360 SQL used below.
 
 ```sh
 sf data query --target-org SOURCE_ALIAS --api-version 67.0 --query "SELECT Id, DataSpaceApiName FROM DataSpace WHERE DataSpaceApiName = 'default' LIMIT 2"
@@ -98,7 +96,7 @@ sf data query --target-org SOURCE_ALIAS --api-version 67.0 --query "SELECT Id, D
 { "status": 0, "result": { "totalSize": 1, "done": true, "records": [{ "DataSpaceApiName": "default" }] } }
 ```
 
-You need exactly one match. This command uses core **SOQL**; it is not the Data 360 SQL executor used below.
+You need exactly one match.
 
 #### 2. Find the tables and join fields
 
@@ -106,9 +104,9 @@ You need exactly one match. This command uses core **SOQL**; it is not the Data 
 sf api request rest '/services/data/v67.0/ssot/metadata' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Find the descriptor's exact latest membership table, segment-on detail DMO, primary key and ordered detail fields. Check that the relationship is **N:1**, using its actual source/target attributes (`fromEntityAttribute` / `toEntityAttribute` where returned). Do not assume that every DMO joins on `Id__c`.
+Find the descriptor's latest membership table, its detail table, the key fields and the ordered detail fields. Confirm the relationship is N:1 using the returned source and target attributes. Do not assume every table joins on `Id__c`.
 
-For the next example, imagine discovery gave you these facts. This is an explanation of the schema, **not the literal API response**:
+The following is an illustrative schema, not a response:
 
 ```json
 {
@@ -121,11 +119,11 @@ For the next example, imagine discovery gave you these facts. This is an explana
 }
 ```
 
-Stop if the identities, keys, cardinality or field order are missing or ambiguous.
+Stop if keys, cardinality or field order are missing or unclear.
 
 #### 3. Submit a small query
 
-Save `segment-member-query.json`. Replace table/key/field names from discovery, and replace `SEGMENT_ID_15` with the first 15 case-preserved characters of the returned MarketSegment ID, **not its API name**. Quote identifiers and validate/escape values before constructing SQL.
+Save `segment-member-query.json`. Replace the table, key and field names with the ones from step 2. Replace `SEGMENT_ID_15` with the first 15 case-preserved characters of the `marketSegmentId`, not its API name. Validate and escape values before building SQL.
 
 ```json
 {
@@ -134,30 +132,26 @@ Save `segment-member-query.json`. Replace table/key/field names from discovery, 
 }
 ```
 
-The query does four things:
+The query:
 
-1. Selects two detail fields in metadata order. To include all details, list **every discovered detail field in that order**, rather than using `SELECT *` on the underlying tables.
-2. Uses a null-safe `LEFT JOIN`, so members without a matching profile remain in the result with null details.
-3. Adds the membership key and match count for validation. Reject more than one detail match per member.
-4. Limits the whole result to two rows, requesting one row per page. These limits do not bound how much data the query engine scans.
+1. Selects the detail fields in metadata order. To include all details, list every detail field.
+2. Uses a `LEFT JOIN`, so members without a profile stay in the result with empty details.
+3. Adds the membership key and a match count. Reject any member with more than one match.
+4. Limits the result to two rows, read one row per page.
 
-The outer `SELECT *` only keeps the explicitly ordered inner columns.
-
-Here `m` and `d` are short SQL aliases for the membership and detail tables, not org aliases. `IS NOT DISTINCT FROM` compares keys while treating two nulls as equal; the match-count check still matters. Double quotes identify table/column names, single quotes delimit text values, and `\"` preserves a double quote inside a JSON string. Do not build SQL from untrusted values by simple text replacement; have a developer validate names and escape values for this SQL dialect.
-
-The verified submission form uses **stdin** (standard input): text passed into a program. In PowerShell, `Get-Content -Raw -LiteralPath` reads the whole named file as text, `|` passes it to the next program, and `--body -` tells the CLI to use that incoming text. For example, in PowerShell:
+In PowerShell, pipe the file in with `--body -`:
 
 ```powershell
 Get-Content -Raw -LiteralPath './segment-member-query.json' | sf api request rest '/services/data/v67.0/ssot/query-sql' --target-org SOURCE_ALIAS --method POST --header 'Data-Space:default' 'Content-Type:application/json' --body - --json
 ```
 
-The CLI also documents file input for the same body:
+Or pass the file directly:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql' --target-org SOURCE_ALIAS --method POST --header 'Data-Space:default' 'Content-Type:application/json' --body '@segment-member-query.json' --json
 ```
 
-POST submits a read query, not a segment refresh, but it can consume query resources. A successful submission can use HTTP `201`:
+A successful submission returns the first result row and a query ID:
 
 ```json
 {
@@ -174,29 +168,27 @@ POST submits a read query, not a segment refresh, but it can consume query resou
 }
 ```
 
-This row has two empty detail fields, the internal membership key and a zero match count. With all detail fields selected, row width is **detail-field count + 2**. Check the returned metadata order and width before interpreting the values.
+This row has empty detail fields, the internal membership key and a zero match count. Its width is the detail-field count plus two. Check the metadata order before you read the values.
 
 #### 4. Read the remaining pages
 
-Use the fresh `result.body.status.queryId` (or `body.queryId` where returned). If the query is still running, check its status; stop on errors, expiry or an unfamiliar status/schema:
+Use the query ID from the submission. Check the query status first:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Unlike submission, this response puts status properties directly under `body`:
-
 ```json
 { "status": 0, "result": { "statusCode": 200, "body": { "queryId": "<query-id>", "completionStatus": "ResultsProduced", "rowCount": 2, "progress": 1 } } }
 ```
 
-Use `offset=1` only after validating and accepting exactly one submission row. Then ask for the next row using the **same query**, not a new POST:
+Read row 2 only after you accept row 1 from the submission. Use the same query ID, not a new POST:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=1&rowLimit=1' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
 ```
 
-Otherwise, if submission contains no rows, wait for recognized status success, then fetch the first bounded page at `offset=0&rowLimit=1`:
+If the submission returned no rows, wait for a completed status. Then read the first page:
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=0&rowLimit=1' --target-org SOURCE_ALIAS --header 'Data-Space:default' --json
@@ -206,53 +198,61 @@ sf api request rest '/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=0&
 { "status": 0, "result": { "statusCode": 200, "body": { "data": [[null, null, "<redacted-membership-key>", 0]], "metadata": ["<column descriptors abbreviated>"], "returnedRows": 1 } } }
 ```
 
-`returnedRows` is the page size; `status.rowCount` is the total for the bounded query. Advance offset by the actual number of validated and accepted rows, including any from submission. Require progress, a stable total and consistent metadata order/width; stop at the total and reject match counts above one before exporting.
+`returnedRows` is the page size. `status.rowCount` is the total for the bounded query. Advance `offset` by the rows you accepted. Stop at the total, and reject any match count above one.
 
-This example covers **two bounded SQL pages, not an unrestricted full export**. The API response still contains array rows with the two internal columns. Validate and transform the results privately if you want named fields, normalized dates or output without those internal columns.
+This covers two bounded SQL pages, not a full export. The rows still contain two internal columns. Transform them privately if you want named fields.
 
 ### Save output deliberately
 
-**Stdout** (standard output) is the program's normal output, which you usually see in the terminal. A shell redirect such as `> output.json` saves that stream to a file and can overwrite an existing file; it does not turn the response into metadata or fetch extra pages. Shell encoding and error-output handling differ, so do not add redirects casually to these examples.
-
-REST normally writes to stdout. The documented file-output form below is **not live-qualified for this member workflow**:
+REST writes to standard output by default. To save the response to a file, use a private path outside the metadata folder. See the Evidence section before you use this option.
 
 ```sh
 sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?limit=1&offset=0' --target-org SOURCE_ALIAS --stream-to-file 'PRIVATE_EXPORT_PATH/members.json'
 ```
 
-Choose a real restricted path outside metadata source. This writes API response bytes; do not add `--include` if you need pure JSON. Request files and member/profile output should stay out of Git. Creating, updating or deleting membership rows, refreshing/publishing, and a one-call enriched export are not covered here.
-
 {% endcapture %}
-{% include operation-tabs.html id="members-retrieve" label="Retrieve" cli_state="blocked" cli_reason="Members are runtime data, not retrievable metadata; no standard include-details flag exists." api_state="available" api_reason="Bounded membership and profile reads only, not a full-population export." api_body=retrieve_api %}
+{% include operation-tabs.html id="members-read" label="Read" cli_state="unknown" cli_reason="No CLI command returns segment members. The API request runner is used instead." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads membership and bounded profile pages. Not a full-population export." connect_body=read_connect %}
 
 ## Create
 
-{% capture create_evidence %}
-Creating membership rows is not qualified here. A segment's rules and processing determine its audience; this page supplies only reads.
-
-{% endcapture %}
-{% include operation-tabs.html id="members-create" label="Create" cli_state="unknown" cli_reason="No membership-row creation workflow is supplied." api_state="unknown" api_reason="Membership-row creation is not qualified here." %}
-
-{{ create_evidence | markdownify }}
+{% include operation-tabs.html id="members-create" label="Create" cli_state="unknown" cli_reason="No membership-row creation command is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="Creating membership rows is not tested. Segment rules decide the audience." %}
 
 ## Update
 
-{% capture update_evidence %}
-Updating membership rows, refreshing or publishing through this resource is not qualified here.
-
-{% endcapture %}
-{% include operation-tabs.html id="members-update" label="Update" cli_state="unknown" cli_reason="No membership-row update workflow is supplied." api_state="unknown" api_reason="Membership updates, refresh and publication are not qualified here." %}
-
-{{ update_evidence | markdownify }}
+{% include operation-tabs.html id="members-update" label="Update" cli_state="unknown" cli_reason="No membership-row update command is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="Updating membership, refreshing and publishing are not tested." %}
 
 ## Delete
 
-{% capture delete_evidence %}
-Deleting membership rows is not qualified here. Do not delete generated membership tables as a substitute.
-
-{% endcapture %}
-{% include operation-tabs.html id="members-delete" label="Delete" cli_state="unknown" cli_reason="No membership-row deletion workflow is supplied." api_state="unknown" api_reason="Membership-row deletion is not qualified here; do not delete generated tables." %}
-
-{{ delete_evidence | markdownify }}
+{% include operation-tabs.html id="members-delete" label="Delete" cli_state="unknown" cli_reason="No membership-row deletion command is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="Deleting membership rows is not tested. Do not delete generated tables instead." %}
 
 > Official reference: [Segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).
+
+<details>
+<summary>Evidence: tested scope, versions and error codes</summary>
+
+**Deliberate CLI-envelope inspection:** the eight REST commands in the Read chapter keep `--json`, so the HTTP status and body appear under `result.statusCode` and `result.body`. This is a structured-response example, not a requirement for every API call. JSON request bodies alone do not need this output flag.
+
+**Verification scope:** Live-org reads and the bounded operations described here were tested. The operation limits still apply. This badge does not verify untested writes or general CRUD support.
+
+**Status codes observed:** the member read returns `200`. Query submission returns `201`. Query status and row reads return `200`. The segment read sample is not in the guide yet.
+
+**Page size:** the documented maximum is 1000 rows per request.
+
+**Dataspace query:** the `--json` sample for the SOQL command is from a structured run. The command without `--json` is the one shown in the chapter.
+
+**SQL notes:** double quotes identify table and column names. `IS NOT DISTINCT FROM` treats two nulls as equal, so the match-count check still matters. Have a developer validate names and escape values for this SQL dialect. Do not build SQL by simple text replacement.
+
+**Stop conditions:** stop on errors, expired query IDs, or unfamiliar status or metadata values.
+
+**File output:** `--stream-to-file` is not live-qualified for this member workflow. It writes the API response bytes. Do not add `--include` if you need pure JSON.
+
+**Not verified:**
+
+- A full-population export. If membership changes while you read, reconcile the result instead of assuming a fixed snapshot.
+- Creating, updating or deleting membership rows.
+- Refreshing or publishing the segment.
+- A one-call export that includes profile details.
+- File output for members through `--stream-to-file`.
+- Plugin workflows for members.
+
+</details>

@@ -32,10 +32,15 @@
       box-shadow: inset 0 -3px $accent-primary;
     }
 
-    &:disabled {
-      color: $text-secondary;
-      background: $bg-elevated;
-      cursor: not-allowed;
+
+    // Not tested: dashed outline, neutral text. Tested and not supported: red text, solid outline.
+    &.operation-tabs__tab--untested {
+      border-style: dashed;
+    }
+
+    &.operation-tabs__tab--unsupported {
+      color: #b42318;
+      border-color: #b42318;
     }
   }
 
@@ -46,6 +51,10 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
+  }
+
+  &__icon--untested {
+    stroke-dasharray: 2 1.5;
   }
 
   &__reasons {
@@ -80,9 +89,9 @@
     background: #0f172a;
     border-color: #64748b;
   }
-  &__controls button:disabled {
-    color: #cbd5e1;
-    background: #334155;
+  &__controls button.operation-tabs__tab--unsupported {
+    color: #fca5a5;
+    border-color: #fca5a5;
   }
   &__controls button[aria-selected='true'] {
     color: #7dd3fc;
