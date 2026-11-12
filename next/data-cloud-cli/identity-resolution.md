@@ -32,7 +32,7 @@ Use the native API 68.0 route first. The optional [sf-plugin-data plugin](https:
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** The plugin supports only the qualified `Individual` profile in the default data space, at API 68.0.
+**Plugin qualification:** The plugin handles any ruleset the API returns or accepts, in the default data space, at API 68.0. That includes any configuration type, automatic run on or off, case sensitivity, a secondary DMO, filters, trusted sources, and rulesets that are not published yet. The live-tested rulesets are listed under Evidence.
 
 ## Read
 
@@ -100,11 +100,14 @@ sf data360 deploy --source-dir force-app/main/default/data360/identityResolution
 
 Use an unused ruleset suffix of at most four characters, such as `cust`. Use the returned `objectApiName` exactly after creation. Create runs only when the owner is confirmed absent. Creation enters `PUBLISHING` and provisions generated outputs, so `--allow-processing` is required. The sample of the output is not in this guide yet.
 
-Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`. That flag does not stop publication. Get permission for publication before you run it.
+Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`. That flag does not stop publication. Get permission for publication before you run it. A ruleset with `doesRunAutomatically: true` can be created too.
+
+Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. The file name must follow that pattern, or be just `<configurationType>`. The plugin takes the ruleset ID from everything after `<configurationType>_`.
 
 **Known failures:**
 
 - A timeout or unknown result stops the batch. Inspect the exact owner in API68. Do not replay the write.
+- `IDENTITY_RESOLUTION_NAME_TYPE_MISMATCH`: the file name does not start with its configuration type.
 {% endcapture %}
 {% capture create_connect %}
 ### Native API68
@@ -116,6 +119,8 @@ sf api request rest '/services/data/v68.0/ssot/identity-resolutions' --target-or
 ```
 
 The sample of this response is not in this guide yet. Build the body from the intended settings: `configurationType: "Individual"`, `dataSpaceName: "default"`, `secondaryDmo: "ssot__Individual__dlm"`, the unused `rulesetId` suffix, the label, the description and the automatic-run and case flags. Include all six reconciliation entities with ordered sources. Omit server IDs, status and generated output names. Check exact absence, capacity, dependencies and publication permission before you submit.
+
+Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
 ### API 65 and API 67 routes
 
@@ -152,9 +157,13 @@ sf data360 deploy --source-dir force-app/main/default/data360/identityResolution
 
 Run the retrieve first with `--target-org TARGET_ALIAS`. Keep all other settings and the identity unchanged. Source priority order matters, so do not sort it. An empty explicit field-override list resets fields to object inheritance. An unchanged definition returns `unchanged`, writes nothing and needs no processing acknowledgement. The sample of the output is not in this guide yet.
 
+If you empty the filters or trusted sources in the file, the plugin sends an empty list and Salesforce decides.
+
 **Known failures:**
 
 - A timeout or unknown result stops the batch. Do not replay the update.
+- Changing `configurationType` or the secondary DMO of an existing ruleset is refused as `blocked-changes`, because the update cannot carry that change.
+- A ruleset that reads `PUBLISHING` or `DELETING` is refused with `IDENTITY_RESOLUTION_NOT_SETTLED`. Wait for it to settle, then run again.
 {% endcapture %}
 {% capture update_connect %}
 ### Native API68
@@ -165,7 +174,7 @@ Sends the complete intended settings with one PATCH. Run it only after a fresh G
 sf api request rest '/services/data/v68.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method PATCH --body '@ir-native-update.json' --include
 ```
 
-The sample of this response is not in this guide yet. Send the full matching array and all six reconciliation entities in `ir-native-update.json`. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write, automatically fall back to API67 or attempt rollback.
+The sample of this response is not in this guide yet. Send the full matching array and all six reconciliation entities in `ir-native-update.json`. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Do not PATCH while a fresh GET shows `PUBLISHING` or `DELETING`: you cannot tell your change from the work already running. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write, automatically fall back to API67 or attempt rollback.
 
 ### API 65 and API 67 routes
 
@@ -212,9 +221,12 @@ deleted identity-resolution Individual_cust (server is still processing)
 
 The output shows `deletion-processing` and `acknowledged-processing`. That acknowledges ongoing removal. It does not confirm deletion.
 
+A ruleset with automatic run on or off can be deleted. In a live test the deleted ruleset read `DELETING` for about 3.5 minutes, then not found, and its unified output DMO was gone.
+
 **Known failures:**
 
 - A later read can show `DELETING_OFFCORE`. That is not confirmed deletion.
+- A ruleset that reads `PUBLISHING` or `DELETING` is refused with `IDENTITY_RESOLUTION_NOT_SETTLED`.
 - A timeout or unknown result stops the batch. Do not replay DELETE. Check the state with read-only calls.
 {% endcapture %}
 {% capture delete_connect %}
@@ -229,6 +241,8 @@ sf api request rest '/services/data/v68.0/ssot/identity-resolutions/OWNED_RULESE
 ```
 
 Replace both placeholders with the owner's ID and API name. A successful DELETE returns HTTP 204 with no body. The sample of the follow-up GET is not in this guide yet. Poll with read-only GET calls until both exact identities are not found. Do not repeat DELETE. Never delete generated DMOs by hand to race the cleanup.
+
+A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
 ### API 65 and API 67 routes
 
@@ -260,7 +274,7 @@ Wait until the exact ruleset is not found. Confirm that the native API 65 GET re
 
 **Plugin retrieve.** The sample of the retrieved file is not in this guide yet. Retrieval keeps the labels and description, matching criteria with their blank and case flags, automatic-run and case settings, object reconciliation defaults, ordered source priorities and field overrides. Resolve target-local DMOs, fields and mapped DLO sources. Do not replay source record IDs or guess generated output names. The default and `auto` settings select native API68 for public retrieve and deploy. Installed API68 acceptance verified canonical retrieval and all twelve generated output and link bindings.
 
-**Admitted profile.** The admitted Individual profile has `doesRunAutomatically: false`, `isCaseSensitive: true`, empty filters and explicit `trustedSources: []`. It requires all six standard reconciliation entities. Matching uses qualified Fuzzy, Exact and ExactNormalized methods with blank and case flags. Object defaults are LastUpdated, MostFrequent or SourceSequence, or field overrides. Ordered source priorities are meaningful. Nonempty trusted sources and a case-sensitive FirstName criterion are refused. Validation is not live qualification of every combination.
+**Accepted rulesets.** The plugin keeps no local list of allowed settings. It checks the file's shape and identity, and Salesforce decides the rest. Ordered source priorities are meaningful and are not sorted. A live create of an `Individual` ruleset with automatic run on and one match rule (FirstName Fuzzy, LastName Exact and email) took about 11.5 minutes to reach `PUBLISHED`. Deleting it was accepted, the ruleset read `DELETING` for about 3.5 minutes, and then the ruleset and its unified output DMO were not found. Acceptance of the API does not mean every combination was tested live.
 
 **Create evidence.** Installed API68 source-org acceptance created a full-settings owner. It confirmed `PUBLISHED` with equal settings and twelve output and link bindings. It then retrieved the owner and repeated deployment with zero writes. No explicit run or cross-org mutation was proved. The retained native68 POST returned HTTP 201 and `PUBLISHING`. An independent GET confirmed publication, full supported settings and all twelve generated bindings. The native POST body omits empty filters and trusted sources. Use all six qualified entities, with independently verified target fields and sources. Settlement is bounded. An unconfirmed write is `unknown`, stops the batch and is not retried or rolled back.
 
@@ -276,12 +290,14 @@ Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities**
 
 **Data Graph root check.** Read the exact ruleset through both the API 67 route and the native endpoint. Its reconciliation entries identify the unified DMOs (`unifiedDmoName`). Correlate the returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or DMO ID. Read the generated outputs through API 65 Connect REST and Metadata API. Compare the root's field names, Text types and explicit Id key. A matching object name alone is insufficient.
 
+The plugin's graph `--preview` does this lookup for you: it reads the rulesets and names the published owner of a unified root, or reports that none owns it. In a live test, preview of a graph on a new unified root reported the missing root before the ruleset existed, and named the `PUBLISHED` owner afterwards. A graph on that root was then created, updated and deleted. See [Data Graphs](/next/data-cloud-cli/data-graphs/#create).
+
 **Two-org qualification.** Retained owned `PUBLISHED` rulesets and all twelve output and link DMOs were correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had compatible Id, FirstName and LastName Text fields and an explicit Id key. This establishes owner, output and schema compatibility. It does not establish cross-org ruleset creation or migration, a successful IR data run, or permission to reuse source IDs. Resolve the owner and its outputs in each org.
 
 **Later Graph update.** The existing-owner target Graph update appended only its LastName projection. It preserved the target ruleset, all twelve output and link DMOs, and the root schema and key. No IR mutation was attempted. A repeat comparison found both resources unchanged. This is preservation during a dependent Graph update. It is not cross-org IR update or create proof, or a successful IR data run.
 
 **Example scope.** This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work. The JSON in the API 65 and API 67 sections are decoded operation-result excerpts, not complete raw server responses or CLI envelopes. `--include` prints HTTP status and headers separately from the server body. Salesforce may add reconciliation entities beyond the ones you send. Keep the returned identity and generated output references for later checks.
 
-**Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, and exhaustive external-consumer exclusion.
+**Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, exhaustive external-consumer exclusion, an update that empties filters or trusted sources, and configuration types other than `Individual`.
 
 </details>

@@ -30,7 +30,7 @@ A template is a saved configuration. The API examples below manage the runtime g
 
 **Example used in every chapter:** the graph `CustomerGraph`, rooted in `UnifiedssotIndividualMkt__dlm`. Creation projects `ssot__Id__c` (the key) and `ssot__FirstName__c`; the update adds `ssot__LastName__c`. Check your root, fields, types and key first. Do not change the underlying object to fit the example. The plugin commands use `ExampleGraph` as the graph name; replace it with yours.
 
-**Plugin qualification:** The plugin workflows apply only to the bounded scope listed under Evidence, not to every graph.
+**Plugin qualification:** The plugin handles any graph the API accepts in the default data space, one graph per operation, at API 68.0. The live-tested shapes are listed under Evidence.
 
 {% include crud-summary.html %}
 
@@ -40,17 +40,43 @@ A template is a saved configuration. The API examples below manage the runtime g
 {% capture read_plugin %}
 <a id="optional-sf-plugin-data-native-api68-crd"></a>
 
-The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data) adds API-led operations. It is not a standard Salesforce CLI graph command. Use `--api-version 68.0` explicitly. The retrieval covers one `NONE` graph rooted in the enabled standard `ssot__Individual__dlm`.
+The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data) adds API-led operations. It is not a standard Salesforce CLI graph command. The default `auto` and `--api-version 68.0` both use API 68.0. Any other version is refused with `INVALID_SCOPE`.
 
 ```sh
 sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
 ```
 
-The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. This is a separate native format, not the API 67 `.dataGraph.json` file. The file keeps fields, key settings, relationship paths, generated bindings and refresh settings.
+The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`.
 
 Sample output is not in this guide yet.
 {% endcapture %}
 {% capture read_connect %}
+### Native API68 read
+
+Reads one graph by name. Nothing in the org changes.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --target-org TARGET_ALIAS
+```
+
+Excerpt of a ready graph:
+
+```json
+{ "name": "CustomerGraph", "status": "ready", "version": "1", "type": "none", "dataspaceName": "default", "primaryObjectName": "UnifiedssotIndividualMkt__dlm", "valuesDmoName": "CustomerGraph_1793202629475_VALUE__dlm", "dayZeroTransformDevName": "Dg_CustomerGraph_1793202651897" }
+```
+
+The response also holds `sourceObject` with fields and related objects, the refresh settings and the generated object, mapping and transform names. A missing graph answers HTTP 400 with `INTERNAL_ERROR` and the message "Data Graph not found with name …", not 404.
+
+There is no list route: `GET /ssot/data-graphs` without a name answers `INTERNAL_ERROR` "Empty Data Graph Name". List the graphs of a data space through the metadata route:
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-graphs/metadata?dataspace=default' --target-org TARGET_ALIAS
+```
+
+Each entry under `dataGraphMetadata` has `developerName`, `status` and the root. Here the status is spelled `Ready`, while the item read says `ready`. Add `&dataGraphEntityName=CustomerGraph` to read one graph. This metadata read is not reliable right after a create or delete; see the Create and Delete chapters.
+
+### API 67 read route
+
 Reads the graph through the API 67 MCP endpoint. Request files stay local, and the response prints to stdout.
 
 The JSON samples here are decoded operation-result excerpts, not raw stdout. The unflagged REST runner prints the server body. Check it for embedded errors.
@@ -73,7 +99,7 @@ This is a read, even though the transport is POST. Check the root, key flags, de
 
 For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads the graph through the API 67 MCP endpoint." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route; the API 67 route is separate." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -87,17 +113,44 @@ sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/
 
 Creation starts processing automatically and uses org resources. Get approval first. The command then requires `--allow-processing`.
 
-Create sends the file as written: the root, related objects with their joins, field types and refresh schedule. Salesforce adds key-qualifier fields to related objects, so retrieve the graph after creating.
+Create sends the file as written: the root, related objects with their joins, field types and refresh schedule. Salesforce adjusts what it stores. It adds key-qualifier fields to related objects, and a unified root reads back with node type `derived`. Retrieve the graph after creating it to get the stored form.
 
-The command waits while Salesforce builds the graph, up to `--wait-timeout` seconds (default 1800). Progress prints to stderr.
+Preview checks the root, because no API answer exists before a write. A missing root object reports `DATA_GRAPH_ROOT_NOT_FOUND`. For a unified root, preview reads the Identity Resolution rulesets and names the owner with `DATA_GRAPH_OWNER`. It reports `DATA_GRAPH_OWNER_NOT_FOUND` when no ruleset owns the root, and `DATA_GRAPH_OWNER_NOT_PUBLISHED` when the owner is not published yet. The deploy itself does not check the owner. Salesforce decides.
 
-If the plugin cannot confirm the graph, it reports `failed` / `unknown` with `DATA_GRAPH_CREATE_UNCONFIRMED`. The graph may still exist. Retrieve it, or deploy the same file again. Do not create it again.
+The command waits while Salesforce builds the graph, up to `--wait-timeout` seconds (default 1800). Progress prints to stderr. A new graph reads `creating` with empty generated names at first. It then reads `processing` for a few seconds and `ready` before the generated day-zero object, mapping and transform names exist. Its metadata stays `Inprogress` for about five minutes after that.
+
+If the plugin cannot confirm the graph, it reports `failed` / `unknown` with `DATA_GRAPH_CREATE_UNCONFIRMED` and names the check that failed: `request`, `response`, `settlement`, `identity` or `deadline` (the wait timed out). The graph may still exist. Retrieve it, or deploy the same file again. Do not create it again.
+
+If Salesforce answers the create with HTTP 429 or 503, the request was not processed. The plugin waits for the `Retry-After` time, or 20 seconds without one, and sends the same request again until the wait budget ends.
 
 An identical existing definition returns `unchanged` with zero writes. A different existing definition follows the Update chapter.
 
 Sample output is not in this guide yet.
 {% endcapture %}
 {% capture create_connect %}
+### Native API68 create
+
+Creates a graph with one POST. Creation starts processing automatically, so get approval for the resource use first.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-graphs' --method POST --body '@graph-native-create.json' --target-org TARGET_ALIAS
+```
+
+The tested body was the graph definition as a native read returns it, without the generated names: drop `idDmoName`, `valuesDmoName`, the day-zero and incremental mapping and transform names, each node's `fragmentDMOName`, and the `devName` of every path entry and field. Root, related objects with their joins, field settings and both refresh settings are sent as written. A different root, related objects and any schedule were accepted.
+
+The response is an echo with `status: "creating"` and an empty `valuesDmoName`. It does not prove the graph will finish. Read the graph by name until it is `ready`:
+
+1. `creating` with empty generated names.
+2. `creating` with `idDmoName`, `valuesDmoName` and the fragment names set.
+3. `processing` for a few seconds.
+4. `ready`, with the day-zero mapping and transform names following shortly after.
+
+The metadata route then reports `Inprogress` for about five minutes. A three-field graph took about 7 minutes in total; graphs with a related object or a unified root took about 16 to 17 minutes. Salesforce adds key-qualifier fields to related objects and can store a different node `type` than you sent: a unified root comes back as `derived`. Read the graph after it is ready to get the stored form.
+
+Do not send the POST again while the first one is building. If the outcome is unclear, read the graph by name first.
+
+### API 67 create route
+
 Creates a root-only graph through the API 67 MCP endpoint. It refreshes fully every seven days, and incremental refresh stays off.
 
 Creation starts processing automatically. Get approval for the resource use first.
@@ -121,7 +174,7 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 
 The automatic work has already started. Do not submit another create or refresh while it is running.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Creates a root-only graph through the API 67 MCP endpoint; processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST of any graph shape; the API 67 route is root-only. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
 
 ## Update
 
@@ -150,25 +203,31 @@ Before the PUT, the plugin requires item `ready`, metadata `Ready` and DataGraph
 
 `--wait-timeout` is a positive integer in seconds, default `1800`, for the whole run. Polls wait at least 20 seconds, subject to the remaining deadline. The command warns upfront on stderr that processing can take seconds to many minutes, up to 30 minutes. Progress goes to stderr. Add `--json` for clean structured stdout.
 
-HTTP 429/503, timeouts and uncertain outcomes are not automatically replayed. Check the graph before you run again.
+HTTP 429 or 503 means Salesforce did not process the PUT. The plugin waits for the `Retry-After` time, or 20 seconds without one, and sends the same PUT again until the wait budget ends. If the budget runs out first, the item is `failed` / `not-attempted`. Timeouts and other uncertain outcomes are not resent. Check the graph before you run again.
 
-The bounded test made one description-only PUT, then checked readiness and preservation independently. Verification used one final fresh archive, with zero-write checks, not another PUT.
-
-### Separate API67 facade — existing-owner LastName append
-
-This separate route appends one projected Text field, `LastName`, to an existing graph. It edits the API 67 file, not the native file. Retrieve the graph with `--api-version auto`, then edit `./project/force-app/main/default/data360/dataGraphs/ExampleGraph.dataGraph.json`:
-
-```sh
-sf data360 retrieve -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version auto -d ./project
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.dataGraph.json --api-version auto --preview
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.dataGraph.json --api-version auto --allow-processing
-```
-
-Append `LastName` after the existing ordered `Id` key and `FirstName` fields. Keep the full configuration unchanged. Check that the owning transform finished before you write. Complete equality needs no processing acknowledgement. A real append requires `--allow-processing` and may process automatically. Do not replay an unknown outcome.
+The bounded test made one description-only PUT, then checked readiness and preservation independently. Verification used one final fresh archive, with zero-write checks, not another PUT. Later live updates changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root.
 
 Sample output is not in this guide yet.
 {% endcapture %}
 {% capture update_connect %}
+### Native API68 update
+
+Changes the graph with one PUT of the complete definition. Start from a fresh native read of the graph, change what you need and send the whole object back:
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --method PUT --body '@graph-native-update.json' --target-org TARGET_ALIAS
+```
+
+Keep the generated object, mapping and transform names from the read. Only send the PUT when the item read says `ready` and the metadata route says `Ready`.
+
+**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. Fields and related objects left out of the body were kept, not removed. Do not repeat a mutation while the graph settles.
+
+**Known failures:**
+
+- PATCH is refused with HTTP 405 on the tested routes.
+
+### API 67 update route
+
 Changes the existing graph through the API 67 MCP endpoint. Send the full definition, not only the change.
 
 First check the generated transform. Its last run must be `ACTIVE` / `SUCCESS`, with a completed run date. `ready` alone is not enough, and not every state allows an edit. If the state is unclear, stop. Do not force a refresh to unlock editing.
@@ -205,14 +264,8 @@ sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body
 Read back with `graph-get.json`. The graph can pass through `processing` and `editing_post_sync` before `ready`. Settling takes time. Do not repeat the update while it settles.
 
 The example omits the optional `creationMode`, and the update is still accepted. An identical repeat keeps identities, version and configuration. It does not guarantee zero writes or no processing. Project templates are not refreshed by this update.
-
-**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After the PUT, reads showed the new description and ready state, with version `"0"` unchanged. Do not repeat a mutation while the graph settles.
-
-**Known failures:**
-
-- PATCH is refused with HTTP 405 on the tested routes.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Changes the existing graph with a full definition, after its transform finishes." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 PUT of the full definition; the API 67 route is separate. Both need a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -226,15 +279,36 @@ sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --source-dir ./proj
 
 `--confirm-delete` is required. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
 
-The delete response decides the result. A 2xx response means deleted, and a 4xx response shows Salesforce's error. The delete does not cascade and does not remove the local file. Preview is read-only.
+The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade and does not remove the local file. Preview is read-only.
+
+The plugin does not read the graph back after the delete, because the by-name metadata read is not reliable at that point (see Known failures).
 
 Sample output is not in this guide yet.
 
 **Known failures:**
 
-- A by-name metadata read can still show a deleted graph for a while after the delete.
+- After a delete, the by-name metadata read (`/ssot/data-graphs/metadata?dataGraphEntityName=`) keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found. The copy can even carry an older description. The graph read by name and a SOQL query on `DataGraph` show it gone at once. Use those to check a deletion.
 {% endcapture %}
 {% capture delete_connect %}
+### Native API68 delete
+
+Deletes the graph by name, after you check its dependencies and ownership. Then read it back by name:
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --method DELETE --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --target-org TARGET_ALIAS
+```
+
+A 2xx answer means the graph is deleted. In live tests the item read returned "Data Graph not found" at once, and a SOQL query on `DataGraph` for the name returned zero rows:
+
+```sh
+sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerGraph'" --target-org TARGET_ALIAS
+```
+
+Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
+
+### API 67 delete route
+
 Deletes the graph through the API 67 MCP endpoint, after checking dependencies and ownership. Save `graph-delete.json`:
 
 ```json
@@ -254,7 +328,7 @@ Confirm that the exact graph is no longer found. Check the generated object and 
 
 The read-back sample is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Deletes a graph through the API 67 MCP endpoint." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL; the API 67 route is separate." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
 
 Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Local request files and any retrieved file remain.
 
@@ -272,6 +346,7 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - Recursive retrieval kept projected fields, key qualifiers, relationship paths, retained generated bindings and refresh configuration, including qualified multihop branches.
 - Retained bindings were matched to the target independently. Source-org record IDs did not become target authority.
 - An installed public retrieval preserved the full recursive artifact before the bounded UPDATE. This does not establish cross-org qualification.
+- Six existing graphs of different shapes were retrieved and previewed read-only. All reported `unchanged`.
 
 **Identity Resolution roots:**
 
@@ -285,7 +360,9 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 
 - Native deploy creates the graph only after independent absence and root checks, with `--allow-processing`.
 - Creation materializes supporting resources. It defaults to a daily full refresh with incremental refresh disabled, even when the file omits the schedule.
-- A three-field graph took about 7 minutes to build. A graph with one related object took about 17 minutes in a live test.
+- A three-field graph took about 7 minutes to build. A graph with one related object took about 17 minutes in a live test. A graph on a unified Identity Resolution root took about 16 minutes.
+- During the build the graph read `creating` with an empty `valuesDmoName`, then `creating` with the generated names set, then `processing` for about 9 seconds, then `ready`. The day-zero names appeared shortly after `ready`, and metadata stayed `Inprogress` for about 5 minutes.
+- Live creates covered a standard `ssot__Individual__dlm` root with a related object and a 7-day schedule, and a unified root owned by a published Identity Resolution ruleset.
 - No native Git selection, mixed families, dependency expansion or cascade is admitted.
 - Live API 68 create, read and delete qualification and the offline installed-package routing smoke are separate results. Neither is live installed cross-org qualification.
 - The API 67 create is root-only and starts processing automatically. It has no processing-free or cross-org guarantee.
@@ -312,12 +389,19 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - A repeat of the same desired configuration found both resources unchanged. It sent zero write requests and no explicit processing jobs. This is a comparison-before-write result. Replaying the raw `graph-update.json` request is not proven write-free or processing-free.
 - Automatic processing from the one substantive update was observed. No explicit refresh or run was needed.
 - This does not establish portable Identity Resolution or Graph creation, missing-prerequisite provisioning, arbitrary roots or edits, or a complete cross-org lifecycle.
-- Automatic and API 67 retrieval stay separate from explicit API 68.
+- The plugin no longer uses the API 67 route. The default `auto` selects API 68.0.
+
+**Update (native API 68, any shape):**
+
+- A live update changed the description and the refresh schedule (7 days to 1 day) and added a field. It was confirmed in about 4.5 minutes. A repeat of the same file was `unchanged` with zero writes.
+- A graph on a unified root was updated the same way and confirmed in 38 seconds.
+- An omitted description is kept on update.
 
 **Delete:**
 
-- Live API 68 create, read and delete qualification passed after stale metadata readback was reconciled.
-- The by-name metadata read kept serving a stale copy of a deleted graph for about 11 to 12 minutes in live tests. For this reason the plugin does not read back after the DELETE.
+- Live API 68 create, read and delete passed. Each deletion was confirmed independently: the graph read by name returned not found and a SOQL query on `DataGraph` returned zero rows.
+- After a delete, the by-name metadata read alternated between not found and a stale copy with the description from before an update. In the longest observation the last stale answer came about 11.5 minutes after the delete, and the read was stable from then on. Shorter observations stopped after about 5 minutes. For this reason the plugin does not read back after the DELETE. The DELETE answer decides.
+- No live HTTP 429 or 503 was seen on graph writes. The resend behaviour is covered by tests only.
 - Exhaustive external consumer exclusion remains unverified.
 - A generated VALUE DMO was still readable after its graph was deleted.
 - Generated mapping, transform and internal-state removal, successful computation, physical storage and credits cleanup are not proven.
@@ -326,6 +410,13 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 
 **Not verified:** nested graphs; exhaustive external consumers; removal of generated objects, mappings, transforms or internal state; physical storage and credits; successful computation; general cross-org lifecycle; arbitrary edits; portable creation; live installed cross-org qualification.
 
-**Error codes:** `DATA_GRAPH_CREATE_UNCONFIRMED` (plugin create could not confirm the graph; the graph may exist).
+**Error codes:**
+
+- `DATA_GRAPH_CREATE_UNCONFIRMED`: plugin create could not confirm the graph; the graph may exist.
+- `DATA_GRAPH_ROOT_NOT_FOUND`: preview found no root object.
+- `DATA_GRAPH_OWNER_NOT_FOUND`: preview found no Identity Resolution ruleset that owns the unified root.
+- `DATA_GRAPH_OWNER_NOT_PUBLISHED`: the owning ruleset is not published.
+- `DATA_GRAPH_OWNER` (information): names the owning ruleset.
+- `INVALID_SCOPE`: an API version other than `auto` or 68.0.
 
 </details>

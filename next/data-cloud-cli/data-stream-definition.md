@@ -10,10 +10,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "partial", methods: [cli, plugin] }
+  read: { status: "partial", methods: [cli, api, plugin] }
   create: { status: "partial", methods: [plugin] }
   update: { status: "partial", methods: [plugin] }
-  delete: { status: "partial", methods: [plugin] }
+  delete: { status: "partial", methods: [api, plugin] }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -71,7 +71,33 @@ sf data360 retrieve -o SOURCE_ALIAS -m data-stream:CustomerStream -d .
 Inspect `data360/data-stream/CustomerStream.data-stream-meta.json`. It is a strict JSON file, not XML or a raw API response. Keep the read-only `observed` section unchanged. The command does not export credentials or create connections. A sample of the file is not in this guide yet.
 {% endcapture %}
 
-{% include operation-tabs.html id="stream-definition-read" label="Read" split_api=true cli_state="available" cli_reason="Retrieves the stream XML. It does not start a refresh (see Evidence)." cli_body=read_cli metadata_state="unknown" metadata_reason="Direct Metadata API reads of streams have not been tested." connect_state="unknown" connect_reason="No tested Connect API read is supplied for this page." plugin_state="available" plugin_reason="Exact stream name, installed API 68.0 and default data space only (see Evidence)." plugin_body=read_plugin %}
+{% capture read_connect %}
+Reads one stream with its mappings, by API name or record ID. Nothing in the org changes.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-streams/CustomerStream?includeMappings=true' --target-org TARGET_ALIAS
+```
+
+Excerpt:
+
+```json
+{ "name": "CustomerStream", "label": "CustomerStream", "status": "ACTIVE", "connectorInfo": { "connectorType": "IngestApi" }, "dataLakeObjectInfo": { "category": "Other", "dataLakeFieldInfoRepresentation": [{ "name": "CustomerId", "dataType": "Text", "isPrimaryKey": true }] } }
+```
+
+The response also holds `recordId`, `mappings`, `sourceFields`, `refreshConfig` and the run counters. Keep `recordId`: update and delete address the stream by it.
+
+List the streams of one connection, and read what depends on a stream or its DLO:
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-streams?connectionName=CustomerConnection&includeMappings=true&limit=200&offset=0' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/data-streams/CustomerStream/dependencies' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/data-lake-objects/CustomerSource__dll/dependencies' --target-org TARGET_ALIAS
+```
+
+A stream with nothing depending on it answers `{ "dependencies": [], "totalSize": 0 }`. The Ingestion API connections are under `/ssot/connections?connectorType=IngestApi`, and a connection's source events under `/ssot/connections/{id}/schema`.
+{% endcapture %}
+
+{% include operation-tabs.html id="stream-definition-read" label="Read" split_api=true cli_state="available" cli_reason="Retrieves the stream XML. It does not start a refresh (see Evidence)." cli_body=read_cli metadata_state="unknown" metadata_reason="Direct Metadata API reads of streams have not been tested." connect_state="available" connect_reason="Native API 68.0 reads of the stream, its connection list and its dependencies." connect_body=read_connect plugin_state="available" plugin_reason="Exact stream name, installed API 68.0 and default data space only (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 
@@ -87,14 +113,16 @@ sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-str
 sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
 ```
 
-Creation also creates the landing DLO. Use the generated names that Salesforce returns, not the proposed names. A sample of the output is not in this guide yet.
+Creation also creates the landing DLO. Salesforce ignores the name in the file for a new Ingestion API stream. It names the stream `<connection>_<event>_<8 hex characters>`, for example `CustomerConnection_CustomerEvent_2A5A8AB6`, and names the DLO after it. The plugin reports the real name as `targetApiName`. A sample of the output is not in this guide yet.
+
+Retrieve the stream by that reported name and keep working with the retrieved file. Deploying the original file again is blocked, because its name no longer matches.
 
 **Known failures:**
 
 - At API 66, a stream had an automatic processing failure. Its cause is not known. The plugin admits only `auto` or `68.0`.
 {% endcapture %}
 
-{% include operation-tabs.html id="stream-definition-create" label="Create" split_api=true cli_state="unknown" cli_reason="Creating a stream from XML has not been verified." metadata_state="unknown" metadata_reason="No Metadata API create workflow for streams has been tested." connect_state="unknown" connect_reason="Native creation was qualified for one fresh stream (see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Installed API 68.0 and default data space, with an existing compatible connection (see Evidence)." plugin_body=create_plugin %}
+{% include operation-tabs.html id="stream-definition-create" label="Create" split_api=true cli_state="unknown" cli_reason="Creating a stream from XML has not been verified." metadata_state="unknown" metadata_reason="No Metadata API create workflow for streams has been tested." connect_state="unknown" connect_reason="Native POST creates were qualified (HTTP 201; Salesforce names the stream after the connection, see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Installed API 68.0 and default data space, with an existing compatible connection (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -147,12 +175,35 @@ sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream --delete-dlo --p
 sf data360 delete -o TARGET_ALIAS -m data-stream:CustomerStream --delete-dlo
 ```
 
-The command checks that the stream and the DLO are both gone. A DELETE response alone is not proof.
+The command checks that the stream and the DLO are both gone. A DELETE response alone is not proof. Salesforce answers the DELETE in a few seconds, but removal takes about 90 seconds, so the command runs for about two minutes.
 
 </details>
+
+**Known failures:**
+
+- Once in three live runs, `--delete-dlo` reported `failed` / `unknown` with an HTTP 400 after 120 seconds, although the stream and its DLO were deleted. Before you run again, read the stream and the DLO by name. If both return not found, the deletion is complete.
 {% endcapture %}
 
-{% include operation-tabs.html id="stream-definition-delete" label="Delete" split_api=true cli_state="unknown" cli_reason="Stream deletion through XML has not been verified." metadata_state="unknown" metadata_reason="A raw Metadata API delete of a stream has not been tested." connect_state="unknown" connect_reason="Native deletion was qualified on owned fixtures (see Evidence). No request is supplied here." plugin_state="available" plugin_reason="Deletes one owned stream; the DLO stays unless you add --delete-dlo (see Evidence)." plugin_body=delete_plugin %}
+{% capture delete_connect %}
+Deletes one owned stream by its `recordId` from the Read chapter. Check the dependencies of the stream and its DLO first. `shouldDeleteDataLakeObject=false` keeps the DLO; `true` removes it with the stream.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-streams/STREAM_RECORD_ID?shouldDeleteDataLakeObject=false' --method DELETE --target-org TARGET_ALIAS
+```
+
+A successful DELETE returns HTTP 204 with no body, within a few seconds. Removal takes longer: in live tests the stream read and the DLO read went from HTTP 200 to 404 after about 90 seconds. Poll those reads until both answer 404, and do not send the DELETE again.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-streams/CustomerStream' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/data-lake-objects/CustomerSource__dll' --target-org TARGET_ALIAS
+```
+
+**Known failures:**
+
+- In one of three live runs the plugin’s delete ended with an HTTP 400 from a request that was not identified, although the stream and DLO were deleted. If you see a 400 during removal, keep polling: a 404 on both reads is the result that counts.
+{% endcapture %}
+
+{% include operation-tabs.html id="stream-definition-delete" label="Delete" split_api=true cli_state="unknown" cli_reason="Stream deletion through XML has not been verified." metadata_state="unknown" metadata_reason="A raw Metadata API delete of a stream has not been tested." connect_state="available" connect_reason="Native API 68.0 DELETE by record ID, with or without the DLO, checked by reads." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned stream; the DLO stays unless you add --delete-dlo (see Evidence)." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -196,6 +247,9 @@ Salesforce documents native API 67 stream GET and PATCH in its [CRM field-disabl
 - A repeat of an unchanged file writes nothing.
 - A proposal label that differs from the generated target label is blocked before any write.
 - Removing an entry from `spec.additiveFieldMappings` does not remove any mapping or field.
+- All reads the plugin makes use native API 68.0 routes: the stream, its connection and the connection's schema, and the dependencies of the stream and its DLO.
+- A new stream's name comes from Salesforce, not the file: `<connection>_<event>_<8 hex characters>`. Three live creates confirmed this; the timed one was confirmed in 44 seconds. The plugin reports the name as `targetApiName`, and a repeat with the original file is blocked.
+- Two of three live `--delete-dlo` runs passed. In the traced one, every read the plugin repeats while waiting went from HTTP 200 to 404 within about 90 seconds and never answered 400. The first run ended `failed` / `unknown` with an HTTP 400 although both resources were deleted. The route that answered 400 was not identified.
 - Fresh installed API 68 qualification passed these steps in both orgs: source create and retrieve; a `spec.connectionName`-only remap to a compatible target connection; target create and retrieve; one additive nonprimary Text mapping update; a zero-write repeat; and explicit cascade cleanup. Independent reads confirmed that cleanup left protected resources unchanged.
 
 **Not verified:** Other connectors, populated data, nondefault data spaces, other API versions, full migration, a published plugin release, XML create, update, activation, refresh or delete, label edits, and cross-org replay of arbitrary stream documents. Downstream DLO-to-DMO mapping provisioning is not verified here.
