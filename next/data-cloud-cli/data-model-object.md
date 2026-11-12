@@ -62,10 +62,27 @@ default data space:
 - a zero-write repeat, retrieval, an unchanged deploy into the second org with
   byte-identical retrieved files, and deletion.
 
-Changing an existing field's data type, moving the primary key, removing a field,
+Custom fields are removed only on request, with `--allow-field-removal`, through a
+Metadata API destructive change. A mapped field is removed only together with its
+mapping pairs. Changing an existing field's data type, moving the primary key,
 adding a generated field or a second primary key, and any write or delete on a
-standard, namespaced or platform-generated DMO are refused before any write; see
-the Update and Delete tabs. **Not verified:** mapped or data-bearing DMOs,
+namespaced or platform-generated DMO are refused before any write; see the Update
+and Delete tabs.
+
+On a standard DMO (for example `ssot__Brand__dlm`) the plugin adds, relabels and
+removes custom fields and changes the object label and description. Its standard
+fields cannot be changed, its category is ignored, and the object itself is never
+created or deleted. Verified at API `68.0` on one standard DMO in two orgs, active
+in only one of them. A mapping may target a standard DMO; the first mapping
+activates the object permanently, and the plugin announces that with
+`MAPPING_ACTIVATES_STANDARD_DMO`. Verified at API `68.0` through the plugin: a
+first mapping onto the inactive DMO was created, and the DMO was enabled afterwards.
+
+Retrieve and deploy act on exactly the selected components. Prerequisites are
+checked, not pulled in: each must be selected explicitly or already exist in the
+target.
+
+**Not verified:** data-bearing DMOs, standard DMOs in active use,
 non-default data spaces, relationships, SQL or flex DMOs, an installed released
 package, and this breadth at any API version other than `68.0`. The API rules
 behind this scope are listed under
@@ -139,8 +156,9 @@ relationships or other API versions.
 - **Unknown keys.** Input keys outside the input schema, for example a field
   `length` or an invented object key, are refused with HTTP `400`.
 - **Descriptions.** The object `description` round-trips. A field `description`
-  and `isDynamicLookup: true` are accepted, but no read returns them, so whether
-  they are stored is not verified.
+  and `isDynamicLookup: true` are accepted, but no read returns them. A field
+  description sent this way does not appear in the Data Model UI either, so treat
+  it as not stored; whether `isDynamicLookup` is stored is not verified.
 
 **Update**
 
@@ -155,10 +173,15 @@ relationships or other API versions.
 - **Silently ignored.** Changing an existing field's data type, or marking another
   field as primary key, returns HTTP `200`, but reads still show the original type
   and key after 60 seconds of polling.
-- **No field removal.** The API has no route for it: field item paths return `404`
-  and PUT on the object returns `405`. The Data Model UI offers no field deletion
-  for an unmapped custom DMO either, so this is a product limit and not only an
-  API gap.
+- **Field removal is not part of this API.** Field item paths return `404` and PUT
+  on the object returns `405`. A custom field can be removed in the Data Model UI,
+  and through the Metadata API with a destructive change for the `CustomField`
+  member `<ObjectName>__dlm.<FieldName>__c` (observed at API `65.0` and `68.0` on
+  empty custom DMOs; the object and its other fields stay unchanged). Salesforce
+  also removes a mapped field without objection and silently drops exactly that
+  field's pairs, also when two mappings hold one (API `68.0`); the mappings stay
+  active and every other pair keeps its selector. Removal of
+  fields that hold data or are referenced elsewhere is not verified.
 
 ### Routes and target identity
 
@@ -254,12 +277,13 @@ Changed saved content requires `--overwrite`; identical content is unchanged.
 Values that only reads return (`creationType`, `isDistinct`, `usageTag` and
 `keyQualifierName`) stay in the saved file and are never sent back. Source record
 IDs and runtime observations are not saved. Standard, namespaced and
-platform-generated DMOs can be retrieved for inspection, but the plugin will not
-deploy or delete them. Verified at API68: files retrieved from a source org and
+platform-generated DMOs can all be retrieved. Namespaced and platform-generated
+DMOs are for inspection only; a standard DMO takes the bounded writes described in
+the Update tab and is never deleted. Verified at API68: files retrieved from a source org and
 from a second org after an unchanged deploy are byte-identical for one Profile,
 one Engagement and one Other DMO.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Native definition GET, verified at API61–68." api_body=retrieve_api plugin_state="available" plugin_reason="Canonical JSON retrieval, verified at API68 on empty unmapped custom DMOs; standard and generated DMOs are retrieve-only; pins from API61 are kept but not each live-tested." plugin_body=retrieve_plugin %}
+{% include operation-tabs.html id="dmo-retrieve" label="Retrieve" cli_state="available" cli_reason="Retrieve the object XML and individual field definitions, not the complete data setup." cli_body=retrieve_cli api_state="available" api_reason="Native definition GET, verified at API61–68." api_body=retrieve_api plugin_state="available" plugin_reason="Canonical JSON retrieval, verified at API68 on empty custom DMOs and one standard DMO; namespaced and generated DMOs are retrieve-only; pins from API61 are kept but not each live-tested." plugin_body=retrieve_plugin %}
 
 ## Create
 
@@ -358,7 +382,7 @@ Each PATCH returns `200` with the state before the change. **Do not treat the mu
 Three requests do not do what they appear to do at API `68.0`. A category change is
 refused with HTTP `400`. A changed `dataType` on an existing field, or
 `isPrimaryKey: true` on another field, returns `200` and is then silently ignored.
-There is no request that removes a field. Details are under
+This API has no request that removes a field; the Metadata API does. Details are under
 [Create and update rules](#api-68-create-and-update-breadth).
 
 An added field leaves everything else alone: apart from the new field, the entire runtime object and entire Metadata object stay equal to their state before the PATCH, including primary-key and key-qualifier settings, system fields and object properties (API `65.0`). In Metadata the added Text field has length `60`, `required=false` and `isDynamicLookup=false`. At API `65.0` a new field name sent with the `__c` suffix is accepted; send bare names, which every verified version accepts.
@@ -398,14 +422,105 @@ Preservation and unsupported-addition checks still run first.
 | Situation | Code |
 | --- | --- |
 | Changing an existing field's data type or moving the primary key. Salesforce would answer `200` and ignore it. | `UNSUPPORTED_DMO_FIELD_CHANGE` |
-| Removing a field, which includes leaving out a custom field that exists in the target. Salesforce offers no way to remove a field. | `UNSUPPORTED_DMO_FIELD_CHANGE` |
+| Leaving out a custom field that exists in the target, without `--allow-field-removal`. | `UNSUPPORTED_DMO_FIELD_CHANGE` |
+| Leaving out the target's primary-key field, with or without the flag. The primary key is never removed. | `UNSUPPORTED_DMO_FIELD_CHANGE` |
+| Removing a field that is currently mapped, with the flag, unless every mapping that holds its pair is deployed by the same command without that pair. | `DMO_FIELD_REMOVAL_MAPPED` |
 | Adding a generated field or a second primary key. | `UNSUPPORTED_DMO_FIELD_ADDITION` |
-| Any write to a standard, namespaced or platform-generated DMO. | `UNSUPPORTED_DMO_TARGET` |
+| On a standard DMO: a standard or system field in the file that differs from the target. | `UNSUPPORTED_DMO_FIELD_CHANGE` |
+| On a standard DMO: a new field that is not a plain custom field, for example `ssot__New__c`. | `UNSUPPORTED_DMO_FIELD_ADDITION` |
+| Any write to a namespaced or platform-generated DMO. | `UNSUPPORTED_DMO_TARGET` |
+
+**Standard DMOs.** A standard DMO such as `ssot__Brand__dlm` is updated with the
+same command, within these bounds:
+
+- custom fields can be added, relabelled and removed (removal as described below);
+- the object label and the object description can be changed;
+- standard and system fields are never sent. They may be left out of the file; one
+  that is listed must match the target. Salesforce itself rejects edits of `ssot__`
+  fields;
+- the category is ignored: it is neither sent nor compared. Salesforce changes it
+  from `UNASSIGNED` to `OTHER` when the object is first mapped;
+- a file retrieved in one org deploys as unchanged to another org, even when the
+  object is active in only one of them.
+
+**Mappings onto a standard DMO.** A DLO-to-DMO mapping may target a standard DMO.
+The first mapping activates the object permanently: it becomes enabled, its
+category changes to `OTHER`, and Salesforce adds the key qualifier field `KQ_Id__c`
+and references it from the standard primary key. Deleting the mapping does not undo
+this. The plugin announces it in the preview and on the created mapping with
+`MAPPING_ACTIVATES_STANDARD_DMO`; the notice changes neither the outcome nor the
+exit status. Details are on the
+[DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/) page.
+
+**Removing fields.** A custom field that exists in the target but not in the file
+is removed only with `--allow-field-removal`:
+
+```sh
+sf data360 deploy -o TARGET_ALIAS -m dmo:Customer__dlm --allow-field-removal --preview
+sf data360 deploy -o TARGET_ALIAS -m dmo:Customer__dlm --allow-field-removal
+```
+
+Preview lists the fields that would be removed (`removeFields`,
+`DMO_FIELD_REMOVAL_PLANNED`) and writes nothing. Execution sends the PATCH for
+other changes first, if there are any, then one Metadata API destructive change for
+all listed `CustomField` members, then reads the object to confirm the fields are
+gone. Nothing is retried. Generated and system fields are never removed. If
+Salesforce does not confirm the removal, the command fails with
+`DMO_FIELD_REMOVAL_FAILED` and Salesforce's message.
+
+**Removing a mapped field.** When Salesforce removes a field through the Metadata
+API, it drops that field's mapping pairs itself, from every mapping that holds
+one; the mappings stay active and keep all their other pairs. A mapped field is
+therefore never removed silently: the deploy must also name every mapping that
+holds a pair for it. The refusal (`DMO_FIELD_REMOVAL_MAPPED`) names those mappings
+and prints the commands to use. There are three ways to do it:
+
+- **Edit the files and deploy them together.** Remove the pair from every mapping
+  file that has one and the field from the DMO file, then run one command. Every
+  mapping that holds the pair must be part of the command and no longer list it;
+  otherwise the whole command is refused before any write. Keep all other authored
+  pairs in the mapping files; the generated pairs may be listed or left out.
+
+  ```sh
+  sf data360 retrieve -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm --overwrite
+  sf data360 deploy -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm --allow-field-removal
+  ```
+
+  For a field mapped by several mappings, add one `-m mapping:<Name>` per mapping.
+  The DMO deploys in its usual place, before the mappings: the PATCH for other
+  changes, then one destructive change that removes the field, and Salesforce drops
+  its pairs with it. The DMO's result lists `removedFields` and `droppedPairs`. The
+  mapping files deploy afterwards and find those pairs already gone; a file whose
+  only change was dropping them reports `unchanged`. With one mapping file this
+  takes about 29 seconds.
+
+- **Delete the field directly**, without editing files; see the Delete tab. It also
+  handles a field mapped by several mappings and takes about 28 seconds for a field
+  mapped by two.
+
+- **Deploy twice.** First the mapping files without the pair, then the DMO file
+  without the field with `--allow-field-removal`. The result is the same as with
+  the single deploy.
+
+Before the destructive change the plugin reads the DMO and all its mappings again.
+After it, the plugin polls separate reads, up to six at five-second intervals,
+until the field is gone and every mapping equals its state before the write minus
+exactly the removed field's pairs, still active. Any other change to a pair, field, DMO
+property, mapping or mapping status stops the command with
+`DMO_FIELD_REMOVAL_SIDE_EFFECT`. If the reads do not settle in time, the command
+fails with `DMO_PERSISTENCE_UNCONFIRMED` (field still readable) or
+`MAPPING_UNMAP_PERSISTENCE_UNCONFIRMED` (a pair still listed). Nothing is retried
+or rolled back.
+
+Any authored pair can be removed from a mapping file, including a pair onto a
+standard field of a standard DMO, for example `Name__c` to `ssot__Name__c`. The
+generated pairs and the primary-key pair stay.
 
 A changed category is not blocked locally; it is sent, and Salesforce rejects it.
 A change to only a field's `description` or `isDynamicLookup` is reported as
 unchanged, because Salesforce does not return those values and the plugin cannot
-see a difference.
+see a difference. A field description is accepted by Salesforce but not stored: no
+read returns it and the Data Model UI does not show it.
 
 After the PATCH the plugin polls separate reads, up to six at five-second
 intervals, and never repeats the write. PATCH's own response shows the old state
@@ -413,14 +528,22 @@ and is not used as confirmation. If the reads do not confirm the definition, the
 command fails with `DMO_PERSISTENCE_UNCONFIRMED`; inspect the target before trying
 again. Preview is read-only; no-op comparison is not a reason to replay a mutation.
 
-**Verified at API68** on empty, unmapped custom DMOs in the default data space:
+**Verified at API68** on empty custom DMOs in the default data space:
 object label, object description including clearing, one existing field label and
 two added fields, reported as updated and confirmed and then unchanged on repeat;
-the Salesforce category rejection; and the local refusal of a data-type change and
-of a field removal. Mapped or data-bearing DMOs, non-default data spaces and other
-API versions for this breadth are not verified.
+the Salesforce category rejection; the local refusal of a data-type change; and
+field removal with `--allow-field-removal` in both orgs, alone and together with a
+label change, including an unmapped field on a mapped DMO, the refusal of a
+mapped field, and the removal of a mapped field in one command together with its
+mapping, also for a field shared by two mappings, with unchanged on repeat. On one
+standard DMO in two orgs, active in only one of them: a custom field added,
+relabelled and removed with `--allow-field-removal`, the object description set and
+cleared, a changed standard field refused, and a file retrieved in one org
+deploying unchanged to the other. Data-bearing DMOs, standard DMOs in active use,
+a mapped custom field of a standard DMO, fields referenced by other components,
+non-default data spaces and other API versions for this breadth are not verified.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-update" label="Update" cli_state="unknown" cli_reason="General DMO XML and Metadata API schema updates have not been verified." api_state="available" api_reason="Empty unmapped custom DMO only: label and added Text field at API61–68; at API68 also description, existing field labels and added fields of other types. No type change, key move, category change or field removal." api_body=update_api plugin_state="available" plugin_reason="Object label and description, existing field labels and added fields; verified at API68 on empty unmapped custom DMOs. Type or key changes and field removal are refused before any write." plugin_body=update_plugin %}
+{% include operation-tabs.html id="dmo-update" label="Update" cli_state="unknown" cli_reason="General DMO XML and Metadata API schema updates have not been verified." api_state="available" api_reason="Empty unmapped custom DMO only: label and added Text field at API61–68; at API68 also description, existing field labels and added fields of other types. No type change, key move or category change; field removal only through the Metadata API." api_body=update_api plugin_state="available" plugin_reason="Object label and description, existing field labels and added fields; verified at API68 on empty custom DMOs and, for custom fields and the description, on one standard DMO. Custom fields are removed only with --allow-field-removal; type or key changes are refused before any write." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -489,11 +612,46 @@ absence independently, and does not cascade or delete the local JSON. Salesforce
 itself may remove the DMO's mapping together with the DMO. Permission
 or ambiguous reads stop. This is not permission to delete a parent to bypass a
 mapping restriction, nor proof of arbitrary dependency or populated-object safety.
+The last mapping of a custom DMO cannot be deleted on its own
+(`MAPPING_LAST_MAPPING_DELETE_BLOCKED`); deleting the DMO removes
+its mapping. The last mapping of a standard DMO can be deleted; the DMO stays
+enabled.
 
-Delete and delete preview of a standard, namespaced or platform-generated DMO are
-refused with `UNSUPPORTED_DMO_TARGET` before any DELETE. An already absent DMO is
-reported as unchanged. **Verified at API68**, in two orgs: that refusal, deletion
-of empty, unmapped custom DMOs with confirmed absence, and unchanged on repeat.
-Deleting mapped or data-bearing DMOs is not verified.
+**Delete single fields.** `--field` removes named custom fields from one DMO
+instead of deleting the DMO:
+
+```sh
+sf data360 delete -m dmo:Customer__dlm --field Note__c -o TARGET_ALIAS --preview
+sf data360 delete -m dmo:Customer__dlm --field Note__c -o TARGET_ALIAS --confirm-delete
+```
+
+The command removes the fields with one Metadata API destructive change. Salesforce
+drops each field's pairs from every mapping that holds one; the mappings stay
+active and keep their other pairs. Before the write, every pair onto the field must
+be found on an active mapping, and a fresh read right before the write must still
+show exactly the planned pairs (`MAPPING_UNMAP_PLAN_CHANGED` otherwise, nothing
+written). After the write the plugin polls the DMO and its mappings, up to six
+reads five seconds apart, with the same checks and diagnostics as a deploy with
+`--allow-field-removal` (see the Update tab). It then refreshes the DMO and mapping
+files that already exist in the project (`--output-dir`, default current
+directory). It does not create files. The result lists `removedFields` and
+`unmappedPairs`, the pairs Salesforce dropped. `--confirm-delete` is required
+because mappings change; preview lists one step per pair that Salesforce drops with
+the field, one per field and the files, and writes nothing. The primary key and
+generated fields are refused. The destructive change is sent once and never rolled
+back. For a field mapped by two mappings the command takes about 28 seconds.
+This is the only delete operation that writes project files. On a standard DMO it
+removes custom fields only; standard and system fields are refused. Any field-level
+delete on a namespaced or platform-generated DMO is refused.
+
+Delete and delete preview of a whole standard, namespaced or platform-generated
+DMO are refused with `UNSUPPORTED_DMO_TARGET` before any DELETE. An already absent
+DMO is reported as unchanged. **Verified at API68**, in two orgs: that refusal,
+deletion of empty, unmapped custom DMOs with confirmed absence, and unchanged on
+repeat; field-level delete of a mapped field with one mapping, including the file
+refresh, of a field shared by two mappings (Salesforce dropped the pair from both
+with the field), of a custom field on a standard DMO with its file refreshed, and of
+unmapped fields in the second org. Deleting data-bearing DMOs or fields is not
+verified.
 {% endcapture %}
-{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="available" api_reason="Exact owned empty custom DMOs, verified at API61–68; no cascade verified." api_body=delete_api plugin_state="available" plugin_reason="Exact-name deletion of custom DMOs, verified on empty unmapped fixtures at API68; no dependency preflight, no prompt; standard and generated DMOs are refused." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" cli_state="available" cli_reason="Only an owned empty custom DMO after fresh dependency checks; the DLO remains." cli_body=delete_cli api_state="available" api_reason="Exact owned empty custom DMOs, verified at API61–68; no cascade verified." api_body=delete_api plugin_state="available" plugin_reason="Exact-name deletion of custom DMOs, verified on empty unmapped fixtures at API68; no dependency preflight, no prompt; whole standard and generated DMOs are refused. Single custom fields can be deleted with their mapping pairs, also on a standard DMO." plugin_body=delete_plugin %}

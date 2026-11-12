@@ -67,7 +67,18 @@ sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 Confirmed target-name absence selects POST with authored fields only. Preview
 reports `outcome: "create"`, `target: "absent"`, `absenceProof: "confirmed-404"`.
 Execution reports `outcome: "created"`, `mutation: "confirmed-created"`. Other
-lookup failures stop without creation. This is standalone Other/default creation.
+lookup failures stop without creation. This is standalone creation in the default
+data space.
+
+The category is sent as the file states it and Salesforce decides; its API lists
+`Profile`, `Engagement`, `Other`, `Directory_Table`, `Observability_Table`,
+`Insights`, `Vector_Embedding` and `Content`. An Engagement DLO also needs
+`spec.eventDateTimeFieldName`: the full name (with `__c`) of one of the listed
+fields, which dates each record. The plugin sends it without the suffix, and
+retrieval saves it. Salesforce adds the DateTime field `cdp_sys_PartitionDate__c` to
+an Engagement DLO; it counts as generated, is never sent and may be left out of the
+file. Observed at API68 through the plugin in one org: a Profile and an Engagement
+DLO created, deployed again unchanged, and retrieved files deployed back unchanged.
 {% endcapture %}
 {% capture update_plugin %}
 ```sh
@@ -76,12 +87,35 @@ sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
 An existing exact name selects PATCH of the resolved target ID. Only label changes
-and nonprimary Text-field additions are admitted. Preview reports `outcome: "update"`;
-execution reports `outcome: "updated"`, `mutation: "confirmed-updated"`. Existing
-field/primary-key edits stop. An equal label and preserved field inventory report
+and nonprimary field additions are admitted; Salesforce decides the type of an added
+field. Preview reports `outcome: "update"`; execution reports `outcome: "updated"`,
+`mutation: "confirmed-updated"`. An equal label and preserved field inventory report
 `outcome: "unchanged"`; execution reports `mutation: "not-attempted"` and sends no
 POST or PATCH. Field ordering does not trigger a write, and the saved omission of
 ordinary generated `KQ_Id__c` does not count as removing that target field.
+
+Salesforce changes neither the category nor the event field of an existing DLO: a
+PATCH naming either is rejected with HTTP 400 (unrecognized field). The plugin
+therefore refuses a changed category with `UNSUPPORTED_DLO_CATEGORY_CHANGE` and a
+changed event field with `UNSUPPORTED_DLO_EVENT_FIELD_CHANGE`, before any write.
+Existing fields cannot change either: Salesforce rejects a changed field (HTTP 400,
+fields already exist), the Metadata API refuses to remove one (setup object in use),
+and the REST field delete route works only for external DLOs. A changed or removed
+field, or a primary-key change, is refused with `UNSUPPORTED_DLO_FIELD_CHANGE`, which
+says why.
+
+A file may omit the fields Salesforce generated: `cdp_sys_SourceVersion__c`,
+`DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`,
+`cdp_sys_PartitionDate__c` on Engagement DLOs and the key
+qualifier of the primary key (`KQ_<Key>__c`, for example `KQ_Id__c`). They stay as
+they are, so a hand-written file with only the authored fields deploys onto its
+existing DLO. Any other target field that the file omits is refused
+(`UNSUPPORTED_DLO_FIELD_CHANGE`). A listed field is compared on the keys the file
+states: keys that only the org's copy carries are ignored, and a stated key that
+differs is refused. Observed at API68 through the plugin in one org: a hand-written
+DLO file deployed again reported `unchanged`, and with one field added it reported
+`updated`; on an Engagement DLO a field was added and a changed event field was
+refused with nothing written.
 No schema removal or ingestion is qualified.
 {% endcapture %}
 {% capture delete_plugin %}
