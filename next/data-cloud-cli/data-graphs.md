@@ -99,13 +99,19 @@ sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/
 Native artifact deploy/delete accept auto/API68. Native deploy creates only after
 independent absence/root checks and `--allow-processing`; creation automatically
 materializes supporting resources and defaults to daily full refresh with incremental
-refresh disabled despite omitting schedule input. An identical definition returns
+refresh disabled despite omitting schedule input. The create waits while Salesforce
+builds the graph, up to `--wait-timeout` (default 1800 seconds), with progress on
+stderr; a three-field graph took about 7 minutes. If the plugin cannot confirm the new
+graph, the item reports `failed` / `unknown` with `DATA_GRAPH_CREATE_UNCONFIRMED` and
+the step that failed; the graph may exist, so retrieve it or deploy the same file again
+instead of creating it again. An identical definition returns
 zero-write unchanged without processing acknowledgement. A different existing
-definition follows only the qualified UPDATE contract in the plugin Update tab.
-CREATE remains root-only with ordered Text Id, key-qualifier and FirstName fields;
-recursive retrieval/UPDATE does not enable recursive CREATE. No native Git
-selection, mixed families, dependency expansion, alternate roots or cascade is
-admitted. Live API68 create/read/delete qualification and offline installed-package
+definition follows the UPDATE workflow in the plugin Update tab. Create sends the
+file as written: any root (standard or unified), related objects with their joins,
+any field types and refresh schedule. Salesforce adds key-qualifier fields to related
+objects and can report a different node type, so retrieve after creating. A graph with
+one related object took about 17 minutes to build in a live test. No native Git
+selection, mixed families, dependency expansion or cascade is admitted. Live API68 create/read/delete qualification and offline installed-package
 routing smoke are distinct; this is not live installed cross-org qualification. See the [Public Graph workflow](https://github.com/JoernBerkefeld/sf-plugin-data#public-graph-workflow)
 for the complete artifact contract.
 {% endcapture %}
@@ -135,11 +141,10 @@ The automatic work has already started. Do not submit another create or refresh 
 ## Update
 
 {% capture update_plugin %}
-### Native API68 — bounded existing-target UPDATE
+### Native API68 — existing-target UPDATE
 
-Retrieve the existing `NONE` graph in default space, rooted in the enabled standard
-`ssot__Individual__dlm`. Edit only its description in the saved native artifact for
-this example; preserve all other fields and configuration. Run the read and preview
+Retrieve the existing graph in the default data space (any root, standard or unified).
+Edit the saved native file, for example its description, schedule or fields. Run the read and preview
 before acknowledging automatic processing:
 
 ```sh
@@ -154,13 +159,14 @@ After independently confirmed success, repeat without processing acknowledgement
 sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
 ```
 
-The bounded contract allows label/description changes and qualified additive
-projections/related objects, including multihop relationships. It preserves retained
-fields, recursive branches, key qualifiers, both join endpoints, generated bindings
-and refresh configuration from the independently bound target. Omitting retained
-fields or branches preserves them rather than removing them. Root/API identity,
-key, qualifier, type, reparenting, join or refresh-setting changes and unsupported
-nonvolatile properties block; this is not arbitrary graph editing or recursive CREATE.
+The change goes to Salesforce in one PUT and Salesforce decides: label, description,
+refresh schedule, incremental refresh, added fields and related objects, joins and field
+settings are sent as written. The plugin refuses only changes to the graph name, data
+space, root object and a node's object, path or type, because they identify what is
+being changed.
+Omitting retained fields or branches preserves them rather than removing them; an
+omitted description is kept too. The target supplies both join endpoints, generated bindings
+and other retained properties.
 
 Immediately before its single guarded PUT, the plugin independently requires item
 `ready`, metadata `Ready` and the exact DataGraph record's `READY` / `ACTIVE` state,
@@ -294,7 +300,10 @@ configuration/root checks and explicitly empty known native dependency and
 related-segment arrays. Unknown/nonempty dependencies block. **Exhaustive external
 consumer exclusion remains unverified.** Independent graph-definition absence
 ultimately passed live API68 create/read/delete qualification after stale metadata
-readback was reconciled; an uncertain mutation must not be replayed. This does not
+readback was reconciled; an uncertain mutation must not be replayed. The single DELETE's
+answer decides the result (2xx deleted, an API 4xx rejected with Salesforce's error);
+nothing is read back, because the by-name metadata read kept serving a stale copy of
+a deleted graph for about 11-12 minutes in live tests. This does not
 prove generated DMO, mapping, transform or internal-state removal, successful
 computation, physical storage or credits cleanup. Preview is read-only; there is no
 cascade or local artifact removal. Installed-package smoke verifies offline command
