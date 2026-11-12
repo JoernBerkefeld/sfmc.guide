@@ -51,17 +51,29 @@ A sample of the retrieved file is not in this guide yet.
 {% capture read_connect %}
 <a id="read-runtime-state-through-the-cli"></a>
 
-Reads the live configuration of the insight. Nothing in the org changes.
+### Native API68 read
+
+Reads the live configuration of the insight by its full name. Nothing in the org changes.
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method GET --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --target-org TARGET_ALIAS
 ```
 
 Server body excerpt (not a CLI envelope):
 
 ```json
-{ "apiName": "CustomerActivity__cio", "status": "DRAFT", "dataSpace": "default", "publishScheduleInterval": "NOT_SCHEDULED", "lastRunStatus": null }
+{ "apiName": "CustomerActivity__cio", "calculatedInsightStatus": "ACTIVE", "dataSpace": "default", "creationType": "Custom", "definitionType": "CALCULATED_METRIC", "displayName": "Customer Activity", "isFromPackage": false, "queryDialect": "ANSI_SQL", "publishScheduleInterval": "NOT_SCHEDULED", "lastRunStatus": null }
 ```
+
+The lifecycle state is in `calculatedInsightStatus`: `DRAFT`, `PROCESSING`, `ACTIVE`, or `DELETING` while a delete runs. The response also holds `expression`, `dimensions`, `measures` and the run fields. A draft has empty `dimensions` and `measures`. `lastRunStatus: null` means the insight has never run.
+
+A missing insight answers HTTP 404:
+
+```json
+[{ "errorCode": "ITEM_NOT_FOUND", "message": "Calculated Insight record not found." }]
+```
+
+The same route without a name lists the insights of the org under `collection.items`.
 
 To download the XML too, run the retrieve command from the CLI tab. The XML does not include the full runtime state, so compare the expression and label only.
 {% endcapture %}
@@ -69,7 +81,7 @@ To download the XML too, run the retrieve command from the CLI tab. The XML does
 {% capture read_plugin %}
 Plugin runtime requests use68; standard XML, Metadata and dependency bindings use65.
 
-Default/auto remains its legacy65 existing-ACTIVE workflow.
+Default/auto uses API 68 as well; `--api-version 65.0` is refused with `INVALID_SCOPE`.
 
 Installed retrieval produced byte-identical XML/JSON.
 
@@ -91,7 +103,7 @@ The command writes these files under the source package:
 A sample of the JSON file is not in this guide yet.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-read" label="Read" cli_state="available" cli_reason="Saves the XML definition, not the complete runtime state." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads the runtime configuration. The XML is saved separately." connect_body=read_connect plugin_state="available" plugin_reason="Saves an ACTIVE insight as a paired XML and JSON file, using API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="ci-read" label="Read" cli_state="available" cli_reason="Saves the XML definition, not the complete runtime state." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read of the runtime configuration. The XML is saved separately." connect_body=read_connect plugin_state="available" plugin_reason="Saves an ACTIVE insight as a paired XML and JSON file, using API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -127,28 +139,33 @@ The result reports the component as created:
 {% endcapture %}
 
 {% capture create_connect %}
-Creates a live insight through the MCP route. The insight starts as a draft.
+### Native API68 create
 
-Save `ci-create.json` outside your metadata folder. `paramsJson` is a JSON string, not an object:
+Creates a live insight as a draft with one POST. It does not publish the insight. Check first that the name is absent: the item read answers `ITEM_NOT_FOUND`, and the retrieve command from the CLI tab finds no definition.
+
+Save `ci-create.json` outside your metadata folder:
 
 ```json
 {
-  "toolName": "d360_ci_create",
-  "paramsJson": "{\"input\":{\"apiName\":\"CustomerActivity__cio\",\"displayName\":\"Customer Activity\",\"expression\":\"SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm GROUP BY CustomerEvent__dlm.ApplicationId__c\",\"definitionType\":\"CalculatedMetric\",\"dataSpaceName\":\"default\",\"draft\":true}}"
+  "apiName": "CustomerActivity__cio",
+  "displayName": "Customer Activity",
+  "expression": "SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY CustomerEvent__dlm.ApplicationId__c",
+  "definitionType": "CalculatedMetric",
+  "dataSpaceName": "default",
+  "draft": true
 }
 ```
 
 ```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@ci-create.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/calculated-insights' --method POST --body '@ci-create.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --target-org TARGET_ALIAS
 ```
 
-Server body excerpt (the operation result, not the full response):
+The POST response is not proof of the result. Read the insight until `calculatedInsightStatus` is `DRAFT`, with empty `dimensions` and `measures`, `NOT_SCHEDULED` and your expression and label. The plugin reads up to 12 times, one second apart, within 120 seconds, and also compares the Metadata definition. `DRAFT` does not show that the insight has computed.
 
-```json
-{ "apiName": "CustomerActivity__cio", "status": "DRAFT", "isEnabled": true, "publishScheduleInterval": "NOT_SCHEDULED", "dimensions": [], "measures": [] }
-```
+The body above is exactly what the plugin sends. It sends only one qualified expression shape: an approximate distinct count grouped by one field, with a `WHERE 1 = 0` filter. Other SQL is not tested on this route.
 
-Use the returned `apiName` from now on. `DRAFT` does not show that the insight has computed.
+Do not send the POST again if the outcome is unclear. Read the insight first.
 {% endcapture %}
 
 {% capture create_plugin %}
@@ -168,7 +185,7 @@ Create requires exact runtime and Metadata absence, not an XML-only shell. Previ
 The sample output is not in this guide yet.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Creates a live insight through the API 67 MCP route." connect_body=create_connect plugin_state="available" plugin_reason="Creates a draft insight from a correlated XML and JSON pair, using API 68.0." plugin_body=create_plugin %}
+{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a draft insight; it does not publish it." connect_body=create_connect plugin_state="available" plugin_reason="Creates a draft insight from a correlated XML and JSON pair, using API 68.0." plugin_body=create_plugin %}
 
 ## Update
 
@@ -189,9 +206,44 @@ Retrieve the file again to confirm the new label and the unchanged SQL.
 {% endcapture %}
 
 {% capture update_connect %}
-Publishes a draft, or changes the label and schedule of an existing insight. Send one kind of change per request, then read the insight again.
+### Native API68 update
 
-To publish the draft, save `ci-publish.json`:
+Publishes a draft, or changes the expression of a draft or `ACTIVE` insight. Each change is one PATCH on the item route. Send one kind of change per request, then read the insight again.
+
+To publish the draft, save `ci-publish-native.json`:
+
+```json
+{ "displayName": "Customer Activity", "draft": false, "publishScheduleInterval": "NotScheduled" }
+```
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-publish-native.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --target-org TARGET_ALIAS
+```
+
+Read the insight until `calculatedInsightStatus` is `ACTIVE` with `NOT_SCHEDULED`. It passes through `PROCESSING` first. `ACTIVE` means the definition is published, not that the calculation has run.
+
+To change the expression of an `ACTIVE` insight, save `ci-expression-native.json`. Keep the same aggregation and output names; this example adds one condition to the filter:
+
+```json
+{ "expression": "SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 AND CustomerEvent__dlm.CustomerId__c IS NOT NULL GROUP BY CustomerEvent__dlm.ApplicationId__c" }
+```
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-expression-native.json' --target-org TARGET_ALIAS
+```
+
+The insight goes to `PROCESSING` and back to `ACTIVE`. The publication state and schedule stay as they were. For a draft, the plugin adds `"draft": true` to the same body, and the insight stays `DRAFT`.
+
+The plugin reads the insight up to 12 times, one second apart, within 120 seconds. It compares the whole definition and checks the expression and label against the Metadata definition. It never sends a PATCH again after an unclear result; do the same and read the insight first.
+
+These are the bodies the plugin sends. The publish body repeats the existing label and `NotScheduled`; the plugin sends no other label or schedule change on this route.
+
+### API 65 update route
+
+The label and schedule change below, and a publish with a `SystemManaged` schedule, are shown on API 65 only.
+
+To publish the draft with a system-managed schedule, save `ci-publish.json`:
 
 ```json
 { "displayName": "Customer Activity", "draft": false, "publishScheduleInterval": "SystemManaged" }
@@ -219,11 +271,9 @@ To change the label and schedule, save `ci-update.json`. Leave `definitionType` 
 sf api request rest '/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio' --method PATCH --body '@ci-update.json' --target-org TARGET_ALIAS
 ```
 
-To change only the expression, send `expression` alone in the PATCH body. Keep the same aggregation and output names.
-
 **Known failures:**
 
-- Changing `APPROX_COUNT_DISTINCT` to `COUNT` with the same measure alias is refused.
+- On API 65, changing `APPROX_COUNT_DISTINCT` to `COUNT` with the same measure alias is refused.
 - A PATCH can return `PROCESSING` again. Read the insight until it returns to `ACTIVE`.
 {% endcapture %}
 
@@ -260,7 +310,7 @@ Only the qualified expression edits are admitted. They are not arbitrary SQL, la
 The sample output is not in this guide yet.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Changes runtime settings and one qualified expression edit." connect_body=update_connect plugin_state="available" plugin_reason="Qualified draft and ACTIVE expression edits, then a separate publish. Not arbitrary SQL." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 publish and qualified expression PATCH; the API 65 label and schedule change is separate." connect_body=update_connect plugin_state="available" plugin_reason="Qualified draft and ACTIVE expression edits, then a separate publish. Not arbitrary SQL." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -291,32 +341,28 @@ A sample of the deletion result is not in this guide yet.
 {% endcapture %}
 
 {% capture delete_connect %}
-Deletes the live insight, then checks that it is gone. Check ownership and dependencies first.
+### Native API68 delete
 
-Save `ci-delete.json`. The request uses an explicit empty raw body:
+Deletes the live insight by its full name, then checks that it is gone. Check ownership and dependencies first.
+
+The plugin sends a DELETE without a body. The Salesforce CLI needs a body entry for DELETE, so save `ci-delete.json` with an explicit empty raw body:
 
 ```json
-{ "url": "/services/data/v65.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
+{ "url": "/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
 ```
 
 ```sh
 sf api request rest --file ci-delete.json --target-org TARGET_ALIAS --include
-sf api request rest '/services/data/v65.0/ssot/calculated-insights' --method GET --target-org TARGET_ALIAS --include
+sf api request rest '/services/data/v68.0/ssot/calculated-insights/CustomerActivity__cio' --target-org TARGET_ALIAS --include
 sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET_ALIAS --api-version 65.0
 ```
 
-A collection excerpt while removal is still running (without the status and headers):
-
-```json
-{ "items": [{ "apiName": "CustomerActivity__cio", "status": "DELETING" }] }
-```
-
-Read the full collection, including any further pages, until the insight is absent. Also check that its metadata entry is gone. Do not send another DELETE while removal is running.
+`--include` prints the HTTP status and headers with the body. The DELETE reply body is empty and is not proof of deletion. While removal runs, the item read still returns the insight with `"calculatedInsightStatus": "DELETING"`. Read it again until it answers `ITEM_NOT_FOUND`, and check that the metadata entry `CustomerActivity` is gone. In one live run that took six `DELETING` reads and about 35 seconds. Do not send another DELETE while removal is running.
 
 **Known failures:**
 
-- A DELETE without a body can fail with a missing `mode` error. Use the whole-request file shown above.
-- An empty response can mean that deletion has started but not finished. Read the collection again.
+- A DELETE without a body can fail in the CLI with a missing `mode` error. Use the whole-request file shown above.
+- The plugin reads up to 12 times within 120 seconds. Two live deletes ended unconfirmed within that budget, and later reads found the insight gone. Read again instead of deleting again.
 {% endcapture %}
 
 {% capture delete_plugin %}
@@ -337,36 +383,35 @@ The sample output is not in this guide yet.
 - Do not run the delete again after an unconfirmed result.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Deletes the runtime insight, then checks the runtime and metadata." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one exact pair member after a guarded check. Uncertain results are not replayed." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, then item read and metadata checks." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one exact pair member after a guarded check. Uncertain results are not replayed." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 
 
-**Plugin scope:** The plugin uses explicit `--api-version 68.0` and the default data space. Default and `auto` remain its legacy65 existing-ACTIVE workflow. Native runtime requests use 68; standard XML, Metadata and dependency bindings use 65. Internal native 64 to 68 feasibility does not qualify the public lifecycle at every version.
+**Plugin scope:** The plugin uses API 68 and the default data space. Default and `auto` use API 68 too; `--api-version 65.0` is refused with `INVALID_SCOPE`. Native runtime requests use 68; standard XML, Metadata and dependency bindings use 65. Internal native 64 to 68 feasibility does not qualify the public lifecycle at every version.
 
 **Plugin evidence:**
 
 - Retrieve exports settled ACTIVE only. Installed retrieval produced byte-identical XML/JSON.
 - Installed cross-org API68 create passed. This does not qualify arbitrary SQL or released packages.
-- Installed GET-only unchanged deployment and ACTIVE edit passed. Default and `auto` remain the separate legacy API 65 route.
+- Installed GET-only unchanged deployment and ACTIVE edit passed.
 - Installed cross-org API68 publish passed.
 - Two initial public deletes returned CI_DELETION_UNCONFIRMED. Later runtime and Metadata reads confirmed that the insight was absent.
 - A later installed delete passed in 35.2 seconds after six `DELETING` polls and dual absence on poll 7. The two unconfirmed results remain unexplained. This is not reliable completion every time, and not a version-specific defect.
 - Native 64 asynchronous deletion evidence does not identify a version-specific defect.
 - One observer harness journal was recovered from independent observations. Child CLI output was lost, so the retained evidence is not a complete raw response archive.
 
-**Separate target-bound check:** An existing `ACTIVE` insight with `NOT_SCHEDULED` received one API 65 PATCH containing only `expression`. The `WHERE 1 = 0` filter was kept. A fully qualified `DeviceId IS NOT NULL` predicate was added. The aggregation and output schema did not change. HTTP 200 was followed by independent runtime, Metadata XML and referenced-DMO checks. The exact edited SQL was present, non-expression settings and dependency bindings were preserved, and the insight remained `ACTIVE` with `NOT_SCHEDULED`. No schedule change was sent or qualified by this check. `lastRunStatus` remained null, so `ACTIVE` is not computation evidence. This does not establish unchanged-source cross-org deployment, arbitrary SQL edits, scheduled-processing behavior or a successful calculation. This is distinct from the earlier `SYSTEM_MANAGED` evidence; no schedule change was sent or qualified.
+**Native API 68 Connect routes:**
 
-**Create and update routes:**
-
-- The API 67 MCP route creates the definition. Reads, updates and deletes use API 65 REST. The route is not a dedicated CLI command or a verified direct API 65 POST.
-- The expression-only API 65 PATCH used the exact field name, `ssot__DeviceApplicationEngagement__dlm.ssot__DeviceId__c`. Output aliases and the grouped application dimension were kept. This proves the bounded predicate edit, not arbitrary SQL or schema editing.
-- After `PROCESSING`, runtime reads reached `ACTIVE`, and a separate Metadata read showed the edited SQL. Dimension and measure names, types and roles were kept.
-- The returned fields' derived `dataSource` changed, although formulas were stable. Do not use that attribution as a dependency identifier.
-- We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT`, keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail.
+- Create is one POST to `/ssot/calculated-insights` with `draft: true`; publish and expression edits are PATCH requests on the item route; delete is a DELETE on the item route. The request bodies on this page are the ones the plugin sends.
+- Installed plugin runs on these routes created a draft, published it to `ACTIVE` with `NOT_SCHEDULED`, edited the `ACTIVE` expression and deleted the insight. Independent runtime, Metadata and dependency reads confirmed each result. `lastRunStatus` stayed null, so `ACTIVE` is not computation evidence.
+- The tested expression edit added a fully qualified `IS NOT NULL` condition to the `WHERE 1 = 0` filter. The aggregation, output aliases and grouped dimension were kept. This proves that bounded edit, not arbitrary SQL or schema editing.
+- On consecutive API 68 reads, the returned fields' derived `dataSource` changed, although formulas were stable. Do not use that attribution as a dependency identifier.
 - Before sending an expression PATCH, read the current expression and settings. If they already match, skip the unnecessary PATCH yourself. This is comparison guidance, not an automatic no-op or identical-repeat guarantee from the API.
+
+**API 65 expression check:** We tried replacing `APPROX_COUNT_DISTINCT` with `COUNT` on API 65, keeping the same measure alias. Salesforce rejected that change because it changed how the existing measure can be aggregated. Separate reads confirmed that the original SQL and field definitions were unchanged. This does not mean that every SQL edit will fail. The change was not tried on API 68.
 
 **Deletion routes:**
 

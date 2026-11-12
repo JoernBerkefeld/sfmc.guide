@@ -50,7 +50,7 @@ The file is saved at `force-app/main/default/data360/identityResolution/Individu
 - A file without `trustedSources` must be retrieved again before you deploy it.
 {% endcapture %}
 {% capture read_connect %}
-### Native API68
+### Native API68 read
 
 Reads the ruleset over the native API 68.0 route. Nothing in the org changes.
 
@@ -58,35 +58,16 @@ Reads the ruleset over the native API 68.0 route. Nothing in the org changes.
 sf api request rest '/services/data/v68.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method GET --include
 ```
 
-The sample of this response is not in this guide yet. The response is a server view, not the plugin file or a body you can send back. Compare two reads rather than trusting a write response. Wait for `PUBLISHED` and check all twelve output bindings.
-
-### API 65 and API 67 routes
-
-These reads are separate routes. They are not a fallback after an uncertain write.
-
-Read through the native API 65 endpoint:
-
-```sh
-sf api request rest '/services/data/v65.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method GET --include
-```
-
-Read through the API 67 execute route. Save `ir-get.json`:
+Excerpt of a published ruleset:
 
 ```json
-{ "toolName": "d360_ir_get", "paramsJson": "{\"identityResolution\":\"Individual_cust\"}" }
+{ "objectApiName": "Individual_cust", "rulesetId": "cust", "configurationType": "individual", "dataSpaceName": "default", "rulesetStatus": "PUBLISHED", "doesRunAutomatically": false, "secondaryDmo": "ssot__Individual__dlm", "reconciliationRules": [{ "entityName": "ssot__Individual__dlm", "ruleType": "lastupdated", "unifiedDmoName": "UnifiedssotIndividualcust__dlm", "linkDmoName": "UnifiedLinkssotIndividualcust__dlm" }] }
 ```
 
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json'
-```
+The full response also holds `id`, `filters`, `trustedSources`, the match rules and one reconciliation entry for each of the six entities. Enum values read in lower case, such as `individual`, `fuzzy` and `lastupdated`. The response is a server view, not the plugin file or a body you can send back. Compare two reads rather than trusting a write response. Wait for `PUBLISHED` and check all twelve output bindings.
 
-```json
-{ "objectApiName": "Individual_cust", "doesRunAutomatically": false, "rulesetStatus": "PUBLISHED" }
-```
-
-Both reads print to stdout and leave the ruleset unchanged.
 {% endcapture %}
-{% include operation-tabs.html id="ir-read" label="Read" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read first; API 65 and API 67 reads are separate routes." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
+{% include operation-tabs.html id="ir-read" label="Read" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
 
 ## Create
 
@@ -110,7 +91,7 @@ Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `I
 - `IDENTITY_RESOLUTION_NAME_TYPE_MISMATCH`: the file name does not start with its configuration type.
 {% endcapture %}
 {% capture create_connect %}
-### Native API68
+### Native API68 create
 
 Creates the ruleset from a complete definition. The body is input-shaped, not the GET response.
 
@@ -118,32 +99,45 @@ Creates the ruleset from a complete definition. The body is input-shaped, not th
 sf api request rest '/services/data/v68.0/ssot/identity-resolutions' --target-org TARGET_ALIAS --method POST --body '@ir-native-create.json' --include
 ```
 
-The sample of this response is not in this guide yet. Build the body from the intended settings: `configurationType: "Individual"`, `dataSpaceName: "default"`, `secondaryDmo: "ssot__Individual__dlm"`, the unused `rulesetId` suffix, the label, the description and the automatic-run and case flags. Include all six reconciliation entities with ordered sources. Omit server IDs, status and generated output names. Check exact absence, capacity, dependencies and publication permission before you submit.
-
-Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
-
-### API 65 and API 67 routes
-
-This example is separate from the native route. It is not a fallback. Save `ir-create.json`. It matches on first name, last name and normalized email, and starts with a `LastUpdated` reconciliation rule:
+Save `ir-native-create.json`. It matches on first name, last name and normalized email, and keeps the newest value for all six reconciliation entities:
 
 ```json
 {
-  "toolName": "d360_ir_create",
-  "paramsJson": "{\"input\":{\"configurationType\":\"Individual\",\"dataSpaceName\":\"default\",\"label\":\"Customer Identity\",\"description\":\"Resolve customers using name and normalized email\",\"rulesetId\":\"cust\",\"doesRunAutomatically\":false,\"matchRules\":{\"rules\":[{\"label\":\"Name and normalized email\",\"criteria\":{\"criteria\":[{\"entityName\":\"ssot__Individual__dlm\",\"fieldName\":\"ssot__FirstName__c\",\"matchMethodType\":\"Fuzzy\",\"shouldMatchOnBlank\":false},{\"entityName\":\"ssot__Individual__dlm\",\"fieldName\":\"ssot__LastName__c\",\"matchMethodType\":\"Exact\",\"shouldMatchOnBlank\":false},{\"entityName\":\"ssot__ContactPointEmail__dlm\",\"fieldName\":\"ssot__EmailAddress__c\",\"matchMethodType\":\"ExactNormalized\",\"shouldMatchOnBlank\":false}]}}]},\"reconciliationRules\":{\"rules\":[{\"entityName\":\"ssot__Individual__dlm\",\"ruleType\":\"LastUpdated\",\"shouldIgnoreEmptyValue\":true}]}}}"
+  "configurationType": "Individual",
+  "rulesetId": "cust",
+  "dataSpaceName": "default",
+  "secondaryDmo": "ssot__Individual__dlm",
+  "label": "Customer Identity",
+  "description": "Resolve customers using name and normalized email",
+  "doesRunAutomatically": false,
+  "isCaseSensitive": true,
+  "matchRules": [
+    {
+      "label": "Name and normalized email",
+      "criteria": [
+        { "entityName": "ssot__Individual__dlm", "fieldName": "ssot__FirstName__c", "matchMethodType": "Fuzzy", "shouldMatchOnBlank": false, "caseSensitiveMatch": false },
+        { "entityName": "ssot__Individual__dlm", "fieldName": "ssot__LastName__c", "matchMethodType": "Exact", "shouldMatchOnBlank": false, "caseSensitiveMatch": false },
+        { "entityName": "ssot__ContactPointEmail__dlm", "fieldName": "ssot__EmailAddress__c", "matchMethodType": "ExactNormalized", "shouldMatchOnBlank": false, "caseSensitiveMatch": false }
+      ]
+    }
+  ],
+  "reconciliationRules": [
+    { "entityName": "ssot__Individual__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointEmail__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointPhone__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointAddress__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointApp__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__PartyIdentification__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] }
+  ]
 }
 ```
 
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-create.json' --include
-```
+The body carries the configuration type, the unused `rulesetId` suffix, the data space, the secondary DMO, the label, the description, the automatic-run and case flags, the match rules and all six reconciliation entities with ordered `sources` and field overrides in `fields`. It omits server IDs, status and generated output names. Empty `filters` and `trustedSources` are left out. The sample of the response is not in this guide yet. Check exact absence, capacity, dependencies and publication permission before you submit.
 
-```json
-{ "objectApiName": "Individual_cust", "doesRunAutomatically": false, "rulesetStatus": "PUBLISHING" }
-```
+Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
-Check nested `body.error` inside the response as well as the result. HTTP `201` and CLI exit `0` can still contain an operation error. Keep the returned identity for later checks.
 {% endcapture %}
-{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-settings POST; API 65 and API 67 examples are separate. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
+{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
 
 ## Update
 
@@ -166,7 +160,7 @@ If you empty the filters or trusted sources in the file, the plugin sends an emp
 - A ruleset that reads `PUBLISHING` or `DELETING` is refused with `IDENTITY_RESOLUTION_NOT_SETTLED`. Wait for it to settle, then run again.
 {% endcapture %}
 {% capture update_connect %}
-### Native API68
+### Native API68 update
 
 Sends the complete intended settings with one PATCH. Run it only after a fresh GET shows the owner is `PUBLISHED`.
 
@@ -174,34 +168,43 @@ Sends the complete intended settings with one PATCH. Run it only after a fresh G
 sf api request rest '/services/data/v68.0/ssot/identity-resolutions/Individual_cust' --target-org TARGET_ALIAS --method PATCH --body '@ir-native-update.json' --include
 ```
 
-The sample of this response is not in this guide yet. Send the full matching array and all six reconciliation entities in `ir-native-update.json`. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Do not PATCH while a fresh GET shows `PUBLISHING` or `DELETING`: you cannot tell your change from the work already running. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write, automatically fall back to API67 or attempt rollback.
-
-### API 65 and API 67 routes
-
-Change the Individual reconciliation rule from `LastUpdated` to **`MostFrequent`**, keeping the matching definition intact. Save `ir-update.json` with the full matching and reconciliation input and label:
+Save `ir-native-update.json`. It changes the description and the Individual reconciliation rule from `LastUpdated` to `MostFrequent`, and sends everything else unchanged:
 
 ```json
 {
-  "toolName": "d360_ir_update",
-  "paramsJson": "{\"identityResolution\":\"Individual_cust\",\"input\":{\"label\":\"Customer Identity\",\"description\":\"Prefer the most frequent customer values\",\"doesRunAutomatically\":false,\"matchRules\":{\"rules\":[{\"label\":\"Name and normalized email\",\"criteria\":{\"criteria\":[{\"entityName\":\"ssot__Individual__dlm\",\"fieldName\":\"ssot__FirstName__c\",\"matchMethodType\":\"Fuzzy\",\"shouldMatchOnBlank\":false},{\"entityName\":\"ssot__Individual__dlm\",\"fieldName\":\"ssot__LastName__c\",\"matchMethodType\":\"Exact\",\"shouldMatchOnBlank\":false},{\"entityName\":\"ssot__ContactPointEmail__dlm\",\"fieldName\":\"ssot__EmailAddress__c\",\"matchMethodType\":\"ExactNormalized\",\"shouldMatchOnBlank\":false}]}}]},\"reconciliationRules\":{\"rules\":[{\"entityName\":\"ssot__Individual__dlm\",\"ruleType\":\"MostFrequent\",\"shouldIgnoreEmptyValue\":true}]}}}"
+  "label": "Customer Identity",
+  "description": "Prefer the most frequent customer values",
+  "doesRunAutomatically": false,
+  "isCaseSensitive": true,
+  "matchRules": [
+    {
+      "label": "Name and normalized email",
+      "criteria": [
+        { "entityName": "ssot__Individual__dlm", "fieldName": "ssot__FirstName__c", "matchMethodType": "Fuzzy", "shouldMatchOnBlank": false, "caseSensitiveMatch": false },
+        { "entityName": "ssot__Individual__dlm", "fieldName": "ssot__LastName__c", "matchMethodType": "Exact", "shouldMatchOnBlank": false, "caseSensitiveMatch": false },
+        { "entityName": "ssot__ContactPointEmail__dlm", "fieldName": "ssot__EmailAddress__c", "matchMethodType": "ExactNormalized", "shouldMatchOnBlank": false, "caseSensitiveMatch": false }
+      ]
+    }
+  ],
+  "reconciliationRules": [
+    { "entityName": "ssot__Individual__dlm", "ruleType": "MostFrequent", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointEmail__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointPhone__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointAddress__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__ContactPointApp__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] },
+    { "entityName": "ssot__PartyIdentification__dlm", "ruleType": "LastUpdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": [] }
+  ]
 }
 ```
 
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-update.json'
-```
-
-```json
-{ "objectApiName": "Individual_cust", "rulesetStatus": "PUBLISHING", "reconciliationRules": { "rules": [{ "entityName": "ssot__Individual__dlm", "ruleType": "mostfrequent" }] } }
-```
-
-**Wait for `PUBLISHED` before updating**; an update during `PUBLISHING` can fail inside an otherwise successful response. Read back until publication settles. Then check the changed rule and the unchanged matches.
+The body leaves out the identity settings (`configurationType`, `rulesetId`, `dataSpaceName`, `secondaryDmo`), which an update cannot change. Send `filters` or `trustedSources` as empty lists only when the current ruleset has entries you want removed. The sample of the response is not in this guide yet. Send the full matching array and all six reconciliation entities. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Do not PATCH while a fresh GET shows `PUBLISHING` or `DELETING`: you cannot tell your change from the work already running. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write or attempt rollback.
 
 **Known failures:**
 
-- An update sent during `PUBLISHING` can fail inside a successful response.
+- An update sent while the ruleset is `PUBLISHING` can fail inside an otherwise successful response: the HTTP status and CLI exit code report success, but the change is not applied. This was seen on the API 67 route and not tried on API 68. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
+
 {% endcapture %}
-{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH; API 65 and API 67 examples are separate." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -230,7 +233,7 @@ A ruleset with automatic run on or off can be deleted. In a live test the delete
 - A timeout or unknown result stops the batch. Do not replay DELETE. Check the state with read-only calls.
 {% endcapture %}
 {% capture delete_connect %}
-### Native API68 (owned disposable ruleset only)
+### Native API68 delete (owned disposable ruleset only)
 
 Deletes one owned, disposable ruleset by its record ID. Get explicit approval for that exact owner first. Read it by ID and by API name, and check its consumers.
 
@@ -244,28 +247,8 @@ Replace both placeholders with the owner's ID and API name. A successful DELETE 
 
 A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
-### API 65 and API 67 routes
-
-This example is separate from native cleanup. It is not a fallback. After you check dependencies and ownership, save `ir-delete.json`:
-
-```json
-{ "toolName": "d360_ir_delete", "paramsJson": "{\"identityResolution\":\"Individual_cust\"}" }
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-delete.json'
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --target-org TARGET_ALIAS --method POST --body '@ir-get.json'
-```
-
-The read after the delete can still show:
-
-```json
-{ "objectApiName": "Individual_cust", "rulesetStatus": "DELETING", "reconciliationRules": [] }
-```
-
-Wait until the exact ruleset is not found. Confirm that the native API 65 GET returns HTTP `404` with `ITEM_NOT_FOUND`. Do not repeat DELETE during removal.
 {% endcapture %}
-{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name; API 65 and API 67 examples are separate." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -278,25 +261,23 @@ Wait until the exact ruleset is not found. Confirm that the native API 65 GET re
 
 **Create evidence.** Installed API68 source-org acceptance created a full-settings owner. It confirmed `PUBLISHED` with equal settings and twelve output and link bindings. It then retrieved the owner and repeated deployment with zero writes. No explicit run or cross-org mutation was proved. The retained native68 POST returned HTTP 201 and `PUBLISHING`. An independent GET confirmed publication, full supported settings and all twelve generated bindings. The native POST body omits empty filters and trusted sources. Use all six qualified entities, with independently verified target fields and sources. Settlement is bounded. An unconfirmed write is `unknown`, stops the batch and is not retried or rolled back.
 
-**Update evidence.** Separate native PATCH qualification covers matching, defaults, ordered source priorities, field overrides, override reset and inheritance. It was followed by independent full-settings and output preservation checks. The latest installed acceptance verified CREATE, retrieve and no-op, not a mutating PATCH. The low-level API command does not detect semantic no-ops. Compare the settings yourself to avoid an unnecessary write. Stop on `unknown` without a write replay, API 67 fallback or rollback. The native PATCH must not be retried after an uncertain result.
+**Update evidence.** Separate native PATCH qualification covers matching, defaults, ordered source priorities, field overrides, override reset and inheritance. It was followed by independent full-settings and output preservation checks. The latest installed acceptance verified CREATE, retrieve and no-op, not a mutating PATCH. The low-level API command does not detect semantic no-ops. Compare the settings yourself to avoid an unnecessary write. Stop on `unknown` without a write replay or rollback. The native PATCH must not be retried after an uncertain result.
 
 **Delete evidence.** Preview is read-only. Installed acceptance observed 52 reads and zero writes. Execution freshly resolves the target identity, compares the complete supported settings and checks output and dependency proofs. It then sends at most one native ID-based DELETE. No wildcard or batch selection, manual generated-DMO deletion, cascade or explicit computation is supplied. Exhaustive external-consumer exclusion is not proved.
 
 Installed public plugin DELETE passed bounded API68 acknowledged-processing acceptance. It sent one HTTP 204 and two post-delete GETs. The first strictly validated ID and name `DELETING` pair returned success promptly. Both responses passed the unchanged strict transition validator, including its narrowly admitted empty-reconciliation shape. Arbitrary, malformed or partial transitions do not qualify. Later `DELETING_OFFCORE` was observed, **not terminal absence**.
 
-Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities** establish `confirmed-deleted`. Already-absent execution is designed to return unchanged without a write or confirmation after strict absence proof. The latest installed run did not exercise that repeat because absence was unavailable. Optional full preservation/output accessibility checks were incomplete; physical profile/output cleanup is unproven. A transport or readback failure remains unknown. It must not trigger retries, API 67 fallback or rollback.
+Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities** establish `confirmed-deleted`. Already-absent execution is designed to return unchanged without a write or confirmation after strict absence proof. The latest installed run did not exercise that repeat because absence was unavailable. Optional full preservation/output accessibility checks were incomplete; physical profile/output cleanup is unproven. A transport or readback failure remains unknown. It must not trigger retries or rollback.
 
 **Owned cleanup evidence.** Retained cleanup deleted one exact owned disposable owner by record ID, after checking its recorded org, ID, name and dependencies. It returned HTTP 204. Independent reads by both exact ID and API name then confirmed absence. The collection count decreased by one. Twelve outputs were missing **or inaccessible** afterward and no DMOs were manually deleted. Physical profile-row cleanup remains unproven. HTTP 204 or temporary `DELETING` is not terminal proof. Generated outputs can remain readable during `DELETING`. Later unreadability means absent **or inaccessible**, not proof of physical deletion. Local request files and retrieved templates remain on disk.
 
-**Data Graph root check.** Read the exact ruleset through both the API 67 route and the native endpoint. Its reconciliation entries identify the unified DMOs (`unifiedDmoName`). Correlate the returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or DMO ID. Read the generated outputs through API 65 Connect REST and Metadata API. Compare the root's field names, Text types and explicit Id key. A matching object name alone is insufficient.
+**Data Graph root check.** Read the exact ruleset through the native endpoint. Its reconciliation entries identify the unified DMOs (`unifiedDmoName`). Correlate the returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or DMO ID. Read the generated output objects and compare the root's field names, Text types and explicit Id key. A matching object name alone is insufficient.
 
 The plugin's graph `--preview` does this lookup for you: it reads the rulesets and names the published owner of a unified root, or reports that none owns it. In a live test, preview of a graph on a new unified root reported the missing root before the ruleset existed, and named the `PUBLISHED` owner afterwards. A graph on that root was then created, updated and deleted. See [Data Graphs](/next/data-cloud-cli/data-graphs/#create).
 
 **Two-org qualification.** Retained owned `PUBLISHED` rulesets and all twelve output and link DMOs were correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had compatible Id, FirstName and LastName Text fields and an explicit Id key. This establishes owner, output and schema compatibility. It does not establish cross-org ruleset creation or migration, a successful IR data run, or permission to reuse source IDs. Resolve the owner and its outputs in each org.
 
-**Later Graph update.** The existing-owner target Graph update appended only its LastName projection. It preserved the target ruleset, all twelve output and link DMOs, and the root schema and key. No IR mutation was attempted. A repeat comparison found both resources unchanged. This is preservation during a dependent Graph update. It is not cross-org IR update or create proof, or a successful IR data run.
-
-**Example scope.** This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work. The JSON in the API 65 and API 67 sections are decoded operation-result excerpts, not complete raw server responses or CLI envelopes. `--include` prints HTTP status and headers separately from the server body. Salesforce may add reconciliation entities beyond the ones you send. Keep the returned identity and generated output references for later checks.
+**Example scope.** This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work. `--include` prints HTTP status and headers separately from the server body. Salesforce may add reconciliation entities beyond the ones you send. Keep the returned identity and generated output references for later checks.
 
 **Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, exhaustive external-consumer exclusion, an update that empties filters or trusted sources, and configuration types other than `Individual`.
 

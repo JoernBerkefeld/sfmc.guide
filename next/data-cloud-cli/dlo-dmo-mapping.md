@@ -116,7 +116,20 @@ Creates the mapping with one native POST. Both objects must already exist.
 sf api request rest /services/data/v68.0/ssot/data-model-object-mappings?dataspace=default --target-org TARGET_ALIAS --method POST --body @mapping-create.json --header Content-Type:application/json
 ```
 
-A sample request body and response are not in this guide yet. A GET afterwards confirms the mapping is `ACTIVE`.
+Save `mapping-create.json`. It names both objects and lists the field pairs you author, by developer name only:
+
+```json
+{
+  "sourceEntityDeveloperName": "CustomerSource__dll",
+  "targetEntityDeveloperName": "Customer__dlm",
+  "fieldMapping": [
+    { "sourceFieldDeveloperName": "Id__c", "targetFieldDeveloperName": "Id__c" },
+    { "sourceFieldDeveloperName": "Alpha__c", "targetFieldDeveloperName": "Alpha__c" }
+  ]
+}
+```
+
+Include the pair that joins the two primary keys. Leave out the pairs Salesforce generates (`KQ_Id__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`) and any selectors from another org. Salesforce returns HTTP `201` and names the mapping itself. A sample response is not in this guide yet. A GET afterwards confirms the mapping is `ACTIVE`, the server-generated name, your pairs and the generated pairs.
 {% endcapture %}
 
 {% capture create_plugin %}
@@ -155,7 +168,19 @@ Adds field pairs to an existing mapping with one PATCH. Existing pairs are kept.
 sf api request rest /services/data/v68.0/ssot/data-model-object-mappings/ACTUAL_MAPPING_NAME/field-mappings?dataspace=default --target-org TARGET_ALIAS --method PATCH --body @mapping-add-pair.json --header Content-Type:application/json
 ```
 
-A sample request body is not in this guide yet. HTTP `200` is not proof of the change. Read the mapping afterwards.
+Save `mapping-add-pair.json`. It repeats both objects and lists only the pairs to add:
+
+```json
+{
+  "sourceEntityDeveloperName": "CustomerSource__dll",
+  "targetEntityDeveloperName": "Customer__dlm",
+  "fieldMapping": [
+    { "sourceFieldDeveloperName": "Beta__c", "targetFieldDeveloperName": "Beta__c" }
+  ]
+}
+```
+
+Use the server-generated mapping name from a GET in the path. The objects in the body must match the mapping's own. HTTP `200` is not proof of the change. Read the mapping afterwards.
 
 **Known failures:**
 
@@ -226,12 +251,6 @@ Mapping deletes is restricted: the API results below do not establish CLI or plu
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
 
 **API family:** The native JSON route `/services/data/vXX.0/ssot/data-model-object-mappings` (including its item and field-mapping routes) belongs to the **Data 360 Connect REST API**, not the SOAP-based Metadata API. Salesforce lists mapping routes separately in the [Connect REST reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) and shows the full versioned URL in its [mapping use case](https://developer.salesforce.com/docs/data/connectapi/guide/dmo-use-case.md). Native plugin requests to this family use authenticated `sf api request rest`; that is API access through a CLI runner, not a dedicated out-of-the-box mapping command. The `sf project` XML examples in the CLI sections instead use Metadata API with `ObjectSourceTargetMap`. This attribution alone does not qualify a native mapping workflow, alter the existing API-tab ratings or establish CRUD support at an untested version.
-
-### Installed API 61 create and single addition
-
-Fresh empty custom Other/Text fixtures passed installed public mapping create, exact canonical retrieval, filtered target binding lookup, one additive Text identity pair and a GET-only unchanged repeat at explicit API61, with `--dataspace` omitted. Captured native routes retained v61.0 and omitted the dataspace query; mapping write bodies carried no scope field. Independent reads confirmed ACTIVE mapping settlement, all prior pairs/selectors, the full DLO and DMO field/key definitions; only the added Extra__c isMapped flag changed during update. Create/update previews were read-only.
-
-This closes the exercised API61 create/read/single-add omission path, not general CRUD or inventory pagination. API61 is the lowest live-tested success for these mapping operations in this record, not a universal introduction claim. API60 GET404 is separate evidence, not POST/PATCH/DELETE rejection proof. API62–67 operation qualification remains open. Desired-state removal and retarget remain API68-only. No nondefault space, ingestion, populated data or released-package qualification follows. The fresh sole mapping and both parents are deliberately retained under the accepted last-mapping limitation; no delete, parent cascade or terminal cleanup was attempted.
 
 ### Plugin coverage and installed acceptance
 
@@ -313,13 +332,13 @@ Adding `Beta__c` and `Gamma__c` together was refused with `UNSUPPORTED_MAPPING_M
 
 A compatible **Number** pair, `Count__c` → `Count__c`, then passed as a single plugin addition: one names-only PATCH `200`, independent `ACTIVE` readback from eight to nine pairs, and preservation of all eight prior pair objects/selectors. Parent definitions were preserved with only expected DMO `isMapped` flag changes allowed. Repeating that deployment was unchanged with zero writes. This qualifies one compatible Number addition, not every data type, Number-based creation or plugin multi-pair updates.
 
-### Individual field-pair removal: separate API67 MCP facade evidence
+### API 61 create and single addition
 
-A selector-aware **API67 MCP facade** operation removed ordinary `Alpha__c`, then `Beta__c` pairs: **7 → 6 → 5 pairs**. Each selector came from the observed target mapping, not a guessed name or source artifact. Independent API67 GETs after every attempt confirmed the mapping stayed `ACTIVE`, unchanged bindings and unaffected pairs/selectors, and preservation of both parents and their key/schema settings.
+The plugin admits mapping operations from API 61. At explicit API 61, empty custom Other/Text objects passed mapping create, exact retrieval, one added Text pair and an unchanged repeat. Independent reads confirmed the mapping was ACTIVE and every earlier pair and field stayed the same. This covers that path, not general CRUD at API 61.
 
-Deleting primary-key `Id__c` was rejected. Deleting `KQ_Id__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c` was also rejected because they were system-generated mappings. Those five pairs remained: removing all ordinary nonkey pairs did **not** produce a zero-pair mapping or remove the relationship. This is one qualified fixture, not a universal minimum pair count.
+### Protected pairs
 
-The facade returned HTTP `201` envelopes for both successful results and errors; that is **not the underlying native DELETE status**. Later independent native API61/API68 experiments returned `204` for observed-selector ordinary Text/Number unmaps and preserved the bounded parent schemas. Those native experiments, not this facade envelope, support the pair removal that a mapping deploy performs. Later installed API68 Text reconciliation passed as described above; it does not establish installed Number-removal coverage.
+Native API61 and API68 unmaps of ordinary Text and Number pairs returned `204` and always left five pairs: the primary-key pair `Id__c` and the generated pairs `KQ_Id__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`. Removing every ordinary pair did **not** produce a zero-pair mapping or remove the relationship. No native API68 attempt to delete one of those five pairs is recorded; through the API 67 MCP facade, deleting each of them was rejected. Later installed API68 Text reconciliation passed as described above; it does not establish installed Number-removal coverage.
 
 ### Completed API68 binding-retarget comparison
 
@@ -383,6 +402,6 @@ The comparison depended on the **target DMO's remaining DLO mappings**: adding a
 
 Deleting the qualified empty, owned DMO cascaded its mapping and left the DLO intact in a separate bounded observation. This is not permission to delete a business or shared parent as a workaround, and does not establish a plugin cascade feature.
 
-**Not verified:** populated or related objects; non-default data spaces; CLI field removal and formula/filter updates; Number removal through the plugin; API62–67 for create, read, update and delete except where stated; inventory completeness; the released package; general cross-org portability.
+**Not verified:** populated or related objects; non-default data spaces; CLI field removal and formula/filter updates; Number removal through the plugin; API62–67 for create, read, update and delete; inventory completeness; the released package; general cross-org portability.
 
 </details>

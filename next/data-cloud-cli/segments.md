@@ -72,21 +72,29 @@ The XML leaves out the lookback, schedule, state and data space. It does not pub
 {% capture read_connect %}
 <a id="read-runtime-state-through-the-cli"></a>
 
+### Native API68 read
+
 Reads the segment's runtime settings with a GET request. Nothing in the org changes.
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/segments/ActiveCustomers' --target-org TARGET_ALIAS
 ```
 
 The response wraps the segment in a `segments` array:
 
 ```json
-{ "segments": [{ "apiName": "ActiveCustomers", "segmentStatus": "ACTIVE", "lastSegmentMemberCount": 0, "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D", "dataSpace": "default", "segmentOnApiName": "UnifiedCustomer__dlm" }] }
+{ "segments": [{ "apiName": "ActiveCustomers", "segmentType": "DBT", "segmentStatus": "ACTIVE", "lastSegmentMemberCount": 0, "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D", "dataSpace": "default", "segmentOnApiName": "UnifiedCustomer__dlm" }] }
+```
+
+The full entry also holds `includeDbt.models` (name and SQL of each model), the escaped `includeCriteria`, the runtime IDs `marketSegmentId`, `marketSegmentDefinitionId` and `segmentOnId`, and the generated `segmentMembershipDmo` tables. The IDs belong to this org. A missing segment answers HTTP 404:
+
+```json
+[{ "errorCode": "ITEM_NOT_FOUND", "message": "Segment not found: ActiveCustomers" }]
 ```
 
 The lookback is the time window the segment uses. `P90D` means 90 days. Check the returned value rather than assuming it. Check the segment name, SQL, type, data space, segment-on object, lookback and schedule. This request does not write an XML file. For audience rows, see [Segment members](/next/data-cloud-cli/segment-members/#read).
 {% endcapture %}
-{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves one JSON file for a single DBT segment (see Evidence)." plugin_body=read_plugin %}
+{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves one JSON file for a single DBT segment (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 
@@ -109,9 +117,11 @@ The output acknowledges queued configuration, not completed computation. A sampl
 {% endcapture %}
 
 {% capture create_connect %}
-Creates a live DBT segment with a POST request. Salesforce queues the work, so the segment starts in `PROCESSING`.
+### Native API68 create
 
-Save `segment-create.json`, using your own unified DMO, key and model name:
+Creates a live DBT segment with one POST. Salesforce queues the work, so the segment starts in `PROCESSING`. Check first that the native read answers `ITEM_NOT_FOUND` for the name.
+
+Save `segment-create.json`, using your own unified DMO, key and model name. This is the body the plugin sends; the schedule is always `NoRefresh`:
 
 ```json
 {
@@ -130,10 +140,11 @@ Save `segment-create.json`, using your own unified DMO, key and model name:
 ```
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments' --method POST --body '@segment-create.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/segments' --method POST --body '@segment-create.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/segments/ActiveCustomers' --target-org TARGET_ALIAS
 ```
 
-The response looks like this:
+The POST answers HTTP 201. The response looks like this:
 
 ```json
 { "apiName": "ActiveCustomers", "segmentType": "DBT", "segmentStatus": "PROCESSING", "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D", "includeDbt": { "models": [{ "name": "ActiveCustomers", "sql": "SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0" }] } }
@@ -141,7 +152,12 @@ The response looks like this:
 
 The request nests the models as `includeDbt.models.models`. The response returns `includeDbt.models` as an array. Do not send the response back as input. `P90D` is the lookback this example returned, not a required value.
 
-Check the segment with a read after the create. Wait for processing to settle before you change it.
+The response does not prove the result. Read the segment by name: the full read must show your definition, the runtime IDs and the generated `segmentMembershipDmo`. It can show `PROCESSING`, then `COUNTING`, then `ACTIVE`. `PROCESSING` or `COUNTING` with the full definition means the configuration is accepted, not that the audience is computed. The plugin reads up to 12 times, one second apart, within 120 seconds. Wait for `ACTIVE` before you change the segment.
+
+**Known failures:**
+
+- A name that already exists answers HTTP 409 with `ENTITY_SAVE_ERROR` ("That developer name's already taken"). The existing segment is not changed. Do not switch to PATCH or send the POST again; read the existing segment.
+- If the outcome is unclear, do not send the POST again. Read the segment first.
 {% endcapture %}
 
 {% capture create_cli %}
@@ -173,7 +189,7 @@ Sample of the deploy result with the optional JSON output:
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": true, "changed": true, "success": true }] } } }
 ```
 {% endcapture %}
-{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from saved JSON, then reads it back (see Evidence)." plugin_body=create_plugin %}
+{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from saved JSON, then reads it back (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -191,9 +207,11 @@ A sample of the output is not in this guide yet.
 {% endcapture %}
 
 {% capture update_connect %}
-Changes the label and description with one PATCH request. Send the full definition, not only the changed fields.
+### Native API68 update
 
-Save `segment-update.json`. The schedule fields are left out on purpose, so the existing schedule stays:
+Changes the label and description with one PATCH request. Send the full definition, not only the changed fields. Patch only an `ACTIVE` segment.
+
+Save `segment-update.json`. This is the body the plugin sends. The schedule and lookback fields are left out on purpose, so the existing values stay:
 
 ```json
 {
@@ -210,18 +228,19 @@ Save `segment-update.json`. The schedule fields are left out on purpose, so the 
 ```
 
 ```sh
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method PATCH --body '@segment-update.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/segments/ActiveCustomers' --method PATCH --body '@segment-update.json' --target-org TARGET_ALIAS
+sf api request rest '/services/data/v68.0/ssot/segments/ActiveCustomers' --target-org TARGET_ALIAS
 ```
 
-The response shows the segment while it processes:
+The PATCH answers HTTP 200 and shows the segment while it processes:
 
 ```json
 { "apiName": "ActiveCustomers", "segmentStatus": "PROCESSING", "publishInterval": "NO_REFRESH", "lookbackPeriod": "P90D" }
 ```
 
-Read the segment again until it is `ACTIVE`. Then compare the new label and description with the values you sent. Check that the other values did not change. Do not send an unclear update again. Read the segment first.
+The PATCH response leaves out `segmentOnApiName` and `segmentMembershipDmo`. Check those with the full read, not the response. Read the segment again: it can pass through `COUNTING` before `ACTIVE`. Compare the new label and description with the values you sent, and check that the other values and runtime IDs did not change. Do not send an unclear update again. Read the segment first.
 
-Only the label and description were tested with this request. A predicate change has its own narrow scope (see Evidence).
+The plugin sends this PATCH for a label or description change, or for the predicate change described in Evidence. A description-only PATCH was tested on API 68. The label and predicate changes were tested with the same body on API 65.
 {% endcapture %}
 
 {% capture update_cli %}
@@ -238,7 +257,7 @@ The deploy reports the label change. An identical repeat can report `Unchanged`.
 
 A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Changes the label and description with one full-definition PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Changes the description in the saved file and deploys it (see Evidence)." plugin_body=update_plugin %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Changes the description in the saved file and deploys it (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -254,27 +273,33 @@ The segment's identity and configuration must match the saved file. Local files 
 {% endcapture %}
 
 {% capture delete_connect %}
+### Native API68 delete
+
 Deletes the live segment with a DELETE request, then checks that it is gone. Delete only segments you own.
 
-Save `segment-delete.json`:
+The plugin sends a DELETE without a body. The Salesforce CLI needs a body entry for DELETE, so save `segment-delete.json` with an explicit empty raw body:
 
 ```json
-{ "url": "/services/data/v65.0/ssot/segments/ActiveCustomers", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
+{ "url": "/services/data/v68.0/ssot/segments/ActiveCustomers", "method": "DELETE", "body": { "mode": "raw", "raw": "" } }
 ```
 
 ```sh
 sf api request rest --file segment-delete.json --target-org TARGET_ALIAS --include
-sf api request rest '/services/data/v65.0/ssot/segments/ActiveCustomers' --method GET --target-org TARGET_ALIAS --include
+sf api request rest '/services/data/v68.0/ssot/segments/ActiveCustomers' --target-org TARGET_ALIAS --include
 sf org list metadata --metadata-type MarketSegmentDefinition --target-org TARGET_ALIAS --api-version 65.0
 ```
 
-The DELETE returns no body when it succeeds. Confirm with the GET that the segment is not found, and with the list command that its definition is gone. A check result for the GET looks like this:
+The DELETE answers HTTP 204 without a body. That alone does not prove absence. Confirm with the GET that the segment answers HTTP 404, and with the list command that its definition is gone:
 
 ```json
-[{ "errorCode": "ITEM_NOT_FOUND", "message": "<segment not found>" }]
+[{ "errorCode": "ITEM_NOT_FOUND", "message": "Segment not found: ActiveCustomers" }]
 ```
 
-Do not delete shared unified DMOs or membership tables as extra cleanup. Local files stay on your computer.
+If the GET still returns the segment, read it again; do not send another DELETE. Do not delete shared unified DMOs or membership tables as extra cleanup. Local files stay on your computer.
+
+**Known failures:**
+
+- A DELETE without a body can fail in the CLI with a missing `mode` error. Use the whole-request file shown above.
 {% endcapture %}
 
 {% capture delete_cli %}
@@ -302,7 +327,7 @@ Check that the deletion completed, and that `CustomerDefinition` is absent from 
 
 A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Needs a deletion manifest that your integration supplies." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Deletes the owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment after a preview and confirmation (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Needs a deletion manifest that your integration supplies." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment after a preview and confirmation (see Evidence)." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -312,7 +337,7 @@ The first command had already stopped with an unknown outcome: later API settlem
 
 `--include` prints HTTP status and headers alongside the server body. DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404` / `ITEM_NOT_FOUND` and the exact metadata member is absent.
 
-**Verification scope:** Live-org reads and the bounded operations described above were tested. This badge does not verify untested writes or general CRUD support. API 65 Metadata and native workflows in the chapters remain separate evidence from the API 68 plugin workflow.
+**Verification scope:** Live-org reads and the bounded operations described above were tested. This badge does not verify untested writes or general CRUD support. API 65 Metadata (XML) workflows in the CLI tabs remain separate evidence from the native API 68 Connect and plugin workflows.
 
 **Live receipts:** Live results come from installed receipts. They bind distinct worktree tarballs. They do not cover the final offline guard refinement or a released package.
 
@@ -340,9 +365,9 @@ The object and field above are placeholders. Use the existing selected object an
 
 After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact desired SQL. A separate standard Metadata retrieval confirmed that same SQL in the definition. The label, owner identities, generated membership references, `NO_REFRESH`, `P90D` and the PROFILE primary-field binding were preserved. This is not audience membership or successful computation. It does not qualify the reverse change, another predicate or field, simultaneous SQL and label changes, arbitrary SQL, UI criteria, CREATE or cross-org replay. A separate source-only existing-owner check kept the same runtime and metadata identity pair. An unchanged comparison repeat kept that pair and the full configuration. Read and compare the current definition before you write. This result does not prove that an identical PATCH is mutation-free.
 
-**Route-specific SQL limits:** Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) documents WHERE-only single-column subqueries and an optional key-qualifier join condition. The separately discovered MCP segment-create description disallows subqueries and compound join conditions. The discovery contract's API version was not supplied. Do not transfer these rules between the native API 65 examples, the org-local API 67 route and hosted MCP. Treat neither description as qualification of broader SQL edits.
+**Route-specific SQL limits:** Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) documents WHERE-only single-column subqueries and an optional key-qualifier join condition. The separately discovered MCP segment-create description disallows subqueries and compound join conditions. The discovery contract's API version was not supplied. Do not transfer these rules between the native examples on this page, the org-local API 67 MCP route and hosted MCP. Treat neither description as qualification of broader SQL edits.
 
-**API 65 runtime route:** The API 65 runtime route creates a live segment. Unlike saving XML alone, it can begin processing immediately. `NoRefresh` can move a segment from `PROCESSING` to `ACTIVE`. Empty-result SQL does not prevent scanning or processing. The XML writes cover source-only API 65 DBT Metadata definition CRUD. Retrieving UI criteria does not establish writes to UI definitions. Saving XML alone need not create a usable live segment.
+**Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML writes cover source-only API 65 DBT Metadata definition CRUD. Retrieving UI criteria does not establish writes to UI definitions. Saving XML alone need not create a usable live segment.
 
 **CLI scope:** The UI retrieval example in the Read chapter shows the XML shape only; its criteria are omitted. Unchanged is not zero writes: a deployment job still runs and package metadata can change. Require independent inventory absence of `CustomerDefinition` as well, after the deletion.
 

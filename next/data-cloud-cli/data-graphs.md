@@ -26,7 +26,7 @@ This badge does not verify untested writes or general CRUD support.
 
 A **Data Graph** gathers selected fields and related data around a **root** object, the graph's starting object. A **projected** field is one included in the graph's output. A full refresh rebuilds the output. An incremental refresh processes only changes.
 
-A template is a saved configuration. The API examples below manage the runtime graph instead. They are not native graph CRUD endpoints.
+A template is a saved configuration. The API examples below manage the runtime graph instead.
 
 **Example used in every chapter:** the graph `CustomerGraph`, rooted in `UnifiedssotIndividualMkt__dlm`. Creation projects `ssot__Id__c` (the key) and `ssot__FirstName__c`; the update adds `ssot__LastName__c`. Check your root, fields, types and key first. Do not change the underlying object to fit the example. The plugin commands use `ExampleGraph` as the graph name; replace it with yours.
 
@@ -75,31 +75,9 @@ sf api request rest '/services/data/v68.0/ssot/data-graphs/metadata?dataspace=de
 
 Each entry under `dataGraphMetadata` has `developerName`, `status` and the root. Here the status is spelled `Ready`, while the item read says `ready`. Add `&dataGraphEntityName=CustomerGraph` to read one graph. This metadata read is not reliable right after a create or delete; see the Create and Delete chapters.
 
-### API 67 read route
-
-Reads the graph through the API 67 MCP endpoint. Request files stay local, and the response prints to stdout.
-
-The JSON samples here are decoded operation-result excerpts, not raw stdout. The unflagged REST runner prints the server body. Check it for embedded errors.
-
-Save `graph-get.json`, using the actual graph name:
-
-```json
-{ "toolName": "d360_data_graph_get", "paramsJson": "{\"dataGraphName\":\"CustomerGraph\",\"includeCIDetails\":true,\"includeSegmentDetails\":true}" }
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-get.json' --target-org TARGET_ALIAS
-```
-
-```json
-{ "name": "CustomerGraph", "status": "ready", "version": "1" }
-```
-
-This is a read, even though the transport is POST. Check the root, key flags, description and refresh settings, not only `ready`. Keep the generated object and transform names. You need them to check deletion later.
-
 For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route; the API 67 route is separate." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -136,7 +114,35 @@ Creates a graph with one POST. Creation starts processing automatically, so get 
 sf api request rest '/services/data/v68.0/ssot/data-graphs' --method POST --body '@graph-native-create.json' --target-org TARGET_ALIAS
 ```
 
-The tested body was the graph definition as a native read returns it, without the generated names: drop `idDmoName`, `valuesDmoName`, the day-zero and incremental mapping and transform names, each node's `fragmentDMOName`, and the `devName` of every path entry and field. Root, related objects with their joins, field settings and both refresh settings are sent as written. A different root, related objects and any schedule were accepted.
+Save `graph-native-create.json`. It is the graph definition without generated names: no `idDmoName`, `valuesDmoName`, day-zero or incremental mapping and transform names, no node `fragmentDMOName`, and no `devName` on path entries or fields:
+
+```json
+{
+  "name": "CustomerGraph",
+  "label": "Customer Graph",
+  "description": "Customer key and given-name projection",
+  "dataspaceName": "default",
+  "primaryObjectName": "UnifiedssotIndividualMkt__dlm",
+  "type": "NONE",
+  "sourceObject": {
+    "name": "UnifiedssotIndividualMkt__dlm",
+    "devName": "CustomerGraph_UnifiedssotIndividualMkt",
+    "label": "Unified Individual MKT",
+    "jsonPath": "$",
+    "path": [],
+    "type": "standard",
+    "fields": [
+      { "sourceFieldName": "ssot__Id__c", "dataType": "Text", "isKeyColumn": true, "isProjected": true, "usageTag": "NONE" },
+      { "sourceFieldName": "ssot__FirstName__c", "dataType": "Text", "isKeyColumn": false, "isProjected": true, "usageTag": "NONE" }
+    ],
+    "relatedObjects": []
+  },
+  "fullRefreshConfig": { "schedule": { "frequency": 7, "timeGranularity": "Day" } },
+  "incrementalRefreshConfig": { "enabled": false }
+}
+```
+
+Root, related objects with their joins (`path` entries with `fieldName` and `parentFieldName`, and a `jsonPath` such as `$.ssot__ContactPointEmail__dlm`), field settings and both refresh settings are sent as written. A different root, related objects and any schedule were accepted. Salesforce replaces the node `devName` with its own.
 
 The response is an echo with `status: "creating"` and an empty `valuesDmoName`. It does not prove the graph will finish. Read the graph by name until it is `ready`:
 
@@ -149,32 +155,8 @@ The metadata route then reports `Inprogress` for about five minutes. A three-fie
 
 Do not send the POST again while the first one is building. If the outcome is unclear, read the graph by name first.
 
-### API 67 create route
-
-Creates a root-only graph through the API 67 MCP endpoint. It refreshes fully every seven days, and incremental refresh stays off.
-
-Creation starts processing automatically. Get approval for the resource use first.
-
-Save `graph-create.json`:
-
-```json
-{
-  "toolName": "d360_data_graph_create",
-  "paramsJson": "{\"input\":{\"name\":\"CustomerGraph\",\"label\":\"Customer Graph\",\"description\":\"Customer key and given-name projection\",\"creationMode\":\"DEFAULT\",\"dataspaceName\":\"default\",\"primaryObjectName\":\"UnifiedssotIndividualMkt__dlm\",\"type\":\"NONE\",\"fullRefreshConfig\":{\"schedule\":{\"frequency\":7,\"timeGranularity\":\"Day\"}},\"incrementalRefreshConfig\":{\"enabled\":false},\"sourceObject\":{\"name\":\"UnifiedssotIndividualMkt__dlm\",\"devName\":\"UnifiedssotIndividualMkt__dlm\",\"label\":\"Unified Customer\",\"path\":[],\"fields\":[{\"sourceFieldName\":\"ssot__Id__c\",\"dataType\":\"Text\",\"isKeyColumn\":true,\"isProjected\":true},{\"sourceFieldName\":\"ssot__FirstName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true}],\"relatedObjects\":[]}}}"
-}
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-create.json' --target-org TARGET_ALIAS
-```
-
-```json
-{ "name": "CustomerGraph", "status": "creating", "version": "1" }
-```
-
-The automatic work has already started. Do not submit another create or refresh while it is running.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST of any graph shape; the API 67 route is root-only. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
 
 ## Update
 
@@ -218,7 +200,44 @@ Changes the graph with one PUT of the complete definition. Start from a fresh na
 sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --method PUT --body '@graph-native-update.json' --target-org TARGET_ALIAS
 ```
 
-Keep the generated object, mapping and transform names from the read. Only send the PUT when the item read says `ready` and the metadata route says `Ready`.
+Save `graph-native-update.json`. It keeps every generated name from the read (graph objects, mapping, transform, fragment, node and field `devName`) and adds `ssot__LastName__c` without a `devName`. Drop the read-only properties such as `id`, `status`, `version`, `kind`, labels of generated objects, `dependency` and `relatedSegments`:
+
+```json
+{
+  "name": "CustomerGraph",
+  "label": "Customer Graph",
+  "description": "Customer key and given-name projection",
+  "dataspaceName": "default",
+  "primaryObjectName": "UnifiedssotIndividualMkt__dlm",
+  "type": "NONE",
+  "sourceObject": {
+    "name": "UnifiedssotIndividualMkt__dlm",
+    "devName": "CustomerGraph_UnifiedssotIndividualMkt",
+    "label": "Unified Individual MKT",
+    "jsonPath": "$",
+    "path": [],
+    "type": "derived",
+    "fragmentDMOName": "Dg_Mc1S_9pFaj0000001xm1EAA_FRAGMENT__dlm",
+    "referenceDeveloperName": "UnifiedIndividual",
+    "projectedName": "UnifiedssotIndividualMkt__dlm",
+    "recencyCriteria": [],
+    "fields": [
+      { "devName": "CustomerGraph_Unif_akJUWVAN", "sourceFieldName": "ssot__Id__c", "dataType": "Text", "isKeyColumn": true, "isProjected": true, "usageTag": "NONE", "isDGRootKeyField": false, "fieldRoles": [] },
+      { "devName": "CustomerGraph_Unif_yrsrHWum", "sourceFieldName": "ssot__FirstName__c", "dataType": "Text", "isKeyColumn": false, "isProjected": true, "usageTag": "NONE", "isDGRootKeyField": false, "fieldRoles": [] },
+      { "sourceFieldName": "ssot__LastName__c", "dataType": "Text", "isKeyColumn": false, "isProjected": true, "usageTag": "NONE" }
+    ],
+    "relatedObjects": []
+  },
+  "idDmoName": "CustomerGraph_1793202628279_ID__dlm",
+  "valuesDmoName": "CustomerGraph_1793202629475_VALUE__dlm",
+  "dayZeroMappingDevName": "Dg_CustomerGraph_1793202651897",
+  "dayZeroTransformDevName": "Dg_CustomerGraph_1793202651897",
+  "fullRefreshConfig": { "schedule": { "frequency": 7, "timeGranularity": "Day" } },
+  "incrementalRefreshConfig": { "enabled": false }
+}
+```
+
+Use the generated names your read returns; the ones above only show their form. Only send the PUT when the item read says `ready` and the metadata route says `Ready`.
 
 **Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. Fields and related objects left out of the body were kept, not removed. Do not repeat a mutation while the graph settles.
 
@@ -226,46 +245,8 @@ Keep the generated object, mapping and transform names from the read. Only send 
 
 - PATCH is refused with HTTP 405 on the tested routes.
 
-### API 67 update route
-
-Changes the existing graph through the API 67 MCP endpoint. Send the full definition, not only the change.
-
-First check the generated transform. Its last run must be `ACTIVE` / `SUCCESS`, with a completed run date. `ready` alone is not enough, and not every state allows an edit. If the state is unclear, stop. Do not force a refresh to unlock editing.
-
-Use the exact `dayZeroTransformDevName` returned by the owner graph. Do not guess the name. Save `graph-transform-get.json`, replacing `RETURNED_TRANSFORM_NAME`:
-
-```json
-{ "toolName": "d360_transform_get", "paramsJson": "{\"dataTransformNameOrId\":\"RETURNED_TRANSFORM_NAME\"}" }
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-transform-get.json' --target-org TARGET_ALIAS
-```
-
-Check the returned name, default data space and `creationSource: Data Graph` against a fresh graph read.
-
-Save `graph-update.json`. Keep the label and description, and add only the `LastName` field. The `editScheduleOnly` flag stays outside `input`:
-
-```json
-{
-  "toolName": "d360_data_graph_update",
-  "paramsJson": "{\"input\":{\"name\":\"CustomerGraph\",\"label\":\"Customer Graph\",\"description\":\"Customer key and given-name projection\",\"dataspaceName\":\"default\",\"primaryObjectName\":\"UnifiedssotIndividualMkt__dlm\",\"type\":\"NONE\",\"fullRefreshConfig\":{\"schedule\":{\"frequency\":7,\"timeGranularity\":\"Day\"}},\"incrementalRefreshConfig\":{\"enabled\":false},\"sourceObject\":{\"name\":\"UnifiedssotIndividualMkt__dlm\",\"devName\":\"UnifiedssotIndividualMkt__dlm\",\"label\":\"Unified Customer\",\"path\":[],\"fields\":[{\"sourceFieldName\":\"ssot__Id__c\",\"dataType\":\"Text\",\"isKeyColumn\":true,\"isProjected\":true},{\"sourceFieldName\":\"ssot__FirstName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true},{\"sourceFieldName\":\"ssot__LastName__c\",\"dataType\":\"Text\",\"isKeyColumn\":false,\"isProjected\":true}],\"relatedObjects\":[]}},\"editScheduleOnly\":false}"
-}
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-update.json' --target-org TARGET_ALIAS
-```
-
-```json
-{ "name": "CustomerGraph", "status": "processing", "version": "1" }
-```
-
-Read back with `graph-get.json`. The graph can pass through `processing` and `editing_post_sync` before `ready`. Settling takes time. Do not repeat the update while it settles.
-
-The example omits the optional `creationMode`, and the update is still accepted. An identical repeat keeps identities, version and configuration. It does not guarantee zero writes or no processing. Project templates are not refreshed by this update.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 PUT of the full definition; the API 67 route is separate. Both need a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -307,39 +288,13 @@ sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerG
 
 Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
 
-### API 67 delete route
-
-Deletes the graph through the API 67 MCP endpoint, after checking dependencies and ownership. Save `graph-delete.json`:
-
-```json
-{ "toolName": "d360_data_graph_delete", "paramsJson": "{\"dataGraphName\":\"CustomerGraph\"}" }
-```
-
-```sh
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-delete.json' --target-org TARGET_ALIAS
-sf api request rest '/services/data/v67.0/ssot/mcp/execute' --method POST --body '@graph-get.json' --target-org TARGET_ALIAS
-```
-
-```json
-{ "success": true }
-```
-
-Confirm that the exact graph is no longer found. Check the generated object and transform names you saved in the Read chapter, with the same access as before. Unreadable does not prove physical removal. Deleting the graph does not prove that generated objects, mappings or internal state are removed.
-
-The read-back sample is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL; the API 67 route is separate." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
 
 Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Local request files and any retrieved file remain.
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
-
-**Read (API 67 MCP endpoint):**
-
-- A ready, root-only graph in the source org was read. Its root, key flags, description and refresh settings were checked.
-- The generated ID, VALUE and root-fragment objects were read through API 65 at the exact names the graph returned. This shows those objects are readable in the source org. It does not show that processing finished or that the same setup works in another org.
-- Consumer-detail flags do not promise a complete list of external dependencies.
 
 **Read (native API 68 retrieval):**
 
@@ -350,11 +305,9 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 
 **Identity Resolution roots:**
 
-- The logical root was matched to the exact unified Individual object returned by its owning ruleset. The ruleset was read through the API 67 MCP endpoint and the native API, and all twelve output and link objects were verified through API 65 Connect REST and Metadata API reads.
+- The logical root was matched to the exact unified Individual object returned by its owning ruleset, read through the native API.
 - The root's Text field definitions and explicit Id key were checked. Generated names were not guessed, and source-org IDs were not reused.
 - A returned `sourceObject.devName` can name the graph's own node. It is not by itself proof of the owner or root.
-- In a two-org check, the portable API identities matched while the org-local IDs differed. One setup graph in each org reached `ready`, and its transform reported `ACTIVE` / `SUCCESS` with a completed run. The source graph projected Id, FirstName and LastName. The target projected Id and FirstName.
-- This establishes the correlation only. It does not establish a portable graph creation workflow.
 
 **Create:**
 
@@ -365,8 +318,6 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - Live creates covered a standard `ssot__Individual__dlm` root with a related object and a 7-day schedule, and a unified root owned by a published Identity Resolution ruleset.
 - No native Git selection, mixed families, dependency expansion or cascade is admitted.
 - Live API 68 create, read and delete qualification and the offline installed-package routing smoke are separate results. Neither is live installed cross-org qualification.
-- The API 67 create is root-only and starts processing automatically. It has no processing-free or cross-org guarantee.
-- The create input uses `creationMode: DEFAULT`.
 
 **Update (native API 68):**
 
@@ -376,20 +327,6 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - The raw PUT observation settled about two minutes after acceptance. Processing can take seconds to many minutes, depending on graph complexity, data and load. The fixed waits are not completion guarantees.
 - Before the PUT, reads confirmed `Status: READY`, `LastRunStatus: ACTIVE` and metadata status `Ready`. Item `ready` alone was not enough.
 - PATCH on both tested routes returned HTTP 405. PUT on the object item route was not part of the qualified workflow.
-
-**Update (API 67 MCP endpoint):**
-
-- The generated transform moved through `PENDING` and `IN_PROGRESS` before `status: ACTIVE`, `lastRunStatus: SUCCESS` and a completed `lastRunDate`.
-- In a source-only test, adding LastName while keeping label and description unchanged settled at `ready`, version `"1"`, about 30 minutes after the single update. The transform reported a new successful run before the graph finished settling.
-- A complete root-only update that omitted `creationMode` also succeeded. Fresh reads reached `ready`, version `"1"`, with a new completed owner-transform run reporting `ACTIVE` / `SUCCESS`. The create-to-final-read observation took about nine minutes.
-- GET omitted `creationMode`. Complete comparison retained the existing field properties, root and node bindings, generated bindings and refresh settings, with only LastName appended.
-- This does not establish preservation of an unreadable creation mode for arbitrary graphs or other update variants.
-- The generated `sourceObject.devName` is an owner-node binding. Do not copy it as the logical root name into a new request.
-- Two-org target update: the existing target Identity Resolution ruleset was unchanged and not updated. After five settlement polls, the graph was `ready`, and its owner-returned transform kept its identity with `ACTIVE` / `SUCCESS` and a later completed run. All twelve output and link objects and the root schema and key were confirmed unchanged. Source-org IDs were not used for target-local identities.
-- A repeat of the same desired configuration found both resources unchanged. It sent zero write requests and no explicit processing jobs. This is a comparison-before-write result. Replaying the raw `graph-update.json` request is not proven write-free or processing-free.
-- Automatic processing from the one substantive update was observed. No explicit refresh or run was needed.
-- This does not establish portable Identity Resolution or Graph creation, missing-prerequisite provisioning, arbitrary roots or edits, or a complete cross-org lifecycle.
-- The plugin no longer uses the API 67 route. The default `auto` selects API 68.0.
 
 **Update (native API 68, any shape):**
 

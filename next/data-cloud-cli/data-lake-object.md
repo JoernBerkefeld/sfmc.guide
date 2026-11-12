@@ -278,10 +278,6 @@ sf api request rest /services/data/v68.0/ssot/data-lake-objects/CustomerSource__
 ```
 
 A sample response is not in this guide yet.
-
-**Known failures:**
-
-- At API version 60.0 the request returns "not found", even for an object that exists.
 {% endcapture %}
 
 {% capture read_plugin %}
@@ -335,7 +331,39 @@ The result reports `outcome: "created"` and `mutation: "confirmed-created"`. Run
 The saved file format is shown in the Read chapter.
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-create" label="Create" split_api=true cli_state="blocked" cli_reason="A standard Metadata deploy of the retrieved test schema failed at API 65 to 68 (see Evidence)." metadata_state="blocked" metadata_reason="This is the same Metadata API deploy as the CLI tab, which failed (see Evidence)." connect_state="unknown" connect_reason="One manual create at API 68 worked, but it is not a reusable workflow yet (see Evidence)." plugin_state="available" plugin_reason="Tested at API 68 on a new name in one org (see Evidence)." plugin_body=create_plugin %}
+{% capture create_connect %}
+Creates a standalone DLO with no stream. Use it only for a name that does not exist yet: read the name first (Read chapter) and continue only on a not-found answer.
+
+Save this as `dlo-create.json`:
+
+```json
+{
+  "name": "CustomerSource",
+  "label": "CustomerSource",
+  "category": "Other",
+  "dataspaceInfo": [{ "name": "default" }],
+  "dataLakeFieldInputRepresentations": [
+    { "name": "Id", "label": "Id", "dataType": "Text", "isPrimaryKey": true },
+    { "name": "Note", "label": "Note", "dataType": "Text", "isPrimaryKey": false }
+  ]
+}
+```
+
+Names go without their suffixes: `CustomerSource` becomes `CustomerSource__dll`, and `Id` becomes `Id__c`. Mark exactly one field as the primary key. Do not list the fields Salesforce generates (Read chapter). Keep the label at 40 characters or fewer. An Engagement DLO also needs `eventDateTimeFieldName`, the name of one listed DateTime field without `__c`.
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/data-lake-objects' --method POST --body '@dlo-create.json' --header 'Content-Type:application/json' --target-org TARGET_ALIAS
+```
+
+Success is HTTP 201 with status `PROCESSING`. Read the object by name until it shows `ACTIVE`. It then lists seven fields: `Id__c` as the primary key, `Note__c`, and the generated `KQ_Id__c`, `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`.
+
+**Known failures:**
+
+- A label longer than 40 characters returns HTTP 400.
+- For a DLO that a stream feeds, create the stream instead. It creates its landing DLO; see [Data Streams](/next/data-cloud-cli/data-stream-definition/#create).
+{% endcapture %}
+
+{% include operation-tabs.html id="dlo-create" label="Create" split_api=true cli_state="blocked" cli_reason="A standard Metadata deploy of the retrieved test schema failed at API 65 to 68 (see Evidence)." metadata_state="blocked" metadata_reason="This is the same Metadata API deploy as the CLI tab, which failed (see Evidence)." connect_state="available" connect_reason="Tested at API 68 on new names, directly and through the plugin (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Tested at API 68 on a new name in one org (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -406,7 +434,7 @@ The DELETE reply alone does not prove deletion. Run a GET afterwards. When the o
 **Known failures:**
 
 - Sending an empty body on the command line fails locally with `No mode found in body entry`. Use the request file above.
-- A DLO that a stream owns can stay in `DELETING`. See Evidence.
+- This DELETE was tested only on standalone DLOs. For a DLO that a stream feeds, delete the stream with its DLO; see [Data Streams](/next/data-cloud-cli/data-stream-definition/#delete).
 {% endcapture %}
 
 {% capture delete_plugin %}
@@ -430,12 +458,7 @@ The result reports `outcome: "deleted"` and `mutation: "confirmed-deleted"`. Add
 
 The plugin still delegates authenticated requests to `sf api request rest`, so standard Salesforce CLI authentication remains in use. Its benefit beyond a redundant command wrapper is a manifest-free workflow with canonical `data360/dlo/<FullApiName>__dll.dlo-meta.json`, portable JSON without the source record ID, separate save/create/update field policies, and target-name lookup selecting PATCH for an existing target or POST only after confirmed absence. This avoids handcrafting each API request or blindly replaying generated response fields. Plugin command acceptance is distinct from the separate API experiments below.
 
-**Native API minimum and plugin qualification:** The separately completed native CRUD matrix establishes **API 61 as the minimum
-live-tested successful version**: API 60 returned `404` for all four CRUD operations;
-API 61–68 completed their bounded standalone lifecycles. The reference's documented
-API 60 availability and the observed API 61 minimum are different claims. Versions
-below API 60 were not tested. The plugin currently admits **API 68/default only**;
-manual matrix success does not broaden its implementation guard.
+**Plugin version:** The plugin admits **API 68/default only**.
 
 **Direct creation for a transform output:** Direct DLO creation has a demonstrated use as a **precreated transform output**,
 without a DataStream for that output. A native API68 `CUSTOM` / `BATCH` transform
@@ -495,9 +518,8 @@ The two-field example below applies the current save policy to the historical pu
 
 **Accepted requests and asynchronous completion:** A successful request is not necessarily a completed operation. The retained native
 DLO experiments observed POST HTTP `201` with `PROCESSING`, then independent GET
-`ACTIVE`; PATCH HTTP `200` with `PROCESSING`, then GET `ACTIVE` (API 67 needed two
-reads); and DELETE HTTP `204`, followed by a brief GET HTTP `200` with `DELETING`
-before exact-name GET returned `404` (notably APIs 64 and 67). These are short
+`ACTIVE`; PATCH HTTP `200` with `PROCESSING`, then GET `ACTIVE`; and DELETE HTTP `204`, followed by a brief GET HTTP `200` with `DELETING`
+before exact-name GET returned `404`. These are short
 asynchronous transitions, not failed writes to repeat automatically.
 
 After a write, use bounded, independent read-only polling for the exact identity:
@@ -520,7 +542,7 @@ response contract for the other's.
 
 The response identifies the object as `type: CustomObject` and `fullName: McpMappingProbe_20261027__dll` and lists its field files separately. Keep all retrieved attributes, including primary-index and key-qualifier settings. This is definition retrieval, not connector credentials, the whole ingestion setup, row data or runtime processing. It establishes neither cross-org deployability nor CREATE, UPDATE, DELETE or wrapper support.
 
-**Separate wrapper readback:** the public `sf-plugin-data` source CLI entry point retrieved this same fixture with requested API `68.0`, selector `dlo:McpMappingProbe_20261027__dll` and an isolated output directory. It exited `0`, reported `success` / `retrieved`, and had empty diagnostic errors, warnings and stderr. Its nine XML files used the same standard decomposed paths and were byte-for-byte identical to the standard API 68 snapshot: zero missing, extra or different files. This is definition-only retrieval, not portable deployment, ID resolution, row export or operational ingestion. Numeric API 65–68 pass-through is implemented and covered by implementation tests, but **only API 68 was live-verified for this wrapper**. The earlier API 65 wrapper refusal predates that implementation change; it is historical, not the current result. This separate observation does not enable the guide's plugin tab or change any CREATE qualification.
+**Separate wrapper readback:** the public `sf-plugin-data` source CLI entry point retrieved this same fixture with requested API `68.0`, selector `dlo:McpMappingProbe_20261027__dll` and an isolated output directory. It exited `0`, reported `success` / `retrieved`, and had empty diagnostic errors, warnings and stderr. Its nine XML files used the same standard decomposed paths and were byte-for-byte identical to the standard API 68 snapshot: zero missing, extra or different files. This is definition-only retrieval, not portable deployment, ID resolution, row export or operational ingestion. Numeric API 65–68 pass-through is implemented and covered by implementation tests, but **only API 68 was live-verified for this wrapper**. This separate observation does not enable the guide's plugin tab or change any CREATE qualification.
 
 **Standard Metadata CREATE comparison: requested API 65–68:** **The unchanged retrieved test schema failed standard creation at all four requested versions.** Four sequential standard `sf project deploy start` attempts used four distinct synthetic names, each independently confirmed absent in the test target org before deployment. These were genuine CREATE attempts, not updates: only the object directory and `.object-meta.xml` filename were renamed from the retrieved fixture; all nine XML file contents remained byte-for-byte identical to the samples in the Read chapter. The existing `McpMappingProbe_20261027__dll` was not deployed or changed.
 
@@ -565,7 +587,7 @@ This failed at `KQ_Id__c` with signature `(2099634494)`, `success: false` and ro
 
 The retained target definition's `isEnabled=false` is an observation, **not an invalidity criterion**. The earlier idea that a stream is required to enable a DLO was a hypothesis, not a result. The standalone native API experiment below returned `isEnabled=true` without provisioning a stream, connector or Data Kit, so it does **not support a universal stream requirement for enabling**. Metadata definition/field persistence and operational ingestion readiness remain different questions. No general CREATE/UPDATE rating or portable recipe is promoted by these experiments.
 
-**Native standalone DLO creation: verified API 68 experiment:** A direct Connect REST `POST /services/data/v68.0/ssot/data-lake-objects` in the source org created a fresh standalone DLO in the independently verified active `default` dataspace. This is a distinct native route from Metadata XML deployment and from connection → schema → stream creation below. **Only API 68 was tested for this request**, not API 65–67 or cross-org replay.
+**Native standalone DLO creation: verified API 68 experiment:** A direct Connect REST `POST /services/data/v68.0/ssot/data-lake-objects` in the source org created a fresh standalone DLO in the independently verified active `default` dataspace. This is a distinct native route from Metadata XML deployment and from stream creation. **Only API 68 was tested for this request**, not API 65–67 or cross-org replay.
 
 Send the following JSON body through your authenticated REST client to that endpoint. Replace `StandaloneKeyProbe` with a fresh name independently confirmed absent; the name here is sanitized, while the other values reproduce the corrected request. This is a real write, not a preview. Keep the object label at **40 characters or fewer**.
 
@@ -586,21 +608,11 @@ The initial request returned HTTP `400` because its object label exceeded the 40
 
 Standard API 68 Metadata retrieval then succeeded and saved **one object plus seven field files**. The submitted `Id` and `Note` persisted as `Id__c` and `Note__c`; `Id__c` had `primaryIndexOrder=1`. Salesforce generated `KQ_Id__c`, `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`. The qualifier's retrieved XML had `definitionCreationType=System` and `usageTag=KEY_QUALIFIER`. These five generated fields belong in the retrieve inventory; **they were not supplied in the create payload**. Do not replay the seven-field readback as though it were this two-field request.
 
-The object read back with `isEnabled=true`; Connect category `Other` corresponded to Metadata `Salesforce_SFDCReferenceModel_0_93.Related`. **No stream, connector or Data Kit was created by this experiment.** The result establishes this bounded standalone creation, key designation, generated fields and settled readback, not row ingestion, processing of source data, duplicate-create safety, a complete operational ingestion chain or general CRUD portability. The Metadata deployment failures above remain valid results for their different inputs and routes. The general CREATE rating and disabled API tab remain unchanged pending a qualified reusable workflow.
+The object read back with `isEnabled=true`; Connect category `Other` corresponded to Metadata `Salesforce_SFDCReferenceModel_0_93.Related`. **No stream, connector or Data Kit was created by this experiment.** The result establishes this bounded standalone creation, key designation, generated fields and settled readback, not row ingestion, processing of source data, duplicate-create safety, a complete operational ingestion chain or general CRUD portability. The Metadata deployment failures above remain valid results for their different inputs and routes. The plugin sends the same request shape, and its create was accepted at API 68 in two orgs (see Public-command acceptance and Cross-org acceptance); the API tab shows that request.
 
 `MktDataLakeObject` is a Data360 concept, not evidence of MCN-only scope; the official AnalyticsWorkspace reference also names it. A file-based deployment warning about named setup metadata types does not by itself settle the separately observed `CustomObject`/`CustomField` behavior. Data Kit packaging is a separate concern, not a condition used to reject these experiments.
 
-**Distinct API ingestion-chain observation:** We did create a new, owned Ingestion API connection without external credentials, add a one-event schema with two Text fields, and create its stream and DLO. This used the **API 67 `/ssot/mcp/execute` facade through vanilla `sf api request rest`**, with operations `d360_connection_create_ingestion_api`, `d360_connection_schema_put_ingestion_api` and `d360_datastream_create_ingestion_api`, not native CLI DLO commands or native CRUD parity.
-
-Separate connection, schema, stream and DLO reads confirmed `CONNECTED`, then stream/DLO `ACTIVE`. The tested configuration was one event, category `Other`, default dataspace, a Text primary key and `UPSERT`. Salesforce generated the returned stream/DLO names rather than using the proposed names literally. Use those returned identities. Persisted DLO fields had `__c` suffixes while embedded stream mappings used unsuffixed fields; the embedded definition ID was not the persisted DLO ID.
-
-The DLO had six fields: the two source fields and four generated key-qualifier/system fields. The custom key-qualifier designation list was empty, so this does not establish preservation of nonempty custom qualifiers. Initial processing happened automatically, with zero records and no explicit ingestion or refresh request. This is a narrow source-only result, not a portable recipe for every connector or category.
-
-**Documented ingestion creation contract:** The October 29 contract discovery documents a specialized connection → complete event schema → ingestion stream route. Its stream operation requires `connectionName`, `event` and `streamName`; for a new DLO, the description additionally requires `category`, `dloName`, `dloLabel` and the primary key's field name, label and data type. Select the primary key explicitly from the existing event schema; do not infer it from field order or an Id-like name. New-DLO inputs and `existingDloName` are alternatives, not inputs to combine. Read the complete connection schema before a schema PUT and preserve every existing object and field.
-
-This is a **documented contract, not a qualified safe public CREATE workflow**. Discovery did not establish duplicate-create safety, complete absence checks, cross-org identity correlation or processing completion guarantees. The discovery provider and underlying API versions were not supplied; the API 67 facade used in the earlier observation does not version these contracts. Direct `d360_dlo_create` discovery does not establish an equivalent source-backed connection/schema/stream setup, and generic stream payloads are not interchangeable with the specialized ingestion inputs. No native HTTP CREATE payload is inferred here. Separately, the [native stream reference discussion](/next/data-cloud-cli/data-stream-definition/#documented-native-stream-api-availability) identifies documented POST availability since 60.0 in the API 67 reference, its required top-level inputs and `INGEST_API` type. Native new-DLO and existing-DLO inputs are alternatives; for ingestion, `dataLakeFieldInputRepresentations` contains **only the primary key field**. That rule is not an instruction to truncate the complete connection schema. The extracted reference's S3-only `200`/`PROCESSING` example and unresolved nested ingestion input shapes do not qualify native ingestion creation, event binding or settled success. Duplicate/nonoverwrite safety, authoritative absence and restart-safe settlement remain unknown.
-
-Salesforce's [Ingestion API stream setup guide](https://developer.salesforce.com/docs/data/data-cloud-int/guide/c360-a-create-ingestion-data-stream.md) separately describes selecting an existing connector and uploaded schema, choosing a primary key/category and configuring refresh mode. That UI guidance does not qualify a CLI/API creation recipe. The unknown CREATE rating therefore remains unchanged.
+**Stream-owned DLO creation:** A Data Stream creates its own landing DLO. The native API 68 stream create, on an existing Ingestion API connection, is in [Data Streams](/next/data-cloud-cli/data-stream-definition/#create). Salesforce names that stream and its DLO after the connection and event and ignores the proposed names. Creating the connection or its event schema is not covered here.
 
 **Standalone native API read: verified API 68:** The [Connect REST reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) documents GET, PATCH and DELETE at `/ssot/data-lake-objects/{recordIdOrDeveloperName}` as available since API 60.0. **Live GET/PATCH/DELETE evidence here is API 68 only**, not API 65–67. These are API requests through standard `sf api request rest`, which handles authentication for `SOURCE_ALIAS`; they are not dedicated native CLI DLO commands or plugin support.
 
@@ -643,21 +655,13 @@ refused with nothing written.
 
 No schema removal or ingestion is qualified.
 
-**Stream-owned DLO updates:** We tried adding a Text field directly with `d360_dlo_update`. It failed because this DLO belonged to a stream: Salesforce required field addition through the Data Stream API. The facade returned HTTP `201` and CLI exit `0` with a nested error; an independent read confirmed the original six fields were unchanged.
+**Stream-owned DLO updates:** To add a field to a DLO that a stream feeds, update the stream, not the DLO: the native API 68 stream PATCH in [Data Streams](/next/data-cloud-cli/data-stream-definition/#update) maps an existing source field to a new DLO field. Adding a field to the source event schema is not covered here.
 
-The successful route was to read the complete owned connection schema, retain both original source fields and add one Text field with `d360_connection_schema_put_ingestion_api`, then invoke `d360_datastream_patch_ingestion_api` with the exact returned stream identity and `syncSchema: true`. These are the same API 67 facade operations called through vanilla `sf api request rest`, not Metadata API updates. The stream entered `PROCESSING`, and separate stream/DLO reads reached `ACTIVE` with seven persisted fields.
-
-The comparison preserved all six original field definitions, including primary-key, generated qualifier and system settings, plus source bindings, original mappings/formulas and refresh configuration. Only the new Text field and its source mapping were added. Custom qualifier lists remained empty. This does not establish arbitrary field removal, type changes, direct DLO updates, nonempty custom qualifier preservation or cross-org replay. Shared connections were not changed.
-
-A separate existing-target check confirmed the same bounded update: exactly one complete connection-schema PUT and one owning-stream schema sync added one Text field. Independent reads reached stream/DLO `ACTIVE` and preserved the full original configuration. Later read-only comparisons confirmed the three source Text fields and all seven persisted fields, including their original key/system settings, mappings and refresh configuration, with no further mutation or processing job. The successful update was **not repeated** to obtain those comparisons.
-
-Persisted DLO reads can also include a last-refresh timestamp and a numeric record count. These are runtime observations, not schema changes or proof of a new ingestion run; in this check the count was zero. Compare the complete configuration separately from those observations and verify `ACTIVE` independently. This remains one existing-target Text-field addition in the source org, not proof of portable creation, completed deletion, populated-data behavior or cross-org deployment.
-
-**Standalone native API update: verified API 68:** The stream-owned restriction above does not describe every DLO. A separate PATCH on the **owned standalone test DLO** returned HTTP `200` after changing its label and adding one non-key Text field. An independent Connect GET confirmed `ACTIVE`, label `CLI API CRUD updated` and **eight fields**, including new `UpdateNote__c` and all seven original fields. Independent standard API 68 Metadata retrieval saved eight field files and confirmed the changed label, retained `Id__c` with `primaryIndexOrder=1` and `isEnabled=true`. PATCH returned a single DLO object; its HTTP `200` was not used instead of independent readback.
+**Standalone native API update: verified API 68:** A PATCH on the **owned standalone test DLO** returned HTTP `200` after changing its label and adding one non-key Text field. An independent Connect GET confirmed `ACTIVE`, label `CLI API CRUD updated` and **eight fields**, including new `UpdateNote__c` and all seven original fields. Independent standard API 68 Metadata retrieval saved eight field files and confirmed the changed label, retained `Id__c` with `primaryIndexOrder=1` and `isEnabled=true`. PATCH returned a single DLO object; its HTTP `200` was not used instead of independent readback.
 
 This verifies only this standalone label change and Text-field addition at **API 68**. **No existing primary-key mutation was tested.** It does not qualify field removal, type changes, populated-data behavior, stream-owned direct updates, cross-org replay or ingestion. The API tab and summary's Update rating apply to this bounded workflow, not unrestricted schema editing.
 
-**Standalone native API delete: verified API 68:** **Destructive: use only an explicitly authorized object.** The test deleted only the fresh standalone test DLO created by the native API experiment, not the original retrieval fixture or any shared connection/stream. Immediately before deletion, org identity and the exact ID/name were rechecked against the original create ownership receipts and a fresh GET. A read-only dependency check returned `dependencies=[]`, `totalSize=0`; this check used the API 67 `d360_dlo_dependencies_list` facade and is not direct API 68 CRUD evidence. Empty dependencies alone are not deletion authorization. Stop if identity, ownership, permission or dependency state is unresolved; no cascade was requested.
+**Standalone native API delete: verified API 68:** **Destructive: use only an explicitly authorized object.** The test deleted only the fresh standalone test DLO created by the native API experiment, not the original retrieval fixture or any shared connection/stream. Immediately before deletion, org identity and the exact ID/name were rechecked against the original create ownership receipts and a fresh GET. A read-only dependency check returned `dependencies=[]`, `totalSize=0`. Run it as `GET /services/data/v68.0/ssot/data-lake-objects/CustomerSource__dll/dependencies`. Empty dependencies alone are not deletion authorization. Stop if identity, ownership, permission or dependency state is unresolved; no cascade was requested.
 
 The corrected request exited `0` and returned HTTP `204`. Independent API 68 GETs by **both ID and exact developer name returned `404`**. A successful API 68 Metadata list had **zero exact-name matches**, and a fresh-directory exact Metadata retrieve explicitly reported the object **cannot be found**. Its top-level retrieve success alone would not establish absence; the missing-object message and failed file entry were inspected. Together these readbacks confirmed completed deletion of this exact owned test object.
 
@@ -673,12 +677,12 @@ Only this standalone definition/provisioning lifecycle was verified at **API 68*
 
 That is a refusal, not a successful delete. Check the actual state after a failure; do not try an assumed instance-delete workaround. This does not mean every possible DLO deletion route is unsupported.
 
-**Stream-owned DLO deletion:** For the new owned ingestion chain, one owning-stream delete with `shouldDeleteDataLakeObject: true` was accepted, but separate stream and DLO reads still showed `DELETING` at the last check. The connection remained `CONNECTED` and its schema in use. This is not completed cleanup or a verified full lifecycle; do not repeat the delete or remove generated objects yourself while it is pending. The result remains **unknown**, not unsupported. This does not independently correlate a settled stream/DLO lifecycle or establish absence. An empty inventory is not a reason to recreate the chain or delete its connection. The earlier owning-stream `DELETING` observation remains unresolved and is not promoted by the standalone delete result above.
+**Stream-owned DLO deletion:** A DLO that a stream feeds is removed with its stream: the native API 68 stream DELETE with `shouldDeleteDataLakeObject=true`, in [Data Streams](/next/data-cloud-cli/data-stream-definition/#delete). The direct DLO DELETE here was tested only on standalone DLOs.
 
 **Cross-org acceptance:** **November 4 installed cross-org acceptance:** an isolated locally packed plugin retrieved a fresh empty standalone Other/default DLO in `mcnext-sdo`, then created it in `mcnext-thuy` from the exact portable file. Org-local IDs differed; independent raw readbacks preserved generated fields and the primary key. A label change plus one nonprimary Text addition persisted. Repeated deploy returned `unchanged` / `not-attempted`; native-client capture recorded GET only, with no POST/PATCH/DELETE. Both exact owned fixtures were deleted after identity and empty-dependency checks, then independently returned 404 by name and ID. Source delete preview preserved its readback; the target campaign call omitted `--preview` and performed the authorized deletion, so this run does not qualify target delete preview. This is API68 standalone definition portability, not ingestion, populated data, mixed-family dependency deployment, lower-version or published-package qualification.
 
 **Portability:** Tested at API 68 from the plugin's source tree against two orgs, on empty, unmapped custom DLOs in the default data space: retrieval, an unchanged deploy into the second org, and deletion. Files retrieved from a source org and from a second org after an unchanged deploy were byte-identical in that run.
 
-**Not verified:** ingestion and populated data; schema removal; nondefault data spaces; plugin workflows below API 68; cascade behavior; live standalone GET, PATCH and DELETE at API 65–67; target delete preview across orgs; installed released packages.
+**Not verified:** ingestion and populated data; schema removal; nondefault data spaces; plugin workflows below API 68; cascade behavior; native API versions other than 68; target delete preview across orgs; installed released packages.
 
 </details>
