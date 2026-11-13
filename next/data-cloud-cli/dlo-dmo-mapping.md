@@ -71,7 +71,29 @@ The file is `data360/mapping/CustomerMapping.mapping-meta.json`. It is a native 
 - A retrieve by type only timed out. Use the exact `mapping:Name` selection.
 {% endcapture %}
 
-{% include operation-tabs.html id="mapping-read" label="Read" cli_state="available" cli_reason="Retrieves the mapping XML using its actual metadata member name." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Reads the mapping over the native Connect REST route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves one mapping by exact name. Inventory retrieval is not supported." plugin_body=read_plugin %}
+{% capture read_metadata %}
+### Metadata API read of the mapping
+
+Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. Nothing in the org changes. Use the metadata member name from `listMetadata`, not a name guessed from the objects.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:readMetadata>
+      <met:type>ObjectSourceTargetMap</met:type>
+      <met:fullNames>CustomerMapping</met:fullNames>
+    </met:readMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The record holds `fullName`, `creationType` and a `fieldSourceTargetMaps` list. Each entry pairs a `sourceField` such as `CustomerSource__dll.Id__c` with a `targetField` such as `Customer__dlm.Id__c`. `listMetadata` with the type `ObjectSourceTargetMap` returns the full names in the org.
+{% endcapture %}
+
+{% include operation-tabs.html id="mapping-read" label="Read" cli_state="available" cli_reason="Retrieves the mapping XML using its actual metadata member name." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata, using the metadata member name." metadata_body=read_metadata connect_state="available" connect_reason="Reads the mapping over the native Connect REST route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves one mapping by exact name. Inventory retrieval is not supported." plugin_body=read_plugin %}
 
 ## Create
 

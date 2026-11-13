@@ -94,7 +94,29 @@ The full entry also holds `includeDbt.models` (name and SQL of each model), the 
 
 The lookback is the time window the segment uses. `P90D` means 90 days. Check the returned value rather than assuming it. Check the segment name, SQL, type, data space, segment-on object, lookback and schedule. This request does not write an XML file. For audience rows, see [Segment members](/next/data-cloud-cli/segment-members/#read).
 {% endcapture %}
-{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves one JSON file for a single DBT segment (see Evidence)." plugin_body=read_plugin %}
+{% capture read_metadata %}
+### Metadata API read of the segment definition
+
+Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. Nothing in the org changes.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:readMetadata>
+      <met:type>MarketSegmentDefinition</met:type>
+      <met:fullNames>ActiveCustomers</met:fullNames>
+    </met:readMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The record holds `fullName`, `masterLabel` and `segmentType`. For a DBT segment, `includeCriteria` holds the DBT pipeline with its SQL as text. `listMetadata` with the type `MarketSegmentDefinition` returns the full names in the org. A definition can exist without a live segment, so check the Connect API tab before you rely on it.
+{% endcapture %}
+
+{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not runtime settings or rows." metadata_body=read_metadata connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves one JSON file for a single DBT segment (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 

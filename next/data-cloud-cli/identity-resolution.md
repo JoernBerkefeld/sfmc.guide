@@ -67,7 +67,7 @@ Excerpt of a published ruleset:
 The full response also holds `id`, `filters`, `trustedSources`, the match rules and one reconciliation entry for each of the six entities. Enum values read in lower case, such as `individual`, `fuzzy` and `lastupdated`. The response is a server view, not the plugin file or a body you can send back. Compare two reads rather than trusting a write response. Wait for `PUBLISHED` and check all twelve output bindings.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-read" label="Read" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
+{% include operation-tabs.html id="ir-read" label="Read" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on IdentityResolution lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
 
 ## Create
 
@@ -84,6 +84,20 @@ Use an unused ruleset suffix of at most four characters, such as `cust`. Use the
 Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`. That flag does not stop publication. Get permission for publication before you run it. A ruleset with `doesRunAutomatically: true` can be created too.
 
 Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. The file name must follow that pattern, or be just `<configurationType>`. The plugin takes the ruleset ID from everything after `<configurationType>_`.
+
+**Return without waiting (`--async`).** By default the deploy waits after the create until Salesforce reports the ruleset `PUBLISHED`, then checks its settings and its generated unified and link DMOs. Add `--async` to return as soon as Salesforce accepts the create:
+
+```sh
+sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing --async
+```
+
+The result is `creation-processing` with mutation `acknowledged-processing`, and the command exits 0. `--async` works for Identity Resolution only; a selection without a ruleset is refused with `INVALID_ASYNC_SCOPE`.
+
+- **How it helps:** the command does not wait for publishing, which usually takes one to four minutes after the write, and you can deploy several rulesets in a row and check them later.
+- **What it does not save:** the checks before the write run either way and take most of the time. In a live test an `--async` create still took about 9.5 minutes.
+- **How it can hurt:** nothing confirms that publishing succeeded, that the settings stuck, or that the generated DMOs exist. Steps that need the published ruleset fail if you run them right away: a Data Graph on the unified DMO needs a `PUBLISHED` owner, and its preview reports `DATA_GRAPH_OWNER_NOT_PUBLISHED`. Deploying the same file again is refused with `IDENTITY_RESOLUTION_NOT_SETTLED` while the ruleset is still publishing. A failed publish looks like a slow one until you run the deploy again.
+
+To check the result, run the same deploy again. `IDENTITY_RESOLUTION_NOT_SETTLED` means it is still publishing; `unchanged` means it settled as written.
 
 **Known failures:**
 
@@ -137,7 +151,7 @@ The body carries the configuration type, the unused `rulesetId` suffix, the data
 Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
+{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and a create through it has not been tested." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
 
 ## Update
 
@@ -204,7 +218,7 @@ The body leaves out the identity settings (`configurationType`, `rulesetId`, `da
 - An update sent while the ruleset is `PUBLISHING` can fail inside an otherwise successful response: the HTTP status and CLI exit code report success, but the change is not applied. This was seen on the API 67 route and not tried on API 68. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -248,7 +262,7 @@ Replace both placeholders with the owner's ID and API name. A successful DELETE 
 A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -278,6 +292,8 @@ The plugin's graph `--preview` does this lookup for you: it reads the rulesets a
 **Two-org qualification.** Retained owned `PUBLISHED` rulesets and all twelve output and link DMOs were correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had compatible Id, FirstName and LastName Text fields and an explicit Id key. This establishes owner, output and schema compatibility. It does not establish cross-org ruleset creation or migration, a successful IR data run, or permission to reuse source IDs. Resolve the owner and its outputs in each org.
 
 **Example scope.** This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work. `--include` prints HTTP status and headers separately from the server body. Salesforce may add reconciliation entities beyond the ones you send. Keep the returned identity and generated output references for later checks.
+
+**Metadata API (read-only, API 68.0):** `IdentityResolution` is not listed by `describeMetadata`, yet `listMetadata` on `IdentityResolution` returned the names of all seven rulesets in the org. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no ruleset settings to read or redeploy; use the native API 68 Connect routes or the plugin. Metadata API create, update and delete were not tried.
 
 **Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, exhaustive external-consumer exclusion, an update that empties filters or trusted sources, and configuration types other than `Individual`.
 

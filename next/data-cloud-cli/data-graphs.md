@@ -77,7 +77,7 @@ Each entry under `dataGraphMetadata` has `developerName`, `status` and the root.
 
 For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="graphs-read" label="Read" cli_state="unknown" cli_reason="No standard CLI workflow for reading runtime graphs is supplied." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on DataGraph lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -156,7 +156,7 @@ The metadata route then reports `Inprogress` for about five minutes. A three-fie
 Do not send the POST again while the first one is building. If the outcome is unclear, read the graph by name first.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="No standard CLI workflow for creating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no graph definition to deploy, and a create through it has not been tested." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
 
 ## Update
 
@@ -246,7 +246,7 @@ Use the generated names your read returns; the ones above only show their form. 
 - PATCH is refused with HTTP 405 on the tested routes.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="No standard CLI workflow for updating runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no graph definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -289,7 +289,7 @@ sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerG
 Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI workflow for deleting runtime graphs is supplied." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
 
 Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Local request files and any retrieved file remain.
 
@@ -344,6 +344,8 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - Generated mapping, transform and internal-state removal, successful computation, physical storage and credits cleanup are not proven.
 - Installed-package smoke verifies offline command routing, not live installed cross-org qualification.
 - An uncertain mutation must not be replayed.
+
+**Metadata API (read-only, API 68.0):** `DataGraph` is not listed by `describeMetadata`, yet `listMetadata` on `DataGraph` returned the names of all six graphs in the org. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no graph definition to read or redeploy; use the native API 68 Connect routes or the plugin. Metadata API create, update and delete were not tried.
 
 **Not verified:** nested graphs; exhaustive external consumers; removal of generated objects, mappings, transforms or internal state; physical storage and credits; successful computation; general cross-org lifecycle; arbitrary edits; portable creation; live installed cross-org qualification.
 

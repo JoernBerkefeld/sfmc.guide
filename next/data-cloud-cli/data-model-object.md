@@ -259,7 +259,29 @@ Current default/`auto` is API68; explicit numeric versions from `61.0` are kept 
 </details>
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object's XML definition and its fields." cli_body=read_cli metadata_state="unknown" metadata_reason="Reading the object directly through the Metadata API has not been tested." connect_state="available" connect_reason="Tested at API versions 61.0 to 68.0 (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Tested at API version 68.0 (see Evidence)." plugin_body=read_plugin %}
+{% capture read_metadata %}
+### Metadata API read of the object
+
+Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. Nothing in the org changes. Use the exact object name, including `__dlm`.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:readMetadata>
+      <met:type>CustomObject</met:type>
+      <met:fullNames>Customer__dlm</met:fullNames>
+    </met:readMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The record holds `fullName`, `label`, `mktDataModelAttributes` and the `fields` list. Each field carries `mktDataModelFieldAttributes`; the primary key field has `primaryIndexOrder` set. `listMetadata` with the type `CustomObject` did not return any DMO at API 68.0, so you need to know the name first; the Connect API tab lists them.
+{% endcapture %}
+
+{% include operation-tabs.html id="dmo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object's XML definition and its fields." cli_body=read_cli metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata by exact name. listMetadata does not list DMOs." metadata_body=read_metadata connect_state="available" connect_reason="Tested at API versions 61.0 to 68.0 (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Tested at API version 68.0 (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 

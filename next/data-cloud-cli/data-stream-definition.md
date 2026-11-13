@@ -97,7 +97,29 @@ sf api request rest '/services/data/v68.0/ssot/data-lake-objects/CustomerSource_
 A stream with nothing depending on it answers `{ "dependencies": [], "totalSize": 0 }`. The Ingestion API connections are under `/ssot/connections?connectorType=IngestApi`, and a connection's source events under `/ssot/connections/{id}/schema`.
 {% endcapture %}
 
-{% include operation-tabs.html id="stream-definition-read" label="Read" split_api=true cli_state="available" cli_reason="Retrieves the stream XML. It does not start a refresh (see Evidence)." cli_body=read_cli metadata_state="unknown" metadata_reason="Direct Metadata API reads of streams have not been tested." connect_state="available" connect_reason="Native API 68.0 reads of the stream, its connection list and its dependencies." connect_body=read_connect plugin_state="available" plugin_reason="Exact stream name, installed API 68.0 and default data space only (see Evidence)." plugin_body=read_plugin %}
+{% capture read_metadata %}
+### Metadata API read of the stream definition
+
+Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. Nothing in the org changes.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:readMetadata>
+      <met:type>DataStreamDefinition</met:type>
+      <met:fullNames>CustomerStream</met:fullNames>
+    </met:readMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The record holds the same attributes as the retrieved XML file, for example `dataConnector`, `dataConnectorType`, `dataExtractMethods`, `dataSource`, `mktDataLakeObject`, `mktDataTranObject`, `masterLabel` and `creationType`. `listMetadata` with the type `DataStreamDefinition` returns the full names in the org.
+{% endcapture %}
+
+{% include operation-tabs.html id="stream-definition-read" label="Read" split_api=true cli_state="available" cli_reason="Retrieves the stream XML. It does not start a refresh (see Evidence)." cli_body=read_cli metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not the run state." metadata_body=read_metadata connect_state="available" connect_reason="Native API 68.0 reads of the stream, its connection list and its dependencies." connect_body=read_connect plugin_state="available" plugin_reason="Exact stream name, installed API 68.0 and default data space only (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 

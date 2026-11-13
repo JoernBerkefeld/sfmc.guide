@@ -315,7 +315,29 @@ The file holds only the authored fields. Salesforce generated fields are left ou
 </details>
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object and its fields as XML files." cli_body=read_cli metadata_state="unknown" metadata_reason="A direct Metadata API read, apart from the CLI command, has not been tested." connect_state="available" connect_reason="Tested at API 68 on test objects (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Tested at API 68 in one org (see Evidence)." plugin_body=read_plugin %}
+{% capture read_metadata %}
+### Metadata API read of the object
+
+Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. Nothing in the org changes. Use the exact object name, including `__dll`.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:readMetadata>
+      <met:type>CustomObject</met:type>
+      <met:fullNames>CustomerSource__dll</met:fullNames>
+    </met:readMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The record holds `fullName`, `label`, `mktDataLakeAttributes` and the `fields` list. Each field carries `mktDataLakeFieldAttributes`. `listMetadata` with the type `CustomObject` did not return any DLO at API 68.0, so you need to know the name first; the Connect API tab lists them.
+{% endcapture %}
+
+{% include operation-tabs.html id="dlo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object and its fields as XML files." cli_body=read_cli metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata by exact name. listMetadata does not list DLOs." metadata_body=read_metadata connect_state="available" connect_reason="Tested at API 68 on test objects (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Tested at API 68 in one org (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 
