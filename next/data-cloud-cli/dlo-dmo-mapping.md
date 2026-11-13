@@ -15,7 +15,7 @@ crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  delete: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -229,7 +229,40 @@ Mapping updates is restricted: the API results below do not establish CLI or plu
 ## Delete
 
 {% capture delete_cli %}
-No CLI command deletes a mapping in this guide. Not verified.
+Deletes the whole mapping with one destructive deploy. Neither object is deleted. Salesforce does not delete the last mapping of a custom DMO; delete that DMO instead.
+
+Get the mapping's metadata name with `sf org list metadata --metadata-type ObjectSourceTargetMap --target-org SOURCE_ALIAS`. In an empty folder named `destructive`, save a `package.xml` that selects nothing:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <version>68.0</version>
+</Package>
+```
+
+Save `destructiveChanges.xml` beside it, naming only the mapping:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types>
+    <members>CustomerMapping</members>
+    <name>ObjectSourceTargetMap</name>
+  </types>
+  <version>68.0</version>
+</Package>
+```
+
+```sh
+sf project deploy start --metadata-dir destructive --target-org SOURCE_ALIAS --wait 10
+sf org list metadata --metadata-type ObjectSourceTargetMap --target-org SOURCE_ALIAS
+```
+
+The deploy must report success. The list must no longer show `CustomerMapping`. Check that the DMO's other mappings and fields are unchanged.
+
+**Known failures:**
+
+- The last mapping of a custom DMO fails with an internal error. A repeat or a dry run fails the same way.
 {% endcapture %}
 
 {% capture delete_connect %}
@@ -265,7 +298,7 @@ There is no confirmation prompt or extra execution flag. The second command chan
 
 Mapping deletes is restricted: the API results below do not establish CLI or plugin retargeting.
 {: .mapping-shared-restriction }
-{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="unknown" cli_reason="No verified CLI command deletes a mapping." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Partial. Deletes one non-last mapping on bounded empty fixtures." connect_body=delete_connect plugin_state="available" plugin_reason="Partial. Observed on empty objects. The last mapping of a custom DMO is refused." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="mapping-delete" label="Delete" cli_state="available" cli_reason="Partial. One destructive deploy, tested at API 68 on empty objects. The last mapping of a custom DMO fails." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Partial. Deletes one non-last mapping on bounded empty fixtures." connect_body=delete_connect plugin_state="available" plugin_reason="Partial. Observed on empty objects. The last mapping of a custom DMO is refused." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -282,7 +315,7 @@ Mapping deletes is restricted: the API results below do not establish CLI or plu
 
 Retrieve and Create remain Yes within their supplied scopes; Update remains Partial. Plugin Retrieve Yes qualifies exact `mapping:Name` selection only. Type-only and bare inventory reads failed with `NATIVE_INVENTORY_UNCONFIRMED` and zero artifacts. A later mapping type-only acceptance attempt timed out, not passed. Neither inventory mode is acceptance-qualified by the exact retrieval result.
 
-**Current implementation:** the JSON file is desired state for API68 field-pair reconciliation. Omitted authored pairs are individually unmapped first, then additions are sent together in one names-only PATCH. Whole-mapping deletion admits exact API61–68 pins, with default/`auto` selecting API68, and deletes the mapping with one Metadata API destructive deployment for `ObjectSourceTargetMap`. Only the last mapping of a **custom** DMO is refused, **before any write**. Delete is Partial for API and Plugin in the supplied-workflow ratings: the evidence is bounded, not a general-purpose deletion guarantee. Out-of-the-box CLI deletion remains not tested.
+**Current implementation:** the JSON file is desired state for API68 field-pair reconciliation. Omitted authored pairs are individually unmapped first, then additions are sent together in one names-only PATCH. Whole-mapping deletion admits exact API61–68 pins, with default/`auto` selecting API68, and deletes the mapping with one Metadata API destructive deployment for `ObjectSourceTargetMap`. Only the last mapping of a **custom** DMO is refused, **before any write**. Delete is Partial for CLI, API and Plugin in the supplied-workflow ratings: the evidence is bounded, not a general-purpose deletion guarantee.
 
 **Native API evidence:** API68 create/GET, qualified batch additions, ordinary field unmaps and both Text field-pair retarget directions were independently observed. Removing the ordinary pairs one at a time and then deleting the non-last mapping with a native DELETE preserved the bounded fixtures at API61 and API68. API62–67 are not live-tested for deletion. API60 read-route rejection and the documented API61 floor do not prove an API60 DELETE failure: no such DELETE was attempted. A direct non-last native DELETE can remove DMO fields despite HTTP `204`, and a native DELETE of the last mapping of a custom DMO returns HTTP `500`. See [Delete](#delete) for what the plugin does instead. The deferred `totalSize` inventory issue remains a known issue; it was not investigated or requalified in this update.
 
@@ -382,6 +415,10 @@ This establishes a limitation of that tested API68 route in one org, not univers
 **Shared destructive-safety restriction:** Salesforce does not delete the last mapping of a custom target DMO; see [Salesforce Help](https://help.salesforce.com/s/articleView?id=001993463&language=en_US&type=1). A native DELETE of it returns HTTP `500`, and the Metadata API answers with an internal error. Deleting the DMO removes its mapping; do that only with a DMO that is yours to delete. A direct native DELETE of a non-last mapping can return HTTP `204` and still remove DMO fields. Evidence is limited to empty objects and the versions below, not general-purpose deletion.
 
 **Partial coverage:** a native DELETE of a non-last mapping returns HTTP `204`; for the last mapping of a custom DMO it returns HTTP `500`. At API61 and API68, removing the ordinary pairs one at a time and then deleting the non-last mapping preserved bounded empty fixtures; see the [native evidence and limits](#native-unmap-first-evidence-and-limits). This is not a standalone direct-DELETE recipe or general preservation guarantee: a direct non-last DELETE also removed DMO fields in one experiment.
+
+### CLI delete — destructive deploy
+
+At API 68 a standard `sf project deploy start --metadata-dir` with an empty `package.xml` and a `destructiveChanges.xml` naming one `ObjectSourceTargetMap` deleted a non-last mapping of a custom DMO and the only mapping of a standard DMO. Afterwards the mapping read returned `404`, and the other mapping and every DMO field name were unchanged. For the last mapping of a custom DMO the deploy failed with an internal error, on a dry run and on a repeat too. This was observed on empty objects in the default data space only. `sf org list metadata --metadata-type ObjectSourceTargetMap` and an exact-name `sf project retrieve start` were rechecked read-only at API 68 with CLI 2.151.7.
 
 ### Plugin delete — one Metadata API destructive deployment
 

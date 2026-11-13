@@ -12,7 +12,7 @@ platforms:
 crud:
   read: { status: "yes", methods: [cli, api, plugin] }
   create: { status: "yes", methods: [api, plugin] }
-  update: { status: "yes", methods: [api, plugin] }
+  update: { status: "yes", methods: [cli, api, plugin] }
   delete: { status: "yes", methods: [cli, api, plugin] }
 ---
 
@@ -565,12 +565,59 @@ If the state does not settle, the command stops with `DMO_FIELD_REMOVAL_SIDE_EFF
 </details>
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="unknown" cli_reason="General DMO XML updates have not been tested." metadata_state="unknown" metadata_reason="Schema changes through the Metadata API have not been tested." connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0 (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API version 68.0 on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
+{% capture update_cli %}
+Removes one custom field from a custom DMO with a destructive deploy. Salesforce also drops that field's pairs from every mapping that holds one. Other changes to a DMO through the CLI are not verified; use the API or plugin tab for labels and added fields.
+
+In an empty folder named `destructive`, save a `package.xml` that selects nothing:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <version>68.0</version>
+</Package>
+```
+
+Save `destructiveChanges.xml` beside it, naming only the field:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types>
+    <members>Customer__dlm.Note__c</members>
+    <name>CustomField</name>
+  </types>
+  <version>68.0</version>
+</Package>
+```
+
+```sh
+sf project deploy start --metadata-dir destructive --target-org TARGET_ALIAS --wait 10
+```
+
+Sample result excerpt, with `--json` added:
+
+```json
+{ "status": 0, "result": { "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "CustomField", "fullName": "Customer__dlm.Note__c", "deleted": true }] } } }
+```
+
+Read the DMO and its mappings afterwards: the field and its pairs are gone, everything else is unchanged. Do not remove the primary key or generated fields.
+{% endcapture %}
+
+{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="available" cli_reason="Only removing one custom field is verified, at API 68 on empty custom DMOs." cli_body=update_cli metadata_state="unknown" metadata_reason="Schema changes through the Metadata API have not been tested." connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0 (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API version 68.0 on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
 {% capture delete_cli %}
-This uses a deletion manifest that your integration supplies. This page does not create those files. Use them only on an empty custom DMO that you own.
+Deletes one object with a destructive deploy. Use it only on an empty custom DMO that you own. Salesforce also deletes the DMO's mapping; the DLO stays.
+
+Save a `package.xml` that selects nothing:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <version>65.0</version>
+</Package>
+```
 
 `destructiveChangesPost.xml` names the one object to delete:
 
@@ -586,7 +633,7 @@ This uses a deletion manifest that your integration supplies. This page does not
 ```
 
 ```sh
-sf project deploy start --manifest package.xml --post-destructive-changes destructiveChangesPost.xml --target-org TARGET_ALIAS --test-level NoTestRun --wait 5
+sf project deploy start --manifest package.xml --post-destructive-changes destructiveChangesPost.xml --target-org TARGET_ALIAS --api-version 65.0 --test-level NoTestRun --wait 5
 ```
 
 **Result** (illustrative `componentSuccesses` excerpt of a completed deletion):
@@ -659,7 +706,7 @@ The command sends one Metadata API destructive change. Salesforce drops each fie
 </details>
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Needs a deletion manifest that your integration supplies." cli_body=delete_cli metadata_state="unknown" metadata_reason="A raw Metadata API delete has not been tested on its own." connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested on empty, unmapped custom DMOs (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Deletes one empty custom DMO with a destructive deploy, tested at API 65. Its mapping goes with it." cli_body=delete_cli metadata_state="unknown" metadata_reason="A raw Metadata API delete has not been tested on its own." connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested on empty, unmapped custom DMOs (see Evidence)." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -709,6 +756,8 @@ The command sends one Metadata API destructive change. Salesforce drops each fie
 - This does not broaden standalone DMO CRUD or its tested versions.
 
 **Portability:** Tested at API `68.0`, from the plugin's source tree against two orgs, on empty, unmapped custom DMOs in the default data space: a zero-write repeat, retrieval, an unchanged deploy into the second org with byte-identical retrieved files, and deletion. Files retrieved from a source org and from a second org after an unchanged deploy are byte-identical. An unchanged-source export comparison across API versions is not verified.
+
+**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DMOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dlm` then saved the object and its fields at API 68.0 (CLI 2.151.7). At API 68 a `destructiveChanges.xml` deploy that named one `CustomField` removed that custom field, also when two mappings held it: each mapping lost only that pair, and the DMO and its other fields were unchanged. At API 65 a deploy with `--post-destructive-changes` naming one empty custom DMO deleted it together with its one mapping; the DLO kept its ID, fields and definition. A check-only deploy of a DLO, DMO and mapping together failed at API 65, so CLI create stays not tested.
 
 **Not verified:** Populated, mapped or related DMOs. Standard DMOs in active use. Non-default data spaces. Relationships. SQL or flex DMOs. An installed released package. The API `68.0` breadth at any other version. Whether `isDynamicLookup` is stored. In addition, cascade behavior and DMOs with dependencies are not verified.
 

@@ -10,7 +10,7 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "yes", plugin: "partial" } }
+  read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "partial" } }
   create: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
   update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
   delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
@@ -67,7 +67,7 @@ Excerpt of a published ruleset:
 The full response also holds `id`, `filters`, `trustedSources`, the match rules and one reconciliation entry for each of the six entities. Enum values read in lower case, such as `individual`, `fuzzy` and `lastupdated`. The response is a server view, not the plugin file or a body you can send back. Compare two reads rather than trusting a write response. Wait for `PUBLISHED` and check all twelve output bindings.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-read" label="Read" cli_state="unknown" cli_reason="No standard CLI runtime ruleset retrieval workflow is supplied." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on IdentityResolution lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
+{% include operation-tabs.html id="ir-read" label="Read" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution metadata type: sf project retrieve start stops with a RegistryError. sf org list metadata lists ruleset names only." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on IdentityResolution lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name." connect_body=read_connect plugin_state="available" plugin_reason="Qualified native API68 retrieve of the full settings in the default data space." plugin_body=read_plugin %}
 
 ## Create
 
@@ -151,7 +151,7 @@ The body carries the configuration type, the unused `rulesetId` suffix, the data
 Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="No standard CLI runtime ruleset creation workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and a create through it has not been tested." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
+{% include operation-tabs.html id="ir-create" label="Create" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution type for source-format deploys, and no ruleset definition can be retrieved to deploy. A metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and a create through it has not been tested." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
 
 ## Update
 
@@ -218,7 +218,7 @@ The body leaves out the identity settings (`configurationType`, `rulesetId`, `da
 - An update sent while the ruleset is `PUBLISHING` can fail inside an otherwise successful response: the HTTP status and CLI exit code report success, but the change is not applied. This was seen on the API 67 route and not tried on API 68. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="No standard CLI runtime ruleset update workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution type for source-format deploys, and no ruleset definition can be retrieved to change. A metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -262,7 +262,7 @@ Replace both placeholders with the owner's ID and API name. A successful DELETE 
 A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="No standard CLI runtime ruleset deletion workflow is supplied." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution type, so sf project delete source cannot select a ruleset. A destructive metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -293,7 +293,9 @@ The plugin's graph `--preview` does this lookup for you: it reads the rulesets a
 
 **Example scope.** This example was tested in the default dataspace in the source org. It does not establish that every matching-rule combination or another org will work. `--include` prints HTTP status and headers separately from the server body. Salesforce may add reconciliation entities beyond the ones you send. Keep the returned identity and generated output references for later checks.
 
-**Metadata API (read-only, API 68.0):** `IdentityResolution` is not listed by `describeMetadata`, yet `listMetadata` on `IdentityResolution` returned the names of all seven rulesets in the org. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no ruleset settings to read or redeploy; use the native API 68 Connect routes or the plugin. Metadata API create, update and delete were not tried.
+**Metadata API (read-only, API 68.0):** `IdentityResolution` is not listed by `describeMetadata`, yet `listMetadata` on `IdentityResolution` returned the names of the rulesets in the org. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no ruleset settings to read or redeploy; use the native API 68 Connect routes or the plugin. Metadata API create, update and delete were not tried.
+
+**Salesforce CLI (read-only, CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `IdentityResolution`, while `sf org list metadata --metadata-type IdentityResolution` lists the ruleset names. `sf project retrieve start --metadata IdentityResolution:<name>` stops with `RegistryError` (exit code 1), and so does a retrieve from a `package.xml` manifest: the CLI's own metadata registry has no `IdentityResolution` type. The standard CLI therefore has no ruleset workflow; CLI deploys and deletes were not tried.
 
 **Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, exhaustive external-consumer exclusion, an update that empties filters or trusted sources, and configuration types other than `Individual`.
 

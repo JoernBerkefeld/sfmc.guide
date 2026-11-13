@@ -13,7 +13,7 @@ crud:
   read: { status: "yes", methods: [cli, api, plugin] }
   create: { status: "partial", methods: [cli, api, plugin] }
   update: { status: "partial", methods: [cli, api, plugin] }
-  delete: { status: "partial", methods: [api, plugin] }
+  delete: { status: "partial", methods: [cli, api, plugin] }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -349,7 +349,7 @@ Check that the deletion completed, and that `CustomerDefinition` is absent from 
 
 A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Needs a deletion manifest that your integration supplies." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment after a preview and confirmation (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment after a preview and confirmation (see Evidence)." plugin_body=delete_plugin %}
 
 <details>
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -392,6 +392,8 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 **Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML writes cover source-only API 65 DBT Metadata definition CRUD. Retrieving UI criteria does not establish writes to UI definitions. Saving XML alone need not create a usable live segment.
 
 **CLI scope:** The UI retrieval example in the Read chapter shows the XML shape only; its criteria are omitted. Unchanged is not zero writes: a deployment job still runs and package metadata can change. Require independent inventory absence of `CustomerDefinition` as well, after the deletion.
+
+**Standard CLI at API 68.0:** `sf org list metadata --metadata-type MarketSegmentDefinition` lists the definitions, and `sf project retrieve start` saved one by name (CLI 2.151.7). The create and delete XML workflows above were run at API 65.0: the deploy reported success, a retrieve matched the file, and after the destructive deploy the list no longer showed the definition.
 
 **Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing. UI criteria writes. General SQL beyond the predicate change above. Send destinations, membership export and cross-org migration. Lower-version JSON CRUD. A released package.
 

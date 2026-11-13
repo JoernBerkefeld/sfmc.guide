@@ -335,6 +335,8 @@ sf api request rest '/services/data/v68.0/ssot/data-lake-objects/CustomerSource_
 - Two of three live `--delete-dlo` runs passed. In the traced one, every read the plugin repeats while waiting went from HTTP 200 to 404 within about 90 seconds and never answered 400. The first run ended `failed` / `unknown` with an HTTP 400 although both resources were deleted. The route that answered 400 was not identified.
 - Fresh installed API 68 qualification passed these steps in both orgs: source create and retrieve; a `spec.connectionName`-only remap to a compatible target connection; target create and retrieve; one additive nonprimary Text mapping update; a zero-write repeat; and explicit cascade cleanup. Independent reads confirmed that cleanup left protected resources unchanged.
 
+**Standard CLI:** `sf org list metadata --metadata-type DataStreamDefinition` lists the stream definitions, and `sf project retrieve start` saved one by name at API 68.0 (CLI 2.151.7). Creating, changing or deleting a stream through a deploy was not tried.
+
 **Not verified:** Other connectors, populated data, nondefault data spaces, other API versions, full migration, a published plugin release, XML create, update, activation, refresh or delete, label edits, and cross-org replay of arbitrary stream documents. Downstream DLO-to-DMO mapping provisioning is not verified here.
 
 </details>

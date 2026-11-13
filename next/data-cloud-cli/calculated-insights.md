@@ -13,7 +13,7 @@ crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
   create: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  delete: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -441,6 +441,8 @@ The sample output is not in this guide yet.
 - The plugin does not prove the original creator owns the insight. A present owner needs `--confirm-delete`.
 - After a write, reconcile runtime and Metadata absence with reads. Do not replay DELETE.
 - All owned CI fixtures are confirmed absent.
+
+**Standard CLI:** `sf org list metadata --metadata-type MktCalcInsightObjectDef` lists the definitions, and `sf project retrieve start` saved one by its metadata name at API 68.0 (CLI 2.151.7). At API 65.0, a source deploy created a definition, a second deploy changed its label with the SQL unchanged, and a deploy with `--post-destructive-changes` deleted it; a list afterwards no longer showed it. Each acted on the definition only: the deployed name was reserved without a live insight.
 
 **Not verified:** populated-data calculations, storage or credit cleanup, released-package qualification, unchanged-source cross-org deployment, arbitrary SQL edits, scheduled-processing behavior, successful calculation, and the Metadata API read of the insight directly.
 
