@@ -22,8 +22,8 @@ it by `-m data-transform:Name`, by file or folder with `--source-dir`, or throug
 `--changed-since`. Retrieve, deploy and delete take several transforms, alone or beside
 other families.
 
-**Limit:** retrieve needs each transform's name (`-m data-transform:Name`). The plugin
-cannot retrieve every transform at once; a bare `-m data-transform` is refused.
+A bare `-m data-transform` retrieves every transform the API lists (20 per page);
+`-m data-transform:Name` retrieves one. System and packaged transforms are saved as-is.
 
 ```sh
 sf data360 retrieve -m data-transform:Example -o SOURCE_ALIAS
