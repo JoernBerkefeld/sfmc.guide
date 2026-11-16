@@ -107,12 +107,12 @@ The update changes the stored template only. It does not change a live graph. Re
 
 For how moving a kit differs from installing it, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limits still apply. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** The kit components have no entry in the verification database. The results below come from earlier bounded live runs that have not been repeated, and no `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to them. This badge does not verify untested writes or general CRUD support.
 
-**Versions and aliases:** Every command in this guide uses API version `65.0`. `SOURCE_ALIAS` and `TARGET_ALIAS` are placeholders for your own org aliases.
+**Versions and aliases:** The `sf project` commands on this page pass `--api-version 65.0`. `SOURCE_ALIAS` and `TARGET_ALIAS` are placeholders for your own org aliases.
 
 **Read:** The command retrieves the stored template, not the live component. The excerpt shows only some attributes; other retrieved attributes are omitted.
 
@@ -120,7 +120,7 @@ For how moving a kit differs from installing it, see [Moving a kit is not instal
 
 **Update:** Only the description inside a Data Graph template payload was verified. The update does not change a runtime graph.
 
-**Delete:** Removing a stored Data Graph template has been demonstrated. An exact, reproducible standard CLI delete invocation is not established, so no command is offered. Deleting a template would not by itself prove runtime graph or supporting-artifact cleanup. No API template-deletion workflow was supplied.
+**Delete:** No command and no verification entry exist for deleting a stored template on its own, so no command is offered. A template is removed only as part of the joint deletion on the [kit definition page](/next/data-cloud-cli/data-package-kit-definition/#delete). Deleting a template would not by itself prove runtime graph or supporting-artifact cleanup. No API template-deletion workflow was supplied.
 
 **Not verified:** Runtime creation and kit installation. Arbitrary payload changes. Full graph updates through templates. Whole-container repeat or update behavior. Runtime cleanup after template deletion.
 

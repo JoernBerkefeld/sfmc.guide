@@ -73,6 +73,10 @@ The AMPscript `Lookup` family is documented individually, each with its own refe
 
 Building link URLs from variables has a tracking pitfall — use `RedirectTo` rather than a hand-built `<a>` tag. See [RedirectTo](/engagement/ampscript/functions/redirectto/#dynamic-trackable-links).
 
+## Mixing AMPscript with SSJS and personalization strings
+
+AMPscript blocks and SSJS scripts can follow each other and share variables, but nesting one inside the other fails, and a personalization string directly in front of `=` or `[` changes what counts as AMPscript. See [How personalization strings, AMPscript and SSJS interact](/engagement/ampscript-ssjs-interplay/) for the tested behavior.
+
 ## Other resources
 
 - [ampscript.guide](https://ampscript.guide/) — community AMPscript function reference

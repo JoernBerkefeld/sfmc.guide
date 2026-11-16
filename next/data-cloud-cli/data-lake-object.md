@@ -30,7 +30,7 @@ This badge does not verify untested writes or general CRUD support.
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every DLO.
+**Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every DLO. The plugin selects a DLO with `-m dlo:Name__dll`. It needs no `--source-dir`, and its commands accept an optional `--dataspace NAME` (alias `--data-space`); a non-default data space is offline-tested only.
 
 ## Read
 
@@ -277,7 +277,33 @@ Reads the object by its developer name over the Connect API. Nothing in the org 
 sf api request rest /services/data/v68.0/ssot/data-lake-objects/CustomerSource__dll --target-org SOURCE_ALIAS --method GET --include
 ```
 
-A sample response is not in this guide yet.
+The reply is HTTP 200. Its body holds a `dataLakeObjects` array with one entry, even for an exact-name read. This excerpt shows the shape for an owned, active standalone object (other keys omitted):
+
+```json
+{
+  "dataLakeObjects": [
+    {
+      "name": "CustomerSource__dll",
+      "label": "CustomerSource",
+      "category": "Other",
+      "status": "ACTIVE",
+      "dataSpaceInfo": [{ "name": "default" }],
+      "fields": [
+        { "name": "Id__c", "dataType": "Text", "isPrimaryKey": true },
+        { "name": "Note__c", "dataType": "Text", "isPrimaryKey": false }
+      ]
+    }
+  ]
+}
+```
+
+The real response lists seven fields: the two authored fields and five that Salesforce generates (see Create). It also carries the record ID that the update and delete requests address the object by. The dependency list of an object is a separate read:
+
+```sh
+sf api request rest /services/data/v68.0/ssot/data-lake-objects/CustomerSource__dll/dependencies --target-org SOURCE_ALIAS
+```
+
+It answers `{ "dependencies": [], "totalSize": 0 }` for an object nothing uses. A mapped object lists the mapped DMO, with `componentType` `DataModelObject`; the mapping itself is not listed.
 {% endcapture %}
 
 {% capture read_plugin %}
@@ -305,9 +331,9 @@ sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS
 }
 ```
 
-The result reports `outcome: "retrieved"`, or `"unchanged"` when the local file already matches. If the file exists and differs, the command stops unless you add `--overwrite`.
+The result reports `outcome: "retrieved"`, or `"unchanged"` when the local file already matches. If the file exists and differs, the command stops unless you add `--overwrite`. A bare `sf data360 retrieve -m dlo -o SOURCE_ALIAS`, alone or beside other families, and a retrieve with no `-m` at all list every DLO the Data 360 API returns in the data space (`--dataspace`, or `default`), connector- and stream-created ones included, and retrieve each one; the plugin does not filter that list. A DLO whose read or file fails gets its own diagnostic with its name; the others are still written and the run ends `failed` (exit 1). An exact `dlo:Name__dll` selector always reads at API 68.0, whatever `--api-version` says.
 
-<details>
+<details markdown="1">
 <summary>What the saved file leaves out</summary>
 
 The file holds only the authored fields. Salesforce generated fields are left out: `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`, `cdp_sys_PartitionDate__c` on Engagement DLOs, and the key qualifier of the primary key, for example `KQ_Id__c`. A key qualifier combines an ID with its source context to avoid collisions. The field named by `eventDateTimeFieldName` always stays, and so does the primary key `Id__c`. Native CREATE generates the left-out fields again, and deploy keeps them from the org. Leaving them out is therefore not field deletion or proof of mapping auto-pair behavior. A retrieved file deploys back `unchanged`. The raw API response remains complete. Custom qualifiers and `keyQualifierName` references stay as read. DLO Metadata marks the qualifier with `definitionCreationType=System` and `usageTag=KEY_QUALIFIER`.
@@ -350,7 +376,23 @@ sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS
 
 The result reports `outcome: "created"` and `mutation: "confirmed-created"`. Running the command again reports `outcome: "unchanged"` when nothing differs.
 
-The saved file format is shown in the Read chapter.
+The saved file format is shown in the Read chapter. Add `--preview` to compare without writing. A hand-written file needs only the authored fields; Salesforce adds the generated ones.
+
+The file's `spec.category` is sent as written and Salesforce decides. Its API lists `Profile`, `Engagement`, `Other`, `Directory_Table`, `Observability_Table`, `Insights`, `Vector_Embedding` and `Content`. An Engagement DLO also needs `spec.eventDateTimeFieldName`, the name of one listed DateTime field. This sketch shows only that key and the field it names:
+
+```json
+{
+  "spec": {
+    "category": "Engagement",
+    "eventDateTimeFieldName": "EventAt__c",
+    "fields": [
+      { "dataType": "DateTime", "isPrimaryKey": false, "label": "EventAt", "name": "EventAt__c" }
+    ]
+  }
+}
+```
+
+Salesforce adds the DateTime field `cdp_sys_PartitionDate__c` to an Engagement DLO. It counts as generated, is never sent and may be left out of the file.
 {% endcapture %}
 
 {% capture create_connect %}
@@ -371,7 +413,7 @@ Save this as `dlo-create.json`:
 }
 ```
 
-Names go without their suffixes: `CustomerSource` becomes `CustomerSource__dll`, and `Id` becomes `Id__c`. Mark exactly one field as the primary key. Do not list the fields Salesforce generates (Read chapter). Keep the label at 40 characters or fewer. An Engagement DLO also needs `eventDateTimeFieldName`, the name of one listed DateTime field without `__c`.
+Names go without their suffixes: `CustomerSource` becomes `CustomerSource__dll`, and `Id` becomes `Id__c`. Mark exactly one field as the primary key. Do not list the fields Salesforce generates (Read chapter). Keep the label at 40 characters or fewer. An Engagement DLO also needs `eventDateTimeFieldName`, the name of one listed DateTime field without `__c`, for example `"category": "Engagement"` with `"eventDateTimeFieldName": "EventAt"` and a DateTime field `EventAt`. Salesforce then adds `cdp_sys_PartitionDate__c`. A Profile and an Engagement DLO are both accepted with HTTP 201.
 
 ```sh
 sf api request rest '/services/data/v68.0/ssot/data-lake-objects' --method POST --body '@dlo-create.json' --header 'Content-Type:application/json' --target-org TARGET_ALIAS
@@ -400,8 +442,10 @@ After a label change, the result reports `outcome: "updated"` and `mutation: "co
 
 **Refused before anything is written:**
 
-- Changing the category or the event field.
-- Changing or removing an existing field, or changing the primary key.
+- Changing the category (`UNSUPPORTED_DLO_CATEGORY_CHANGE`) or the event field (`UNSUPPORTED_DLO_EVENT_FIELD_CHANGE`).
+- Changing or removing an existing field, or changing the primary key (`UNSUPPORTED_DLO_FIELD_CHANGE`).
+
+Add `--preview` to compare without writing.
 {% endcapture %}
 
 {% capture update_connect %}
@@ -426,8 +470,9 @@ Replace `OWNED_DLO_ID` with the ID of an owned test object, from a GET request. 
 
 **Known failures:**
 
-- Salesforce refuses a change to an existing field.
-- Salesforce refuses a change to the category or the event field.
+- A PATCH that restates an existing field with a new label returns HTTP 400 `INVALID_INPUT`: the fields already exist and only new fields can be added.
+- A PATCH that names `category` or `eventDateTimeFieldName` returns HTTP 400 `JSON_PARSER_ERROR` (unrecognized field). Neither can change after creation.
+- Removing a field is not possible through these routes. The REST field DELETE (`/ssot/data-lake-objects/NAME/fields/FIELD`) works only for external DLOs and answers HTTP 400 otherwise. A Metadata API destructive change for a `CustomField` is refused with "setup object in use".
 {% endcapture %}
 
 {% include operation-tabs.html id="dlo-update" label="Update" split_api=true cli_state="unknown" cli_reason="Updating a working DLO by deploy is not tested. Adding fields worked only on a test DLO created without fields; removing a field was refused." metadata_state="unknown" metadata_reason="A Metadata API update has not been tested." connect_state="available" connect_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." plugin_body=update_plugin %}
@@ -453,6 +498,8 @@ sf api request rest --file dlo-delete-request.json --target-org SOURCE_ALIAS --i
 
 The DELETE reply alone does not prove deletion. Run a GET afterwards. When the object is gone, the GET reports that it does not exist.
 
+Read the dependencies first (Read chapter). Salesforce refuses to delete an object that something still uses: the DELETE answers HTTP 412 with `DEPENDENCY_EXISTS` ("referenced elsewhere in Salesforce") and changes nothing.
+
 **Known failures:**
 
 - Sending an empty body on the command line fails locally with `No mode found in body entry`. Use the request file above.
@@ -460,18 +507,27 @@ The DELETE reply alone does not prove deletion. Run a GET afterwards. When the o
 {% endcapture %}
 
 {% capture delete_plugin %}
-Deletes the object and its local file. The command has no confirmation prompt. Add `--preview` first to check the target without changing it.
+Deletes the object and its local file. The command has no confirmation prompt. Add `--preview` first to check the target without changing it; it lists the local file instead of removing it.
 
 ```sh
+sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --preview
 sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS
 ```
 
-The result reports `outcome: "deleted"` and `mutation: "confirmed-deleted"`. Add `--keep-local-files` to keep the local file.
+The result reports `outcome: "deleted"` and `mutation: "confirmed-deleted"`. After a confirmed deletion the command removes `data360/dlo/CustomerSource__dll.dlo-meta.json` from the current project. Add `--keep-local-files` to keep it. A file that cannot be removed leaves the org result confirmed and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`; do not repeat the delete.
+
+The command reads the object's dependencies before its first write. A dependent that the same command does not delete stops it with `DLO_DEPENDENCY_EXISTS`, which names each dependent and changes nothing. Select the dependents in the same command and they are deleted first, in this order: relationships, mappings, DMOs, then DLOs.
+
+```sh
+sf data360 delete -m dlo:CustomerSource__dll -m dmo:Customer__dlm -o TARGET_ALIAS
+```
+
+If Salesforce still lists the dependents the command just deleted, it stops with `DLO_DEPENDENCY_PENDING` and does not send the DLO delete; wait and run the delete again for the DLO alone. A DELETE that Salesforce answers with HTTP 4xx reports mutation `rejected`.
 {% endcapture %}
 
 {% include operation-tabs.html id="dlo-delete" label="Delete" split_api=true cli_state="blocked" cli_reason="A Metadata definition delete was refused while the DLO still existed and was referenced (see Evidence)." metadata_state="blocked" metadata_reason="This is the same Metadata API delete as the CLI tab, which was refused." connect_state="available" connect_reason="Tested at API 68 on an empty, owned test object (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested at API 68 on an owned test object in one org (see Evidence)." plugin_body=delete_plugin %}
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 **API family:** The native JSON route `/services/data/vXX.0/ssot/data-lake-objects` (and its item routes) belongs to the **Data 360 Connect REST API**, as listed in the [Salesforce reference](https://developer.salesforce.com/docs/data/connectapi/references/spec). The native API and plugin examples use this family through authenticated `sf api request rest`; they do **not** use the SOAP-based Metadata API. The XML `sf project` workflows in the CLI sections use Metadata API instead. Calling either API through Salesforce CLI does not make it a dedicated out-of-the-box DLO command or broaden the operation/version qualification recorded below.
@@ -480,25 +536,14 @@ The result reports `outcome: "deleted"` and `mutation: "confirmed-deleted"`. Add
 
 The plugin still delegates authenticated requests to `sf api request rest`, so standard Salesforce CLI authentication remains in use. Its benefit beyond a redundant command wrapper is a manifest-free workflow with canonical `data360/dlo/<FullApiName>__dll.dlo-meta.json`, portable JSON without the source record ID, separate save/create/update field policies, and target-name lookup selecting PATCH for an existing target or POST only after confirmed absence. This avoids handcrafting each API request or blindly replaying generated response fields. Plugin command acceptance is distinct from the separate API experiments below.
 
-**Plugin version:** The plugin admits **API 68/default only**.
+**Plugin API versions:** The raw native DLO routes (POST, GET, PATCH and DELETE) worked from API 61.0 through 68.0 in the tested org. At 60.0 all four answered `NOT_FOUND`, although the reference documents them from 60.0. Plugin deploy and delete take the default (`auto`, 68.0) or an explicit numeric pin from 61.0; an exact `dlo:` retrieve always reads at 68.0. Live plugin runs used 68.0, so other numeric pins are offline-tested only.
 
-**Direct creation for a transform output:** Direct DLO creation has a demonstrated use as a **precreated transform output**,
-without a DataStream for that output. A native API68 `CUSTOM` / `BATCH` transform
-with an `STL` definition bound that directly created output DLO and completed a
-run with `SUCCESS` in 47 seconds, processing and writing zero rows. The source
-DLO was also directly created as an empty test fixture; ordinary transform sources
-may instead contain ingested data. The output binding is the practical reason for
-direct creation, not a requirement to create every source this way.
+**Direct creation for a transform output:** a directly created DLO can serve as the output
+of an STL transform, without a DataStream for that output; Salesforce refuses an STL output
+DLO that does not exist. Precreation is not needed for a DCSQL transform, which creates the
+output DLOs it declares. See [Data Transforms](/next/data-cloud-cli/data-transforms/).
 
-This qualifies only the tested precreated-output path: precreation was **not proven
-mandatory**, and automatic output provisioning was **not tested**. A zero-row run
-does not qualify populated transformations, other API versions or cross-org replay.
-The transform, source DLO and output DLO were removed after the experiment.
-**Data Transform plugin commands are not implemented**; see the
-[Data Transforms qualification](/next/data-cloud-cli/data-transforms/) for this
-native API evidence, not an available plugin transform workflow.
-
-**Plugin command and saved-file contract:** The replacement workflow uses exact `dlo:CustomerSource__dll` selections with API `68.0` and the default data space. A full API name includes `__dll`; it is not the source object's record ID. Commands accept an optional `--dataspace NAME` (alias `--data-space`); the flag has no default. Readable retrieval counts successful DLO results, including unchanged files, not API `totalSize`; JSON output is unchanged.
+**Plugin command and saved-file contract:** The workflow uses exact `dlo:CustomerSource__dll` selections, API `68.0` in the examples below and the default data space. A full API name includes `__dll`; it is not the source object's record ID. Commands accept an optional `--dataspace NAME` (alias `--data-space`); the flag has no default. A non-default data space is offline-tested only; a mismatch with the object's data space stops with `DLO_DATASPACE_MISMATCH`. Readable retrieval counts successful DLO results, including unchanged files, not API `totalSize`; JSON output is unchanged.
 
 ```sh
 sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS --api-version 68.0 --output-dir ./project
@@ -516,11 +561,11 @@ Deploy resolves the exact API name in the target before selecting POST or PATCH.
 
 **Structured output:** With `--json`, the retrieve envelope has contract `sf-data360-retrieve`; `result.items[]` reports `family: "dlo"`, `operation: "retrieve"`, `outcome: "retrieved"` (or `"unchanged"`) and `path`.
 
-**Public-command acceptance and saved example:** The public plugin commands were exercised on a fresh owned standalone fixture at API 68 in the default data space. Separate readbacks confirmed seven raw fields after creation, eight raw fields after the label and field update, preservation after delete preview, and absence after default deletion; the local JSON file remained. These are historical complete readback counts, not current saved-file counts. Delete preview left readback unchanged, and the default delete completed without a prompt. This proves the bounded API 68 definition workflow, not ingestion or cross-org portability.
+**Public-command acceptance and saved example:** The public plugin commands were exercised on a fresh owned standalone fixture at API 68 in the default data space. Separate readbacks confirmed seven raw fields after creation, eight raw fields after the label and field update, preservation after delete preview, and absence after default deletion. These are complete readback counts, not saved-file counts. Delete preview left readback unchanged, and the default delete completed without a prompt. This proves the bounded API 68 definition workflow, not ingestion or cross-org portability.
 
 The public create reported `outcome: created`, `mutation: confirmed-created`, with preflight `target: absent` and `absenceProof: confirmed-404`. The update reported `outcome: updated`, `mutation: confirmed-updated`, with `target: existing`. These are request outcomes, not a claim that the response alone proves settlement.
 
-The two-field example below applies the current save policy to the historical public-command readback, with the synthetic fixture name substituted. It is not a newly live-accepted saved file or an HTTP CREATE request:
+The two-field example below applies the save policy to that readback, with the synthetic fixture name substituted. It is not a separately live-accepted saved file or an HTTP CREATE request:
 
 ```json
 {
@@ -580,7 +625,7 @@ This is an actual deployment, not a dry run. Each requested version (65.0, 66.0,
 
 Independent exact-name Metadata retrieves after each failure reported that the named object could not be found. No retained new metadata DLO was observed for those four names; this is not a global runtime inventory or universal rollback guarantee. No fields were stripped, no stream was provisioned and no deployment was retried. This bounded result does **not mean all DLO CREATE is unsupported**, and does not qualify an operational ingestion chain. Do not treat removal of primary-key or system qualifier metadata as a verified equivalent creation recipe.
 
-**Later controlled Metadata experiments: API 68 only:** These experiments used standard `CustomObject` and `CustomField` deployment, not a plugin or an ingestion API. They are separate from the unchanged-schema comparison above; **none of the following variants was tested at API 65–67**. Use fresh, independently absent synthetic names and isolated projects, not a shared DLO. The commands below are retained experiment shapes with aliases and names replaced, not an operational ingestion recipe.
+**Controlled Metadata experiments: API 68 only:** These experiments used standard `CustomObject` and `CustomField` deployment, not a plugin or an ingestion API. They are separate from the unchanged-schema comparison above; **none of the following variants was tested at API 65–67**. Use fresh, independently absent synthetic names and isolated projects, not a shared DLO. The commands below are retained experiment shapes with aliases and names replaced, not an operational ingestion recipe.
 
 **Empty definition, then original fields in the target org:** a project containing only the original object XML, renamed to a fresh `ProbeTarget__dll` directory/file, successfully deployed one `CustomObject`. An independent retrieve returned the object and zero fields: no `Id__c` or other field was automatically generated. Submitted `isEnabled=true` read back as `false`; the original category was retained.
 
@@ -607,7 +652,7 @@ sf project deploy start --metadata CustomObject:ProbeSource__dll --api-version 6
 
 This failed at `KQ_Id__c` with signature `(2099634494)`, `success: false` and rollback enabled. Eight provisional component successes did not establish persistence: independent exact-name retrieval reported the object missing, and an independent Metadata listing had no matching name. **Removing the primary-index annotation alone was insufficient for this complete eight-field CREATE.** The result does not isolate the qualifier's name, system creation type or usage tag as its cause.
 
-The retained target definition's `isEnabled=false` is an observation, **not an invalidity criterion**. The earlier idea that a stream is required to enable a DLO was a hypothesis, not a result. The standalone native API experiment below returned `isEnabled=true` without provisioning a stream, connector or Data Kit, so it does **not support a universal stream requirement for enabling**. Metadata definition/field persistence and operational ingestion readiness remain different questions. No general CREATE/UPDATE rating or portable recipe is promoted by these experiments.
+The retained target definition's `isEnabled=false` is an observation, **not an invalidity criterion**. Whether a stream is required to enable a DLO is not established: the standalone native API experiment below returned `isEnabled=true` without provisioning a stream, connector or Data Kit, so it does **not support a universal stream requirement for enabling**. Metadata definition/field persistence and operational ingestion readiness remain different questions. No general CREATE/UPDATE rating or portable recipe is promoted by these experiments.
 
 **Native standalone DLO creation: verified API 68 experiment:** A direct Connect REST `POST /services/data/v68.0/ssot/data-lake-objects` in the source org created a fresh standalone DLO in the independently verified active `default` dataspace. This is a distinct native route from Metadata XML deployment and from stream creation. **Only API 68 was tested for this request**, not API 65–67 or cross-org replay.
 
@@ -638,7 +683,7 @@ The object read back with `isEnabled=true`; Connect category `Other` corresponde
 
 **Standalone native API read: verified API 68:** The [Connect REST reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) documents GET, PATCH and DELETE at `/ssot/data-lake-objects/{recordIdOrDeveloperName}` as available since API 60.0. **Live GET/PATCH/DELETE evidence here is API 68 only**, not API 65–67. These are API requests through standard `sf api request rest`, which handles authentication for `SOURCE_ALIAS`; they are not dedicated native CLI DLO commands or plugin support.
 
-The GET is shown in the Read chapter. On November 2, this GET by developer name returned HTTP `200`, `ACTIVE` and **seven fields** for the owned standalone object created in the native API experiment above. Its `Id__c` remained the primary key. Preserve the complete readback, including generated fields, rather than treating it as a create/update body.
+The GET is shown in the Read chapter. This GET by developer name returned HTTP `200`, `ACTIVE` and **seven fields** for the owned standalone object created in the native API experiment above. Its `Id__c` remained the primary key. Preserve the complete readback, including generated fields, rather than treating it as a create/update body.
 
 **Response shapes differ:** the GET body contains a `dataLakeObjects` array, even for this exact-name read; identify the exact returned object and retain its ID. The successful POST and PATCH bodies contain a **single DLO object**, not that array. HTTP headers shown by `--include` are separate from the JSON body. This is a definition/configuration read, not row export or proof of ingestion.
 
@@ -701,12 +746,14 @@ That is a refusal, not a successful delete. Check the actual state after a failu
 
 **Stream-owned DLO deletion:** A DLO that a stream feeds is removed with its stream: the native API 68 stream DELETE with `shouldDeleteDataLakeObject=true`, in [Data Streams](/next/data-cloud-cli/data-stream-definition/#delete). The direct DLO DELETE here was tested only on standalone DLOs.
 
-**Cross-org acceptance:** **November 4 installed cross-org acceptance:** an isolated locally packed plugin retrieved a fresh empty standalone Other/default DLO in `mcnext-sdo`, then created it in `mcnext-thuy` from the exact portable file. Org-local IDs differed; independent raw readbacks preserved generated fields and the primary key. A label change plus one nonprimary Text addition persisted. Repeated deploy returned `unchanged` / `not-attempted`; native-client capture recorded GET only, with no POST/PATCH/DELETE. Both exact owned fixtures were deleted after identity and empty-dependency checks, then independently returned 404 by name and ID. Source delete preview preserved its readback; the target campaign call omitted `--preview` and performed the authorized deletion, so this run does not qualify target delete preview. This is API68 standalone definition portability, not ingestion, populated data, mixed-family dependency deployment, lower-version or published-package qualification.
+**Cross-org acceptance:** **Installed cross-org acceptance:** an isolated locally packed plugin retrieved a fresh empty standalone Other/default DLO in `mcnext-sdo`, then created it in `mcnext-thuy` from the exact portable file. Org-local IDs differed; independent raw readbacks preserved generated fields and the primary key. A label change plus one nonprimary Text addition persisted. Repeated deploy returned `unchanged` / `not-attempted`; native-client capture recorded GET only, with no POST/PATCH/DELETE. Both exact owned fixtures were deleted after identity and empty-dependency checks, then independently returned 404 by name and ID. Source delete preview preserved its readback; the target campaign call omitted `--preview` and performed the authorized deletion, so this run does not qualify target delete preview. This is API68 standalone definition portability, not ingestion, populated data, mixed-family dependency deployment, lower-version or published-package qualification.
 
 **Portability:** Tested at API 68 from the plugin's source tree against two orgs, on empty, unmapped custom DLOs in the default data space: retrieval, an unchanged deploy into the second org, and deletion. Files retrieved from a source org and from a second org after an unchanged deploy were byte-identical in that run.
 
-**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, later deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". Updating a DLO that was created through the API or a stream was not tried with the CLI.
+**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, further deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". Updating a DLO that was created through the API or a stream was not tried with the CLI.
 
-**Not verified:** ingestion and populated data; schema removal; nondefault data spaces; plugin workflows below API 68; cascade behavior; native API versions other than 68; target delete preview across orgs; installed released packages.
+**Plugin error codes:** `DLO_DEPENDENCY_EXISTS`, `DLO_DEPENDENCY_PENDING` and `DLO_DEPENDENCIES_UNCONFIRMED` concern the dependency check before a delete (the first two were observed live at API 68, the last is offline-tested). `DLO_DELETE_NOT_CONFIRMED` and `DLO_DELETE_UNCONFIRMED` report a DELETE whose result could not be confirmed; inspect the object before another attempt. `DLO_REQUEST_UNCONFIRMED` and `DLO_HTTP_ERROR` report a write whose outcome is unknown or a Salesforce rejection. `DLO_TARGET_IDENTITY_MISMATCH` and `DLO_DATASPACE_MISMATCH` stop a command whose target does not match the file. The `UNSUPPORTED_DLO_*` codes (category, event field, field change, field addition, selection, data space) are refusals before any write. `LOCAL_FILE_REMOVAL_FAILED` reports a local file that could not be removed after a confirmed delete. Everything except the live observations named above is offline-tested.
+
+**Not verified:** ingestion and populated data; schema removal; nondefault data spaces; plugin numeric API pins other than 68 (offline-tested only); cascade behavior beyond the dependent selections shown in the Delete chapter; raw DLO routes below API 61; installed released packages.
 
 </details>

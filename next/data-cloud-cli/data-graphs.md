@@ -11,7 +11,7 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "partial" } }
-  create: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
   update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
   delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
 ---
@@ -30,7 +30,9 @@ A template is a saved configuration. The API examples below manage the runtime g
 
 **Example used in every chapter:** the graph `CustomerGraph`, rooted in `UnifiedssotIndividualMkt__dlm`. Creation projects `ssot__Id__c` (the key) and `ssot__FirstName__c`; the update adds `ssot__LastName__c`. Check your root, fields, types and key first. Do not change the underlying object to fit the example. The plugin commands use `ExampleGraph` as the graph name; replace it with yours.
 
-**Plugin qualification:** The plugin handles any graph the API accepts in the default data space, one graph per operation, at API 68.0. The live-tested shapes are listed under Evidence.
+**Plugin qualification:** The plugin handles any graph the API accepts in the default data space, at API 68.0. One command can name several graphs, each with its own `data-graph:Name` selector; retrieve reads them one after another. The live-tested shapes are listed under Evidence.
+
+**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the command aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` both select API 68.0; anything else is `INVALID_SCOPE`), `--dataspace` (alias `--data-space`; only the `default` data space is supported), `--preview` (read-only), `--allow-processing` (acknowledges that create and update start processing), `--wait-timeout` (seconds, default 1800, deploy only), `--keep-local-files` (delete only), and `-d` / `--source-dir` to name the graph file for `deploy`; `delete` selects the graph by name with `-m`. A retrieve can carry several graphs together with other families in one run. A deploy or delete can carry graphs together with other families: deploy runs graphs last, after the identity resolution they are built on is published, and delete runs them first. Deletion does not cascade. `--changed-since` includes graph files changed in the range with the rest of the range.
 
 {% include crud-summary.html %}
 
@@ -46,9 +48,9 @@ The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin
 sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
 ```
 
-The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`.
+The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed.
 
-Sample output is not in this guide yet.
+Without `--api-version` the command also uses API 68.0. In the test org all six existing graphs retrieved this way and previewed `unchanged` (verification DB: `graph-native-any-shape`, `graph-auto-routes-native68`). A graph that does not exist is an HTTP 400 on the API read, not a 404; the plugin reports the missing graph.
 {% endcapture %}
 {% capture read_connect %}
 ### Native API68 read
@@ -103,7 +105,6 @@ If Salesforce answers the create with HTTP 429 or 503, the request was not proce
 
 An identical existing definition returns `unchanged` with zero writes. A different existing definition follows the Update chapter.
 
-Sample output is not in this guide yet.
 {% endcapture %}
 {% capture create_connect %}
 ### Native API68 create
@@ -189,7 +190,6 @@ HTTP 429 or 503 means Salesforce did not process the PUT. The plugin waits for t
 
 The bounded test made one description-only PUT, then checked readiness and preservation independently. Verification used one final fresh archive, with zero-write checks, not another PUT. Later live updates changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root.
 
-Sample output is not in this guide yet.
 {% endcapture %}
 {% capture update_connect %}
 ### Native API68 update
@@ -251,20 +251,18 @@ Use the generated names your read returns; the ones above only show their form. 
 ## Delete
 
 {% capture delete_plugin %}
-Deletes one native graph. The selector and the local file must name the same graph. Preview first, then confirm:
+Deletes one native graph, selected by name. Preview first, then run the delete:
 
 ```sh
-sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview
-sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --confirm-delete
+sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0 --preview
+sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0
 ```
 
-`--confirm-delete` is required. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
+The delete takes no confirmation flag. The graph's current definition is read from the org by its name first, also by the preview; a graph the org does not have reports `unchanged`. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
 
-The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade and does not remove the local file. Preview is read-only.
+The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade. After a confirmed deletion the plugin removes the graph's canonical file, `data360/dataGraphs/ExampleGraph.native-dataGraph.json` under the default package directory of `sfdx-project.json` (`force-app/main/default` without one), when it is a regular file; add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), nor for an unchanged, blocked, failed, rejected or unconfirmed delete. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. A live delete confirmed in 66 seconds and removed the local file (verification DB: `graph-native-create-delete-settlement`). Preview is read-only.
 
 The plugin does not read the graph back after the delete, because the by-name metadata read is not reliable at that point (see Known failures).
-
-Sample output is not in this guide yet.
 
 **Known failures:**
 
@@ -289,11 +287,11 @@ sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerG
 Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no DataGraph type, so sf project delete source cannot select a graph. A destructive metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph after preview and an exact confirmation flag." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no DataGraph type, so sf project delete source cannot select a graph. A destructive metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph selected by name, after a preview." plugin_body=delete_plugin %}
 
-Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Local request files and any retrieved file remain.
+Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Through the API route, local request files and retrieved files remain; the plugin removes only the graph file it was given.
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 **Read (native API 68 retrieval):**
@@ -312,11 +310,12 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 **Create:**
 
 - Native deploy creates the graph only after independent absence and root checks, with `--allow-processing`.
-- Creation materializes supporting resources. It defaults to a daily full refresh with incremental refresh disabled, even when the file omits the schedule.
+- Creation materializes supporting resources. What Salesforce stores when the file omits the refresh schedule has no verification entry; name `fullRefreshConfig` and `incrementalRefreshConfig` explicitly and read the graph after creating it.
 - A three-field graph took about 7 minutes to build. A graph with one related object took about 17 minutes in a live test. A graph on a unified Identity Resolution root took about 16 minutes.
 - During the build the graph read `creating` with an empty `valuesDmoName`, then `creating` with the generated names set, then `processing` for about 9 seconds, then `ready`. The day-zero names appeared shortly after `ready`, and metadata stayed `Inprogress` for about 5 minutes.
 - Live creates covered a standard `ssot__Individual__dlm` root with a related object and a 7-day schedule, and a unified root owned by a published Identity Resolution ruleset.
-- No native Git selection, mixed families, dependency expansion or cascade is admitted.
+- A graph can be deployed beside other families and selected with `--changed-since`; graphs run last, and a graph on the unified DMO of a selected identity resolution starts only after that ruleset is `PUBLISHED`. Dependencies are never pulled in, and nothing cascades.
+- Create, update and delete at `auto` (no `--api-version`) ran through API 68.0: create confirmed in 1040 s, a repeat was `unchanged`, update confirmed in 42 s, delete confirmed in 43 s (verification DB: `graph-auto-routes-native68`).
 - Live API 68 create, read and delete qualification and the offline installed-package routing smoke are separate results. Neither is live installed cross-org qualification.
 
 **Update (native API 68):**

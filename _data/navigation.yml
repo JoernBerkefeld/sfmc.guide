@@ -19,6 +19,8 @@
       url: /engagement/general/
     - title: Differs from Official Docs
       url: /engagement/differs-from-docs/
+    - title: Personalization strings, AMPscript & SSJS together
+      url: /engagement/ampscript-ssjs-interplay/
     - title: FAQ
       url: /engagement/faq/
     - title: Einstein Recommendations

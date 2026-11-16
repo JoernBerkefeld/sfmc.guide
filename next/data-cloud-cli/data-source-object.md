@@ -28,7 +28,7 @@ crud:
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** This page does not list an sf-plugin-data workflow for source objects.
+**Plugin qualification:** The `sf data360` commands have no source-object family, so this page lists no plugin workflow.
 
 ## Read
 
@@ -67,12 +67,12 @@ The file names the source record that the configuration refers to.
 
 {% include operation-tabs.html id="source-object-delete" label="Delete" cli_state="unknown" cli_reason="Deleting a source object has not been tested." split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API workflow for deleting a source object has been tested." %}
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 **Tested scope:** Live-org reads and the bounded operations described here were tested. This badge does not verify untested writes or general CRUD support.
 
-**Read:** The CLI retrieve was run with `--api-version 65.0`. The saved XML names the source record. It does not include field definitions or a complete connector or credential export.
+**Read:** The CLI retrieve was run with `--api-version 65.0`. The saved XML names the source record. It does not include field definitions or a complete connector or credential export. No verification-database row records this read; treat the sample as an observation from one retrieve, not a verified result.
 
 **Not verified:** Create, update and delete of source objects. Any API retrieval of source objects. Field definitions, and connector or credential export.
 

@@ -34,6 +34,8 @@ Member IDs and profile fields are personal data. Keep request files and exports 
 
 **Plugin qualification:** No plugin workflow is tested for segment members.
 
+**Evidence scope:** Every request on this page uses API v67, and the verification database has no row for any of them: not the member read, the metadata read, the SQL query routes or the saved-output option. The commands and samples are documented as written, not verified. The segment itself is read at API v68 on the [Segments](/next/data-cloud-cli/segments/) page, which has database rows.
+
 ## Read
 
 {% capture read_connect %}
@@ -47,7 +49,7 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers' --targe
 
 Keep `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName`. You need them for profile details. Do not guess a table name from the display name.
 
-The segment response sample is not in this guide yet.
+The response has the shape shown on the Connect API tab of the [Segments](/next/data-cloud-cli/segments/#read) page.
 
 The path is quoted so the shell does not read `&` as an operator. Next, request one member:
 
@@ -227,14 +229,14 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?
 
 > Official reference: [Segment members API](https://developer.salesforce.com/docs/marketing/marketing-cloud-growth/references/mc-connect-segments?meta=getSegmentMembers).
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 **Deliberate CLI-envelope inspection:** the eight REST commands in the Read chapter keep `--json`, so the HTTP status and body appear under `result.statusCode` and `result.body`. This is a structured-response example, not a requirement for every API call. JSON request bodies alone do not need this output flag.
 
-**Verification scope:** Live-org reads and the bounded operations described here were tested. The operation limits still apply. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** See the evidence scope near the top of the page: no member route here has a verification-database row. The operation limits still apply, and this badge does not verify untested writes or general CRUD support.
 
-**Status codes observed:** the member read returns `200`. Query submission returns `201`. Query status and row reads return `200`. The segment read sample is not in the guide yet.
+**Status codes shown in the samples (not recorded in the verification database):** the member read returns `200`. Query submission returns `201`. Query status and row reads return `200`.
 
 **Page size:** the documented maximum is 1000 rows per request.
 
@@ -254,5 +256,6 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers/members?
 - A one-call export that includes profile details.
 - File output for members through `--stream-to-file`.
 - Plugin workflows for members.
+- Every route on this page at any API version, including v67 and v68 (no verification-database row).
 
 </details>

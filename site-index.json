@@ -1008,11 +1008,11 @@
     "description": "Data Stream ingestion, source-to-DLO mappings, saved definitions and qualified native API and plugin limits."
   },
   {
-    "name": "Data Transforms: native API qualification",
+    "name": "Data Transforms",
     "url": "/next/data-cloud-cli/data-transforms/",
     "section": "Data Cloud with Salesforce CLI",
     "type": "page",
-    "description": "A bounded API68 experiment demonstrates a directly created DLO as a precreated batch transform output, not plugin command support."
+    "description": "The plugin's transform commands: the file holds the transform as Salesforce returns it, deploy creates or updates by name and Salesforce decides."
   },
   {
     "name": "DLO-DMO-mapping",
@@ -1118,6 +1118,13 @@
     "section": "Next",
     "type": "page",
     "description": "The complete Handlebars helper catalog for Marketing Cloud Next — searchable and filterable, with the Core API version each helper became available in and its AMPscript equivalent where one exists."
+  },
+  {
+    "name": "How personalization strings, AMPscript and SSJS interact",
+    "url": "/engagement/ampscript-ssjs-interplay/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Tested on a live CloudPage: the order in which Marketing Cloud Engagement resolves personalization strings, AMPscript and SSJS, and what happens when you nest them."
   },
   {
     "name": "Identity Resolution",

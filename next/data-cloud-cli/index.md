@@ -12,11 +12,11 @@ crud_rows:
   - path: next/data-cloud-cli/data-stream-definition.md
     label: Data Streams
     anchor: data-stream-configuration-datastreamdefinition
-    failures: 'One of three live `--delete-dlo` runs reported an HTTP 400 although the stream and DLO were deleted.'
+    failures: '—'
   - path: next/data-cloud-cli/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
-    failures: 'Full-schema standard redeploy failed with primary-key/qualifier errors. CLI create failed for the tested schema.'
+    failures: 'Standard-CLI create of the tested full schema fails; the plugin creates through the native API.'
   - path: next/data-cloud-cli/data-model-object.md
     label: DMOs
     anchor: data-model-object-dmo-customobject-dlm
@@ -24,7 +24,7 @@ crud_rows:
   - path: next/data-cloud-cli/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
-    failures: 'Inventory acceptance: earlier runs failed and it is not passed. A direct native DELETE of a non-last mapping can remove DMO fields.'
+    failures: 'A direct native DELETE of a non-last mapping can remove DMO fields.'
   - path: next/data-cloud-cli/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -36,7 +36,7 @@ crud_rows:
   - path: next/data-cloud-cli/calculated-insights.md
     label: Calculated insights
     anchor: read
-    failures: 'Two earlier deletions could not be confirmed; the cause is unexplained.'
+    failures: '—'
   - path: next/data-cloud-cli/segments.md
     label: Segments
     anchor: read
@@ -69,41 +69,15 @@ crud_rows:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
-
 You can use Salesforce CLI to download quite a bit of your Data Cloud (Data 360) configuration. Making changes is a little less straightforward: some commands work with saved definitions, while others work with the actual running component.
 
-[Data Transforms qualification](/next/data-cloud-cli/data-transforms/) separately
-explains the demonstrated use of a directly created DLO as a precreated transform
-output. Transform plugin commands are not implemented; this qualification does not
-add a resource to the CRUD support table below.
+[Data Transforms](/next/data-cloud-cli/data-transforms/) explains the plugin's transform commands: the file holds the transform as Salesforce returns it, and deploy creates or updates it by name. It is not a row in the CRUD table below.
 
 This page explains the difference and shows the commands next to the files and responses you can expect. Start with retrieving an existing component. Only move on to create, update or delete when you have checked the prerequisites for that section.
 
 <!-- Keep this capability table, all linked type-page details and their visible last-updated timestamps synchronized with every substantive update across this guide. -->
 
 Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. Using Salesforce CLI as a request runner does not make an API workflow standard resource-specific CLI support. XML definitions and runtime state are views of the same resource, not separate feature types.
-
-### Choose a method for each operation
-
-The resource pages group complete workflows into independent operation tabs. **CLI** means a supplied supported Metadata retrieval/deployment workflow or a resource-specific standard command. **API** means requests such as `sf api request rest`, including any supporting CLI reads needed by that workflow. Generic REST or SOAP request runners, request bodies supplied by file or stdin, MCP/facade/Aura calls and authentication helpers never establish resource-specific standard CLI support. Their use of Salesforce CLI for authentication or transport does not change the API classification. Separately identified custom plugin commands remain plugin workflows, not standard CLI support. Switching a tab changes the method's prose, payloads, commands and checks together, not just its code blocks. Shared prerequisites, safety warnings and detailed evidence for disabled methods remain visible.
-
-- **Available:** an existing workflow is supplied and the tab can be selected. Its bounded, definition-only or asynchronous qualifications still apply; availability is not a new verification claim.
-- **Not supported:** we tested this method in the stated scope and it did not work. The disabled tab has a solid red circle-slash icon, and the reason is shown beneath the tabs.
-- **Not tested:** nothing has been tested or researched for this method. The disabled tab has a dashed grey question-mark icon. This is not the same as "does not work".
-- **sf-plugin-data:** the DLO page now supplies native API68/default retrieve, automatic create/update and exact-target delete workflows, with explicit read-only preview. Its portable JSON and separate payload policies replace the earlier XML wrapper/ingestion-DLO mechanisms. The Data Stream, DMO and DLO-DMO-mapping pages also supply qualified plugin workflows, with their own prerequisites and operation limits. The calculated-insight page separately documents the bounded explicit68 draft/publish/source-paired-delete workflow, installed cross-org equality/no-op evidence and unresolved historical deletion-confirmation failures; its standard-CLI/API tabs remain separate. The Graph page separately documents native API 68 retrieve, create, update and delete for any graph shape the API accepts (standard or unified roots, related objects, any schedule), zero-write equality, a preview check of the root and its Identity Resolution owner, and deletion decided by the DELETE answer. Installed description UPDATE and zero-write output checks passed; general cross-org portability is not qualified. The plugin defaults to native API 68 routes, and every plugin-supported operation's API tab shows the native API 68 request it sends. Exhaustive external consumers and generated-resource/storage/credits cleanup are unverified. The Segment page now supplies four bounded native JSON API68/default plugin workflows: installed retrieve/repeat, absent-target CREATE, description UPDATE with acknowledged processing and independent preservation reads, settled zero-write no-op and confirmed exact deletion. Its later conservative predispatch DELETE guard is offline-qualified only; transitional DELETE branches are synthetic-only. Historical API65 evidence remains separate, with no general SQL, cross-org, completed computation or physical cleanup claim. Other resource plugin tabs remain not tested. Public-command standalone acceptance does not establish ingestion, populated/stream-owned behavior or support beyond API68.
-
-CLI is selected first when available, otherwise API. When neither method has a workflow, all choices remain disabled and the limitations stay visible. Without JavaScript, available workflows remain readable as labeled sections.
-
-**Presentation update:** operation-tab guidance was added on October 29, 2026. The last-updated and live-verification scope on each resource page retain their original meaning; this presentation change does not record a new live-org test. The 14:35 documentation synchronization includes the independently reverified relationship read; synchronized Graph/Identity Resolution timestamps do not represent new live checks of those resources. The 17:27 synchronization adds the October 29 source-only mapping XML comparison; it records retained evidence, not a new live check or broader write qualification. The 19:43 synchronization adds the retained target-bound calculated-insight expression update and preservation result; it does not record new Graph/Identity Resolution live verification, a schedule change or a successful calculation run.
-
-**October 30 documentation reconciliation:** the DLO/stream pages now distinguish documented ingestion CREATE inputs from qualified workflows and retain the inconclusive stream readback as unknown. Segment guidance adds the source-only stable-owner comparison and native/MCP DBT rule differences. The native stream reference now adds documented POST availability, the ingestion primary-key-only field-array rule and the native/facade list-filter distinction; it supplies no qualified ingestion CREATE recipe. CRUD ratings are unchanged. Synchronized overview, Segment, calculated-insight, Graph and Identity Resolution timestamps do not represent new live tests of those resources.
-
-**October 30 Segment predicate reconciliation:** retained native API 65 evidence now qualifies one source-only existing-owner forward addition of `AND <same selected primary field> IS NOT NULL` after `WHERE 1 = 0`. Independent ACTIVE runtime and Metadata reads agreed on the desired SQL and preserved settings, identities and bindings. This is not general SQL, cross-org, membership or computation proof. The Segment API update method was already Partial; no CRUD status or method is promoted. The synchronized timestamps record this documentation reconciliation, not new live tests of the other resources.
-
-**November 2 DLO retrieval reconciliation:** retained standard CLI runs with requested API 65.0–68.0 each succeeded on the same source test fixture, saving one object and eight field XML files with identical bytes and parsed XML. The [DLO Retrieve section](/next/data-cloud-cli/data-lake-object/#read) includes the complete saved fixture files and one command example. No disk manifest was generated, and the CLI response did not independently report an effective API version. This adds retrieval evidence only: CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged.
-
-**November 2 DLO CREATE reconciliation:** four real standard deployments of the unchanged retrieved schema under independently absent synthetic names failed at requested API 65–68, with the same generic internal error signature at `Id__c` (combined object line 54, column 13). Independent post-failure Metadata reads could not find each name. The DLO CLI Create tab is blocked for this tested schema; this did not establish universally unsupported CREATE. The separate native API68 standalone plugin workflow now qualifies bounded creation. Distinct earlier API ingestion-chain observations are retained, not promoted to a general creation workflow. No other resource was reverified.
 
 {% include crud-legend.html %}
 
@@ -130,160 +104,39 @@ The ratings cover usable workflows supplied in this guide, not every observed op
   </tbody>
 </table>
 
-## Native plugin scope and readable results
-
-**Documentation update: November 3, 2026.** This section describes the current
-implementation and requested output format. The stream detail and summary above
-also include the fresh bounded installed API68 cross-org result; this does not
-requalify other resources or API versions. The resource pages retain their existing operation ratings and
-live-tested limits. In particular, mapping inventory acceptance and its deferred
-`totalSize` mismatch remain unresolved; mapping deletion is observed live at
-API68 only.
-
-For whole-mapping deletion, see the [mapping delete commands and safety limits](/next/data-cloud-cli/dlo-dmo-mapping/#delete).
-Removing selected field pairs instead uses the complete JSON deploy workflow under
-[Mapping Update](/next/data-cloud-cli/dlo-dmo-mapping/#update).
-
-### Optional dataspace
-
-Native `sf data360 retrieve`, `deploy` and `delete` accept `--dataspace NAME`.
-`--data-space NAME` is an alias; use one spelling, never both in the same command.
-The flag has no CLI default. Omitting it does not mean every request sends a
-`default` parameter:
-
-- Mapping requests add the `dataspace` query only when you supply the flag. Without
-  it, local identity checks use the documented default context, but the HTTP query
-  is omitted.
-- DMO create and update send `dataSpaceName` only with an explicit flag. Creating a
-  nondefault-space DMO without that flag is refused.
-- DLO creation must still send `dataspaceInfo`: its membership comes from the
-  validated saved definition, even without a flag. DLO update does not acquire a
-  scope property. DLO/DMO list, detail and delete URLs do not gain extra dataspace
-  filters that those routes do not support.
-
-Before a write, the requested scope, saved identity and fresh target/parent
-identities must agree. DLO checks use actual memberships; DMO checks use the
-returned `dataSpaceName`. Inventory filters returned memberships locally: omission
-keeps default-space discovery, not an all-space export. An explicit scope selects
-that space; ambiguous names are refused. The existing file layout is unchanged,
-and `--overwrite` does not permit replacing another dataspace's definition at the
-same filename. Legacy families and dependency adapters remain default-only.
-
-These are implemented scope checks and parameter handling, **not live-qualified
-nondefault-space CRUD**. They do not widen version guards, parent/survivor checks,
-ingestion support or destructive-operation permissions. The default-space command
-examples below remain the retained qualified examples, not nondefault recipes.
-
-### Safe operation diagnostics
-
-Native stream, DLO, DMO and mapping failures distinguish plugin verification from
-a confirmed Salesforce API rejection. Protected-state mismatches can identify the
-check, resource and first differing path. Only bounded schema identifiers, enums
-and flags are shown as expected/observed values; IDs, labels, free text and unknown
-properties are redacted. Raw remote payloads, arbitrary exception messages and stack
-traces are not forwarded. A confirmed rejection may report its HTTP status without
-the response body; otherwise the plugin does not claim Salesforce rejected the
-request. Diagnostics leave safety checks and error codes intact and do not
-permit retrying an unknown mutation.
-
-For Connect API failures, the plugin identifies HTTP 429 **Too Many Requests**
-as rate limiting. HTTP 503 **Service Unavailable** can mean a Connect rate limit,
-maintenance, load or another availability issue; it does not confirm the cause.
-Human-readable and JSON diagnostics show a server `Retry-After` value only when
-it passes validation. Reduce request frequency and try later because effective
-limits can vary with load and change. Before rerunning a write with an unknown
-outcome, inspect the target. The plugin does not automatically replay the write.
-
-For ingestion provisioning, start with the [Data Stream and landing DLO](/next/data-cloud-cli/data-stream-definition/),
-prepare the DMO and its required fields independently, then create the DLO-to-DMO
-mapping last. Add a supported stream-linked DLO field through its owning stream,
-not standalone DLO CRUD; that update does not create DMO fields or downstream mappings.
-
-### Human-readable output
-
-Leave off `--json` to see one action line per deployed or deleted component,
-identified by type and API name. Lines distinguish created, updated, deleted,
-unchanged, failed, blocked and not-attempted results; preview uses `Planned` rather
-than claiming a completed change. Confirmed mapping updates also show the
-[removed and added field-pair lists](/next/data-cloud-cli/dlo-dmo-mapping/#update).
-A field-pair retarget appears in both lists.
-
-Successful CRUD lines use `created|updated|deleted <type> <apiName>`. The suffix
-` (server is still processing)` identifies positively acknowledged, unsettled
-work: an explicit DLO `PROCESSING` write response, unless an existing independent
-read confirms `ACTIVE` and the requested definition, or the guarded Identity
-Resolution deletion acknowledgement. HTTP 204 alone and `--allow-processing` do
-not establish ongoing processing. A suffix-free line does not prove activation
-or physical cleanup; some operations confirm only a definition or accepted
-receipt. Failed or unknown outcomes are not successful queued operations. This
-output change has synthetic regression coverage only, not new live-org acceptance.
-
-Deployment execution ends with `Deployed: n (x created / y updated / z failed)`.
-Here `n` is the number of confirmed creations plus confirmed updates. Unchanged,
-blocked and unattempted components are excluded; a failed component counts once,
-not once per field operation. Preview does not print a completed-deployment total.
-
-Retrieval lists each successful component as
-`Downloaded <type>:<ApiName> (retrieved).` or
-`Downloaded <type>:<ApiName> (unchanged).`, then prints `Downloaded <type>: n`
-for that type. The total counts successful component results, including unchanged
-local files, not attempts, individual files or API `totalSize`. Failed names remain
-visible and are not counted. This display rule applies to exact, type-only and
-bare retrieval; it does not prove that an inventory is complete or that a pending
-retrieval implementation has passed installed acceptance. `--json` keeps its
-structured result without these human-readable lines.
-
 ## Before you start
 
-### What is the CLI, and where do I type this?
+The resource pages use two kinds of commands, and each example says which one it is:
 
-Salesforce CLI is a program on your computer that talks to Salesforce. CLI stands for **command-line interface**: instead of clicking through pages, you type a command and read its response. Here we use it to save configuration as files, compare settings and make selected changes. Installing it does not create a Salesforce account or give you additional permissions.
+- **Standard CLI:** Salesforce CLI's own `sf project …` and `sf api request rest` commands.
+- **Plugin:** the `sf-plugin-data` commands `sf data360 retrieve|deploy|delete|publish`.
 
-Open **PowerShell** on Windows or **Terminal** on macOS/Linux. A terminal is the window; the shell inside it interprets what you type. You can also use the terminal in an editor such as VS Code. Do not paste these commands into Salesforce's browser search box or a browser's developer console.
+Both need the same setup: Salesforce CLI, a login for an org with Data Cloud enabled, and a project folder. Run commands in a terminal (PowerShell on Windows, Terminal on macOS/Linux), one line at a time, and check each result before the next. Replace the placeholders `SOURCE_ALIAS` and `TARGET_ALIAS` with your own org aliases; check the org and your permission before any deploy, POST, PATCH or DELETE. The detailed examples live on the resource pages, so only one example per command kind is shown here.
 
-Copy one command line at a time and press Enter. Long lines may wrap on this page, but are still one command. Wait for the prompt to return and check the result before running the next line. Blocks labelled JSON or XML are file contents or sample responses, **not terminal commands**. The `sf` commands below work in PowerShell and common macOS/Linux shells; the later `Get-Content` example is specifically PowerShell.
+### Install
 
-### Install and check Salesforce CLI
-
-You need a computer where you can install software, an internet connection to Salesforce, a plain-text editor, and access to an org with Data Cloud enabled. An **org** is a Salesforce environment with its own users, settings and data. Ask your administrator for a non-production practice org, its login URL and the appropriate API/Data Cloud permissions. A **sandbox** is a separate testing environment; an arbitrary new Salesforce account will not necessarily have these features.
-
-Follow Salesforce's [CLI installation instructions](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm). If you choose the npm installation route, first install a supported Node.js LTS version from [Node.js](https://nodejs.org/en/download/). Node.js runs JavaScript outside the browser; its bundled **npm** program installs software packages. Then run:
+Install [Salesforce CLI](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm) (it needs a supported Node.js LTS when installed through npm), then check it:
 
 ```sh
-node --version
-npm --version
-npm install --global @salesforce/cli
 sf --version
 ```
 
-The first two commands should print version numbers; the last should identify `@salesforce/cli` and its version. If `sf` is not found, reopen your terminal after installation and check the installer instructions before continuing. The standard Metadata and API request-runner examples do not require a custom plugin, Yarn or TypeScript. A **plugin** adds commands to the CLI; the separately identified optional `sf data360` workflows require installing `sf-plugin-data` and following their linked prerequisites.
+The plugin is only needed for the plugin examples. Its install steps, supported Node.js versions and command reference are in the plugin's README; after installing, `sf data360 --help` lists its commands.
 
-To see what a command accepts without running it, append `--help`, for example `sf org login web --help`. Words starting with `--` are **flags**: options that change how a command runs.
+### Log in
 
-### Log in and name the connection
-
-An **alias** is a local nickname for an authenticated connection. Choose a clear one, such as `data-practice`. Replace `LOGIN_URL` below with the exact HTTPS login URL your administrator supplied, keeping the quotes:
+An **alias** is a local nickname for an authenticated org. Replace `LOGIN_URL` with the HTTPS login URL for your org:
 
 ```sh
 sf org login web --instance-url 'LOGIN_URL' --alias data-practice
 sf org list
 ```
 
-The first command opens your browser. Sign in to the intended org, complete any sign-in checks, approve access if your administrator allows it, then return to the terminal. The second lists connections: check the alias, username and connection status. If login is blocked by your company's security policy, ask your administrator; do not try to bypass it. The CLI retains authentication locally, so protect your computer and never share authentication files or tokens.
+Check the alias, username and connection status in the list. If you only read, one login is enough.
 
-Throughout this page, `SOURCE_ALIAS` and `TARGET_ALIAS` are **placeholders**, not literal connections. Replace them with your chosen aliases. If you are only reading, one login is enough. If a later example changes a different org, log in to that org separately with a different alias and verify it too. `--target-org` always chooses the org the command contacts, even for a read.
+### Project folder
 
-An alias is not a read-only permission setting. Some explicitly source-only examples below write to `SOURCE_ALIAS`. Before every deploy, POST, PATCH or DELETE, check the command, the actual org and your permission to make that change. We deliberately pass `--target-org` rather than rely on a saved default org. Start with retrieval, not the create/delete sections; these are alternatives to consult, not a script to run from top to bottom.
-
-### Make a local Salesforce project
-
-A **project** is a folder on your computer, not a new org. It tells the CLI where to put Salesforce configuration files. For this guide, the smallest setup is enough:
-
-1. In your file manager, create a new empty folder called `data-cloud-practice` in a private working location. Do not reuse a project containing unrelated work.
-2. Inside it, create the nested folders `force-app`, then `main`, then `default`. This gives you `force-app/main/default/`.
-3. In your text editor, create `sfdx-project.json` directly inside `data-cloud-practice`, beside `force-app`, with the contents below. Save it as plain UTF-8 text, not as `sfdx-project.json.txt`.
-
-JSON stores named settings as `"key": value` pairs inside braces. Keep double quotes, commas and brackets as shown; JSON does not allow comments or a comma after the last entry.
+A project is a folder on your computer, not a new org. Create an empty folder with `force-app/main/default/` inside it and an `sfdx-project.json` beside `force-app`:
 
 ```json
 {
@@ -293,144 +146,35 @@ JSON stores named settings as `"key": value` pairs inside braces. Keep double qu
 }
 ```
 
-`packageDirectories` identifies the source folder; `default: true` makes it the default location for retrieved files. `namespace` stays empty here. `sourceApiVersion` selects the project's default Salesforce API version, explained below. There is no package to install from this file.
+Run the commands from that folder. The standard CLI writes retrieved XML under `force-app/main/default/`. The plugin writes its JSON files under `data360/` (for the plugin retrieve flags, see its README and the resource pages).
 
-Now change the terminal's **working directory**—the folder commands run from—to your project. Replace `PROJECT_FOLDER` with its full path, keeping the quotes (especially if the path contains spaces):
+### First retrieval
 
-```sh
-cd 'PROJECT_FOLDER'
-pwd
-```
-
-`cd` changes directory; `pwd` prints the current one. Check that it is `data-cloud-practice`, the folder containing `sfdx-project.json`, not `force-app` or `default`. Run the remaining commands from that project root unless a section tells you to use a separate project. A path such as `force-app/main/default/...` is relative to this root. After reopening a terminal, use `cd` again.
-
-### Configuration, live components and names
-
-**Metadata** means configuration: object definitions, fields, labels and selection rules rather than customer rows. Salesforce's **Metadata API** transfers those definitions. An **API** is an interface programs use to communicate; the CLI handles the login and sends the request for you. **Runtime** or **operational** means the live component and its current state, which is not always created by saving a definition. Retrieving a segment definition, for example, does not retrieve its members.
-
-A **dataspace** groups Data Cloud data and configuration with its own access boundaries. The metadata examples use **API `65.0`, default dataspace**. Ask your administrator to confirm you can use that dataspace. API versions describe the Salesforce interface, not your installed CLI version. Keep the API versions in the commands: the later sections deliberately use API `67.0` for some requests. The examples do not establish that a configuration can be moved between orgs unchanged.
-
-A component's **label** is its friendly display text. Its **API name** is the exact technical name; a **metadata member name** is the name used to select its saved definition. An **ID** is a separate record identifier returned by Salesforce. These are not interchangeable. Names such as `Customer__dlm`, `CustomerActivity` and `ActiveCustomers` are examples, not objects Salesforce creates for you. Keep actual capitalization and suffixes; replace example names consistently in commands, filenames and file contents. Later placeholders such as `QUERY_ID` must come from the response specified in that section, never from a guessed display name.
-
-To find an existing metadata member before your first download, ask the component owner for its API name or list the relevant type. For example, this read lists `CustomObject` definitions visible to your user:
-
-```sh
-sf org list metadata --metadata-type CustomObject --target-org SOURCE_ALIAS --api-version 65.0
-```
-
-Look for the exact `fullName` of your intended DMO ending in `__dlm`. The list can include other kinds of objects; do not pick the first entry blindly. If you cannot identify the intended component, stop and ask its owner. Later sections give the corresponding metadata type to list.
-
-An **object** describes a table-like collection of records; its **fields** are the columns. A **schema** describes those fields and their types. A **primary key** identifies a row; a **key qualifier** distinguishes keys from different sources. A lookup links to another object, and relationship **cardinality** describes how many rows may match: `ManyToOne` or `N:1` means many source rows can refer to one target row. Keep the real key and relationship settings rather than inferring them from example names.
-
-**Dependencies** are the objects, fields or other components a definition relies on—or consumers that rely on it. Ask the owner to check these before writes and deletion; an empty result from one inventory is not proof that nothing uses a component. The later create examples assume those prerequisites already exist. This page is not a recipe for building an entire Data Cloud environment from scratch.
-
-### Files you send, files you receive
-
-Salesforce source-format metadata uses **XML**: named elements such as `<label>Customer</label>`. Preserve the surrounding tags and namespace declarations. Create any missing parent folders in your editor before saving a new file at the exact path shown. Do not paste an XML fragment over a complete retrieved file.
-
-The default source layout is **`force-app/main/default/`**. In short:
-
-- **Retrieve** downloads XML into that folder. It can replace local edits, but does not change the org or start ingestion, calculations or publication.
-- **Deploy** sends your selected local XML to the org. It does not rewrite the local file, and it does not automatically create missing dependencies.
-- **REST requests** print a response to the terminal. They do not create Salesforce project files. Save the request JSON shown below yourself, outside metadata source; `--body '@file.json'` reads that file.
-- **Delete** changes the org. The delete examples here leave previously downloaded XML on your computer. Reconcile those files before deploying again, or you risk restoring stale configuration.
-
-For a request such as `--body '@ci-create.json'`, create `ci-create.json` in the project root, **beside `force-app`, not inside it**, using your text editor. Save only the JSON block, without the surrounding Markdown backticks. The `@` tells the CLI to read a local file; it is not part of the filename. All later unqualified request filenames use this same location. `--file ci-delete.json` is different: that file describes the whole request, including URL and method, rather than only its body. Neither form creates the file for you.
-
-**REST** is the API request style used for the live components below. The quoted `/services/data/...` path is an **endpoint**, an address within the org selected by `--target-org`, not a folder on your computer. `GET` reads; `PATCH` changes selected settings; `DELETE` requests removal. `POST` submits an operation and can create or process data, but some explicitly named operations below are reads. `--header` supplies request context, such as `Data-Space:default`; `--body` supplies the request's input. A response body is the data Salesforce sends back. Do not assume that a response can be reused as a request.
-
-The API examples call **native endpoints** at API 68.0: each `/services/data/v68.0/ssot/...` path addresses one component directly, and the request body is the component's own JSON. You invoke them through vanilla `sf api request rest`; they are not native `sf` commands. Where the plugin supports an operation, the API tab shows the same request the plugin sends.
-
-**Follow documented routes:** a returned URL containing an API version identifies that link's version, not the version or support level of the request that produced it. Verify the intended org and path before you use a returned link. The [native stream reference](/next/data-cloud-cli/data-stream-definition/#documented-native-stream-api-availability) documents stream POST, but that alone does not establish a safe ingestion creation workflow; the Data Streams page lists what was qualified.
-
-All responses are **sanitized, shortened illustrations**, not complete response contracts. XML with an “omitted” comment is an excerpt: keep the complete retrieved file when deploying. Likewise, `<redacted-member-id>` and similar response markers stand for removed values, not inputs to copy.
-
-### Your first retrieval
-
-Use the DMO name you identified above in place of `Customer__dlm`:
+Standard CLI, API 65.0 and the default dataspace. Use the exact `__dlm` name of your DMO instead of `Customer__dlm`:
 
 ```sh
 sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
-Here's how to read that command:
-
-- `sf project retrieve start` downloads configuration into the current project.
-- `--metadata CustomObject:Customer__dlm` selects **type:name**. `CustomObject` is Salesforce's metadata type here, not an instruction to create an object.
-- `--target-org` chooses the authenticated connection; `--api-version` selects the interface version.
-- `--wait 5` waits up to five minutes for results, not five seconds. Returning to the prompt is not proof that a job finished.
-Interactive CLI and plugin examples use human-readable output by default. Optionally append `--json` for structured output with named properties; it does not save an output file. Samples explicitly labelled optional structured output illustrate that format, not the flag-free command's default display. REST responses can inherently remain JSON without this flag.
-
-Later, `--source-dir` selects a local file or folder to deploy; selecting a folder includes its subfolders. `--manifest` selects components listed in an XML file instead. `--test-level NoTestRun` concerns Salesforce Apex code tests, **not** a simulation or permission to skip checking the result. `--dry-run`, where supported, validates rather than saving the change; these examples otherwise perform the requested operation.
-
-### What does a successful response look like?
-
-In human output, check the retrieval's completion status and saved file paths. **Optional structured output (`--json`):** retrieving a DMO can return this shortened illustration:
-
-```json
-{
-  "status": 0,
-  "result": {
-    "done": true,
-    "success": true,
-    "status": "Succeeded",
-    "files": [{
-      "fullName": "Customer__dlm",
-      "type": "CustomObject",
-      "state": "Created",
-      "filePath": "force-app/main/default/objects/Customer__dlm/Customer__dlm.object-meta.xml"
-    }]
-  }
-}
-```
-
-The outer `status: 0` says the CLI command reported success; a nonzero status means you need to read the error. Inside `result`, check `done`, `success` and the job's own `status` when present. JSON braces `{}` group named properties; brackets `[]` hold a list. `result.files` means the `files` list inside `result`, not a filename. `null` means no value was supplied, not zero or a successful run.
-
-`filePath` tells you where to look. Open that path in your editor, starting from the project root. `Created` describes the **local file**, not a newly created object in Salesforce. The full response can also list individual field files. You have now logged in and downloaded a definition without deploying it. You can stop here and inspect the files before choosing another section.
-
-For deployments, wait for the whole job to succeed and then read the component again to check the result. A component listed as successful inside a failed deployment is not enough. Likewise, `Unchanged` means the configuration did not change; the deployment job still ran.
-
-For REST, check the HTTP status **and the response body**. HTTP is the request/response protocol: codes such as `200` and `201` indicate a successful request, `204` has no response body, and `404` means the requested resource was not found. Authentication or permission failures are not evidence of deletion. Use `--include` when the walkthrough needs visible HTTP status and headers alongside the server body; these are separate from decoded operation results. Only the explicitly labelled Segment Members envelope walkthrough deliberately keeps `--json` to inspect `result.statusCode` and `result.body`.
-
-**Asynchronous** work continues on Salesforce after your command returns. **Polling** means repeating a read/status request, not repeating the create, update or delete. For a deployment that has not finished, use its returned job ID in place of `JOB_ID` and the same org:
+`--metadata` selects `type:name`; `--wait 5` waits up to five minutes. Plugin equivalent, using the plugin's `type:Name` selector (here a DMO):
 
 ```sh
-sf project deploy report --job-id JOB_ID --target-org TARGET_ALIAS --wait 5
+sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS
 ```
 
-For a retrieval that times out, follow the installed command's recovery guidance rather than assuming all files arrived or inventing a deploy-report command for it. For live components, use that section's read command to check progress. Allow time between checks; if the state stays unresolved or reports an error, stop and ask the administrator instead of resubmitting writes. Later **terminal checks** mean checks for a final state, not simply text appearing in your terminal window.
+Append `--json` to either command for structured output. Salesforce decides what a write is allowed to do; read the limits on the resource page before create, update or delete.
 
-A collection or query may return only a **page** of results. **Pagination** means reading the remaining pages. A limit is how many rows to request; an offset is how many rows have already been passed. The Segment Members section shows the concrete steps. Where a collection returns a continuation link/token, use the documented continuation for that endpoint, keeping the same org and expected API path; if you cannot establish that you reached the end, you cannot conclude a deleted item is absent. Never forward credentials to an arbitrary returned URL.
+### What retrieve saves
 
-### Retrieve more than one component
+The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others.
 
-You can repeat `--metadata`; there is no need for a manifest just to select two components:
+- A key the plugin does not know stays in the saved file. Deploy checks files strictly and refuses that file, naming the key path. Unknown keys in a data stream's read-only `observed` section do not block deploy.
+- An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams that are not Ingestion API streams, segments built in the UI or without DBT models, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, system or packaged data transforms, and data graph schedules the format does not hold.
+- Deploy skips as-is files in a folder or Git range with a warning. Naming one refuses with `VERBATIM_NOT_DEPLOYABLE`, and so does publish. Deleting an as-is file in a Git range deletes the object by type and name, with the usual checks.
+- An object still fails when the read fails (HTTP or connection error), when it does not exist, when the answer names another object or data space, or when the org was caught mid-change or a list was incomplete.
 
-```sh
-sf project retrieve start --metadata MktCalcInsightObjectDef:CustomerActivity --metadata MarketSegmentDefinition:ActiveCustomers --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
-```
+Lists are read page by page until the org has no more, and an unusable entry is skipped with a warning.
 
-Check the saved paths for both definitions. **Optional structured output (`--json`):** the `files` list contains both definitions:
+### Deletion examples
 
-```json
-{
-  "status": 0,
-  "result": {
-    "success": true,
-    "files": [
-      { "fullName": "CustomerActivity", "type": "MktCalcInsightObjectDef", "state": "Created" },
-      { "fullName": "ActiveCustomers", "type": "MarketSegmentDefinition", "state": "Created" }
-    ]
-  }
-}
-```
-
-### A note about deletion examples
-
-A **manifest** is an XML list of metadata types and member names. A destructive-change manifest selects what to delete; `--post-destructive-changes` applies those removals after the regular deployment content. An empty `package.xml` does not cancel those deletions.
-
-A few metadata deletes below use generated `package.xml` and destructive-change files. These explain the lower-level mechanism; they are **not self-contained user workflows**. Run them only when your integration has supplied the exact files and checked ownership and dependencies. No current multi-family wrapper or generator invocation is supplied here, and hand-authoring manifests is not the intended normal workflow.
-
-Here, **your integration** means existing tooling or a developer on your team that supplies reviewed files—not something installed by following this page. If you do not have those files and checks, skip these deletion examples. **Git** is a tool for tracking and sharing file changes; keeping a file out of Git means not adding it to that history or uploading it to a repository.
-
-Keep those generated files temporary and out of Git. Use an isolated source project without unrelated XML. Never delete a shared or populated object just to make another example work.
+Some standard-CLI deletions on the resource pages use a destructive-change manifest (an XML file naming the members to delete, applied with `--post-destructive-changes`). They describe the lower-level mechanism and are not self-contained workflows: use them only with files whose ownership and dependencies you have checked, keep those files temporary and out of Git, and never delete a shared or populated object to make an example work. The plugin's `delete` command needs no manifest.

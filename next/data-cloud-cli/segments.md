@@ -32,20 +32,71 @@ A **UI** segment is built in Salesforce's visual interface. A **DBT** segment is
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** The `sf-plugin-data` tabs cover the bounded cases tested for one owned segment, not every segment.
+**Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment-on DMO and SQL models (DBT) or criteria (UI) as written, and Salesforce decides. DBT segments with `NO_REFRESH` and `P90D`, and UI segments with `NO_REFRESH`, no parameters and no settings the plugin does not know, can be expressed. Retrieve saves any other segment as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file.
 
 ## Read
 
 {% capture read_plugin %}
-Saves the segment as one JSON file. You can use that file for the Create, Update and Delete commands.
+Saves the segment on API68 as one JSON file plus one SQL file per model. You can use these files for the Create, Update and Delete commands.
 
 ```sh
-sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --api-version 68.0 --output-dir retrieved
+sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --output-dir retrieved
 ```
 
-The file is written to `data360/segments/OwnedSegment.segment.json`. It has no companion Segment XML. The default is API68 (version 68.0). Repeating the command saves the same bytes and reports the file as unchanged.
+The command writes `retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/<package>/main/default/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model, where `<package>` is the default package directory of `sfdx-project.json`. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
 
-Runtime IDs are not portable between orgs. A sample of the saved file is not in this guide yet.
+The JSON file lists the models by name only:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "segment",
+  "identity": { "dataSpace": "default", "apiName": "OwnedSegment" },
+  "spec": {
+    "displayName": "Owned Segment",
+    "description": "Customer segment with an empty initial audience",
+    "segmentType": "DBT",
+    "segmentOn": { "kind": "dmo", "dataSpace": "default", "apiName": "UnifiedCustomer__dlm" },
+    "models": [{ "name": "OwnedSegment" }],
+    "publishInterval": "NO_REFRESH",
+    "lookbackPeriod": "P90D"
+  }
+}
+```
+
+Each SQL file holds that model's SQL as plain text, with the bytes Salesforce returned:
+
+```sql
+SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0
+```
+
+The plugin checks only the structure of the files. A model name must start with a letter or digit and hold only letters, digits and underscores, and two model names may not differ only in letter case (`INVALID_SEGMENT_DOCUMENT`). The SQL itself is not checked locally; Salesforce decides. Salesforce requires every column fully qualified as `Table.column`, with the DMO API name as the table: it refuses an unqualified column and a table alias with HTTP 400, and the plugin reports that answer. Only DBT segments with `NO_REFRESH`, `P90D` and no parameters can be expressed; another schedule or lookback is refused with `UNSUPPORTED_SEGMENT_VARIANT`. Runtime IDs are not portable between orgs and are not saved.
+
+A UI segment has no SQL file. Its JSON file holds the criteria as a JSON object in `spec.includeCriteria` (Salesforce returns them as an HTML-encoded string; the plugin decodes them), and any lookback:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "segment",
+  "identity": { "dataSpace": "default", "apiName": "OwnedUiSegment" },
+  "spec": {
+    "displayName": "Owned UI Segment",
+    "description": "",
+    "segmentType": "UI",
+    "segmentOn": { "kind": "dmo", "dataSpace": "default", "apiName": "UnifiedCustomer__dlm" },
+    "includeCriteria": {
+      "type": "TextComparison",
+      "subject": { "objectApiName": "UnifiedCustomer__dlm", "fieldApiName": "FirstName__c" },
+      "operator": "equal",
+      "values": ["Example"]
+    },
+    "publishInterval": "NO_REFRESH",
+    "lookbackPeriod": "P90D"
+  }
+}
+```
+
+The criteria are not checked locally. Salesforce adds keys of its own to the criteria it stores (`selfReference`, `subjectFieldDataType` and similar); retrieve the segment after a create to keep that stored form, and a repeat deploy of it reports `unchanged`. A UI segment with another schedule, parameters or a setting the plugin does not know (for example exclusion criteria) is saved as-is.
 {% endcapture %}
 
 {% capture read_cli %}
@@ -93,6 +144,12 @@ The full entry also holds `includeDbt.models` (name and SQL of each model), the 
 ```
 
 The lookback is the time window the segment uses. `P90D` means 90 days. Check the returned value rather than assuming it. Check the segment name, SQL, type, data space, segment-on object, lookback and schedule. This request does not write an XML file. For audience rows, see [Segment members](/next/data-cloud-cli/segment-members/#read).
+
+The same route without a name lists the segments of the org. The listing takes `batchSize`, `offset` and `orderByExpression` and reports `totalSize`:
+
+```sh
+sf api request rest '/services/data/v68.0/ssot/segments' --target-org TARGET_ALIAS
+```
 {% endcapture %}
 {% capture read_metadata %}
 ### Metadata API read of the segment definition
@@ -116,26 +173,35 @@ Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https:/
 The record holds `fullName`, `masterLabel` and `segmentType`. For a DBT segment, `includeCriteria` holds the DBT pipeline with its SQL as text. `listMetadata` with the type `MarketSegmentDefinition` returns the full names in the org. A definition can exist without a live segment, so check the Connect API tab before you rely on it.
 {% endcapture %}
 
-{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not runtime settings or rows." metadata_body=read_metadata connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves one JSON file for a single DBT segment (see Evidence)." plugin_body=read_plugin %}
+{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not runtime settings or rows." metadata_body=read_metadata connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves a JSON file and one SQL file per model, using API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
 {% capture create_plugin %}
-Creates the segment from a saved JSON file on API68, if it does not exist yet. Preview first; the preview writes nothing.
+Creates the segment from the saved files on API68, if it does not exist yet. Preview first; the preview writes nothing.
 
 ```sh
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --allow-processing
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-Use the exact file from the Read chapter in a project you own. Do not reuse a source record ID. Create the dependencies in the target org first.
+The JSON file or any of its SQL files selects the segment, and so does `-m segment:OwnedSegment`. The plugin joins the JSON with exactly one SQL file per model; a missing or extra `OwnedSegment.segment.*` file, or a `sql` key left in the JSON, is refused with `INVALID_SOURCE`. Create and update need `--allow-processing`. The DMO named in `segmentOn` must exist in the target. Do not reuse a source record ID. `--changed-since <git-ref>` can select changed segment files instead of `--source-dir`; a change to the JSON or to any SQL file selects the segment. The plugin always sends the schedule `NoRefresh`.
 
-The output acknowledges queued configuration, not completed computation. A sample of the full output is not in this guide yet.
+Every column in the SQL must be fully qualified with the DMO API name, as in `UnifiedCustomer__dlm.CustomerKey__c`. Salesforce refuses an unqualified column and a table alias with HTTP 400; the item is then `failed` with mutation `rejected` (`REQUEST_FAILED`, or `SEGMENT_CREATE_CONFLICT` for HTTP 409), and Salesforce's message is shown. Nothing was written.
+
+The output acknowledges queued configuration, not completed computation. It reads (offline-tested; derived from the command's output code):
+
+```text
+created segment OwnedSegment (server is still processing)
+Deployed: 1 (1 created / 0 updated / 0 failed)
+```
+
+The preview prints `Planned create: segment:OwnedSegment.` and writes nothing.
 
 **Known failures:**
 
-- A segment name that already exists is refused.
-- If the result is unclear, do not send it again. Read the segment first.
+- The plugin creates only when the native read proves the name absent. A segment name that already exists is routed to the update, or reported `unchanged` when nothing differs; it is not refused. The raw POST answers HTTP 409 (see the Connect API tab).
+- If the result is unclear (`SEGMENT_CREATE_UNCONFIRMED`), do not send it again. Read the segment first.
 {% endcapture %}
 
 {% capture create_connect %}
@@ -211,21 +277,28 @@ Sample of the deploy result with the optional JSON output:
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": true, "changed": true, "success": true }] } } }
 ```
 {% endcapture %}
-{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from saved JSON, then reads it back (see Evidence)." plugin_body=create_plugin %}
+{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from its JSON and SQL files, then reads it back." plugin_body=create_plugin %}
 
 ## Update
 
 {% capture update_plugin %}
-Changes the description in the saved JSON file on API68, then deploys it. Preview the exact file before you run the deploy.
+Changes the saved files on API68, then deploys them. Preview before you run the deploy.
 
 ```sh
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --allow-processing
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-Change only the description. Keep the other settings and bindings as they were saved. Running the same deploy again, after the segment settles, writes nothing.
+Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
 
-A sample of the output is not in this guide yet.
+The output reads (offline-tested; derived from the command's output code):
+
+```text
+updated segment OwnedSegment (server is still processing)
+Deployed: 1 (0 created / 1 updated / 0 failed)
+```
+
+The preview prints `Planned update: segment:OwnedSegment.`. An unclear result ends with `SEGMENT_UPDATE_UNCONFIRMED`; do not replay the update, read the segment first.
 {% endcapture %}
 
 {% capture update_connect %}
@@ -262,11 +335,11 @@ The PATCH answers HTTP 200 and shows the segment while it processes:
 
 The PATCH response leaves out `segmentOnApiName` and `segmentMembershipDmo`. Check those with the full read, not the response. Read the segment again: it can pass through `COUNTING` before `ACTIVE`. Compare the new label and description with the values you sent, and check that the other values and runtime IDs did not change. Do not send an unclear update again. Read the segment first.
 
-The plugin sends this PATCH for a label or description change, or for the predicate change described in Evidence. A description-only PATCH was tested on API 68. The label and predicate changes were tested with the same body on API 65.
+The plugin sends this PATCH for any change of the label, description, segment-on DMO or SQL models, with the SQL of the saved model files.
 {% endcapture %}
 
 {% capture update_cli %}
-Changes only `masterLabel` in the owned DBT XML file, then deploys it. Keep the criteria, model, SQL and type as they are.
+Changes only `masterLabel` in the owned DBT XML file, then deploys it. Keep the criteria, model, SQL and type as they are. This is a note, not a verified step: no verification-database row records the label update (the exit code was not retained).
 
 Change `masterLabel` to `Customer Definition Updated`:
 
@@ -276,22 +349,33 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 ```
 
 The deploy reports the label change. An identical repeat can report `Unchanged`. The deploy job still runs in that case.
-
-A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Changes the description in the saved file and deploys it (see Evidence)." plugin_body=update_plugin %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited JSON and SQL files as one PATCH; Salesforce decides." plugin_body=update_plugin %}
 
 ## Delete
 
 {% capture delete_plugin %}
-Deletes one owned segment on API68, after a preview and an explicit confirmation. The preview reads only. Check that the file matches the segment you intend to delete.
+Deletes one owned segment on API68, selected by name. The preview reads only. Check in the preview that it names the segment you intend to delete; the delete takes no confirmation flag.
 
 ```sh
-sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --preview
-sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --source-dir retrieved/data360/segments/OwnedSegment.segment.json --api-version 68.0 --confirm-delete
+sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --api-version 68.0 --preview
+sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --api-version 68.0
 ```
 
-The segment's identity and configuration must match the saved file. Local files stay on your computer after deletion. A sample of the output is not in this guide yet.
+The selector must be exactly `segment:<Name>`. The segment is read from the org by that name before anything is deleted, also by the preview, and must pass fresh identity, definition and segment-on DMO checks; a segment the org does not have reports `unchanged`. Delete runs at API 68 (the default) in the default data space. Unknown outcomes are never replayed.
+
+After the org confirms the deletion (or accepts it and is still deleting), the command removes the segment's files: `data360/segments/OwnedSegment.segment.json` and every `OwnedSegment.segment.*.sql` beside it, under the default package directory of `sfdx-project.json` (`force-app/main/default` without one). Pass `--keep-local-files` to keep them. The preview removes nothing and lists each file as `Planned local file removal: <path>`. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. Deletion removes no shared unified DMO or membership table.
+
+The output reads (offline-tested; derived from the command's output code):
+
+```text
+Delete: success.
+deleted segment OwnedSegment
+removed local file <path of the .segment.json file>
+removed local file <path of each .sql file>
+```
+
+An outcome that cannot be confirmed ends with `SEGMENT_DELETION_UNCONFIRMED`; read the segment instead of deleting again.
 {% endcapture %}
 
 {% capture delete_connect %}
@@ -317,7 +401,7 @@ The DELETE answers HTTP 204 without a body. That alone does not prove absence. C
 [{ "errorCode": "ITEM_NOT_FOUND", "message": "Segment not found: ActiveCustomers" }]
 ```
 
-If the GET still returns the segment, read it again; do not send another DELETE. Do not delete shared unified DMOs or membership tables as extra cleanup. Local files stay on your computer.
+If the GET still returns the segment, read it again; do not send another DELETE. Do not delete shared unified DMOs or membership tables as extra cleanup. This request writes no local files.
 
 **Known failures:**
 
@@ -346,32 +430,29 @@ sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE
 ```
 
 Check that the deletion completed, and that `CustomerDefinition` is absent from the list. This removes the definition only. The XML file stays on your computer.
-
-A sample of the output is not in this guide yet.
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment after a preview and confirmation (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment selected by name, after a preview (see Evidence)." plugin_body=delete_plugin %}
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-The first command had already stopped with an unknown outcome: later API settlement does not retroactively make that command successful. Do not replay an update with an unknown outcome; reconcile it with reads.
-
+Do not replay an update with an unknown outcome; reconcile it with reads.
 
 `--include` prints HTTP status and headers alongside the server body. DELETE can return HTTP `204` without a body. Confirm that GET returns HTTP `404` / `ITEM_NOT_FOUND` and the exact metadata member is absent.
 
 **Verification scope:** Live-org reads and the bounded operations described above were tested. This badge does not verify untested writes or general CRUD support. API 65 Metadata (XML) workflows in the CLI tabs remain separate evidence from the native API 68 Connect and plugin workflows.
 
-**Live receipts:** Live results come from installed receipts. They bind distinct worktree tarballs. They do not cover the final offline guard refinement or a released package.
+**Native API 68 plugin (one org):** Created segments from the JSON and SQL files, retrieved them back with the SQL file byte-equal, reported a repeat retrieve `unchanged`, updated one by an SQL-only edit, and deleted them, which also removed the local JSON and SQL files; a follow-up GET answered `ITEM_NOT_FOUND`. Salesforce refused an unqualified column ("Expected a fully qualified column name") and a table alias ("Need api name of DMO") with HTTP 400; the same SQL with fully qualified columns created, updated and round-tripped. A segment whose description is empty is returned without `description`; the plugin reads that as an empty description. `created segment ... (server is still processing)` acknowledges queued configuration, not completed computation, and `--allow-processing` acknowledges possible server work even for empty-result SQL and `NO_REFRESH`. A delete confirmed by GET 404 removed no shared membership DMO; generated-resource, physical storage and credit cleanup remain unproven. Unknown outcomes stop without replay, retry, fallback or rollback.
 
-**Native JSON API 68 plugin, Read:** Installed source and default acceptance saved one portable JSON file. Repeating retrieval was byte-stable and reported unchanged. Same-version DMO detail and Metadata reads validated the selected PROFILE model and the text primary field. This is not a Segment XML retrieval. Qualification is limited to one selected single-model DBT segment with an empty audience, `NO_REFRESH` and `P90D`. Runtime and private IDs are not portable source identities. Neither this read nor the later writes prove general SQL, UI criteria, cross-org deployment or a released artifact.
+**Update outcomes:** An update can end `SEGMENT_UPDATE_UNCONFIRMED` while later reads show the segment `ACTIVE` with the change preserved. The command outcome stays unknown; later success does not change it. Do not replay an uncertain write. Reconcile it with reads.
 
-**Native JSON API 68 plugin, Create:** Installed API 68 and default acceptance observed a zero-write preview. It then observed one POST 201 with `PROCESSING`. An independent full GET 200 confirmed the configuration, the private identities and the generated membership references. A later GET observed `COUNTING`. The output `created segment ... (server is still processing)` acknowledges queued configuration, not completed computation. `--allow-processing` acknowledges possible server work, even for empty-result SQL and `NO_REFRESH`. Only authoritative exact native absence permits one CREATE. An existing target takes the bounded UPDATE path. Lookup errors stop the command rather than falling through. A separate native duplicate-name experiment returned HTTP 409. It is not installed duplicate-create acceptance. Conflict or uncertain writes must not trigger PATCH, upsert, retry, fallback or rollback. Reconcile uncertain outcomes with reads. This is not lower-version JSON CREATE, populated-audience or cross-org qualification.
+**Rejected payloads (API 65, source-only):** Five tested variants were rejected. They are observed results, not universal API constraints:
 
-**Native JSON API 68 plugin, Update:** Installed API 68 and default acceptance demonstrated one description-only PATCH. It had a positive PROCESSING acknowledgement. An independent full GET confirmed the desired definition and every setting that was not edited. `updated segment ... (server is still processing)` means queued configuration acceptance, not finished computation. Complete reads of the desired definition during `COUNTING` do not prove audience correctness. A settled, identical deploy without `--allow-processing` was a zero-configuration-write no-op.
-
-**Native JSON API 68 plugin, Delete:** Installed API 68 and default acceptance proved a zero-write preview and an unconfirmed rejection. It then sent exactly one DELETE204. An internal independent exact GET404 followed, and a separate external exact GET404 confirmed the result. HTTP 204 alone is not terminal absence. No shared membership DMO was deleted. Generated-resource, physical storage and credit cleanup remain unproven. The later conservative fresh-predispatch processing guard is offline-qualified only, not separately installed or live-tested. Preserved DELETING and new PROCESSING acknowledgement branches are synthetic-only. The installed deletion reached terminal 404 and did not exercise those branches. Pre-existing PROCESSING is not proof of deletion progress. Unknown outcomes stop without replay, retry, fallback or rollback. No lower-version JSON DELETE, exhaustive external-consumer exclusion or general cross-org qualification is claimed. Local files remain after deletion.
-
-**Installed UPDATE outcomes:** Installed UPDATE attempts that returned `SEGMENT_UPDATE_UNCONFIRMED` were later followed by ACTIVE preservation reads. Those command outcomes stay failed or unknown. Later success does not change them. Do not replay an uncertain write. Reconcile it with reads.
+- A POST with the array directly at `includeDbt.models` (instead of `includeDbt.models.models`) was rejected as an unexpected array.
+- A label and description PATCH without `segmentType` was rejected with a `segmentType` requirement.
+- Adding only `segmentType: Dbt` to that sparse PATCH still failed a validation of referenced columns. The accepted PATCH is the full definition shown on the Connect API tab.
+- A full-definition PATCH that resends `NoRefresh` without schedule information was rejected because the schedule information was not cleared. The plugin leaves the schedule fields out of the PATCH and sends `NoRefresh` only on create.
+- A schedule information body with the frequency `None` was rejected during subtype parsing.
 
 **Label and description update (API 65):** In one owned DBT update, separate reads observed `PROCESSING`, then `COUNTING`, then `ACTIVE`, without intervention. `COUNTING` was neither final success nor proof of failure. The `ACTIVE` read came about nine minutes after the observed `COUNTING` read. The exact transition time between those checks is unknown. Independent runtime and standard XML retrieval then confirmed the new label and description, the original model, SQL and type, the identities, the data space, the segment-on object, the schedule and lookback, and the generated membership references. The description is runtime-only. The XML label agreed with the runtime label. The first command had already stopped with an unknown outcome, and later settlement does not make that command successful. This result does not establish arbitrary preservation of omitted fields, general SQL or UI criteria updates, or schedule and lookback editing.
 
@@ -389,13 +470,15 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 
 **Route-specific SQL limits:** Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) documents WHERE-only single-column subqueries and an optional key-qualifier join condition. The separately discovered MCP segment-create description disallows subqueries and compound join conditions. The discovery contract's API version was not supplied. Do not transfer these rules between the native examples on this page, the org-local API 67 MCP route and hosted MCP. Treat neither description as qualification of broader SQL edits.
 
-**Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML writes cover source-only API 65 DBT Metadata definition CRUD. Retrieving UI criteria does not establish writes to UI definitions. Saving XML alone need not create a usable live segment.
+**Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML create and delete are verification-database rows at API 65; the label update is a note without a row. Retrieving UI criteria alone does not establish writes to UI definitions; the plugin's UI segment round trip below does, for one simple criterion. Saving XML alone need not create a usable live segment.
 
 **CLI scope:** The UI retrieval example in the Read chapter shows the XML shape only; its criteria are omitted. Unchanged is not zero writes: a deployment job still runs and package metadata can change. Require independent inventory absence of `CustomerDefinition` as well, after the deletion.
 
 **Standard CLI at API 68.0:** `sf org list metadata --metadata-type MarketSegmentDefinition` lists the definitions, and `sf project retrieve start` saved one by name (CLI 2.151.7). The create and delete XML workflows above were run at API 65.0: the deploy reported success, a retrieve matched the file, and after the destructive deploy the list no longer showed the definition.
 
-**Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing. UI criteria writes. General SQL beyond the predicate change above. Send destinations, membership export and cross-org migration. Lower-version JSON CRUD. A released package.
+**UI segment (native API 68 plugin, one org):** Created a UI segment from a hand-written JSON file with one text comparison (`operator` `equal`, a `values` list), retrieved it with the criteria Salesforce normalized, reported a repeat deploy `unchanged`, updated the criteria value and the lookback (`P90D` to `P30D`), and deleted it by name; a follow-up GET answered `ITEM_NOT_FOUND`. The plugin writes UI segments with `segmentCreationFlow` `Headless`, which the API requires. The first update attempt, about a minute after the create while the segment was still `PROCESSING`, was refused with HTTP 403 `ENTITY_SAVE_ERROR` and nothing was written; the same deploy succeeded once the segment was `ACTIVE`.
+
+**Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing. UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules. Populated audiences. Send destinations, membership export and cross-org migration. A released package.
 
 **Error codes:** `ITEM_NOT_FOUND` is returned by the GET after a successful delete. A successful XML deploy can still leave the runtime GET returning `ITEM_NOT_FOUND`.
 

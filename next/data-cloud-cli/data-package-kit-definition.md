@@ -69,7 +69,7 @@ Replace the example names with your own. The template content must already be co
 sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0
 ```
 
-An exact reply is not in this guide yet. Evidence has a shortened example.
+A shortened result is under Evidence.
 {% endcapture %}
 
 {% include operation-tabs.html id="kit-definition-create" label="Create" cli_state="available" cli_reason="Creates the three components together in the source org. Needs three complete, matching files." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No separate API creation workflow is supplied." %}
@@ -117,17 +117,17 @@ Save this as `manifest/destructiveChangesPost.xml`. It names the three component
 sf project deploy start --manifest manifest/empty.xml --post-destructive-changes manifest/destructiveChangesPost.xml --target-org SOURCE_ALIAS --api-version 65.0
 ```
 
-An exact reply is not in this guide yet. Evidence has a shortened example.
+A shortened result is under Evidence.
 {% endcapture %}
 
 {% include operation-tabs.html id="kit-definition-delete" label="Delete" cli_state="available" cli_reason="Deletes the three owned components together in the source org." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No separate API deletion workflow is supplied." %}
 
 For the difference between moving a kit and installing it, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** The kit components have no entry in the verification database. The results below come from earlier bounded live runs that have not been repeated, and no `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to them. The commands on this page pass `--api-version 65.0` and the manifests name version 65.0. This badge does not verify untested writes or general CRUD support.
 
 **Create:** The joint deployment was tested in the source org with the three complete, compatible files. A shortened structured reply (`--json`) is shown below. It is an illustration, not an exact reply:
 

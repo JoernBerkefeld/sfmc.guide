@@ -11,9 +11,9 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "partial" } }
-  create: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
-  update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
-  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
+  update: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
+  delete: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -32,7 +32,9 @@ Use the native API 68.0 route first. The optional [sf-plugin-data plugin](https:
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** The plugin handles any ruleset the API returns or accepts, in the default data space, at API 68.0. That includes any configuration type, automatic run on or off, case sensitivity, a secondary DMO, filters, trusted sources, and rulesets that are not published yet. The live-tested rulesets are listed under Evidence.
+**Plugin qualification:** The plugin does not keep its own list of allowed settings. It checks the shape and identity of the file and sends any ruleset the API accepts, in the default data space, at API 68.0: automatic run on or off, case sensitivity, a secondary DMO, filters, trusted sources, and rulesets that are not published yet. Live tests covered the `Individual` configuration type only; other configuration types are sent as written and Salesforce decides. The live-tested rulesets are listed under Evidence.
+
+**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` select API 68.0), `--data-space` (alias of `--dataspace`; only `default` is supported), `--preview` (read-only), `--allow-processing` (required because create and update publish the ruleset), `--async` (deploy only, see Create), `--keep-local-files` (delete only), and `--source-dir` / `-d` to name the ruleset file for `deploy`; `delete` selects the ruleset by name with `--metadata`.
 
 ## Read
 
@@ -43,11 +45,7 @@ Saves the ruleset settings to a file in your project. Run this from the Salesfor
 sf data360 retrieve --metadata identity-resolution:Individual_cust --target-org SOURCE_ALIAS --api-version 68.0 --data-space default
 ```
 
-The file is saved at `force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json`. The sample of that file is not in this guide yet.
-
-**Known failures:**
-
-- A file without `trustedSources` must be retrieved again before you deploy it.
+The file is saved at `force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json`. It is a JSON document with `schemaVersion: 1`, `kind: identity-resolution`, an `identity` (`dataSpace`, `apiName`) and a `spec` with the configuration type, label, description, automatic-run and case flags, secondary DMO, `filters`, `matchRules` and `reconciliationRules`. `trustedSources` is optional in the file: retrieve writes it (an empty list when the API omits it), and a hand-written file may leave it out.
 {% endcapture %}
 {% capture read_connect %}
 ### Native API68 read
@@ -79,11 +77,11 @@ sf data360 deploy --source-dir force-app/main/default/data360/identityResolution
 sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
 ```
 
-Use an unused ruleset suffix of at most four characters, such as `cust`. Use the returned `objectApiName` exactly after creation. Create runs only when the owner is confirmed absent. Creation enters `PUBLISHING` and provisions generated outputs, so `--allow-processing` is required. The sample of the output is not in this guide yet.
+Use an unused ruleset suffix of at most four characters, such as `cust`. Use the returned `objectApiName` exactly after creation. Create runs only when the owner is confirmed absent. Creation enters `PUBLISHING` and provisions generated outputs, so `--allow-processing` is required. 
 
 Create and update enter `PUBLISHING` even with `doesRunAutomatically: false`. That flag does not stop publication. Get permission for publication before you run it. A ruleset with `doesRunAutomatically: true` can be created too.
 
-Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. The file name must follow that pattern, or be just `<configurationType>`. The plugin takes the ruleset ID from everything after `<configurationType>_`.
+Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. The ruleset name in the file must be either `<configurationType>` alone or `<configurationType>_<rulesetId>`; the plugin takes the ruleset ID from everything after `<configurationType>_`. Any other name is refused with `IDENTITY_RESOLUTION_NAME_TYPE_MISMATCH`.
 
 **Return without waiting (`--async`).** By default the deploy waits after the create until Salesforce reports the ruleset `PUBLISHED`, then checks its settings and its generated unified and link DMOs. Add `--async` to return as soon as Salesforce accepts the create:
 
@@ -102,7 +100,9 @@ To check the result, run the same deploy again. `IDENTITY_RESOLUTION_NOT_SETTLED
 **Known failures:**
 
 - A timeout or unknown result stops the batch. Inspect the exact owner in API68. Do not replay the write.
-- `IDENTITY_RESOLUTION_NAME_TYPE_MISMATCH`: the file name does not start with its configuration type.
+- `IDENTITY_RESOLUTION_NAME_TYPE_MISMATCH`: the ruleset name is neither the configuration type nor `<configurationType>_<rulesetId>`.
+- A file with two reconciliation entries for the same entity is refused, because the generated outputs are keyed by entity.
+- While the plugin waits for `PUBLISHED` it polls up to 31 times, 10 seconds apart, within 360 seconds. A ruleset still publishing after that is reported as unconfirmed. Do not replay the write.
 {% endcapture %}
 {% capture create_connect %}
 ### Native API68 create
@@ -146,7 +146,7 @@ Save `ir-native-create.json`. It matches on first name, last name and normalized
 }
 ```
 
-The body carries the configuration type, the unused `rulesetId` suffix, the data space, the secondary DMO, the label, the description, the automatic-run and case flags, the match rules and all six reconciliation entities with ordered `sources` and field overrides in `fields`. It omits server IDs, status and generated output names. Empty `filters` and `trustedSources` are left out. The sample of the response is not in this guide yet. Check exact absence, capacity, dependencies and publication permission before you submit.
+The body carries the configuration type, the unused `rulesetId` suffix, the data space, the secondary DMO, the label, the description, the automatic-run and case flags, the match rules and all six reconciliation entities with ordered `sources` and field overrides in `fields`. It omits server IDs, status and generated output names. Empty `filters` and `trustedSources` are left out. Check exact absence, capacity, dependencies and publication permission before you submit.
 
 Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
@@ -163,7 +163,7 @@ sf data360 deploy --source-dir force-app/main/default/data360/identityResolution
 sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
 ```
 
-Run the retrieve first with `--target-org TARGET_ALIAS`. Keep all other settings and the identity unchanged. Source priority order matters, so do not sort it. An empty explicit field-override list resets fields to object inheritance. An unchanged definition returns `unchanged`, writes nothing and needs no processing acknowledgement. The sample of the output is not in this guide yet.
+Run the retrieve first with `--target-org TARGET_ALIAS`. Keep all other settings and the identity unchanged. Source priority order matters, so do not sort it. An empty explicit field-override list resets fields to object inheritance. An unchanged definition returns `unchanged`, writes nothing and needs no processing acknowledgement. `--async` also works for an update and returns `update-processing` once Salesforce accepts the PATCH; no live PATCH was run with it (offline-tested).
 
 If you empty the filters or trusted sources in the file, the plugin sends an empty list and Salesforce decides.
 
@@ -211,11 +211,11 @@ Save `ir-native-update.json`. It changes the description and the Individual reco
 }
 ```
 
-The body leaves out the identity settings (`configurationType`, `rulesetId`, `dataSpaceName`, `secondaryDmo`), which an update cannot change. Send `filters` or `trustedSources` as empty lists only when the current ruleset has entries you want removed. The sample of the response is not in this guide yet. Send the full matching array and all six reconciliation entities. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Do not PATCH while a fresh GET shows `PUBLISHING` or `DELETING`: you cannot tell your change from the work already running. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write or attempt rollback.
+The body leaves out the identity settings (`configurationType`, `rulesetId`, `dataSpaceName`, `secondaryDmo`), which an update cannot change. Send `filters` or `trustedSources` as empty lists only when the current ruleset has entries you want removed. Send the full matching array and all six reconciliation entities. A sparse PATCH is not safe. Leave out GET-only identity, status and output fields. Compare the desired and current settings yourself before you write. Do not PATCH while a fresh GET shows `PUBLISHING` or `DELETING`: you cannot tell your change from the work already running. Wait for `PUBLISHED` and all twelve output bindings. Do not replay the write or attempt rollback.
 
 **Known failures:**
 
-- An update sent while the ruleset is `PUBLISHING` can fail inside an otherwise successful response: the HTTP status and CLI exit code report success, but the change is not applied. This was seen on the API 67 route and not tried on API 68. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
+- Do not send an update while the ruleset is `PUBLISHING`; you cannot tell your change from the work already running. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
 
 {% endcapture %}
 {% include operation-tabs.html id="ir-update" label="Update" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution type for source-format deploys, and no ruleset definition can be retrieved to change. A metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no ruleset definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
@@ -223,11 +223,11 @@ The body leaves out the identity settings (`configurationType`, `rulesetId`, `da
 ## Delete
 
 {% capture delete_plugin %}
-Deletes the ruleset after checks. Use one exact selector and its saved file. Get approval for the exact target, and check its consumers first. Preview only reads.
+Deletes the ruleset after checks. Use one exact selector; the ruleset is read from the org by its name before anything is deleted, also by the preview, and a ruleset the org does not have reports `unchanged`. Get approval for the exact target, and check its consumers first. Preview only reads; the delete takes no confirmation flag.
 
 ```sh
-sf data360 delete --metadata identity-resolution:Individual_cust --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
-sf data360 delete --metadata identity-resolution:Individual_cust --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --confirm-delete
+sf data360 delete --metadata identity-resolution:Individual_cust --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
+sf data360 delete --metadata identity-resolution:Individual_cust --target-org TARGET_ALIAS --api-version 68.0 --data-space default
 ```
 
 Output of a successful run:
@@ -236,7 +236,9 @@ Output of a successful run:
 deleted identity-resolution Individual_cust (server is still processing)
 ```
 
-The output shows `deletion-processing` and `acknowledged-processing`. That acknowledges ongoing removal. It does not confirm deletion.
+Before the DELETE the plugin checks that the resolved ruleset ID starts with `1ir` and has the length of a record ID. The command then reads the ruleset by ID and by name up to 13 times, 10 seconds apart, within 180 seconds. The output shows `deletion-processing` and `acknowledged-processing`. That acknowledges ongoing removal. It does not confirm deletion.
+
+After the delete is accepted, the plugin removes the ruleset's canonical file, `data360/identityResolution/Individual_cust.identityResolution.json` under the default package directory of `sfdx-project.json` (`force-app/main/default` without one), when it is a regular file. Add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), or for an unchanged, blocked, failed or unconfirmed delete. A failed removal keeps the org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`.
 
 A ruleset with automatic run on or off can be deleted. In a live test the deleted ruleset read `DELETING` for about 3.5 minutes, then not found, and its unified output DMO was gone.
 
@@ -257,19 +259,21 @@ sf api request rest '/services/data/v68.0/ssot/identity-resolutions/OWNED_RULESE
 sf api request rest '/services/data/v68.0/ssot/identity-resolutions/OWNED_RULESET_API_NAME' --target-org TARGET_ALIAS --method GET --include
 ```
 
-Replace both placeholders with the owner's ID and API name. A successful DELETE returns HTTP 204 with no body. The sample of the follow-up GET is not in this guide yet. Poll with read-only GET calls until both exact identities are not found. Do not repeat DELETE. Never delete generated DMOs by hand to race the cleanup.
+Replace both placeholders with the owner's ID and API name. A successful DELETE returns HTTP 204 with no body. Poll with read-only GET calls until both exact identities are not found. Do not repeat DELETE. Never delete generated DMOs by hand to race the cleanup.
 
 A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
 {% endcapture %}
 {% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no IdentityResolution type, so sf project delete source cannot select a ruleset. A destructive metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
+
+**Verification-database rows.** `identity-resolution-native-any-ruleset` (rows 1 to 5: auto-run create, graph preview owner lookup, graph on a unified root, auto-run delete, full GET) and `identity-resolution-deploy-async` (async create 570 s, rerun `unchanged` 663 s, delete acknowledged in 85 s). The poll budgets, the `1ir` check and the refusals on this page are offline-tested.
 
 **Latest source-org acceptance.** Native API68 supports full matching and reconciliation settings. The latest source-org acceptance confirmed CREATE, canonical retrieval and a zero-write unchanged repeat. It found twelve stable generated output and link bindings. Native PATCH qualification is separate from that latest acceptance, which sent no PATCH. Neither establishes general cross-org migration, released-package acceptance or successful profile computation.
 
-**Plugin retrieve.** The sample of the retrieved file is not in this guide yet. Retrieval keeps the labels and description, matching criteria with their blank and case flags, automatic-run and case settings, object reconciliation defaults, ordered source priorities and field overrides. Resolve target-local DMOs, fields and mapped DLO sources. Do not replay source record IDs or guess generated output names. The default and `auto` settings select native API68 for public retrieve and deploy. Installed API68 acceptance verified canonical retrieval and all twelve generated output and link bindings.
+**Plugin retrieve.** Retrieval keeps the labels and description, matching criteria with their blank and case flags, automatic-run and case settings, object reconciliation defaults, ordered source priorities and field overrides. Resolve target-local DMOs, fields and mapped DLO sources. Do not replay source record IDs or guess generated output names. The default and `auto` settings select native API68 for public retrieve and deploy. Installed API68 acceptance verified canonical retrieval and all twelve generated output and link bindings.
 
 **Accepted rulesets.** The plugin keeps no local list of allowed settings. It checks the file's shape and identity, and Salesforce decides the rest. Ordered source priorities are meaningful and are not sorted. A live create of an `Individual` ruleset with automatic run on and one match rule (FirstName Fuzzy, LastName Exact and email) took about 11.5 minutes to reach `PUBLISHED`. Deleting it was accepted, the ruleset read `DELETING` for about 3.5 minutes, and then the ruleset and its unified output DMO were not found. Acceptance of the API does not mean every combination was tested live.
 
@@ -281,9 +285,9 @@ A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test i
 
 Installed public plugin DELETE passed bounded API68 acknowledged-processing acceptance. It sent one HTTP 204 and two post-delete GETs. The first strictly validated ID and name `DELETING` pair returned success promptly. Both responses passed the unchanged strict transition validator, including its narrowly admitted empty-reconciliation shape. Arbitrary, malformed or partial transitions do not qualify. Later `DELETING_OFFCORE` was observed, **not terminal absence**.
 
-Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities** establish `confirmed-deleted`. Already-absent execution is designed to return unchanged without a write or confirmation after strict absence proof. The latest installed run did not exercise that repeat because absence was unavailable. Optional full preservation/output accessibility checks were incomplete; physical profile/output cleanup is unproven. A transport or readback failure remains unknown. It must not trigger retries or rollback.
+Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities** establish `confirmed-deleted`. Already-absent execution is designed to return unchanged without a write after strict absence proof. The latest installed run did not exercise that repeat because absence was unavailable. Optional full preservation/output accessibility checks were incomplete; physical profile/output cleanup is unproven. A transport or readback failure remains unknown. It must not trigger retries or rollback.
 
-**Owned cleanup evidence.** Retained cleanup deleted one exact owned disposable owner by record ID, after checking its recorded org, ID, name and dependencies. It returned HTTP 204. Independent reads by both exact ID and API name then confirmed absence. The collection count decreased by one. Twelve outputs were missing **or inaccessible** afterward and no DMOs were manually deleted. Physical profile-row cleanup remains unproven. HTTP 204 or temporary `DELETING` is not terminal proof. Generated outputs can remain readable during `DELETING`. Later unreadability means absent **or inaccessible**, not proof of physical deletion. Local request files and retrieved templates remain on disk.
+**Owned cleanup evidence.** Retained cleanup deleted one exact owned disposable owner by record ID, after checking its recorded org, ID, name and dependencies. It returned HTTP 204. Independent reads by both exact ID and API name then confirmed absence. The collection count decreased by one. Twelve outputs were missing **or inaccessible** afterward and no DMOs were manually deleted. Physical profile-row cleanup remains unproven. HTTP 204 or temporary `DELETING` is not terminal proof. Generated outputs can remain readable during `DELETING`. Later unreadability means absent **or inaccessible**, not proof of physical deletion. Through the API route, local request files and retrieved files remain on disk; the plugin removes only the ruleset file it was given.
 
 **Data Graph root check.** Read the exact ruleset through the native endpoint. Its reconciliation entries identify the unified DMOs (`unifiedDmoName`). Correlate the returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or DMO ID. Read the generated output objects and compare the root's field names, Text types and explicit Id key. A matching object name alone is insufficient.
 

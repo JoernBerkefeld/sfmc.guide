@@ -36,7 +36,7 @@ crud:
 Downloads the kit definition, its templates and this membership as XML files in one retrieval.
 
 ```sh
-sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS
+sf project retrieve start --manifest manifest/package.xml --target-org SOURCE_ALIAS --api-version 65.0 --wait 10
 ```
 
 **Manifest** (`manifest/package.xml`, the input for the command). Use the exact member names from your org, which can differ from the kit's display name:
@@ -108,12 +108,12 @@ Downloading or deploying kit XML only moves its metadata. Instantiating the kit 
 
 An Identity Resolution template can be stored and still fail when it is instantiated later. That does not mean every valid kit fails.
 
-<details>
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
 The available tools do not expose canonical kit creation, component-add or template-generation, so no generated-kit workflow is supplied here.
 
-**Verification scope:** Live-org reads and the explicitly described bounded operations were tested. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** The kit components have no entry in the verification database. The results below come from earlier bounded live runs that have not been repeated, and no `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to them. The commands use `--api-version 65.0` and the manifest names version 65.0. This badge does not verify untested writes or general CRUD support.
 
 **Read (combined transport):** Tested with `--api-version 65.0` and `--wait 10`. The `--json` result listed the three members as `Created`:
 

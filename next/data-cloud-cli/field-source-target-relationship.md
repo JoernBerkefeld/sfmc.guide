@@ -10,25 +10,29 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [cli] }
-  create: { status: "partial", methods: [cli] }
-  update: { status: "partial", methods: [cli] }
-  delete: { status: "unknown", methods: [] }
+  read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
+  update: { status: "partial", methods: [cli], method_statuses: { cli: "partial", api: "no", plugin: "no" } }
+  delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
 [Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
 
-This badge does not verify untested writes or general CRUD support.
+This badge does not verify untested writes or general CRUD support. A claim marked **offline-tested** rests on the plugin code and its offline tests; no live run is recorded for it.
 
 <a id="field-relationship-fieldsrctrgtrelationship"></a>
 
 A field relationship links a source field to a target field. Many records in the source object can point to one record in the target object.
 
-**Example used in every chapter:** the `OrderCustomer` relationship from `Order__dlm` to `Customer__dlm`.
+**Example used in every chapter:** the `OrderCustomer` relationship from `Order__dlm` to `Customer__dlm`. The source field is `Order__dlm.CustomerId__c` and the target field is `Customer__dlm.Id__c`.
 
-**Plugin qualification:** No `sf-plugin-data` workflow is covered on this page.
+The target can also be a CRM object: in the Data Cloud UI the related-object type is Data Cloud or CRM, and a relationship to a CRM object such as `Account.Id` has owner `SObject`.
+
+Three rules apply to every method. Salesforce requires the source DMO, and a target DMO, to be mapped before it creates a relationship. Salesforce generates the relationship name when it creates the relationship (for example `Order_CustomerId_map_Customer_Id_1794467679481`), except on the Metadata API route, where the metadata name is yours. Salesforce offers no read by relationship name: relationships are read through the list of a DMO.
+
+**Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every relationship.
 
 {% include crud-summary.html %}
 
@@ -41,11 +45,99 @@ Downloads the relationship definition as an XML file.
 sf project retrieve start --metadata FieldSrcTrgtRelationship:OrderCustomer --target-org SOURCE_ALIAS --wait 5
 ```
 
-The file is saved to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`. It contains the elements shown in the Create chapter. Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
+The file is saved to `force-app/main/default/fieldSrcTrgtRelationships/OrderCustomer.fieldSrcTrgtRelationship-meta.xml`. It contains the elements shown in the Create chapter:
 
-A sample of the retrieved file is not in this guide yet.
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldSrcTrgtRelationship xmlns="http://soap.sforce.com/2006/04/metadata">
+  <definitionCreationType>Custom</definitionCreationType>
+  <lookupFieldName>Order__dlm.CustomerLookup__c</lookupFieldName>
+  <masterLabel>Order Customer</masterLabel>
+  <owner>DataCloud</owner>
+  <relationshipCardinality>ManyToOne</relationshipCardinality>
+  <sourceFieldName>Order__dlm.CustomerId__c</sourceFieldName>
+  <targetFieldName>Customer__dlm.Id__c</targetFieldName>
+</FieldSrcTrgtRelationship>
+```
+
+Retrieve the `CustomObject` definitions separately if you also need the objects and fields.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-read" label="Read" cli_state="available" cli_reason="Retrieves the relationship XML. Retrieve the object definitions separately." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship retrieval workflow is supplied." %}
+
+{% capture read_connect %}
+Lists the relationships of one DMO, as source or as target. Nothing in the org changes. Quote the URL so the shell keeps the `&`.
+
+```sh
+sf api request rest "/services/data/v68.0/ssot/data-model-objects/Order__dlm/relationships?limit=200&offset=0" --target-org SOURCE_ALIAS --method GET
+```
+
+**Response excerpt (HTTP 200)**, limited to the keys this page relies on:
+
+```json
+{
+  "relationships": [
+    {
+      "id": "0geXXXXXXXXXXXXXXX",
+      "name": "Order_CustomerId_map_Customer_Id_1794467679481",
+      "status": "ACTIVE",
+      "creationType": "Custom",
+      "owner": "DataCloud",
+      "cardinality": "ManyToOne",
+      "sourceObject": { "name": "Order__dlm" },
+      "sourceField": { "name": "CustomerId__c" },
+      "targetObject": { "name": "Customer__dlm" },
+      "targetField": { "name": "Id__c" }
+    }
+  ],
+  "totalSize": 1
+}
+```
+
+A DMO without relationships answers HTTP `204` with no body. Page with `offset`: the `nextPageUrl` in a response repeats the current offset, so it does not advance. A relationship created through the Metadata API reads `INACTIVE`; one created through the native route below reads `ACTIVE`.
+
+**Known failures:**
+
+- `GET /services/data/v68.0/ssot/data-model-objects/relationships/{name}` answers HTTP `405`: only DELETE is allowed on the by-name route.
+{% endcapture %}
+
+{% capture read_plugin %}
+Saves every relationship whose source is the named DMO, one JSON file each.
+
+```sh
+sf data360 retrieve -m relationship:Order__dlm -o SOURCE_ALIAS
+```
+
+The file is `data360/relationship/<Name>.relationship-meta.json`, named after the relationship Salesforce generated. It holds the six authored values and leaves out the id, labels, status and creation type:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "relationship",
+  "identity": {
+    "apiName": "Order_CustomerId_map_Customer_Id_1794467679481",
+    "dataSpace": "default"
+  },
+  "spec": {
+    "sourceObjectName": "Order__dlm",
+    "sourceFieldName": "CustomerId__c",
+    "targetObjectName": "Customer__dlm",
+    "targetFieldName": "Id__c",
+    "cardinality": "ManyToOne",
+    "relationshipOwner": "DataCloud"
+  }
+}
+```
+
+A relationship to a CRM object is saved the same way, with the CRM object and field as target and owner `SObject`:
+
+```json
+"targetObjectName": "Account",
+"targetFieldName": "Id",
+"relationshipOwner": "SObject"
+```
+
+Select several DMOs with repeated `-m` flags. A bare `-m relationship`, meaning every relationship of the org, is refused with `RELATIONSHIP_INVENTORY_UNQUALIFIED`. The plugin pages the DMO's list by offset; the pages must add up to the reported `totalSize` without duplicate names, otherwise that DMO stops with `RELATIONSHIP_INVENTORY_INCOMPLETE`. An identical local file is unchanged; a differing one needs `--overwrite` (`-x`). `--output-dir` (`-d`) sets the project root, which defaults to the current directory. The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`; non-default spaces are offline-tested only.
+{% endcapture %}
+{% include operation-tabs.html id="relationship-read" label="Read" cli_state="available" cli_reason="Retrieves the relationship XML. Retrieve the object definitions separately." cli_body=read_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Lists a DMO's relationships over the native route, tested at API 68.0." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the relationships of a source DMO, observed at API 68.0 on empty custom DMOs." plugin_body=read_plugin %}
 
 ## Create
 
@@ -95,9 +187,63 @@ The result includes:
 ] } }
 ```
 
-The deployment creates the lookup and the relationship. It does not create the DMOs or their key fields. Read back the relationship, field references and cardinality to confirm them.
+The deployment creates the lookup and the relationship. It does not create the DMOs or their key fields. Read back the relationship, field references and cardinality to confirm them. The new relationship reads `INACTIVE` through the native list.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-create" label="Create" cli_state="available" cli_reason="Creates a ManyToOne relationship and lookup between two existing empty custom DMOs." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship creation workflow is supplied." %}
+
+{% capture create_connect %}
+Creates one relationship on its source DMO. Both DMOs must already exist and be mapped. Save `relationship-create.json`:
+
+```json
+{
+  "relationships": [
+    {
+      "sourceObjectName": "Order__dlm",
+      "sourceFieldName": "CustomerId__c",
+      "targetObjectName": "Customer__dlm",
+      "targetFieldName": "Id__c",
+      "cardinality": "ManyToOne",
+      "relationshipOwner": "DataCloud"
+    }
+  ]
+}
+```
+
+```sh
+sf api request rest /services/data/v68.0/ssot/data-model-objects/Order__dlm/relationships --target-org TARGET_ALIAS --method POST --body @relationship-create.json --header Content-Type:application/json
+```
+
+Salesforce answers HTTP `201` with the created relationship, in the shape of the Read chapter, including the generated `name`. The relationship was listed `ACTIVE` from both DMOs about 5 seconds later. Read the list to confirm it.
+
+**Known failures:**
+
+- A relationship between two DMOs that are not mapped is refused with HTTP `400` `INVALID_INPUT`: "No ObjectSourceTargetMaps were found for the DMOs in the relationships. Make sure that the DMOs are mapped." Nothing is created.
+{% endcapture %}
+
+{% capture create_plugin %}
+Creates the relationship from `data360/relationship/<Name>.relationship-meta.json`, in the shape shown in the Read chapter. Preview first.
+
+```sh
+sf data360 deploy -m relationship:Order_CustomerId_map_Customer_Id_1794467679481 -o TARGET_ALIAS --preview
+sf data360 deploy -m relationship:Order_CustomerId_map_Customer_Id_1794467679481 -o TARGET_ALIAS
+```
+
+`--source-dir` with the file path works as well; the file must sit in a `data360/relationship/` folder and its name must match `identity.apiName`. A hand-written file may use any name: deploy lists the source DMO's relationships and finds the relationship by its binding (source and target object and field), not by name. `--preview` only reads.
+
+- Present with the same cardinality and owner: `unchanged`, nothing is written.
+- Absent: one create request on the source DMO, then reads of the list until the relationship is `ACTIVE` with the requested cardinality and owner. The result names the relationship Salesforce created in `targetApiName`. If that does not happen in time, the command ends with `RELATIONSHIP_PERSISTENCE_UNCONFIRMED`, and a status other than `ACTIVE` or `CREATING` stops the reads at once with the same code.
+- Present with a different cardinality or owner: refused with `RELATIONSHIP_CHANGE_UNSUPPORTED` before any write.
+
+Cardinality and owner are sent as written; Salesforce decides which values it accepts. A relationship between unmapped DMOs is rejected by Salesforce with HTTP `400` and reported as `RELATIONSHIP_HTTP_ERROR`; the plugin does not check this itself. Two files with the same binding in one command are refused (`DUPLICATE_IDENTITY`).
+
+In a batch the relationship runs after the DLOs, DMOs and mappings, so one command can create all of them:
+
+```sh
+sf data360 deploy -m dlo:OrderSource__dll -m dlo:CustomerSource__dll -m dmo:Order__dlm -m dmo:Customer__dlm -m mapping:OrderMapping -m mapping:CustomerMapping -m relationship:OrderCustomer -o TARGET_ALIAS
+```
+
+A preview of a relationship whose DMO the same batch creates reports `planned-dependencies` (`RELATIONSHIP_DEPENDENCIES_PLANNED`): nothing is asserted about the relationship until the DMO exists. `--dataspace NAME` (alias `--data-space`) selects a non-default data space, which is offline-tested only.
+{% endcapture %}
+{% include operation-tabs.html id="relationship-create" label="Create" cli_state="available" cli_reason="Creates a ManyToOne relationship and lookup between two existing empty custom DMOs." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Creates a ManyToOne relationship between two mapped custom DMOs, tested at API 68.0." connect_body=create_connect plugin_state="available" plugin_reason="Creates the relationship from a project file, alone or in a batch, observed at API 68.0 on empty custom DMOs." plugin_body=create_plugin %}
 
 ## Update
 
@@ -114,7 +260,7 @@ sf project deploy start --metadata FieldSrcTrgtRelationship:OrderCustomer --targ
 
 Expect `Changed`, or `Unchanged` on an identical repeat. Check that the lookup, source, target and cardinality stayed the same.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-update" label="Update" cli_state="available" cli_reason="Changes the relationship label. The other fields stay the same." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship update workflow is supplied." %}
+{% include operation-tabs.html id="relationship-update" label="Update" cli_state="available" cli_reason="Changes the relationship label. The other fields stay the same." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="blocked" connect_reason="The by-name route answers 405 and lists DELETE as its only allowed method, so no native update route is known. To change cardinality or owner, delete the relationship and create it again." plugin_state="blocked" plugin_reason="The plugin refuses a changed relationship with RELATIONSHIP_CHANGE_UNSUPPORTED (offline-tested) and reports an unchanged one without a write (observed at API 68.0). To change cardinality or owner, delete the relationship, then deploy the file again." %}
 
 ## Delete
 
@@ -150,17 +296,63 @@ Check that the relationship and lookup are gone. Both DMOs and their key fields 
 
 - Stale-source redeployment: leftover lookup XML in the local project can make a later deletion fail. Use an isolated, empty source project rather than suppressing warnings.
 {% endcapture %}
-{% include operation-tabs.html id="relationship-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned relationship and its sole-use lookup. Both DMOs and key fields remain." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="unknown" connect_reason="No API relationship deletion workflow is supplied." %}
 
-<details>
+{% capture delete_connect %}
+Deletes one relationship by its exact name, taken from the list of the source DMO. Check the name first; the by-name route cannot be read.
+
+```sh
+sf api request rest /services/data/v68.0/ssot/data-model-objects/relationships/Order_CustomerId_map_Customer_Id_1794467679481 --target-org TARGET_ALIAS --method DELETE
+```
+
+Salesforce answers HTTP `204` with no body. List the relationships of the source DMO afterwards: the relationship is gone, and the list answers `204` when it was the only one. The DELETE reply alone is not proof.
+{% endcapture %}
+
+{% capture delete_plugin %}
+Deletes one relationship, named with its source DMO and its generated name: `relationship:<SourceDmo__dlm>:<Name>`. A bare `relationship:<Name>` is refused with `INVALID_SELECTION`. The command has no confirmation flag. Preview first.
+
+```sh
+sf data360 delete -m relationship:Order__dlm:Order_CustomerId_map_Customer_Id_1794467679481 -o TARGET_ALIAS --preview
+sf data360 delete -m relationship:Order__dlm:Order_CustomerId_map_Customer_Id_1794467679481 -o TARGET_ALIAS
+```
+
+The command reads no local file. It lists the source DMO's relationships and looks for the name, ignoring letter case. No match reports `unchanged`, and so does a source DMO that does not exist, so a rerun after the DMO was deleted finishes. Two matches are refused with `AMBIGUOUS_RELATIONSHIP_TARGET`; a match whose source object is another DMO is refused with `RELATIONSHIP_TARGET_BINDING_MISMATCH`, which names the right selector. To find the generated name, run `sf data360 retrieve -m relationship:Order__dlm`.
+
+Otherwise it sends one DELETE and reads the source DMO's list until the relationship is gone (`RELATIONSHIP_DELETION_UNCONFIRMED` otherwise). `--preview` only reads and lists the local file it would remove. After a confirmed deletion the local file `data360/relationship/<Name>.relationship-meta.json` in the current directory is removed; `--keep-local-files` keeps it. Running the delete again reports `unchanged`. Salesforce's reference allows deleting custom relationships only; the plugin sends the request and reports Salesforce's answer. In a delete batch, relationships run first, before mappings, DMOs and DLOs.
+{% endcapture %}
+{% include operation-tabs.html id="relationship-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned relationship and its sole-use lookup. Both DMOs and key fields remain." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Deletes a relationship by name, tested at API 68.0." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes a relationship named with its source DMO and confirms its absence, observed at API 68.0." plugin_body=delete_plugin %}
+
+<details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-**Read verification:** An independent exact-name standard Metadata API 65 retrieve was reverified against a retained standard relationship in one source org. It used a separately configured package source directory. The returned XML is a definition export. It is not proof of prerequisite compatibility, cross-org portability or safe deployment. That read did not create, update or delete any relationship, and it does not requalify the bounded write examples.
+**Native route, API 68.0 (raw requests, empty synthetic custom DMOs, default data space):**
 
-**Write scope:** The create, update and delete examples cover custom, DataCloud-owned `ManyToOne` relationships between existing empty custom DMOs in the default dataspace. The command examples were run with API version 65.0.
+- A POST of a `ManyToOne` relationship with owner `DataCloud` between two unmapped DMOs is refused with HTTP `400` `INVALID_INPUT`, and no relationship is listed afterwards.
+- The same POST between two mapped DMOs returns HTTP `201` with a generated name, and the relationship is listed `ACTIVE` from both DMOs about 5 seconds later.
+- `DELETE .../ssot/data-model-objects/relationships/{name}` returns HTTP `204`, and the source DMO lists no relationship afterwards.
+- `GET` on the by-name route returns HTTP `405` (only DELETE is allowed), proven on a standard relationship of `ssot__Brand__dlm`.
 
-**Activation:** No explicit activation command is included. That is not a guarantee of no internal processing.
+**Plugin, API 68.0 (default), empty custom DMOs in one org:** one command deployed two DLOs, two DMOs, two mappings and a relationship between the DMOs, and the relationship was created `ACTIVE` after the mappings. `retrieve -m relationship:<SourceDmo__dlm>` wrote one file named after the generated relationship, and that file redeployed `unchanged` with no write. A delete removed the relationship, the source DMO's list showed no relationship afterwards, and a repeated delete was `unchanged`.
 
-**Not verified:** Retargeting, cardinality changes and `OneToOne` updates. Managed relationships and shared lookup fields are outside this scope.
+**Metadata API, API 65:** the create, update and delete examples cover custom, DataCloud-owned `ManyToOne` relationships between existing empty custom DMOs in the default data space. Both tested DMO relationship endpoints returned the created relationship with status `INACTIVE`, `creationType` `Custom`, owner `DataCloud` and `ManyToOne`. After the exact relationship deletion both endpoints returned HTTP `204` while both DMOs still existed and the owned lookup was absent from the source Metadata. An independent exact-name standard Metadata API 65 retrieve of a standard relationship in one source org returned a definition export; that read does not prove prerequisite compatibility, cross-org portability or safe deployment.
+
+**Plugin behaviour (offline-tested):** default and `auto` select API `68.0`; numeric pins from `61.0` are kept as given, and admitting a version is not a live test of it. Deploy never deletes relationships. The portable file holds the six authored values; the generated name is not part of the binding.
+
+| Diagnostic | Meaning |
+|---|---|
+| `RELATIONSHIP_INVENTORY_UNQUALIFIED` | Bare `relationship` selector. Select a source DMO. |
+| `RELATIONSHIP_INVENTORY_INCOMPLETE` | The list pages did not add up to `totalSize` or repeated a name. Rerun. |
+| `RELATIONSHIP_CHANGE_UNSUPPORTED` | The binding exists with another cardinality or owner. Delete it, then deploy again. |
+| `AMBIGUOUS_RELATIONSHIP_TARGET` | More than one relationship links the same four fields. Delete the extra one by name. |
+| `RELATIONSHIP_HTTP_ERROR` | Salesforce rejected a request, for example because the DMOs are not mapped. |
+| `RELATIONSHIP_PERSISTENCE_UNCONFIRMED` | A create was sent but did not read back `ACTIVE` in time. Nothing is retried. |
+| `RELATIONSHIP_REQUEST_UNCONFIRMED` | A request ended without a clear HTTP result. List the DMO before trying again. |
+| `RELATIONSHIP_FILE_IDENTITY_MISMATCH` | `identity.apiName` of the file differs from the selected name. |
+| `RELATIONSHIP_TARGET_BINDING_MISMATCH` | The named relationship links other objects or fields than the file, or on delete has another source DMO than the selector. |
+| `RELATIONSHIP_NAME_MISMATCH` | No relationship has that name, but another carries the file's binding. |
+| `RELATIONSHIP_DELETION_UNCONFIRMED` | The delete was sent but the relationship is still listed. |
+| `RELATIONSHIP_DEPENDENCIES_PLANNED` | The batch creates a DMO the relationship uses; the preview cannot compare it yet. |
+| `RELATIONSHIP_DATASPACE_COLLISION` / `UNSUPPORTED_RELATIONSHIP_DATASPACE` | The file's data space differs from the command's. |
+
+**Not verified:** retargeting, cardinality changes and `OneToOne` relationships; standard relationships (other than the 405 read); relationships of populated DMOs; managed relationships and shared lookup fields; non-default data spaces; other API versions through the plugin. No explicit activation command is included, which is not a guarantee of no internal processing.
 
 </details>
