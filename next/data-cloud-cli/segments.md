@@ -30,6 +30,15 @@ A **UI** segment is built in Salesforce's visual interface. A **DBT** segment is
 
 **Processing:** Creating or changing a live segment can start processing, even with `NoRefresh` and an empty audience. Get permission for that before you write.
 
+<a id="beyond-the-gui"></a>
+
+{% capture beyond_gui %}
+- **Create, update and delete SQL (DBT) segments.** Plugin `deploy`/`delete` with the SQL in its own `.sql` file, or the Connect API (`/ssot/segments`). The Data Cloud UI's New Segment wizard offers Standard, Waterfall, Real-Time and Dynamic segments built visually, with no SQL or DBT option.
+
+Evidence: UI wizard opened without saving, and a plugin create, byte-exact retrieve, SQL-only update and delete of a DBT segment, both at API 68.0. The Metadata API also creates a DBT definition, but no live segment.
+{% endcapture %}
+{% include callout.html type="tip" title="Beyond the Data Cloud GUI" content=beyond_gui %}
+
 {% include crud-summary.html %}
 
 **Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment-on DMO and SQL models (DBT) or criteria (UI) as written, and Salesforce decides. DBT segments with `NO_REFRESH` and `P90D`, and UI segments with `NO_REFRESH`, no parameters and no settings the plugin does not know, can be expressed. Retrieve saves any other segment as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file. This covers Waterfall, Real-Time and Lookalike segments, segments with parameters or exclusion criteria, and refresh schedules other than no refresh (deploying a schedule would publish the segment).

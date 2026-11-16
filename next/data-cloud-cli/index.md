@@ -75,6 +75,19 @@ You can use Salesforce CLI to download quite a bit of your Data Cloud (Data 360)
 
 This page explains the difference and shows the commands next to the files and responses you can expect. Start with retrieving an existing component. Only move on to create, update or delete when you have checked the prerequisites for that section.
 
+<a id="beyond-the-gui"></a>
+
+{% capture beyond_gui %}
+These come with the plugin's file-based workflow, which the UI's per-object wizards and dialogs do not offer:
+
+- **Retrieve many components in one command** and keep the files in Git (plugin). One `sf data360 retrieve -m data-stream -m data-transform -m data-graph -m relationship` saved 3,878 items without an error.
+- **Deploy only what changed in a Git range** (plugin `--changed-since`). A range holding a data stream, a DMO and a mapping ran in dependency order and wrote nothing because nothing differed.
+- **Deploy or delete related objects of several types in one command**, in dependency order (plugin). One deploy created two DLOs, two DMOs, two mappings and a relationship; one delete removed two data graphs before the identity resolution ruleset they were built on.
+
+Type-specific items, each checked against the UI: [relationship label, cardinality and source field changes](/next/data-cloud-cli/field-source-target-relationship/#beyond-the-gui) and [SQL (DBT) segments](/next/data-cloud-cli/segments/#beyond-the-gui).
+{% endcapture %}
+{% include callout.html type="tip" title="Beyond the Data Cloud GUI" content=beyond_gui %}
+
 <!-- Keep this capability table, all linked type-page details and their visible last-updated timestamps synchronized with every substantive update across this guide. -->
 
 Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. Using Salesforce CLI as a request runner does not make an API workflow standard resource-specific CLI support. XML definitions and runtime state are views of the same resource, not separate feature types.

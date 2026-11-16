@@ -34,6 +34,16 @@ Three rules apply. The native route and the plugin need the source DMO, and a ta
 
 **Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every relationship.
 
+<a id="beyond-the-gui"></a>
+
+{% capture beyond_gui %}
+- **Change the label of an existing relationship.** Metadata API (`updateMetadata`, or `sf project deploy start` of the retrieved file) and plugin `deploy`. The Data Cloud UI's Edit Relationships dialog has no label field.
+- **Change the cardinality or the source field in place**, keeping the same relationship id. Metadata API and `sf project deploy start`; the plugin was observed changing the cardinality (source field: Metadata API only). In the UI dialog, field, cardinality and related field are locked for an existing relationship; only the Active switch and delete work.
+
+Evidence: live checks at API 68.0, 2026-11-16, on an `ACTIVE` relationship between mapped custom DMOs, plus a look at the UI dialog without saving. A changed target or owner is refused by every route, the UI included. Details under Update and in the Evidence section.
+{% endcapture %}
+{% include callout.html type="tip" title="Beyond the Data Cloud GUI" content=beyond_gui %}
+
 {% include crud-summary.html %}
 
 ## Read
