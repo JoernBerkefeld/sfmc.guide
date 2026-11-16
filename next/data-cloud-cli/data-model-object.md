@@ -11,9 +11,9 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [cli, api, plugin] }
-  create: { status: "yes", methods: [api, plugin] }
+  create: { status: "yes", methods: [cli, api, plugin] }
   update: { status: "yes", methods: [cli, api, plugin] }
-  delete: { status: "yes", methods: [api, plugin] }
+  delete: { status: "yes", methods: [cli, api, plugin] }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -448,7 +448,81 @@ The preview reads the target and reports the planned step; it never sends a POST
 - An array field type is refused by Salesforce. The plugin reports it as an HTTP error.
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-create" label="Create" split_api=true cli_state="unknown" cli_reason="No verified CLI command creates a DMO." metadata_state="unknown" metadata_reason="Creating a DMO by deploying object XML has not been tested." connect_state="available" connect_reason="Tested for empty custom DMOs at API versions 61.0 to 68.0 (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Offline-tested; the native routes it uses are observed at API 68.0 (see Evidence)." plugin_body=create_plugin %}
+{% capture create_cli %}
+Deploys the object XML from the Read chapter's CLI tab: the object file plus `Id__c` and `Note__c`. Leave out the fields that Salesforce generates (`DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`, `KQ_Id__c`).
+
+```sh
+sf project deploy start --metadata CustomObject:Customer__dlm --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The deploy reports the object and both fields as `Created`. The Connect API GET then returns the DMO with `Id__c` as its primary key and `Note__c`.
+
+**Unlike a Connect API create, a deploy adds no generated fields:** the DMO has only the fields you deployed, without `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` or the key qualifier `KQ_Id__c`. Whether such a DMO can be mapped is not tested; to get the same DMO as the other tabs, create it through the Connect API or the plugin.
+{% endcapture %}
+
+{% capture create_metadata %}
+### Metadata API create of the object
+
+Send `createMetadata` to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. The object and its authored fields go in one record.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:createMetadata>
+      <met:metadata xsi:type="met:CustomObject">
+        <met:fullName>Customer__dlm</met:fullName>
+        <met:label>Customer</met:label>
+        <met:mktDataModelAttributes>
+          <met:creationType>Custom</met:creationType>
+          <met:dataModelTaxonomy>Salesforce_SFDCReferenceModel_0_93</met:dataModelTaxonomy>
+          <met:dataSpaceName>default</met:dataSpaceName>
+          <met:isEnabled>false</met:isEnabled>
+          <met:isSegmentable>false</met:isSegmentable>
+          <met:isUsedForMetrics>false</met:isUsedForMetrics>
+          <met:labelOverride>Customer</met:labelOverride>
+          <met:masterLabel>Customer</met:masterLabel>
+          <met:objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</met:objectCategory>
+        </met:mktDataModelAttributes>
+        <met:fields>
+          <met:fullName>Id__c</met:fullName>
+          <met:label>Id</met:label>
+          <met:length>60</met:length>
+          <met:mktDataModelFieldAttributes>
+            <met:definitionCreationType>Custom</met:definitionCreationType>
+            <met:isDynamicLookup>false</met:isDynamicLookup>
+            <met:labelOverride>Id</met:labelOverride>
+            <met:masterLabel>Id</met:masterLabel>
+            <met:primaryIndexOrder>1</met:primaryIndexOrder>
+            <met:usageTag>None</met:usageTag>
+          </met:mktDataModelFieldAttributes>
+          <met:type>Text</met:type>
+        </met:fields>
+        <met:fields>
+          <met:fullName>Note__c</met:fullName>
+          <met:label>Note</met:label>
+          <met:length>60</met:length>
+          <met:mktDataModelFieldAttributes>
+            <met:definitionCreationType>Custom</met:definitionCreationType>
+            <met:isDynamicLookup>false</met:isDynamicLookup>
+            <met:labelOverride>Note</met:labelOverride>
+            <met:masterLabel>Note</met:masterLabel>
+            <met:usageTag>None</met:usageTag>
+          </met:mktDataModelFieldAttributes>
+          <met:type>Text</met:type>
+        </met:fields>
+      </met:metadata>
+    </met:createMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The response holds one `success` `true` result each for the object and both fields. As with the CLI tab, the DMO has only `Id__c` (the primary key) and `Note__c`; no generated fields are added. The Connect API GET finds it.
+{% endcapture %}
+
+{% include operation-tabs.html id="dmo-create" label="Create" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." cli_body=create_cli metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." metadata_body=create_metadata connect_state="available" connect_reason="Tested for empty custom DMOs at API versions 61.0 to 68.0 (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Offline-tested; the native routes it uses are observed at API 68.0 (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -602,7 +676,15 @@ If the state does not settle, the command stops with `DMO_FIELD_REMOVAL_SIDE_EFF
 {% endcapture %}
 
 {% capture update_cli %}
-Removes one custom field from a custom DMO with a destructive deploy. Salesforce also drops that field's pairs from every mapping that holds one. Other changes to a DMO through the CLI are not verified; use the API or plugin tab for labels and added fields.
+**Label and added field.** Edit the object file's `label`, `labelOverride` and `masterLabel`, add a field file, then deploy the object:
+
+```sh
+sf project deploy start --metadata CustomObject:Customer__dlm --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The deploy reports the object as `Changed`, the new field as `Created` and the other fields as `Unchanged`. The Connect API GET then shows the new label and field. This was tested on a DMO that a deploy created.
+
+**Removing a field.** Removes one custom field from a custom DMO with a destructive deploy. Salesforce also drops that field's pairs from every mapping that holds one.
 
 In an empty folder named `destructive`, save a `package.xml` that selects nothing:
 
@@ -639,7 +721,42 @@ Sample result excerpt, with `--json` added:
 Read the DMO and its mappings afterwards: the field and its pairs are gone, everything else is unchanged. Do not remove the primary key or generated fields.
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="available" cli_reason="Only removing one custom field is verified, at API 68 on empty custom DMOs." cli_body=update_cli metadata_state="unknown" metadata_reason="Schema changes through the Metadata API have not been tested." connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0 (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Offline-tested; field removal is observed at API 68.0 on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
+{% capture update_metadata %}
+### Metadata API update of the object
+
+`updateMetadata` changes the object's label. Send only the object, without `fields`:
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:updateMetadata>
+      <met:metadata xsi:type="met:CustomObject">
+        <met:fullName>Customer__dlm</met:fullName>
+        <met:label>Customer updated</met:label>
+        <met:mktDataModelAttributes>
+          <met:creationType>Custom</met:creationType>
+          <met:dataModelTaxonomy>Salesforce_SFDCReferenceModel_0_93</met:dataModelTaxonomy>
+          <met:dataSpaceName>default</met:dataSpaceName>
+          <met:isEnabled>false</met:isEnabled>
+          <met:isSegmentable>false</met:isSegmentable>
+          <met:isUsedForMetrics>false</met:isUsedForMetrics>
+          <met:labelOverride>Customer updated</met:labelOverride>
+          <met:masterLabel>Customer updated</met:masterLabel>
+          <met:objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</met:objectCategory>
+        </met:mktDataModelAttributes>
+      </met:metadata>
+    </met:updateMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+To add a field, send `createMetadata` with one `CustomField` record whose `fullName` is `Customer__dlm.Extra__c` and whose attributes match `Note__c` on the Create tab. Both calls persisted: the Connect API GET showed the new label and field. The label change also worked on a DMO that the Connect API created.
+{% endcapture %}
+
+{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and an added field, and at API 68 for removing one custom field on empty custom DMOs." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0 (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Offline-tested; field removal is observed at API 68.0 on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -707,7 +824,59 @@ Add `--preview` to list the planned field removals, the pairs Salesforce drops a
 </details>
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="unknown" cli_reason="Deleting a whole DMO with a destructive deploy has no verification record and is unproven. Removing one custom field that way is verified; see the Update chapter." metadata_state="unknown" metadata_reason="A raw Metadata API delete has not been tested on its own." connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Offline-tested for the whole object; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
+{% capture delete_cli %}
+Deletes the whole DMO with a destructive deploy. In an empty folder named `destructive`, save a `package.xml` that selects nothing:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <version>68.0</version>
+</Package>
+```
+
+Save `destructiveChanges.xml` beside it, naming the object:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Customer__dlm</members>
+        <name>CustomObject</name>
+    </types>
+    <version>68.0</version>
+</Package>
+```
+
+```sh
+sf project deploy start --metadata-dir destructive --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The result lists the object with `deleted` `true`. Afterwards the Connect API GET answers `ITEM_NOT_FOUND`. This was tested on an empty, unmapped DMO that a deploy created.
+{% endcapture %}
+
+{% capture delete_metadata %}
+### Metadata API delete of the object
+
+Send `deleteMetadata` with the exact name:
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:deleteMetadata>
+      <met:type>CustomObject</met:type>
+      <met:fullNames>Customer__dlm</met:fullNames>
+    </met:deleteMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_FOUND`. This worked both on a DMO that `createMetadata` created and on an empty, unmapped DMO that the Connect API created.
+{% endcapture %}
+
+{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on an empty, unmapped DMO that a deploy created (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on empty, unmapped DMOs created by createMetadata and by the Connect API (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Offline-tested for the whole object; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -758,9 +927,15 @@ Add `--preview` to list the planned field removals, the pairs Salesforce drops a
 
 **Portability (offline-tested):** a retrieved file deploys into another org as `unchanged` when the target already holds the same definition, and creates the DMO when it does not. An unchanged-source export comparison across API versions is not verified.
 
-**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DMOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dlm` then saved the object and its fields at API 68.0. At API 68 a `destructiveChanges.xml` deploy that named one `CustomField` removed that custom field, also when two mappings held it: each mapping lost only that pair, and the DMO and its other fields were unchanged. Deleting a whole DMO with a destructive deploy and creating a DMO from object XML are not recorded and are unproven.
+**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DMOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dlm` then saved the object and its fields at API 68.0. At API 68 a `destructiveChanges.xml` deploy that named one `CustomField` removed that custom field, also when two mappings held it: each mapping lost only that pair, and the DMO and its other fields were unchanged.
 
-**Not verified:** Populated, mapped or related DMOs. Standard DMOs in active use. Non-default data spaces. SQL or flex DMOs. An installed released package. The API `68.0` breadth at any other version. Cascade behavior and DMOs with dependencies, including a DMO that a segment or calculated insight references. Whether `isDynamicLookup` is stored.
+**CLI and Metadata API writes at API 68.0:** On `Cli…` probes in one org, empty and unmapped; every probe was deleted afterwards and confirmed gone:
+
+- **Create.** A deploy and a `createMetadata` call, each with the object plus `Id__c` (`primaryIndexOrder` `1`) and `Note__c`, succeeded. `readMetadata` and the Connect GET returned only those two fields, with `Id__c` as the primary key; no `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` or `KQ_Id__c` was generated. The same two fields sent to the Connect API create produce six.
+- **Update.** A deploy changed the label and added `Extra__c`; `updateMetadata` changed the label and `createMetadata` of one `CustomField` added a field. The Connect GET showed each change. `updateMetadata` also changed the label of a DMO that the Connect API created.
+- **Delete.** A destructive deploy that named the `CustomObject` and a `deleteMetadata` call each deleted their DMO; `deleteMetadata` also deleted a DMO that the Connect API created. Afterwards the Connect GET answered `ITEM_NOT_FOUND` and `readMetadata` returned no record.
+
+**Not verified:** Populated, mapped or related DMOs. Whether a DMO created by deploy or `createMetadata`, without generated fields, can be mapped. A destructive deploy of a DMO that the Connect API or the plugin created. Standard DMOs in active use. Non-default data spaces. SQL or flex DMOs. An installed released package. The API `68.0` breadth at any other version. Cascade behavior and DMOs with dependencies, including a DMO that a segment or calculated insight references. Whether `isDynamicLookup` is stored.
 
 **Existing objects:** A SQL query against an existing DMO can return SQLSTATE `42P01` even when the object exists. That is not an empty result. GET `404` can also mean the caller cannot access the DMO. Neither is proof that no record store exists.
 

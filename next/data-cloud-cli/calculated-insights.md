@@ -232,7 +232,26 @@ The preview prints `Planned create: calculated-insight:CustomerActivity__cio.` a
 - A Real-Time Insight (`GRAPH_METRIC`, built with the Visual Builder on a Real-Time Data Graph) cannot be created through Salesforce's public API, so its create is reported as `rejected`. Create it in the UI, then retrieve it; updates and delete through the plugin work.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a draft insight; it does not publish it." connect_body=create_connect plugin_state="available" plugin_reason="Creates an insight, as a draft with --draft, from its JSON and SQL files, using API 68.0." plugin_body=create_plugin %}
+{% capture create_metadata %}
+### Metadata API create of the definition
+
+Send `createMetadata` to the same SOAP endpoint and headers as the Read tab. The record has the same four elements a read returns. Use DMO fields that already exist, and the metadata name without `__cio`.
+
+```xml
+<met:createMetadata>
+  <met:metadata xsi:type="met:MktCalcInsightObjectDef" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <met:fullName>CustomerActivity</met:fullName>
+    <met:creationType>Custom</met:creationType>
+    <met:expression>SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY CustomerEvent__dlm.ApplicationId__c</met:expression>
+    <met:masterLabel>Customer Activity</met:masterLabel>
+  </met:metadata>
+</met:createMetadata>
+```
+
+The answer is `success` `true` with the full name. `readMetadata` then returns the same four values, and `listMetadata` shows the name. Like the CLI deploy, this saves the definition only: in the live run, the runtime read on the Connect API tab kept answering `ITEM_NOT_FOUND`, so no insight was created and nothing ran.
+{% endcapture %}
+
+{% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata. Saves the definition only; no live insight is created." metadata_body=create_metadata connect_state="available" connect_reason="Native API68 POST creates a draft insight; it does not publish it." connect_body=create_connect plugin_state="available" plugin_reason="Creates an insight, as a draft with --draft, from its JSON and SQL files, using API 68.0." plugin_body=create_plugin %}
 
 ## Update
 
@@ -357,7 +376,26 @@ published: CustomerActivity__cio; mutation: confirmed-published.
 With `--preview` the header is `Publish preview: success.` and the line reads `publish: CustomerActivity__cio; mutation: not-attempted.`. An equal `ACTIVE` target reads `unchanged`.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 publish and qualified expression PATCH; the API 65 label and schedule change is separate." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited files with one PATCH; deploy keeps a draft, publish activates it." plugin_body=update_plugin %}
+{% capture update_metadata %}
+### Metadata API update of the definition
+
+Send `updateMetadata` with the complete record, in the same form as the create on the Create tab, with only the changed value edited. The live run changed `masterLabel` to `Customer Activity Updated` and kept the SQL:
+
+```xml
+<met:updateMetadata>
+  <met:metadata xsi:type="met:MktCalcInsightObjectDef" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <met:fullName>CustomerActivity</met:fullName>
+    <met:creationType>Custom</met:creationType>
+    <met:expression>SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY CustomerEvent__dlm.ApplicationId__c</met:expression>
+    <met:masterLabel>Customer Activity Updated</met:masterLabel>
+  </met:metadata>
+</met:updateMetadata>
+```
+
+The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged SQL. This changes the definition only; it does not change or publish a live insight. Only a label change on a definition without a live insight is tested.
+{% endcapture %}
+
+{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: a label change on a definition without a live insight." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 publish and qualified expression PATCH; the API 65 label and schedule change is separate." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited files with one PATCH; deploy keeps a draft, publish activates it." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -439,7 +477,22 @@ The preview prints `Planned delete: calculated-insight:CustomerActivity__cio; mu
 - Do not run the delete again after an unconfirmed result.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE by name, then item read and metadata checks." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one insight by name, then removes its JSON and SQL files. Uncertain results are not replayed." plugin_body=delete_plugin %}
+{% capture delete_metadata %}
+### Metadata API delete of the definition
+
+Send `deleteMetadata` with the type and the metadata name. Check ownership and dependencies first.
+
+```xml
+<met:deleteMetadata>
+  <met:type>MktCalcInsightObjectDef</met:type>
+  <met:fullNames>CustomerActivity</met:fullNames>
+</met:deleteMetadata>
+```
+
+The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. Only a definition without a live insight is tested; for a live insight, use the Connect API tab.
+{% endcapture %}
+
+{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live insight." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE by name, then item read and metadata checks." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one insight by name, then removes its JSON and SQL files. Uncertain results are not replayed." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -470,6 +523,8 @@ The preview prints `Planned delete: calculated-insight:CustomerActivity__cio; mu
 - After a write, confirm absence with reads. Do not replay DELETE.
 
 **Standard CLI:** `sf org list metadata --metadata-type MktCalcInsightObjectDef` lists the definitions, and `sf project retrieve start` saved one by its metadata name at API 68.0 (CLI 2.151.7). The standard CLI create, label update and `--post-destructive-changes` delete at API 65.0 are recorded on this page only, with no verification-database row (exit codes not retained). They act on the definition only: a deployed name is reserved without a live insight.
+
+**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (label only) and `deleteMetadata` on one new probe definition each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect item read answered `ITEM_NOT_FOUND` every time: no live insight was created and no job started. After the delete the definition was gone from both views, and the list held the same three definitions as before the run. Not tested: an SQL change, and these calls on a definition that has a live insight.
 
 **Not verified:** populated-data calculations, storage or credit cleanup, released-package qualification, cross-org deployment of retrieved files, scheduled-processing behavior, successful calculation, and the standard CLI create, update and delete of the definition (no database row).
 

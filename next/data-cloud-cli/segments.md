@@ -45,6 +45,14 @@ sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --
 
 The command writes `retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/<package>/main/default/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model, where `<package>` is the default package directory of `sfdx-project.json`. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
 
+To save every segment of the default data space at once, use `--metadata segment` without a name:
+
+```sh
+sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment --output-dir retrieved
+```
+
+The plugin lists the segments page by page (up to 200 per page, until the total the list reports) and then reads each one by name, exactly as above. One segment that cannot be read or written gets its own error and does not stop the others. Segments the plugin cannot express (see below) are saved as-is, as with a single segment.
+
 The JSON file lists the models by name only:
 
 ```json
@@ -173,7 +181,7 @@ Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https:/
 The record holds `fullName`, `masterLabel` and `segmentType`. For a DBT segment, `includeCriteria` holds the DBT pipeline with its SQL as text. `listMetadata` with the type `MarketSegmentDefinition` returns the full names in the org. A definition can exist without a live segment, so check the Connect API tab before you rely on it.
 {% endcapture %}
 
-{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not runtime settings or rows." metadata_body=read_metadata connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Saves a JSON file and one SQL file per model, using API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="segments-read" label="Read" cli_state="available" cli_reason="Saves the XML definition. Runtime settings and audience rows are not included." cli_body=read_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata and listMetadata. Returns the definition, not runtime settings or rows." metadata_body=read_metadata connect_state="available" connect_reason="Native API68 read of runtime settings, not an XML file or audience rows." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves every segment (bare -m segment) or one by name, as JSON plus one SQL file per model, using API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -278,7 +286,25 @@ Sample of the deploy result with the optional JSON output:
 { "status": 0, "result": { "success": true, "status": "Succeeded", "details": { "componentSuccesses": [{ "componentType": "MarketSegmentDefinition", "fullName": "CustomerDefinition", "created": true, "changed": true, "success": true }] } } }
 ```
 {% endcapture %}
-{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from its JSON and SQL files, then reads it back." plugin_body=create_plugin %}
+{% capture create_metadata %}
+### Metadata API create of the definition
+
+Send `createMetadata` to the same SOAP endpoint and headers as the Read tab. The record has the elements a read returns. Inside the SOAP body, `includeCriteria` is text, so escape the pipeline XML as in the CLI tab's file.
+
+```xml
+<met:createMetadata>
+  <met:metadata xsi:type="met:MarketSegmentDefinition" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <met:fullName>CustomerDefinition</met:fullName>
+    <met:includeCriteria>&lt;DbtPipeline xmlns=""&gt;&lt;models&gt;&lt;model&gt;&lt;name&gt;CustomerDefinition&lt;/name&gt;&lt;sql&gt;SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0&lt;/sql&gt;&lt;/model&gt;&lt;/models&gt;&lt;/DbtPipeline&gt;</met:includeCriteria>
+    <met:masterLabel>Customer Definition</met:masterLabel>
+    <met:segmentType>DBT</met:segmentType>
+  </met:metadata>
+</met:createMetadata>
+```
+
+The answer is `success` `true` with the full name. `readMetadata` then returns the same pipeline, label and type, and `listMetadata` shows the name. This saves the definition only: in the live run, the segment read on the Connect API tab kept answering `ITEM_NOT_FOUND`, so no live segment was created and no processing started.
+{% endcapture %}
+{% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata. Saves the DBT definition only; no live segment is created." metadata_body=create_metadata connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from its JSON and SQL files, then reads it back." plugin_body=create_plugin %}
 
 ## Update
 
@@ -351,7 +377,25 @@ sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition 
 
 The deploy reports the label change. An identical repeat can report `Unchanged`. The deploy job still runs in that case.
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited JSON and SQL files as one PATCH; Salesforce decides." plugin_body=update_plugin %}
+{% capture update_metadata %}
+### Metadata API update of the definition
+
+Send `updateMetadata` with the complete record from the Create tab, with only the changed value edited. The live run changed `masterLabel` to `Customer Definition Updated` and kept the pipeline and type:
+
+```xml
+<met:updateMetadata>
+  <met:metadata xsi:type="met:MarketSegmentDefinition" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <met:fullName>CustomerDefinition</met:fullName>
+    <met:includeCriteria>&lt;DbtPipeline xmlns=""&gt;&lt;models&gt;&lt;model&gt;&lt;name&gt;CustomerDefinition&lt;/name&gt;&lt;sql&gt;SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0&lt;/sql&gt;&lt;/model&gt;&lt;/models&gt;&lt;/DbtPipeline&gt;</met:includeCriteria>
+    <met:masterLabel>Customer Definition Updated</met:masterLabel>
+    <met:segmentType>DBT</met:segmentType>
+  </met:metadata>
+</met:updateMetadata>
+```
+
+The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged pipeline. This changes the definition only, not a live segment. Only a label change on a definition without a live segment is tested.
+{% endcapture %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: a label change on a definition without a live segment." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited JSON and SQL files as one PATCH; Salesforce decides." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -432,7 +476,21 @@ sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE
 
 Check that the deletion completed, and that `CustomerDefinition` is absent from the list. This removes the definition only. The XML file stays on your computer.
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment selected by name, after a preview (see Evidence)." plugin_body=delete_plugin %}
+{% capture delete_metadata %}
+### Metadata API delete of the definition
+
+Send `deleteMetadata` with the type and the definition name. Use it only on an owned definition.
+
+```xml
+<met:deleteMetadata>
+  <met:type>MarketSegmentDefinition</met:type>
+  <met:fullNames>CustomerDefinition</met:fullNames>
+</met:deleteMetadata>
+```
+
+The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. Only a definition without a live segment is tested; for a live segment, use the Connect API tab.
+{% endcapture %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live segment." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment selected by name, after a preview (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -477,9 +535,11 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 
 **Standard CLI at API 68.0:** `sf org list metadata --metadata-type MarketSegmentDefinition` lists the definitions, and `sf project retrieve start` saved one by name (CLI 2.151.7). The create and delete XML workflows above were run at API 65.0: the deploy reported success, a retrieve matched the file, and after the destructive deploy the list no longer showed the definition.
 
+**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (label only) and `deleteMetadata` on one new single-model DBT probe definition each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect segment read answered `ITEM_NOT_FOUND` every time: no live segment, publication or activation followed. After the delete the definition was gone from both views, and the list held the same five definitions as before the run. Not tested: SQL or criteria changes, UI definitions, and these calls on a definition that has a live segment.
+
 **UI segment (native API 68 plugin, one org):** Created a UI segment from a hand-written JSON file with one text comparison (`operator` `equal`, a `values` list), retrieved it with the criteria Salesforce normalized, reported a repeat deploy `unchanged`, updated the criteria value and the lookback (`P90D` to `P30D`), and deleted it by name; a follow-up GET answered `ITEM_NOT_FOUND`. The plugin writes UI segments with `segmentCreationFlow` `Headless`, which the API requires. The first update attempt, about a minute after the create while the segment was still `PROCESSING`, was refused with HTTP 403 `ENTITY_SAVE_ERROR` and nothing was written; the same deploy succeeded once the segment was `ACTIVE`.
 
-**Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing. UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules. Populated audiences. Send destinations, membership export and cross-org migration. A released package.
+**Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing through the CLI (the Metadata API calls above created no live segment). UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules. Populated audiences. Send destinations, membership export and cross-org migration. A released package.
 
 **Error codes:** `ITEM_NOT_FOUND` is returned by the GET after a successful delete. A successful XML deploy can still leave the runtime GET returning `ITEM_NOT_FOUND`.
 

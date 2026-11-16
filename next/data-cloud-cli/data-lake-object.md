@@ -10,10 +10,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [cli, api, plugin] }
-  create: { status: "yes", methods: [api, plugin] }
-  update: { status: "yes", methods: [api, plugin] }
-  delete: { status: "yes", methods: [api, plugin] }
+  read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
+  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -427,7 +427,113 @@ Success is HTTP 201 with status `PROCESSING`. Read the object by name until it s
 - For a DLO that a stream feeds, create the stream instead. It creates its landing DLO; see [Data Streams](/next/data-cloud-cli/data-stream-definition/#create).
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-create" label="Create" split_api=true cli_state="blocked" cli_reason="A standard Metadata deploy of the retrieved test schema failed at API 65 to 68 (see Evidence)." metadata_state="blocked" metadata_reason="This is the same Metadata API deploy as the CLI tab, which failed (see Evidence)." connect_state="available" connect_reason="Tested at API 68 on new names, directly and through the plugin (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Tested at API 68 on a new name in one org (see Evidence)." plugin_body=create_plugin %}
+{% capture create_cli %}
+Deploys the object with only the fields you author. Salesforce adds the key qualifier `KQ_Id__c`. Leave out every field that Salesforce generates (`KQ_…`, `cdp_sys_…`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`): a deploy that restates them fails.
+
+**The result is a disabled definition only.** It reads back with `isEnabled` `false`, and no Data Lake Object instance exists for it: the Connect API answers HTTP 400 `INVALID_INPUT` for its name, and the plugin cannot see it. To get a DLO that the Connect API, the plugin and mappings can use, create it on the Connect API or plugin tab.
+
+Save the object file as `force-app/main/default/objects/CustomerSource__dll/CustomerSource__dll.object-meta.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>CustomerSource</label>
+    <mktDataLakeAttributes>
+        <creationType>Custom</creationType>
+        <isEnabled>true</isEnabled>
+        <objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</objectCategory>
+    </mktDataLakeAttributes>
+</CustomObject>
+```
+
+Save the key as `fields/Id__c.field-meta.xml` beside it. `Note__c` is the same without `primaryIndexOrder`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Id__c</fullName>
+    <label>Id</label>
+    <length>60</length>
+    <mktDataLakeFieldAttributes>
+        <definitionCreationType>Custom</definitionCreationType>
+        <externalName>Id</externalName>
+        <isEventDate>false</isEventDate>
+        <isInternalOrganization>false</isInternalOrganization>
+        <isRecordModified>false</isRecordModified>
+        <primaryIndexOrder>1</primaryIndexOrder>
+        <usageTag>NONE</usageTag>
+    </mktDataLakeFieldAttributes>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>
+```
+
+```sh
+sf project deploy start --metadata CustomObject:CustomerSource__dll --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The deploy reports the object and both fields as `Created`. A retrieve afterwards saves `Id__c` with `primaryIndexOrder` `1`, `Note__c` and the generated `KQ_Id__c`.
+{% endcapture %}
+
+{% capture create_metadata %}
+### Metadata API create of the object
+
+Send `createMetadata` to `https://MyDomainName.my.salesforce.com/services/Soap/m/68.0` with the headers `Content-Type: text/xml` and `SOAPAction: ""`. The object and its authored fields go in one record; leave out every field that Salesforce generates.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:createMetadata>
+      <met:metadata xsi:type="met:CustomObject">
+        <met:fullName>CustomerSource__dll</met:fullName>
+        <met:label>CustomerSource</met:label>
+        <met:mktDataLakeAttributes>
+          <met:creationType>Custom</met:creationType>
+          <met:isEnabled>true</met:isEnabled>
+          <met:objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</met:objectCategory>
+        </met:mktDataLakeAttributes>
+        <met:fields>
+          <met:fullName>Id__c</met:fullName>
+          <met:label>Id</met:label>
+          <met:length>60</met:length>
+          <met:mktDataLakeFieldAttributes>
+            <met:definitionCreationType>Custom</met:definitionCreationType>
+            <met:externalName>Id</met:externalName>
+            <met:isEventDate>false</met:isEventDate>
+            <met:isInternalOrganization>false</met:isInternalOrganization>
+            <met:isRecordModified>false</met:isRecordModified>
+            <met:primaryIndexOrder>1</met:primaryIndexOrder>
+            <met:usageTag>NONE</met:usageTag>
+          </met:mktDataLakeFieldAttributes>
+          <met:type>Text</met:type>
+        </met:fields>
+        <met:fields>
+          <met:fullName>Note__c</met:fullName>
+          <met:label>Note</met:label>
+          <met:length>60</met:length>
+          <met:mktDataLakeFieldAttributes>
+            <met:definitionCreationType>Custom</met:definitionCreationType>
+            <met:externalName>Note</met:externalName>
+            <met:isEventDate>false</met:isEventDate>
+            <met:isInternalOrganization>false</met:isInternalOrganization>
+            <met:isRecordModified>false</met:isRecordModified>
+            <met:usageTag>NONE</met:usageTag>
+          </met:mktDataLakeFieldAttributes>
+          <met:type>Text</met:type>
+        </met:fields>
+      </met:metadata>
+    </met:createMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+The response holds one `success` `true` result each for the object and both fields. As with the CLI tab, the result is a disabled definition (`isEnabled` `false`) with the generated `KQ_Id__c` and no Data Lake Object instance, so the Connect API does not find it.
+{% endcapture %}
+
+{% include operation-tabs.html id="dlo-create" label="Create" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on a new name. It saves a disabled definition without a Data Lake Object instance (see Evidence)." cli_body=create_cli metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata on a new name. It saves a disabled definition without a Data Lake Object instance (see Evidence)." metadata_body=create_metadata connect_state="available" connect_reason="Tested at API 68 on new names, directly and through the plugin (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Tested at API 68 on a new name in one org (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -475,7 +581,48 @@ Replace `OWNED_DLO_ID` with the ID of an owned test object, from a GET request. 
 - Removing a field is not possible through these routes. The REST field DELETE (`/ssot/data-lake-objects/NAME/fields/FIELD`) works only for external DLOs and answers HTTP 400 otherwise. A Metadata API destructive change for a `CustomField` is refused with "setup object in use".
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-update" label="Update" split_api=true cli_state="unknown" cli_reason="Updating a working DLO by deploy is not tested. Adding fields worked only on a test DLO created without fields; removing a field was refused." metadata_state="unknown" metadata_reason="A Metadata API update has not been tested." connect_state="available" connect_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." plugin_body=update_plugin %}
+{% capture update_cli %}
+Changes the label and adds a field on an existing DLO, including an active DLO that the Connect API or the plugin created. Retrieve the object first so the project holds every field, edit the object file's `label`, add a field file, then deploy:
+
+```sh
+sf project deploy start --metadata CustomObject:CustomerSource__dll --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The deploy reports the object as `Changed`, the new field as `Created` and every retrieved field, generated ones included, as `Unchanged`. The Connect API GET then shows the new label and the added field, and the DLO stays `ACTIVE`.
+
+Existing fields cannot change or be removed this way: setting the primary-key order on an existing field fails, and a destructive change that names one DLO field is refused with "setup object in use".
+{% endcapture %}
+
+{% capture update_metadata %}
+### Metadata API update of the object
+
+`updateMetadata` changes the object's label. Send only the object, without `fields`; restate its `mktDataLakeAttributes` as `readMetadata` returned them:
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:updateMetadata>
+      <met:metadata xsi:type="met:CustomObject">
+        <met:fullName>CustomerSource__dll</met:fullName>
+        <met:label>CustomerSource updated</met:label>
+        <met:mktDataLakeAttributes>
+          <met:creationType>Custom</met:creationType>
+          <met:isEnabled>true</met:isEnabled>
+          <met:objectCategory>Salesforce_SFDCReferenceModel_0_93.Related</met:objectCategory>
+        </met:mktDataLakeAttributes>
+      </met:metadata>
+    </met:updateMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+To add a field, send `createMetadata` with one `CustomField` record whose `fullName` is `CustomerSource__dll.Extra__c` and whose attributes match `Note__c` on the Create tab. A new field listed inside an `updateMetadata` object record is refused with `INVALID_CROSS_REFERENCE_KEY` (no `CustomField` of that name found). Both calls worked on an active DLO created through the Connect API: its GET showed the new label and field and stayed `ACTIVE`.
+{% endcapture %}
+
+{% include operation-tabs.html id="dlo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and a text field addition, on a deployed definition and on an active DLO (see Evidence)." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field, on a definition and on an active DLO (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -525,7 +672,61 @@ sf data360 delete -m dlo:CustomerSource__dll -m dmo:Customer__dlm -o TARGET_ALIA
 If Salesforce still lists the dependents the command just deleted, it stops with `DLO_DEPENDENCY_PENDING` and does not send the DLO delete; wait and run the delete again for the DLO alone. A DELETE that Salesforce answers with HTTP 4xx reports mutation `rejected`.
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-delete" label="Delete" split_api=true cli_state="blocked" cli_reason="A Metadata definition delete was refused while the DLO still existed and was referenced (see Evidence)." metadata_state="blocked" metadata_reason="This is the same Metadata API delete as the CLI tab, which was refused." connect_state="available" connect_reason="Tested at API 68 on an empty, owned test object (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested at API 68 on an owned test object in one org (see Evidence)." plugin_body=delete_plugin %}
+{% capture delete_cli %}
+Deletes a DLO definition that a deploy or `createMetadata` created. **An active DLO is refused**: one created through the Connect API, the plugin or a stream has a Data Lake Object instance, and the delete fails with "This data lake object definition is referenced elsewhere in Salesforce", even when its dependency list is empty. Delete such a DLO on the Connect API or plugin tab.
+
+In an empty folder named `destructive`, save a `package.xml` that selects nothing:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <version>68.0</version>
+</Package>
+```
+
+Save `destructiveChanges.xml` beside it, naming the object:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CustomerSource__dll</members>
+        <name>CustomObject</name>
+    </types>
+    <version>68.0</version>
+</Package>
+```
+
+```sh
+sf project deploy start --metadata-dir destructive --target-org TARGET_ALIAS --api-version 68.0 --wait 10
+```
+
+The result lists the object with `deleted` `true`. Afterwards `readMetadata` returns no record for the name.
+{% endcapture %}
+
+{% capture delete_metadata %}
+### Metadata API delete of the object
+
+Send `deleteMetadata` with the exact name. The same limit as on the CLI tab applies: only a definition that a deploy or `createMetadata` created is deleted.
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header>
+    <met:SessionHeader><met:sessionId>ACCESS_TOKEN</met:sessionId></met:SessionHeader>
+  </soapenv:Header>
+  <soapenv:Body>
+    <met:deleteMetadata>
+      <met:type>CustomObject</met:type>
+      <met:fullNames>CustomerSource__dll</met:fullNames>
+    </met:deleteMetadata>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+For an active DLO the result is `success` `false` with status code `DEPENDENCY_EXISTS` and the message "This data lake object definition is referenced elsewhere in Salesforce. Remove the usage and try again", naming its own Data Lake Object instance.
+{% endcapture %}
+
+{% include operation-tabs.html id="dlo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on a definition that a deploy created. An active DLO is refused (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition that createMetadata created. An active DLO is refused with DEPENDENCY_EXISTS (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested at API 68 on an empty, owned test object (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested at API 68 on an owned test object in one org (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -736,6 +937,12 @@ A first attempt failed locally with `No mode found in body entry`, before any HT
 
 Only this standalone definition/provisioning lifecycle was verified at **API 68**, not API 65–67, arbitrary dependent or stream-owned deletion, cascade behavior, populated-data handling or ingestion. The summary's Delete rating and API tab refer only to the bounded standalone workflow above.
 
+**CLI and Metadata API writes at API 68.0:** On `Cli…` probes in one org, with no stream and no mapping; every probe was deleted afterwards and confirmed gone:
+
+- **Create.** A deploy and a `createMetadata` call, each with the object plus the authored `Id__c` (`primaryIndexOrder` `1`) and `Note__c`, succeeded. `readMetadata` and a retrieve returned both fields plus the generated `KQ_Id__c`, with `isEnabled` `false` although `true` was sent. No Data Lake Object instance was created: the Connect GET by name answered HTTP 400 `INVALID_INPUT`. The earlier create failures restated the generated fields; leaving them out is what works.
+- **Update.** On those definitions a deploy changed the label and added `Extra__c`; `updateMetadata` changed the label, and `createMetadata` of one `CustomField` added the field. A new field listed only inside an `updateMetadata` object record was refused with `INVALID_CROSS_REFERENCE_KEY`. On an active DLO created through the Connect API, `updateMetadata` (label), `createMetadata` (field) and then a deploy of the retrieved project (label plus a second field, every other field `Unchanged`) all persisted: the Connect GET showed the new label, both new fields and `ACTIVE`.
+- **Delete.** A destructive deploy and `deleteMetadata` each deleted a definition that a deploy or `createMetadata` created; `readMetadata` then returned no record. On the active DLO, whose dependency list was empty, both were refused with "referenced elsewhere" (`DEPENDENCY_EXISTS` on `deleteMetadata`), naming its own Data Lake Object instance. The Connect DELETE then removed it.
+
 **Metadata definition delete refused:** A Metadata definition delete was refused. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
 
 ```json
@@ -750,10 +957,10 @@ That is a refusal, not a successful delete. Check the actual state after a failu
 
 **Portability:** Tested at API 68 from the plugin's source tree against two orgs, on empty, unmapped custom DLOs in the default data space: retrieval, an unchanged deploy into the second org, and deletion. Files retrieved from a source org and from a second org after an unchanged deploy were byte-identical in that run.
 
-**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, further deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". Updating a DLO that was created through the API or a stream was not tried with the CLI.
+**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, further deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". At API 68 a deploy also changed the label of, and added a field to, an active DLO that the Connect API created; see the CLI and Metadata API writes above.
 
 **Plugin error codes:** `DLO_DEPENDENCY_EXISTS`, `DLO_DEPENDENCY_PENDING` and `DLO_DEPENDENCIES_UNCONFIRMED` concern the dependency check before a delete (the first two were observed live at API 68, the last is offline-tested). `DLO_DELETE_NOT_CONFIRMED` and `DLO_DELETE_UNCONFIRMED` report a DELETE whose result could not be confirmed; inspect the object before another attempt. `DLO_REQUEST_UNCONFIRMED` and `DLO_HTTP_ERROR` report a write whose outcome is unknown or a Salesforce rejection. `DLO_TARGET_IDENTITY_MISMATCH` and `DLO_DATASPACE_MISMATCH` stop a command whose target does not match the file. The `UNSUPPORTED_DLO_*` codes (category, event field, field change, field addition, selection, data space) are refusals before any write. `LOCAL_FILE_REMOVAL_FAILED` reports a local file that could not be removed after a confirmed delete. Everything except the live observations named above is offline-tested.
 
-**Not verified:** ingestion and populated data; schema removal; nondefault data spaces; plugin numeric API pins other than 68 (offline-tested only); cascade behavior beyond the dependent selections shown in the Delete chapter; raw DLO routes below API 61; installed released packages.
+**Not verified:** ingestion and populated data; whether a definition created by deploy or `createMetadata` can later get a Data Lake Object instance or feed a mapping; CLI and Metadata API writes on a stream-owned DLO; schema removal; nondefault data spaces; plugin numeric API pins other than 68 (offline-tested only); cascade behavior beyond the dependent selections shown in the Delete chapter; raw DLO routes below API 61; installed released packages.
 
 </details>

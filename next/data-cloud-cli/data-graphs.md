@@ -11,8 +11,8 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "partial" } }
-  create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
-  update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
+  update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "partial" } }
   delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
 ---
 
@@ -81,7 +81,7 @@ Each entry under `dataGraphMetadata` has `developerName`, `status` and the root.
 
 For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
 {% endcapture %}
-{% include operation-tabs.html id="graphs-read" label="Read" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7 has no DataGraph metadata type: sf project retrieve start stops with a RegistryError. sf org list metadata lists graph names only." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on DataGraph lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves the graph as a native file with API 68.0." plugin_body=read_plugin %}
+{% include operation-tabs.html id="graphs-read" label="Read" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7 has no DataGraph metadata type: sf project retrieve start stops with a RegistryError. sf org list metadata lists graph names only." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on DataGraph lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Partial: by exact graph name only; the plugin cannot retrieve every graph. Native file, API 68.0." plugin_body=read_plugin %}
 
 ## Create
 
@@ -161,7 +161,7 @@ The metadata route then reports `Inprogress` for about five minutes. A three-fie
 Do not send the POST again while the first one is building. If the outcome is unclear, read the graph by name first.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-create" label="Create" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no DataGraph type for source-format deploys, and no graph definition can be retrieved to deploy. A metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no graph definition to deploy, and a create through it has not been tested." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip, whatever folder or suffix is used." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, createMetadata is refused with REQUIRED_FIELD_MISSING (DeveloperName, MasterLabel), while the DataGraph type describes only fullName." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
 
 ## Update
 
@@ -250,7 +250,7 @@ Use the generated names your read returns; the ones above only show their form. 
 - PATCH is refused with HTTP 405 on the tested routes.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-update" label="Update" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no DataGraph type for source-format deploys, and no graph definition can be retrieved to change. A metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="The Metadata API returns no graph definition to deploy, and an update through it has not been tested." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, the DataGraph type carries only fullName, so updateMetadata has no setting to send. It reported success for a graph that does not exist and changed nothing." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -291,7 +291,7 @@ sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerG
 Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7 has no DataGraph type, so sf project delete source cannot select a graph. A destructive metadata-format deploy was not tested." split_api=true metadata_state="unknown" metadata_reason="A delete through the Metadata API has not been tested." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph selected by name, after a preview." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7: sf project delete source stops with a RegistryError. A destructive metadata-format deploy at API 68.0 passed with zero components for a graph that does not exist; deleting an existing graph this way was not tried." split_api=true metadata_state="unknown" metadata_reason="At API 68.0, deleteMetadata for a graph that does not exist is refused as a standard component that cannot be deleted. Deleting an existing graph was not tried." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph selected by name, after a preview." plugin_body=delete_plugin %}
 
 Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Through the API route, local request files and retrieved files remain; the plugin removes only the graph file it was given.
 
@@ -348,9 +348,14 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - Installed-package smoke verifies offline command routing, not live installed cross-org qualification.
 - An uncertain mutation must not be replayed.
 
-**Metadata API (read-only, API 68.0):** `DataGraph` is not listed by `describeMetadata`, yet `listMetadata` on `DataGraph` returned the names of all six graphs in the org. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no graph definition to read or redeploy; use the native API 68 Connect routes or the plugin. Metadata API create, update and delete were not tried.
+**Metadata API (API 68.0):** `DataGraph` is not listed by `describeMetadata`, yet `listMetadata` on `DataGraph` returned the names of all six graphs in the org (as `default.<name>`), and `describeValueType` describes the type with only `fullName`, marked creatable, updatable and deletable. `readMetadata` for one graph returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no graph definition to read or redeploy; use the native API 68 Connect routes or the plugin. Writes on new `Cli…` names (2026-11-16):
 
-**Salesforce CLI (read-only, CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `DataGraph`, while `sf org list metadata --metadata-type DataGraph` lists the graph names. `sf project retrieve start --metadata DataGraph:<name>` stops with `RegistryError` (exit code 1), and so does a retrieve from a `package.xml` manifest: the CLI's own metadata registry has no `DataGraph` type. The standard CLI therefore has no graph workflow; CLI deploys and deletes were not tried.
+- `createMetadata` with `fullName` `default.CliW4Graph` or `CliW4GraphB` was refused with `REQUIRED_FIELD_MISSING` "Required fields are missing: [DeveloperName, MasterLabel]". The type has no such fields to send. Nothing was created: the list was unchanged and the Connect read by name answered "Data Graph not found".
+- `updateMetadata` on a graph that does not exist returned `success: true` and changed nothing. With only `fullName` in the type, an update has no setting to carry.
+- `deleteMetadata` on a graph that does not exist was refused with `FIELD_INTEGRITY_EXCEPTION` "… is standard and cannot be deleted".
+- Updating or deleting an existing graph through the Metadata API was not tried: only new `Cli…` test objects may be written, and a test graph can only be made through a create that starts a build.
+
+**Salesforce CLI (CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `DataGraph`, while `sf org list metadata --metadata-type DataGraph` lists the graph names. `sf project retrieve start --metadata DataGraph:<name>`, `sf project deploy start --metadata DataGraph:CliW4Graph` and `sf project delete source --metadata DataGraph:CliW4GraphD` all stop with `RegistryError` "Missing metadata type definition in registry for id 'DataGraph'" (exit code 1), and so does a retrieve from a `package.xml` manifest. A metadata-format deploy (`--metadata-dir`, `--dry-run`) naming `DataGraph` `CliW4Graph` was refused with "An object 'CliW4Graph' of type DataGraph was named in package.xml, but was not found in zipped directory" for every folder and suffix tried (`dataGraphs/*.dataGraph`, `dataGraph/`, `datagraphs/*.datagraph`, `*.dataGraph-meta.xml`, `dataGraphDefinitions/`): without a `describeMetadata` entry the server has no folder for the type. A destructive metadata-format deploy naming a graph that does not exist passed with zero components. The standard CLI therefore cannot create or update a graph; deleting an existing graph with a destructive deploy was not tried.
 
 **Not verified:** nested graphs; exhaustive external consumers; removal of generated objects, mappings, transforms or internal state; physical storage and credits; successful computation; general cross-org lifecycle; arbitrary edits; portable creation; live installed cross-org qualification.
 
