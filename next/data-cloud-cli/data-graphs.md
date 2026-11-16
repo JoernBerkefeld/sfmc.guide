@@ -48,7 +48,9 @@ The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin
 sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
 ```
 
-The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed.
+The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed. A draft graph (saved but never built) is saved as-is too (`DATA_GRAPH_DRAFT`): Salesforce does not let the API update, build or delete a draft.
+
+A Real-Time Data Graph (`type` `REALTIME`) uses the same file. It also holds the settings of the UI page "Real-Time Consumption Limits" (`isRealTimeToggleEnabled`, `processIngestionApi`, `processSalesforceCrm`, `isRecordCachingDisabled`, `sessionEnd`, `sessionEndTimeUnit`, `cacheDurationInDays`, `maxRecordsCached`), sent as written on create and update with `--allow-processing`; Salesforce decides.
 
 Without `--api-version` the command also uses API 68.0. In the test org all six existing graphs retrieved this way and previewed `unchanged` (verification DB: `graph-native-any-shape`, `graph-auto-routes-native68`). A graph that does not exist is an HTTP 400 on the API read, not a 404; the plugin reports the missing graph.
 {% endcapture %}
@@ -143,7 +145,9 @@ Save `graph-native-create.json`. It is the graph definition without generated na
 }
 ```
 
-Root, related objects with their joins (`path` entries with `fieldName` and `parentFieldName`, and a `jsonPath` such as `$.ssot__ContactPointEmail__dlm`), field settings and both refresh settings are sent as written. A different root, related objects and any schedule were accepted. Salesforce replaces the node `devName` with its own.
+Root, related objects with their joins (`path` entries with `fieldName` and `parentFieldName`, and a `jsonPath` such as `$.ssot__ContactPointEmail__dlm`), field settings and both refresh settings are sent as written. A different root and related objects were accepted. Salesforce recomputes each node's `jsonPath` and `devName` on create and update, whatever you send.
+
+**Salesforce's schedule limits:** `fullRefreshConfig.schedule` accepts only day or hour frequencies, and not every value: Day 1 and Hour 1 were accepted, Hour 6 and Hour 12 were refused. `OnDemand` depends on an org feature. A graph cannot be switched to streaming while it is being edited.
 
 The response is an echo with `status: "creating"` and an empty `valuesDmoName`. It does not prove the graph will finish. Read the graph by name until it is `ready`:
 
@@ -180,7 +184,7 @@ sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/
 
 The plugin sends one PUT, and Salesforce decides what changes. Label, description, refresh schedule, incremental refresh, added fields, related objects, joins and field settings go as written. The plugin refuses changes to the graph name, data space, root object, and a node's object, path or type.
 
-Omitting retained fields or branches preserves them rather than removing them. An omitted description is kept too. The target supplies both join endpoints, generated bindings and other retained properties.
+Omitting retained fields or branches preserves them rather than removing them. An omitted description is kept too. An omitted `fullRefreshConfig` is not kept: Salesforce resets the schedule to 1 day. Schedules are limited as described in the Create chapter. The target supplies both join endpoints, generated bindings and other retained properties.
 
 Before the PUT, the plugin requires item `ready`, metadata `Ready` and DataGraph record `READY` / `ACTIVE`. Success means a readback confirmed the change, not the PUT response. An identical ready definition reports `unchanged` with zero writes and needs no `--allow-processing`.
 
@@ -239,7 +243,7 @@ Save `graph-native-update.json`. It keeps every generated name from the read (gr
 
 Use the generated names your read returns; the ones above only show their form. Only send the PUT when the item read says `ready` and the metadata route says `Ready`.
 
-**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. Fields and related objects left out of the body were kept, not removed. Do not repeat a mutation while the graph settles.
+**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. Fields and related objects left out of the body were kept, not removed; a body without `fullRefreshConfig` reset the schedule to 1 day. Do not repeat a mutation while the graph settles.
 
 **Known failures:**
 

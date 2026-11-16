@@ -77,6 +77,8 @@ sf api request rest /services/data/v68.0/ssot/data-model-object-mappings/ACTUAL_
 ```
 
 A GET confirms the status, the DLO and DMO bindings and every field pair, including the four pairs Salesforce generates (`KQ_Id__c`, `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c`). The `developerName` of each pair is the selector that the pair DELETE in the Update chapter needs.
+
+A list of mappings needs `dmoDeveloperName` or `sourceObjectName`. Listing by CRM source object (`sourceObjectName=Contact`) shows the same DLO-to-DMO mappings in another form: the CRM object and its field names, no status, no pair selectors and fewer pairs. The item read by name returns the DLO form shown above.
 {% endcapture %}
 
 {% capture read_plugin %}
@@ -214,6 +216,7 @@ Salesforce accepts a Number pair and a pair between differently named fields, fo
 **Known failures:**
 
 - A mapping without a pair joining the two primary keys is refused with HTTP `400` `MISSING_ARGUMENT`: "Unable to find Primary Key of DLO in POST request of Mapping Creation".
+- Salesforce creates mappings only from a DLO to a DMO. A DMO or a CRM object as the source is refused ("Need api name of DLO").
 {% endcapture %}
 
 {% capture create_plugin %}

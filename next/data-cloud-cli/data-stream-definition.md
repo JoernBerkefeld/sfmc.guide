@@ -223,6 +223,8 @@ sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-str
 
 Creation also creates the landing DLO. Salesforce ignores the name in the file for a new Ingestion API stream. It names the stream `<connection>_<event>_<8 hex characters>`, for example `CustomerConnection_CustomerEvent_2A5A8AB6`, and names the DLO after it. The plugin reports the real name as `targetApiName` and the DLO's name as `targetDloName`, with `outcome: "created"` and `mutation: "confirmed-created"`. A stream already bound to the same connection and event is not created again: the command reports `STREAM_EXISTING_BINDING_REQUIRES_UPDATE`, so retrieve that stream and update it instead.
 
+After a create or update, Salesforce keeps the stream and its DLO in `PROCESSING` for a while; the plugin reads both back until they are `ACTIVE` before it reports the result.
+
 Retrieve the stream by that reported name and keep working with the retrieved file. Deploying the original file again is blocked, because its name no longer matches.
 
 **Salesforce CRM stream:** Write or copy a CRM stream file (Read chapter) with a new stream name, DLO name and source object, and deploy it the same way with `--allow-processing`. The plugin renames the keys that the create request spells differently (`datastreamType`, `dataspaceInfo`, `dataLakeFieldInputRepresentations`, `sourceFields[].dataType`), leaves out the plain field mappings and sends each formula with the type of its DLO field. Salesforce keeps the name you chose and creates the DLO. It checks each source field type against the CRM object; a standard checkbox such as `IsActive` must be `Text`. Do not add the system fields; Salesforce refuses them in a create.
@@ -276,7 +278,7 @@ Success is HTTP 201. Salesforce ignores the names in the body: it names the stre
 ## Update
 
 {% capture update_plugin %}
-Adds one nonprimary Text field to the stream's mappings. It also creates the matching DLO field. To add a formula field instead, add an entry to `spec.formulaMappings` (`targetFieldName`, `formula`, `targetFieldReturntype`); Salesforce creates its DLO field. A formula removed from the file is sent as an empty formula, which Salesforce refuses (reported as rejected). A changed stream label is sent; Salesforce keeps its own label, reported as `STREAM_CHANGE_NOT_APPLIED`. A change of the DLO label, category, event time field or primary key is refused before any request (`UNSUPPORTED_STREAM_SETTINGS_CHANGE`).
+Adds one nonprimary Text field to the stream's mappings. It also creates the matching DLO field. To add a formula field instead, add an entry to `spec.formulaMappings` (`targetFieldName`, `formula`, `targetFieldReturntype`); Salesforce creates its DLO field. A formula removed from the file is sent as an empty formula, which Salesforce refuses (reported as rejected). A changed stream label is sent; Salesforce keeps its own label, reported as `STREAM_CHANGE_NOT_APPLIED`. A change of the DLO label, category, event time field or primary key, or of an existing formula's return type, is refused by the plugin before any request (`UNSUPPORTED_STREAM_SETTINGS_CHANGE`).
 
 Retrieve the target stream first, using the Read command with `TARGET_ALIAS`. Keep its settings, labels and `observed` section. Then append one entry to `spec.additiveFieldMappings`, and keep the existing entries:
 
@@ -299,7 +301,7 @@ sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-str
 
 An accepted update reports `outcome: "updated"`. An unchanged repeat reports `outcome: "unchanged"` and writes nothing. Removing an entry does not remove the mapping or field. Prepare the DMO field first, and deploy the DLO-to-DMO mapping last. A stream or DLO that is not `ACTIVE` stops the command with `STREAM_NOT_READY`; wait until both are active and run it again.
 
-**Salesforce CRM stream:** Edit the retrieved file and deploy it. The plugin sends one PATCH with `datastreamType` and only the parts that differ from the org. To add a formula field, add a mapping with `targetFieldName` and `formula`, plus the matching field in `dataLakeObjectInfo.fields`. Removing a formula mapping clears that formula; the DLO field stays. A changed `refreshConfig.fullRefreshIntervalDays` is applied. Salesforce refuses a change of `refreshMode` (reported as rejected, nothing changed) and keeps the old label after a label change: the plugin reports that as `STREAM_CHANGE_NOT_APPLIED`.
+**Salesforce CRM stream:** Edit the retrieved file and deploy it. The plugin sends one PATCH with `datastreamType` and only the parts that differ from the org. To add a formula field, add a mapping with `targetFieldName` and `formula`, plus the matching field in `dataLakeObjectInfo.fields`. Removing a formula mapping clears that formula; the DLO field stays. Full refresh is set with `refreshConfig.fullRefreshIntervalDays`, and a changed interval is applied. Salesforce refuses a change of `refreshMode` (reported as rejected, nothing changed) and keeps the old label after a label change: the plugin reports that as `STREAM_CHANGE_NOT_APPLIED`. A plain (non-formula) field mapping added, removed or changed, or a new return type for an existing formula, has no proven update path in the API, so the plugin refuses it before any write (`UNSUPPORTED_STREAM_SETTINGS_CHANGE`).
 {% endcapture %}
 
 {% capture update_connect %}

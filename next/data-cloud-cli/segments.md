@@ -32,7 +32,7 @@ A **UI** segment is built in Salesforce's visual interface. A **DBT** segment is
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment-on DMO and SQL models (DBT) or criteria (UI) as written, and Salesforce decides. DBT segments with `NO_REFRESH` and `P90D`, and UI segments with `NO_REFRESH`, no parameters and no settings the plugin does not know, can be expressed. Retrieve saves any other segment as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file.
+**Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment-on DMO and SQL models (DBT) or criteria (UI) as written, and Salesforce decides. DBT segments with `NO_REFRESH` and `P90D`, and UI segments with `NO_REFRESH`, no parameters and no settings the plugin does not know, can be expressed. Retrieve saves any other segment as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file. This covers Waterfall, Real-Time and Lookalike segments, segments with parameters or exclusion criteria, and refresh schedules other than no refresh (deploying a schedule would publish the segment).
 
 ## Read
 
@@ -202,6 +202,7 @@ The preview prints `Planned create: segment:OwnedSegment.` and writes nothing.
 
 - The plugin creates only when the native read proves the name absent. A segment name that already exists is routed to the update, or reported `unchanged` when nothing differs; it is not refused. The raw POST answers HTTP 409 (see the Connect API tab).
 - If the result is unclear (`SEGMENT_CREATE_UNCONFIRMED`), do not send it again. Read the segment first.
+- Salesforce's API validates filters more strictly than Segment Builder, so a UI segment built in the canvas (for example with criteria over related objects) can be refused on deploy. The plugin shows Salesforce's error.
 {% endcapture %}
 
 {% capture create_connect %}
@@ -289,7 +290,7 @@ sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/mai
 sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
+Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Salesforce can refuse an update right after a create with HTTP 403 while the segment is still processing; deploy again once it is `ACTIVE`. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
 
 The output reads (offline-tested; derived from the command's output code):
 

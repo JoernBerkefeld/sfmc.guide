@@ -198,6 +198,10 @@ The POST response is not proof of the result. Read the insight until `calculated
 The create body uses some other names than the read: `dataSpaceName` instead of `dataSpace`, `createdFromPackage` instead of `isFromPackage`, and `NotScheduled` instead of `NOT_SCHEDULED`. At API 68 Salesforce refuses `dataSpace` and `isFromPackage` as unrecognised input and `NOT_SCHEDULED` as a value; `definitionType` and `queryDialect` take either spelling on POST.
 
 Do not send the POST again if the outcome is unclear. Read the insight first.
+
+**Known failures:**
+
+- Salesforce does not create a Real-Time Insight (`definitionType` `GRAPH_METRIC`) through the API: the POST answers "The Definition Type is not supported". Create it in the UI; update and delete work through the API.
 {% endcapture %}
 
 {% capture create_plugin %}
@@ -222,6 +226,10 @@ Deployed: 1 (1 created / 0 updated / 0 failed)
 ```
 
 The preview prints `Planned create: calculated-insight:CustomerActivity__cio.` and performs no write.
+
+**Known failures:**
+
+- A Real-Time Insight (`GRAPH_METRIC`, built with the Visual Builder on a Real-Time Data Graph) cannot be created through Salesforce's public API, so its create is reported as `rejected`. Create it in the UI, then retrieve it; updates and delete through the plugin work.
 {% endcapture %}
 
 {% include operation-tabs.html id="ci-create" label="Create" cli_state="available" cli_reason="Definition only. It can reserve a name and does not guarantee that no processing happens." cli_body=create_cli split_api=true metadata_state="unknown" metadata_reason="Not tested for this operation." connect_state="available" connect_reason="Native API68 POST creates a draft insight; it does not publish it." connect_body=create_connect plugin_state="available" plugin_reason="Creates an insight, as a draft with --draft, from its JSON and SQL files, using API 68.0." plugin_body=create_plugin %}
