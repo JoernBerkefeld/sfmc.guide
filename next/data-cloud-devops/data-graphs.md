@@ -14,7 +14,7 @@ platforms:
 crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
-  update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "partial" } }
+  update: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
   delete: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
 ---
 
@@ -95,7 +95,7 @@ sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/Exam
 
 Creation starts processing automatically and uses org resources. Get approval first. The command then requires `--allow-processing`. Without it the create stops with `PROCESSING_ACKNOWLEDGEMENT_REQUIRED`. A create of a graph whose same-named predecessor is still being deleted (Salesforce still lists it) stops with `DATA_GRAPH_PENDING`; wait and run it again. In both cases nothing is written, and the run ends `DEPLOY_EXECUTION_BLOCKED`.
 
-Create sends the file as written: the root, related objects with their joins, field types and refresh schedule. Salesforce adjusts what it stores. It adds key-qualifier fields to related objects, and a unified root reads back with node type `derived`. Retrieve the graph after creating it to get the stored form.
+Create sends the file as written: the root, related objects with their joins, field types and refresh schedule. A hand-written file may leave out each node's `type`: the create then sends none and Salesforce sets it (a create without node types answered 201 at API 68). Salesforce adjusts what it stores. It adds key-qualifier fields to related objects, and a unified root reads back with node type `derived`. Retrieve the graph after creating it to get the stored form.
 
 Preview checks the root, because no API answer exists before a write. A missing root object reports `DATA_GRAPH_ROOT_NOT_FOUND`. For a unified root, preview reads the Identity Resolution rulesets and names the owner with `DATA_GRAPH_OWNER`. It reports `DATA_GRAPH_OWNER_NOT_FOUND` when no ruleset owns the root, and `DATA_GRAPH_OWNER_NOT_PUBLISHED` when the owner is not published yet. The deploy itself does not check the owner. Salesforce decides.
 
@@ -182,9 +182,15 @@ After the update is confirmed, run the same file without `--allow-processing`:
 sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
 ```
 
-The plugin sends one PUT, and Salesforce decides what changes. Label, description, refresh schedule, incremental refresh, added fields, related objects, joins and field settings go as written. The plugin refuses changes to the graph name, data space, root object, and a node's object, path or type.
+The file is the desired state. The plugin sends it in one PUT, and Salesforce decides what changes. Label, description, refresh schedule, incremental refresh, the fields and related objects as the file lists them, field settings and the root object go as written. A field or related object left out of the file is not sent.
 
-Omitting retained fields or branches preserves them rather than removing them. An omitted description is kept too. An omitted `fullRefreshConfig` is not kept: Salesforce resets the schedule to 1 day. Schedules are limited as described in the Create chapter. The target supplies both join endpoints, generated bindings and other retained properties.
+Salesforce only adds to a graph. At API 68 it refuses with 400 a removed field (also `isProjected: false`), a removed related object, another related object in place of an existing one, and a root change. The plugin reports that answer as `rejected`, with Salesforce's message on the item (`REQUEST_FAILED`), and nothing is written. The key-qualifier fields Salesforce added stay when the file leaves them out.
+
+The plugin refuses a join change of an existing related object before any write (`DATA_GRAPH_JOIN_CHANGE`). Preview reports the graph as present and the run as `DEPLOY_PREVIEW_BLOCKED`; the deploy ends `DEPLOY_EXECUTION_BLOCKED`. Salesforce accepts such a PUT, rebuilds the graph and keeps the old join. A graph read back with another join than the plugin sent reports `DATA_GRAPH_CHANGE_NOT_APPLIED`, never `updated`. To change a join, delete the graph and create it again.
+
+The name and the data space identify the graph. A PUT cannot rename a graph. A file with another name creates or addresses another graph, and the old graph is not renamed. A node's type, reference and projected name are set by Salesforce: a file may leave them out, and a stated one must match the org. A related object added by an update without `type` is sent without one; that is not verified live.
+
+Settings left out of the file, such as the description, the refresh schedule, a node's label or criteria and field settings, keep their org values: the plugin fills them in from the graph it read. To clear a setting, give it an explicit value. Schedules are limited as described in the Create chapter. For the objects and fields the org already holds, the org supplies both join endpoints, generated bindings and other retained properties.
 
 Before the PUT, the plugin requires item `ready`, metadata `Ready` and DataGraph record `READY` / `ACTIVE`. Success means a readback confirmed the change, not the PUT response. An identical ready definition reports `unchanged` with zero writes and needs no `--allow-processing`.
 
@@ -243,7 +249,7 @@ Save `graph-native-update.json`. It keeps every generated name from the read (gr
 
 Use the generated names your read returns; the ones above only show their form. Only send the PUT when the item read says `ready` and the metadata route says `Ready`.
 
-**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. Fields and related objects left out of the body were kept, not removed; a body without `fullRefreshConfig` reset the schedule to 1 day. Do not repeat a mutation while the graph settles.
+**Observed PUT, not a documented contract.** Salesforce accepted `PUT /services/data/v68.0/ssot/data-graphs/{name}` in testing, with HTTP 200. This route is not in the public Graph Connect specification when checked. Its availability is not a claim of a documented or supported API contract. After a description-only PUT, reads showed the new description and ready state, with version `"0"` unchanged. Later PUTs changed the description, changed the refresh schedule from 7 days to 1 day and added a field, on a standard root and on a unified root. They were ready again after about 4.5 minutes and 38 seconds. A body that leaves out an existing field or related object, swaps a related object, changes the root or renames the graph is refused with 400 (2026-11-18); a join change answers 200 but the old join stays. Key-qualifier fields Salesforce added may be left out and stay. A body without `fullRefreshConfig` reset the schedule to 1 day. Do not repeat a mutation while the graph settles.
 
 **Known failures:**
 
@@ -339,6 +345,7 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - A live update changed the description and the refresh schedule (7 days to 1 day) and added a field. It was confirmed in about 4.5 minutes. A repeat of the same file was `unchanged` with zero writes.
 - A graph on a unified root was updated the same way and confirmed in 38 seconds.
 - An omitted description is kept on update.
+- PUTs on a probe graph (2026-11-18): Salesforce refused with 400 a removed field at the root and on a related object, `isProjected: false` on an existing field, a removed related object, another related object in place of the existing one, and a root change. A PUT with the old name in the URL and a new name in the body was refused (`INVALID_API_INPUT`). A join change answered 200 and rebuilt the graph, but the old join stayed; fields added in the same PUT were applied. Each refused PUT left the graph unchanged.
 
 **Delete:**
 
@@ -378,6 +385,9 @@ On an existing test graph, `CliB4Graph`, built through the native API 68 create 
 - `DATA_GRAPH_OWNER_NOT_FOUND`: preview found no Identity Resolution ruleset that owns the unified root.
 - `DATA_GRAPH_OWNER_NOT_PUBLISHED`: the owning ruleset is not published.
 - `DATA_GRAPH_OWNER` (information): names the owning ruleset.
+- `DATA_GRAPH_JOIN_CHANGE`: the file changes the join of an existing related object; nothing written, run ends `DEPLOY_PREVIEW_BLOCKED` (preview) or `DEPLOY_EXECUTION_BLOCKED`.
+- `REQUEST_FAILED`: Salesforce refused the PUT (for example a removed field); its message is on the item, nothing written.
+- `DATA_GRAPH_CHANGE_NOT_APPLIED`: Salesforce accepted the update, but the graph read back still has another join.
 - `INVALID_SCOPE`: an API version other than `auto` or 68.0.
 
 </details>

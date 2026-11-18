@@ -352,10 +352,6 @@ for (const name of ['data-graphs', 'calculated-insights']) {
         /ExampleGraph\.native-dataGraph\.json --api-version 68\.0 --wait-timeout 1800/,
       );
       assert.doesNotMatch(update, /API67 facade|ExampleGraph\.dataGraph\.json/);
-      assert.match(
-        update,
-        /Omitting retained\s+fields or branches preserves them rather than removing them/,
-      );
       assert.match(update, /both join endpoints, generated bindings/);
       assert.match(update, /`ready`, metadata `Ready`.*`READY` \/ `ACTIVE`/s);
       assert.match(update, /positive integer in seconds, default `1800`/);

@@ -16,6 +16,7 @@ crud_rows:
     anchor: data-stream-configuration-datastreamdefinition
     failures: '—'
     api_note: 'Ingestion API and Salesforce CRM streams'
+    plugin_note: 'other connectors than Ingestion API and Salesforce CRM are untested and sent as written; refresh mode and DLO setting changes are refused: Salesforce ignores them'
   - path: next/data-cloud-devops/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
@@ -32,6 +33,7 @@ crud_rows:
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
     failures: 'A direct native DELETE of a non-last mapping can remove DMO fields.'
     api_note: 'a direct native DELETE of a non-last mapping can remove DMO fields'
+    plugin_note: 'the file holds the label, changed through the Metadata API'
   - path: next/data-cloud-devops/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
@@ -56,6 +58,7 @@ crud_rows:
     anchor: read
     failures: '—'
     cli_note: 'definitions only, never a live segment'
+    plugin_note: 'the file holds the schedule; a deployed schedule makes the segment publish in the target org; Salesforce refuses to clear a DBT schedule'
   - path: next/data-cloud-devops/segment-members.md
     label: Segment members
     anchor: segment-members-runtime-data-not-metadata
@@ -65,6 +68,7 @@ crud_rows:
     label: Data Graphs
     anchor: operational-data-graphs
     failures: '—'
+    plugin_note: 'join changes are refused: Salesforce keeps the old join'
   - path: next/data-cloud-devops/identity-resolution.md
     label: Identity Resolution
     anchor: operational-identity-resolution
@@ -125,6 +129,10 @@ Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata A
 - **Generated DMOs are open to writes, and their fields are not protected.** On the DMOs that identity resolution and data graphs create, Salesforce accepts label, description and custom-field changes, and also relabels or deletes their own system and standard fields. It refuses a mapping onto them (`400` "Unsupported DMO Creation Type used for mapping") and deletes them only after their ruleset or graph is gone (`412` before).
 - **System transforms cannot be changed.** The transform a data graph creates reads as one hidden `STL_HIDDEN` definition. Salesforce refuses a `PUT` of it (`400`), a schedule change and a delete (`403`), and a create from its file (`400`). A graph built on a DMO without a mapping leaves this transform in `ERROR` for good.
 - **Transform schedules have their own route.** `PUT …/data-transforms/<name>/schedule` takes `Hourly`, `Daily` or `None` (`Weekly` is refused), only while the transform is active; `{"frequency":"None"}` turns it off, and `DELETE` on the route answers `405`. The `GET` answer cannot be sent back as is.
+- **Graph edits can only add.** A data graph `PUT` that removes a field or related object, swaps a related object or changes the root is refused (`400`). A changed join answers `200` and rebuilds the graph but keeps the old join. A graph cannot be renamed.
+- **Segment schedules.** A weekly schedule (exactly one day) is set on create or by `PATCH` through `publishScheduleInfo` plus a start date; a `PATCH` without schedule keys keeps it. A UI segment's schedule can be cleared; a DBT segment's schedule cannot (every clearing body answers `400`), only deleting the segment removes it. Segments take no `parameters` input. Lookbacks such as 7, 30 or 45 days and 1 year are accepted; 0 days and 400 days are refused.
+- **Ingestion API stream updates.** Salesforce refuses (`400`) a mapping retarget, removal, source or return-type change and targets `KQ_…` or `DataSource`. It answers `200` but changes nothing for refresh mode, category, event time field, DLO label and source fields. It accepts additive mappings from the primary key, with a Number type, and in the create body, and it stores an additive mapping from a label that names no event field without checking it. Only UPSERT creates.
+- **Waterfall children.** A Waterfall's child segments go into `includeCriteria` as `{"type":"Waterfall","segments":[{"type":"NestedSegment","segmentId":"<child definition id>"}]}`; a description-only `PATCH` keeps them. Every `PATCH` of an Einstein GPT segment is refused (`400`).
 
 ### What this means for the plugin
 
@@ -199,7 +207,7 @@ Append `--json` to either command for structured output. Salesforce decides what
 The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others. A retrieve without `-m` saves all DLOs, DMOs and mappings; every other type is retrieved only when `-m` names it.
 
 - A key the plugin does not know stays in the saved file. Deploy checks files strictly and refuses that file, naming the key path. Unknown keys in a data stream's read-only `observed` section do not block deploy.
-- An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams that are not Ingestion API streams, segments built in the UI or without DBT models, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, data transforms with both `definition` and `definitions`, and data graph schedules the format does not hold.
+- An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams whose read names no connector type (or the Ingestion API connector with another stream type), segments with parameters, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, data transforms with both `definition` and `definitions`, and data graph schedules the format does not hold.
 - Deploy skips as-is files in a folder or Git range with a warning. Naming one refuses with `VERBATIM_NOT_DEPLOYABLE`, and so does publish. Deleting an as-is file in a Git range deletes the object by type and name, with the usual checks.
 - An object still fails when the read fails (HTTP or connection error), when it does not exist, when the answer names another object or data space, or when the org was caught mid-change or a list was incomplete.
 

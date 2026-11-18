@@ -15,7 +15,7 @@ platforms:
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
-  update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
+  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
   delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
 ---
 
@@ -87,7 +87,7 @@ Saves the mapping as one JSON file. The pairs Salesforce generates are left out 
 sf data360 retrieve -m mapping:CustomerMapping -o SOURCE_ALIAS
 ```
 
-The file is `data360/mapping/CustomerMapping.mapping-meta.json`. It is a native JSON definition, not an `ObjectSourceTargetMap` XML fallback; the plugin reads mappings through the native API route only:
+The file is `data360/mapping/CustomerMapping.mapping-meta.json`. It is a native JSON definition, not an `ObjectSourceTargetMap` XML fallback. The pairs come from the native API route; only the label is read through the Metadata API, because the native route has none:
 
 ```json
 {
@@ -113,6 +113,8 @@ The file is `data360/mapping/CustomerMapping.mapping-meta.json`. It is a native 
   }
 }
 ```
+
+When the mapping has a label, the file also holds it as `spec.label` (for example `"label": "Customer Mapping"` after `fieldMappings`; it is `masterLabel` in `readMetadata`). A bare `-m mapping` reads the labels ten mappings per Metadata API call. A label equal to the mapping's own name is the one Salesforce gives a mapping created without a label, so the file leaves it out. If the label read fails, the file leaves the label out and the retrieve warns; it does not fail.
 
 A retrieved file also carries a `developerName` selector on each pair; a hand-written file may leave it out. Retrieve and deploy decide with one rule, from fresh reads of the source DLO and the target DMO, which pairs Salesforce generated. Besides the primary-key pair `KQ_Id__c`, Salesforce generates a `KQ_*` pair for other fields, for example `KQ_RefId__c` onto `KQ_RefId__c` once a relationship starts at `RefId__c`. The file leaves these pairs out, and deploy does not count them as a difference. A mapping that is not from a DLO to a DMO is saved as-is with a warning, and deploy does not send that file. When those reads fail, retrieve refuses with `MAPPING_GENERATED_PAIRS_UNPROVEN` and writes nothing for that mapping.
 
@@ -390,11 +392,19 @@ Deployed: 1 (0 created / 1 updated / 0 failed)
 To retarget a pair, replace it in the file with the new pair; the old connection goes first, then the new one is added. The mapping's DLO and DMO never change. Any authored pair may be omitted, whatever its field names, data types or target (custom or standard field); Salesforce decides whether the removal is accepted. The generated pairs may be listed or left out, and are never removed. A file that drops the primary-key pair is refused with `MAPPING_PROTECTED_PAIR_REQUIRED`, and a pair whose layout the plugin cannot prove is refused with `MAPPING_PROTECTED_LAYOUT_UNPROVEN`, both before any write. There is no write retry and no rollback; a failure after a write is reported as failed with an unknown mutation, and a mixed batch stops there.
 
 Reconciliation runs from API `61.0`; the default and `auto` select `68.0`. An unchanged file reports `unchanged` and sends nothing.
+
+The optional `spec.label` sets the mapping's label; a file without it leaves the label alone. The native routes cannot change a label, so deploy compares it with the label `readMetadata` returns. When it differs, deploy sends one `updateMetadata` after the pair changes (and after a create): the new `masterLabel` with every pair the mapping currently has and no other, because a pair left out of the update is kept and a pair in it is added. A `readMetadata` then confirms the label and that the pairs did not change. An equal label sends nothing. A preview shows the change and writes nothing:
+
+```text
+Planned label change: "CustomerSource_map_Customer_1794467679481" -> "Customer Mapping".
+```
+
+A refused label update is `MAPPING_LABEL_UPDATE_REJECTED`; a failed Metadata API read is `MAPPING_LABEL_READ_FAILED`. A live API 68 run created a mapping with a label, changed only the label, and removed a pair while changing the label in one deploy; the removed pair stayed removed, and a file without `label` left the label as it was.
 {% endcapture %}
 
 Mapping updates are limited to the field pairs and the label; the source and target objects of an existing mapping are not changed.
 {: .mapping-shared-restriction }
-{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Partial: changes the label and adds pairs, tested at API 68.0. A pair left out of the file is not removed, so retargeting does not work." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Partial: updateMetadata changes the label and adds pairs, tested at API 68.0. A pair left out is not removed." metadata_body=update_metadata connect_state="available" connect_reason="Adds pairs with one PATCH and removes a pair with a DELETE, tested at API 64.0 and 68.0. Replacement is not supported." connect_body=update_connect plugin_state="available" plugin_reason="Adds, removes and retargets pairs from a JSON file, observed at API 61.0, 64.0 and 68.0. Not a general guarantee." plugin_body=update_plugin %}
+{% include operation-tabs.html id="mapping-update" label="Update" cli_state="available" cli_reason="Partial: changes the label and adds pairs, tested at API 68.0. A pair left out of the file is not removed, so retargeting does not work." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Partial: updateMetadata changes the label and adds pairs, tested at API 68.0. A pair left out is not removed." metadata_body=update_metadata connect_state="available" connect_reason="Adds pairs with one PATCH and removes a pair with a DELETE, tested at API 64.0 and 68.0. Replacement is not supported." connect_body=update_connect plugin_state="available" plugin_reason="Adds, removes and retargets pairs from a JSON file, observed at API 61.0, 64.0 and 68.0, and sets the label through the Metadata API, tested at API 68.0. Not a general guarantee." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -524,7 +534,7 @@ The plugin code and its offline tests back everything in this block unless an ob
 - **Versions:** the default and `auto` select API `68.0`. Numeric pins from `61.0` are admitted for retrieve, deploy, pair reconciliation and whole-mapping deletion. Admission is not a live test of each version.
 - **Identity:** saved mapping names and selectors are not target identity. Deploy resolves a unique target mapping by its DLO and DMO bindings and uses the target's server-generated name and selectors. An existing identical mapping is a zero-write repeat.
 - **Pairs:** the file is the desired set of authored pairs. Omitted pairs are unmapped individually from freshly read selectors, then additions are sent in one selector-free PATCH. Generated pairs come from the org's copy and are never sent or removed. On a custom DMO a same-name `KQ_*` pair counts as generated whenever a target field names that key qualifier in its `keyQualifierName`, not only for the primary key; on a standard DMO the rule still needs the source primary key. A pair onto a field that another mapping of the DMO also targets is removed like any other, and the field stays mapped until the last such pair is gone.
-- **Output:** each component prints one action line with its type and API name; `Deleted field mappings:` and `Added field mappings:` lines list the changed pairs of a confirmed update. Preview lines start with `Planned`. The `Deployed:` total counts confirmed creations and updates only, not unchanged, blocked or unattempted items. Retrieval prints `Downloaded mapping: n` for the successful names.
+- **Output:** each component prints one action line with its type and API name; `Deleted field mappings:` and `Added field mappings:` lines list the changed pairs of a confirmed update, and `Label set to "…".` a changed label. Preview lines start with `Planned`. The `Deployed:` total counts confirmed creations and updates only, not unchanged, blocked or unattempted items. Retrieval prints `Downloaded mapping: n` for the successful names.
 - **`--dataspace`:** requests carry the `dataspace` query only when the flag is given. Requested scope, saved identity and fresh parent identities must agree before a write.
 - **Delete:** one Metadata API destructive deployment, type `ObjectSourceTargetMap`, member the mapping developer name. It does not unmap pairs first and sends no native DELETE. Before the write the plugin reads the mapping, all mappings of the target DMO and the DMO; if the mapping is the **last mapping of a custom DMO** it stops with `MAPPING_LAST_MAPPING_DELETE_BLOCKED` and names the command that deletes the DMO. Being the last mapping of a DLO is no obstacle, and the last mapping of a **standard** DMO is deleted normally; the DMO stays enabled with its generated `KQ_Id__c` field and no mapped fields. After the write the plugin polls (up to 6 reads, 5 seconds apart) until the mapping reads `404`, then requires that the DMO's other mappings (pairs and selectors) and the DMO's field names are exactly what they were. There is no rollback and no parent deletion. A mapping selected beside its DMO, which Salesforce removes with the DMO, is read again and reported deleted only when its read answers `404`, otherwise `deletion-unconfirmed`.
 

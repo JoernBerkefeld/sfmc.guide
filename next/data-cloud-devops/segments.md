@@ -13,8 +13,8 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
-  create: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
+  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
   delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
 ---
 
@@ -41,7 +41,7 @@ Evidence: UI wizard opened without saving, and a plugin create, byte-exact retri
 
 {% include crud-summary.html %}
 
-**Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment-on DMO and SQL models (DBT) or criteria (UI) as written, and Salesforce decides. DBT segments with `NO_REFRESH` and `P90D`, and UI segments with `NO_REFRESH`, no parameters and no settings the plugin does not know, can be expressed. Retrieve saves any other segment as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file. This covers Waterfall, Real-Time and Lookalike segments, segments with parameters or exclusion criteria, and refresh schedules other than no refresh (deploying a schedule would publish the segment).
+**Plugin qualification:** The `sf-plugin-data` tabs send the authored label, description, segment type, segment-on DMO, SQL models (DBT) or criteria (UI), lookback and refresh schedule as written, and Salesforce decides. Other segment types (for example Waterfall or Dynamic) are saved and sent without SQL or criteria, except a Waterfall's child segments: the file keeps them by name (`childSegments`) and deploy sends them as the Waterfall's criteria. A deployed schedule makes the segment publish on it in the target org. Salesforce has no write for parameters, so retrieve saves a segment with parameters as-is with a warning (`UNSUPPORTED_SEGMENT_VARIANT`), and deploy does not send that file. A setting the plugin does not know (for example UI exclusion criteria) stays in the file, and deploy refuses it.
 
 ## Read
 
@@ -75,7 +75,6 @@ The JSON file lists the models by name only:
     "segmentType": "DBT",
     "segmentOn": { "kind": "dmo", "dataSpace": "default", "apiName": "UnifiedCustomer__dlm" },
     "models": [{ "name": "OwnedSegment" }],
-    "publishInterval": "NO_REFRESH",
     "lookbackPeriod": "P90D"
   }
 }
@@ -87,7 +86,26 @@ Each SQL file holds that model's SQL as plain text, with the bytes Salesforce re
 SELECT UnifiedCustomer__dlm.CustomerKey__c FROM UnifiedCustomer__dlm WHERE 1 = 0
 ```
 
-The plugin checks only the structure of the files. A model name must start with a letter or digit and hold only letters, digits and underscores, and two model names may not differ only in letter case (`INVALID_SEGMENT_DOCUMENT`). The SQL itself is not checked locally; Salesforce decides. Salesforce requires every column fully qualified as `Table.column`, with the DMO API name as the table: it refuses an unqualified column and a table alias with HTTP 400, and the plugin reports that answer. Only DBT segments with `NO_REFRESH`, `P90D` and no parameters can be expressed; another schedule or lookback is refused with `UNSUPPORTED_SEGMENT_VARIANT`. Runtime IDs are not portable between orgs and are not saved.
+The plugin checks only the structure of the files. A model name must start with a letter or digit and hold only letters, digits and underscores, and two model names may not differ only in letter case (`INVALID_SEGMENT_DOCUMENT`). The SQL itself is not checked locally; Salesforce decides. Salesforce requires every column fully qualified as `Table.column`, with the DMO API name as the table: it refuses an unqualified column and a table alias with HTTP 400, and the plugin reports that answer. The lookback is sent as written: Salesforce accepted `P7D`, `P30D`, `P45D` and `P1Y` and refused `P0D`, `30` and `P400D` with HTTP 400 "Invalid lookbackPeriod.". Runtime IDs are not portable between orgs and are not saved.
+
+A segment that refreshes on a schedule gets a `schedule` key in `spec`, in the shape the write takes:
+
+```json
+"schedule": { "frequency": "Weekly", "interval": 1, "daysOfWeek": ["Monday"], "startDateTime": "2026-12-07T03:00:00.000Z" }
+```
+
+A segment without a refresh schedule gets no `schedule` key. End dates are kept as `endDate` and `endDateTime`, and a refresh without schedule details (an hourly interval) as `publishInterval`; these are sent as written but not verified live. On deploy, a file without the key leaves the org schedule alone, whatever it is. Otherwise only the keys the file states are compared with the org schedule: a key left out keeps its org value, and letter case, an interval written as text and a start date with or without milliseconds count as equal. When a stated key differs, the create or update sends the keys of the file, and `{ "frequency": "None" }` turns the schedule off. An update without a start date keeps the stored one (verified); that it keeps an end date is not verified, so the plugin's read after the write checks it and reports `SEGMENT_READBACK_MISMATCH` if it changed. A `null` schedule value is refused; leave the key out instead. A weekly schedule takes exactly one day. An optional `time` (`hour`, `minute`, `timeZone`) is sent too, but Salesforce does not read it back, so a change of the time alone is not deployed. Salesforce clears the schedule of a UI segment, but refuses every way to clear the schedule of a DBT segment; only deleting the segment removes it, and the plugin reports that refusal as `rejected`. Schedule details the plugin does not know are saved as-is (`UNSUPPORTED_SEGMENT_VARIANT`); a file without `schedule` still updates such a segment and keeps its schedule.
+
+Other segment types are saved with the same keys, without SQL files, and with a lookback only when the segment has one. A Waterfall's child segments are saved by API name, in priority order:
+
+```json
+"segmentType": "Waterfall",
+"childSegments": ["Gold_Customers", "Silver_Customers"]
+```
+
+Salesforce stores each child by an ID that differs from org to org. Retrieve looks the names up in the segment list; deploy reads each named child in the target org and sends its ID there. A child must already exist in the target org or be part of the same deploy, which then deploys the child first (preview shows the Waterfall as `planned-dependencies`). The children the deploy does not select are read before its first write, so a missing one stops the run before any write with `SEGMENT_CHILD_NOT_FOUND`. The read after the write compares the children by name and order. A Waterfall file without `childSegments` leaves the children in the org alone.
+
+Criteria of other types (for example a Dynamic segment's `includeCriteria`), and Waterfall children retrieve cannot name, stay in the file as read, and deploy refuses that file (`UNKNOWN_SEGMENT_CONFIGURATION`). Deploy sends these types as written: Salesforce created Waterfall (also with child segments), Dynamic and Einstein (`EinsteinGptSegmentsUI`) segments, refused a Lookalike segment whose seed segment does not exist, and answered HTTP 500 for a Real-Time segment without a data graph. An update of a Waterfall or Dynamic segment that changes only the description answered 200 and kept everything else, Waterfall children included. Salesforce refuses every update of an Einstein segment with HTTP 400 ("Expected referredColumns to be not empty"), which the plugin reports as `rejected`.
 
 A UI segment has no SQL file. Its JSON file holds the criteria as a JSON object in `spec.includeCriteria` (Salesforce returns them as an HTML-encoded string; the plugin decodes them), and any lookback:
 
@@ -107,13 +125,12 @@ A UI segment has no SQL file. Its JSON file holds the criteria as a JSON object 
       "operator": "equal",
       "values": ["Example"]
     },
-    "publishInterval": "NO_REFRESH",
     "lookbackPeriod": "P90D"
   }
 }
 ```
 
-The criteria are not checked locally. Salesforce adds keys of its own to the criteria it stores (`selfReference`, `subjectFieldDataType` and similar); retrieve the segment after a create to keep that stored form, and a repeat deploy of it reports `unchanged`. A UI segment with another schedule, parameters or a setting the plugin does not know (for example exclusion criteria) is saved as-is.
+The criteria are not checked locally. Salesforce adds keys of its own to the criteria it stores (`selfReference`, `subjectFieldDataType` and similar); retrieve the segment after a create to keep that stored form, and a repeat deploy of it reports `unchanged`. A UI segment with parameters is saved as-is; a setting the plugin does not know (for example exclusion criteria) stays in the file, and deploy refuses it.
 {% endcapture %}
 
 {% capture read_cli %}
@@ -202,7 +219,7 @@ sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segme
 sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-The JSON file or any of its SQL files selects the segment, and so does `-m segment:OwnedSegment`. The plugin joins the JSON with exactly one SQL file per model; a missing or extra `OwnedSegment.segment.*` file, or a `sql` key left in the JSON, is refused with `INVALID_SOURCE`. Create and update need `--allow-processing`. The DMO named in `segmentOn` must exist in the target. Do not reuse a source record ID. `--changed-since <git-ref>` can select changed segment files instead of `--source-dir`; a change to the JSON or to any SQL file selects the segment. The plugin always sends the schedule `NoRefresh`.
+The JSON file or any of its SQL files selects the segment, and so does `-m segment:OwnedSegment`. The plugin joins the JSON with exactly one SQL file per model; a missing or extra `OwnedSegment.segment.*` file, or a `sql` key left in the JSON, is refused with `INVALID_SOURCE`. Create and update need `--allow-processing`. The DMO named in `segmentOn` must exist in the target. Do not reuse a source record ID. `--changed-since <git-ref>` can select changed segment files instead of `--source-dir`; a change to the JSON or to any SQL file selects the segment. Without a `schedule` key the plugin sends `NoRefresh`. A schedule in the file is sent with the create, and the preview and the deploy report `SEGMENT_SCHEDULE_CHANGE`: the segment then publishes on that schedule in the target org.
 
 Every column in the SQL must be fully qualified with the DMO API name, as in `UnifiedCustomer__dlm.CustomerKey__c`. Salesforce refuses an unqualified column and a table alias with HTTP 400; the item is then `failed` with mutation `rejected` (`REQUEST_FAILED`, or `SEGMENT_CREATE_CONFLICT` for HTTP 409), and Salesforce's message is shown. Nothing was written.
 
@@ -227,7 +244,7 @@ The preview prints `Planned create: segment:OwnedSegment.` and writes nothing.
 
 Creates a live DBT segment with one POST. Salesforce queues the work, so the segment starts in `PROCESSING`. Check first that the native read answers `ITEM_NOT_FOUND` for the name.
 
-Save `segment-create.json`, using your own unified DMO, key and model name. This is the body the plugin sends; the schedule is always `NoRefresh`:
+Save `segment-create.json`, using your own unified DMO, key and model name. The plugin sends this body with the file's `lookbackPeriod` added; without a schedule in the file it sends `NoRefresh`:
 
 ```json
 {
@@ -329,7 +346,7 @@ sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segme
 sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Salesforce can refuse an update right after a create with HTTP 403 while the segment is still `PROCESSING` or `COUNTING`. The plugin shows Salesforce's text, for example `ENTITY_SAVE_ERROR: Segment cannot be updated when it is in PROCESSING state`, and reports the update as `rejected`; deploy again once it is `ACTIVE`. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
+Edit the label, description, lookback or schedule in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The PATCH carries the lookback, and the schedule only when the file has one that differs from the org schedule; the preview and the deploy then report `SEGMENT_SCHEDULE_CHANGE`. Salesforce can refuse an update right after a create with HTTP 403 while the segment is still `PROCESSING` or `COUNTING`. The plugin shows Salesforce's text, for example `ENTITY_SAVE_ERROR: Segment cannot be updated when it is in PROCESSING state`, and reports the update as `rejected`; deploy again once it is `ACTIVE`. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
 
 The output reads (offline-tested; derived from the command's output code):
 
@@ -348,7 +365,7 @@ Deploy never publishes. To publish the segment, run `sf data360 publish --target
 
 Changes the label and description with one PATCH request. Send the full definition, not only the changed fields. Patch only an `ACTIVE` segment.
 
-Save `segment-update.json`. This is the body the plugin sends. The schedule and lookback fields are left out on purpose, so the existing values stay:
+Save `segment-update.json`. The plugin sends this body with the file's `lookbackPeriod` added. The schedule fields are left out, so the existing schedule stays:
 
 ```json
 {
@@ -377,7 +394,7 @@ The PATCH answers HTTP 200 and shows the segment while it processes:
 
 The PATCH response leaves out `segmentOnApiName` and `segmentMembershipDmo`. Check those with the full read, not the response. Read the segment again: it can pass through `COUNTING` before `ACTIVE`. Compare the new label and description with the values you sent, and check that the other values and runtime IDs did not change. Do not send an unclear update again. Read the segment first.
 
-The plugin sends this PATCH for any change of the label, description, segment-on DMO or SQL models, with the SQL of the saved model files.
+The plugin sends this PATCH for any change of the label, description, segment-on DMO, lookback, schedule or SQL models, with the SQL of the saved model files.
 {% endcapture %}
 
 {% capture update_cli %}
@@ -535,10 +552,10 @@ Do not replay an update with an unknown outcome; reconcile it with reads.
 - A POST with the array directly at `includeDbt.models` (instead of `includeDbt.models.models`) was rejected as an unexpected array.
 - A label and description PATCH without `segmentType` was rejected with a `segmentType` requirement.
 - Adding only `segmentType: Dbt` to that sparse PATCH still failed a validation of referenced columns. The accepted PATCH is the full definition shown on the Connect API tab.
-- A full-definition PATCH that resends `NoRefresh` without schedule information was rejected because the schedule information was not cleared. The plugin leaves the schedule fields out of the PATCH and sends `NoRefresh` only on create.
+- A full-definition PATCH that resends `NoRefresh` without schedule information was rejected because the schedule information was not cleared. The plugin leaves the schedule fields out of the PATCH unless the schedule changes.
 - A schedule information body with the frequency `None` was rejected during subtype parsing.
 
-**Label and description update (API 65):** In one owned DBT update, separate reads observed `PROCESSING`, then `COUNTING`, then `ACTIVE`, without intervention. `COUNTING` was neither final success nor proof of failure. The `ACTIVE` read came about nine minutes after the observed `COUNTING` read. The exact transition time between those checks is unknown. Independent runtime and standard XML retrieval then confirmed the new label and description, the original model, SQL and type, the identities, the data space, the segment-on object, the schedule and lookback, and the generated membership references. The description is runtime-only. The XML label agreed with the runtime label. The first command had already stopped with an unknown outcome, and later settlement does not make that command successful. This result does not establish arbitrary preservation of omitted fields, general SQL or UI criteria updates, or schedule and lookback editing.
+**Label and description update (API 65):** In one owned DBT update, separate reads observed `PROCESSING`, then `COUNTING`, then `ACTIVE`, without intervention. `COUNTING` was neither final success nor proof of failure. The `ACTIVE` read came about nine minutes after the observed `COUNTING` read. The exact transition time between those checks is unknown. Independent runtime and standard XML retrieval then confirmed the new label and description, the original model, SQL and type, the identities, the data space, the segment-on object, the schedule and lookback, and the generated membership references. The description is runtime-only. The XML label agreed with the runtime label. The first command had already stopped with an unknown outcome, and later settlement does not make that command successful. This result does not establish arbitrary preservation of omitted fields or general SQL or UI criteria updates; schedule and lookback changes are covered by the API 68 evidence below.
 
 A separate source-only existing-owner check correlated the runtime segment and its Metadata definition as one stable pair. Comparing with the unchanged desired definition found nothing more to apply. Read and compare both views before you PATCH. This is bounded stable-owner and readback evidence, not a guarantee that an identical API PATCH is mutation-free, and not proof that the definition can be deployed to another org unchanged.
 
@@ -570,7 +587,11 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 
 **Publish and members:** One owned one-member segment was published once with the Connect API and its members read, and one owned zero-member segment was published with `sf data360 publish` (`SUCCESS` after 922 seconds, API 68, 2026-11-17); see [Segment members](/next/data-cloud-devops/segment-members/#update).
 
-**Outside these probes:** Cross-org replay of XML definitions and cross-org migration need a second org. UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules, send destinations and activations, and a released package were not tried: these probes run no schedule, activation or package.
+**Schedule, lookback and other types (native API 68, raw requests, one org, 2026-11-18):** DBT segments were created with lookbacks `P30D`, `P45D` and `P1Y`, and changed to `P7D` by a full-definition PATCH; `P0D`, `30` and `P400D` answered HTTP 400 "Invalid lookbackPeriod.". DBT and UI segments were created with a weekly schedule (one day, a start date in the future) and had it added and changed by PATCH; a PATCH without schedule keys kept the schedule. Weekly with two days answered HTTP 400. A UI schedule was cleared; every tested way to clear a DBT schedule answered HTTP 400, and only the delete removed it. The read returns the schedule with `publishInterval` `TWENTY_FOUR`, a plain day list and `timeInfo` null. `parameters` on create answered HTTP 400 for every type. Waterfall, Dynamic and Einstein segments were created without criteria and deleted (the Einstein one only through `MarketSegment`). Every probe segment was deleted before its schedule started.
+
+**Waterfall children and other-type updates (native API 68, raw requests, one org, 2026-11-18):** A Waterfall was created with two DBT child segments through `includeCriteria`, a JSON string: `{"type":"Waterfall","segments":[{"type":"NestedSegment","segmentId":"<child definition ID>"}]}` (HTTP 201). The child's API name or segment record ID (`1sg…`) in `segmentId` answered HTTP 400 "Include Criteria JSON is invalid". The read returns the same JSON with HTML entities (`&quot;`); a Waterfall without children has no `includeCriteria`. A PATCH of the description without criteria answered 200 and kept both children. The Waterfalls with DBT children (on an empty DMO) ended in status `ERROR` (`PROCESSING_FAILED`); the cause was not investigated. The same PATCH answered 200 for a Dynamic segment and HTTP 400 for an Einstein segment, which stayed unchanged. All probe segments were deleted.
+
+**Outside these probes:** Cross-org replay of XML definitions and cross-org migration need a second org. UI criteria with several filters or related objects, UI exclusion criteria, daily, hourly and monthly schedules, end dates, a PATCH that changes Waterfall children, criteria of Dynamic and Einstein segments, send destinations and activations, and a released package were not tried: these probes run no activation or package.
 
 **Error codes:** `ITEM_NOT_FOUND` is returned by the GET after a successful delete. A successful XML deploy can still leave the runtime GET returning `ITEM_NOT_FOUND`.
 
