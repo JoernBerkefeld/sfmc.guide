@@ -26,7 +26,7 @@ crud_rows:
     anchor: data-model-object-dmo-customobject-dlm
     failures: 'A changed field type is accepted (HTTP 200) but silently ignored. API 60.0 returns 404 for every method.'
     api_note: 'no field removal; a changed field type is accepted but silently ignored'
-    plugin_note: 'refuses platform-generated and namespaced DMOs, and standard DMOs on delete'
+    plugin_note: 'never deletes a standard DMO; never changes generated fields except their label on deploy'
   - path: next/data-cloud-devops/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap

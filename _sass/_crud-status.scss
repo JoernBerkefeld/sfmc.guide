@@ -70,6 +70,13 @@
   white-space: nowrap;
 }
 
+// A tool note sits on its own line below the C R U D letters and wraps normally.
+.crud-matrix td small {
+  display: block;
+  margin-top: 0.3em;
+  white-space: normal;
+}
+
 [data-theme='dark'] .crud-chip {
   &--yes {
     color: #6fd39c;
