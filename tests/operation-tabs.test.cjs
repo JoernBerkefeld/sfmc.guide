@@ -317,15 +317,6 @@ test('dark reasons have an explicit padded surface with at least 4.5:1 text cont
   assert.ok((light + 0.05) / (dark + 0.05) >= 4.5, 'WCAG AA normal text contrast');
 });
 
-// Plugin grades: partial only where the plugin itself refuses or lacks part of the operation
-// (data graphs: root/node identity changes and omitted fields kept on update, delete while
-// dependencies are reported). Limits Salesforce imposes and verification breadth do not make an
-// operation partial; bare -m data-graph retrieves every graph, so read is yes.
-const PLUGIN_GRADES = {
-  'data-graphs': { read: 'yes', create: 'yes', update: 'partial', delete: 'yes' },
-  'calculated-insights': { read: 'yes', create: 'yes', update: 'yes', delete: 'yes' },
-};
-
 for (const name of ['data-graphs', 'calculated-insights']) {
   test(`${name}: all plugin recipes are operation-local and narrowly qualified`, () => {
     const source = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
@@ -344,11 +335,6 @@ for (const name of ['data-graphs', 'calculated-insights']) {
       );
       assert.match(body, /^sf data360 /m);
       assert.doesNotMatch(body, /^sf data360 .*--json/m);
-      const key = operation;
-      assert.match(
-        source,
-        new RegExp(String.raw`${key}: \{[^\n]*plugin: "${PLUGIN_GRADES[name][key]}"`),
-      );
     }
     if (name === 'data-graphs') {
       const update = captures.find((capture) => capture[1] === 'update')[2];

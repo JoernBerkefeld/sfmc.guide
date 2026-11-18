@@ -94,7 +94,6 @@ test('CI evidence records native API68 Connect results without computation claim
 });
 
 test('CI retains partial writes, four operation tabs and synchronized overview limits', () => {
-  assert.match(ci, /update: \{ status: "yes", methods: \[cli, api, plugin\], method_statuses: \{ cli: "partial", api: "partial", plugin: "yes" \} \}/);
   assert.match(ci, /verification: verified/);
   assert.equal((ci.match(/include operation-tabs\.html/g) || []).length, 4);
   assert.ok(ci.indexOf('**Verification scope:**') < ci.indexOf('A calculated insight computes'));

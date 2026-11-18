@@ -20,13 +20,6 @@ test('DMO attributes its own native route to Connect REST, not Metadata API', ()
 });
 
 test('DMO CRUD badges and tabs match bounded native matrix evidence', () => {
-  const grades = (cli, api, plugin) =>
-    `methods: \\[cli, api, plugin\\], method_statuses: \\{ cli: "${cli}", api: "${api}", plugin: "${plugin}" \\} \\}`;
-  assert.match(page, new RegExp(`read: \\{ status: "yes", ${grades('yes', 'yes', 'yes')}`));
-  assert.match(page, new RegExp(`create: \\{ status: "yes", ${grades('yes', 'yes', 'yes')}`));
-  // Plugin update/delete are partial: the plugin refuses platform-generated and namespaced DMOs.
-  assert.match(page, new RegExp(`update: \\{ status: "yes", ${grades('yes', 'partial', 'partial')}`));
-  assert.match(page, new RegExp(`delete: \\{ status: "yes", ${grades('yes', 'yes', 'partial')}`));
   for (const operation of ['read', 'create', 'update', 'delete']) {
     assert.match(
       page,

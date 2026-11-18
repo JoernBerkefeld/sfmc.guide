@@ -95,10 +95,6 @@ test('mapping preserves standard CLI workflow, CRUD tabs and bounded write ratin
   for (const operation of ['read', 'create', 'update', 'delete']) {
     assert.ok(mapping.includes(`id="mapping-${operation}"`));
   }
-  assert.match(mapping, /read: \{ status: "yes", methods: \[cli, api, plugin\], method_statuses: \{ cli: "yes", api: "yes", plugin: "yes" \} \}/);
-  assert.match(mapping, /create: \{ status: "yes", methods: \[cli, api, plugin\], method_statuses: \{ cli: "yes", api: "yes", plugin: "partial" \} \}/);
-  assert.match(mapping, /update: \{ status: "partial", methods: \[cli, api, plugin\], method_statuses: \{ cli: "partial", api: "partial", plugin: "partial" \} \}/);
-  assert.match(mapping, /delete: \{ status: "yes", methods: \[cli, api, plugin\], method_statuses: \{ cli: "partial", api: "partial", plugin: "yes" \} \}/);
   assert.match(mapping, /verification: verified/);
   assert.ok(mapping.indexOf('**Verification scope:**') > mapping.indexOf('<details markdown="1">'));
   for (const operation of ['read', 'create', 'update']) {

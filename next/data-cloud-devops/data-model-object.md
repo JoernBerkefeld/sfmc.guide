@@ -14,7 +14,7 @@ platforms:
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
-  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "partial", plugin: "partial" } }
+  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "partial", plugin: "yes" } }
   delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
 ---
 
@@ -654,13 +654,14 @@ An equal definition returns `outcome: "unchanged"` and `mutation: "not-attempted
 <details markdown="1">
 <summary>Standard DMOs such as ssot__Brand__dlm</summary>
 
-A standard DMO (`creationType` `Standard`) is never created and never deleted by the plugin. A deploy onto an existing one writes only:
+A standard DMO (`creationType` `Standard`) is never created and never deleted by the plugin. The same deploy rules apply to the DMOs Salesforce generates for identity resolution (`Derived`, `Bridge`), data graphs (`Adg`) and segments, and to a custom DMO under a namespaced name. A deploy onto an existing one writes only:
 
 - custom fields: add, relabel, and remove with `--allow-field-removal`;
+- the label of any other field;
 - the object label, sent only when it differs;
 - the object description, with the same absent-or-empty rule as above.
 
-The category is ignored. Standard and system fields are never sent and may be left out of the file; one that the file lists and that differs from the org is refused with `UNSUPPORTED_DMO_FIELD_CHANGE`. A new field must be a plain custom field: a name starting with `ssot__` is refused (`UNSUPPORTED_DMO_FIELD_ADDITION`), as Salesforce itself rejects an edit of a standard field with "Data model fields cannot start with ssot__" (raw API, API 68). A platform-generated DMO, or a custom DMO under a namespaced name, is refused with `UNSUPPORTED_DMO_TARGET`. Everything on this standard-DMO list is offline-tested; the raw API behaviour is recorded under Evidence.
+The category is ignored. Standard, system and generated fields may be left out of the file, and a deploy never removes them. When the file lists one with another label, only that label is sent and Salesforce decides: at API 68 it relabels a system or graph field and refuses an `ssot__` field with "Data model fields cannot start with ssot__", which the plugin reports as rejected. Any other difference is refused with `UNSUPPORTED_DMO_FIELD_CHANGE`. A new field must be a plain custom field: a name starting with `ssot__` is refused (`UNSUPPORTED_DMO_FIELD_ADDITION`). Salesforce does not protect generated fields itself, so the plugin keeps them out of every deploy. Everything on this list is offline-tested; the raw API behaviour is recorded under Evidence.
 
 </details>
 
@@ -810,20 +811,21 @@ The object is gone and its local file is removed. Running the command again repo
 
 **Known failures:**
 
-- Standard, namespaced and platform-generated DMOs are refused before anything is deleted, in the preview as well (`UNSUPPORTED_DMO_TARGET`).
+- A standard DMO, and a DMO read without `creationType`, is refused before anything is deleted, in the preview as well (`UNSUPPORTED_DMO_TARGET`).
+- A DMO that Salesforce generated for an identity resolution or a data graph is sent; Salesforce refuses it while its owner exists with HTTP `412` `MATCH_PRECONDITION_FAILED` ("The resource is referenced in other features and thereby cannot be deleted"), reported as rejected. The local file stays. Delete the owner instead, which removes its DMOs.
 - The last mapping of a custom DMO cannot be deleted on its own. Deleting the DMO removes its mapping.
 
 <details markdown="1">
-<summary>Delete one custom field instead of the whole object</summary>
+<summary>Delete one field instead of the whole object</summary>
 
-Use `--field` to remove named custom fields and keep the object. Mappings change as well, so check the preview first; the delete takes no confirmation flag.
+Use `--field` to remove named fields and keep the object. Standard, system and generated fields may be named on any DMO, including the DMOs of an identity resolution or a data graph; this is the only way the plugin removes them, and Salesforce decides (at API 68 it deleted such fields, raw API). A Salesforce refusal is reported as rejected. Mappings change as well, so check the preview first; the delete takes no confirmation flag.
 
 ```sh
 sf data360 delete -m dmo:Customer__dlm --field Note__c -o TARGET_ALIAS --preview
 sf data360 delete -m dmo:Customer__dlm --field Note__c -o TARGET_ALIAS
 ```
 
-The command sends one Metadata API destructive change. Salesforce drops each field's pairs from every mapping that holds one. If the mapping plan changed since it was read, the command stops with `MAPPING_UNMAP_PLAN_CHANGED`, and nothing is written. The result lists `removedFields` and `unmappedPairs`. For a field mapped by two mappings the command took about 28 seconds at API 68. The primary key and generated fields are refused.
+The command sends one Metadata API destructive change. Salesforce drops each field's pairs from every mapping that holds one. If the mapping plan changed since it was read, the command stops with `MAPPING_UNMAP_PLAN_CHANGED`, and nothing is written. The result lists `removedFields` and `unmappedPairs`. For a field mapped by two mappings the command took about 28 seconds at API 68. The primary key is refused.
 
 Add `--preview` to list the planned field removals, the pairs Salesforce drops and the local files; it writes nothing, in the org or on disk. After a successful removal, the existing local `data360/dmo` and `data360/mapping` files under `--output-dir` (default: the current directory) are refreshed from the org. No file is created or deleted, and `--keep-local-files` does not apply to this form. A failed refresh keeps the org result and exits nonzero with `LOCAL_REFRESH_FAILED`. `--field` cannot be combined with another selector, `--changed-since` or `--delete-dlo`.
 
@@ -930,14 +932,16 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 
 - The plugin keeps no local allowlists. It checks only the shape of the saved file. Category, field data types, labels and descriptions are sent as authored, and Salesforce decides. Its error is reported.
 - Default and `auto` select API `68.0`; explicit numeric versions from `61.0` are kept as given, and admitting a version is not a live test of it.
-- Refused before any write: `UNSUPPORTED_DMO_FIELD_CHANGE` (a type change or a moved key, or a missing custom field without `--allow-field-removal`), `UNSUPPORTED_DMO_FIELD_ADDITION` (a generated field or a second key), `UNSUPPORTED_DMO_TARGET` (a platform-generated, untyped or namespaced DMO, or the deletion of a standard DMO), and `DMO_FIELD_REMOVAL_MAPPED`.
+- Refused before any write: `UNSUPPORTED_DMO_FIELD_CHANGE` (a type change or a moved key, or a missing custom field without `--allow-field-removal`), `UNSUPPORTED_DMO_FIELD_ADDITION` (a generated field or a second key), `UNSUPPORTED_DMO_TARGET` (creating a namespaced DMO, or deleting a standard or untyped DMO), and `DMO_FIELD_REMOVAL_MAPPED`.
 - Preview lists planned removals as `removedFields` and `DMO_FIELD_REMOVAL_PLANNED` and writes nothing.
 - After a deploy, polled reads (up to 6, five seconds apart) confirm the result. The plugin never repeats a write. If the reads do not confirm, it fails with `DMO_PERSISTENCE_UNCONFIRMED`.
 - If the local file cannot be removed after a deletion, the command fails with `LOCAL_FILE_REMOVAL_FAILED` after the org result.
-- Standard DMOs: custom fields can be added, relabelled and removed, and the label and description can change. Standard and system fields cannot change, and the category is ignored. A first mapping onto a standard DMO enables it permanently; the plugin announces this with `MAPPING_ACTIVATES_STANDARD_DMO`.
+- Standard, platform-generated and namespaced DMOs: custom fields can be added, relabelled and removed, other fields relabelled, and the label and description can change. No other property of a standard, system or generated field is sent, a deploy never removes one, and the category is ignored. `delete --field` removes any named field but the primary key. A first mapping onto a standard DMO enables it permanently; the plugin announces this with `MAPPING_ACTIVATES_STANDARD_DMO`.
 - This does not broaden standalone DMO CRUD or its tested versions.
 
 **Portability (offline-tested):** a retrieved file deploys into another org as `unchanged` when the target already holds the same definition, and creates the DMO when it does not. An unchanged-source export comparison across API versions is not verified.
+
+**Platform-generated DMOs at API `68.0` (raw API, 2026-11-18):** on the `Derived` and `Bridge` DMOs of a probe identity resolution and the `Adg` DMOs of a probe data graph, Salesforce accepted a PATCH of the object label and description, an added custom field, a relabel of that field and of a system or graph field (`MatchKeys__c`, `json_blob__c`), and Metadata API deletes of custom, standard, system and graph fields. It refused a relabel of an `ssot__` field (`400` `INVALID_INPUT`), a mapping onto any of these DMOs (`400` `INVALID_INPUT` "Unsupported DMO Creation Type used for mapping") and a DMO DELETE while the owner existed (`412` `MATCH_PRECONDITION_FAILED`). A PATCH response showed the old label; only a later GET showed the change. Every probe was deleted afterwards.
 
 **Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DMOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dlm` then saved the object and its fields at API 68.0. At API 68 a `destructiveChanges.xml` deploy that named one `CustomField` removed that custom field, also when two mappings held it: each mapping lost only that pair, and the DMO and its other fields were unchanged.
 

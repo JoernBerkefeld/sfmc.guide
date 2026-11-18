@@ -1,8 +1,8 @@
 {%- comment -%}
-  Per-tool R/C/U/D grades for every row of page.crud_rows, read from each linked page's `crud`
+  Per-tool C/R/U/D grades, with an optional `<tool>_note` per row under each tool cell, for every row of page.crud_rows, read from each linked page's `crud`
   front matter, so the overview never drifts from the type pages.
 {%- endcomment -%}
-{%- assign operations = 'read,create,update,delete' | split: ',' -%}
+{%- assign operations = 'create,read,update,delete' | split: ',' -%}
 {%- assign tools = 'cli,api,plugin' | split: ',' -%}
 <table class="crud-overview crud-matrix">
   <thead><tr><th scope="col">Type</th><th scope="col">Standard CLI</th><th scope="col">API</th><th scope="col">Plugin</th><th scope="col">Verified failures</th></tr></thead>
@@ -12,7 +12,7 @@
     {%- if resource %}
       {%- unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
     <tr>
-      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% if row.notes %}<small>{{ row.notes | escape }}</small>{% endif %}</td>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
       {%- for tool in tools %}
       <td>
         {%- for operation in operations -%}
@@ -28,6 +28,7 @@
           {%- if grade == 'yes' -%}{%- assign word = 'yes' -%}{%- elsif grade == 'partial' -%}{%- assign word = 'partial' -%}{%- elsif grade == 'no' -%}{%- assign word = 'not supported' -%}{%- else -%}{%- assign word = 'not offered' -%}{%- endif %}
         <span class="crud-chip crud-chip--{{ grade }}" data-crud-tool="{{ tool }}" data-crud-op="{{ operation }}" data-crud-status="{{ grade }}" title="{{ operation | capitalize }}: {{ word }}">{{ letter }}</span>
         {%- endfor %}
+        {%- assign note_key = tool | append: '_note' %}{% if row[note_key] %}<small>{{ row[note_key] | escape }}</small>{% endif %}
       </td>
       {%- endfor %}
       <td>{{ row.failures | default: '—' | markdownify }}</td>

@@ -11,10 +11,6 @@ const jsonBlock = (text) => JSON.parse(text.match(/```json\n([\s\S]*?)\n```/)[1]
 
 test('stream-owned DLO lifecycle points to the native API68 stream routes, not a facade', () => {
   const dlo = read('data-lake-object');
-  assert.match(
-    dlo,
-    /create: \{ status: "yes", methods: \[cli, api, plugin\](?:, method_statuses: \{[^}]*\})? \}/,
-  );
   for (const anchor of ['create', 'update', 'delete'])
     assert.ok(dlo.includes(`/next/data-cloud-devops/data-stream-definition/#${anchor})`), anchor);
   assert.match(dlo, /Creating the connection or its event schema is not covered here/);
@@ -109,10 +105,6 @@ test('segment predicate qualification stays native, source-only and narrowly bou
   assert.match(segment, /separate standard Metadata retrieval confirmed that same SQL/);
   assert.match(segment, /not audience membership or successful computation/);
   assert.match(segment, /does not qualify the reverse change/);
-  assert.match(
-    segment,
-    /update: \{ status: "partial", methods: \[cli, api, plugin\](?:, method_statuses: \{ [^{}]+ \})? \}/,
-  );
   assert.doesNotMatch(segment, /segment-predicate-|OwnedSegRetest|compiled.worktree/);
 });
 

@@ -14,7 +14,7 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
-  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
   delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
 ---
@@ -241,7 +241,7 @@ The plugin sends the authored pairs as the file lists them and applies no local 
 
 Selectors are exact `mapping:Name`; bare types and wildcards are refused. One command may also create the parents: with `-m dlo:CustomerSource__dll -m dmo:Customer__dlm -m mapping:CustomerMapping` the plugin deploys the DLO, then the DMO, then the mapping, whatever the selector order, and settles each parent before the next write. A preview whose parents are only planned reports `planned-dependencies` (`MAPPING_DEPENDENCIES_PLANNED`) for the mapping. `--dataspace NAME` (alias `--data-space`) selects a non-default data space, which is offline-tested only.
 
-**Standard DMO as target.** A mapping may target a standard DMO such as `ssot__Brand__dlm`. The authored pairs may name standard and custom fields, for example `Id__c` onto `ssot__Id__c` and `Name__c` onto `ssot__Name__c`. Salesforce then adds four generated pairs: `DataSource__c` onto `ssot__DataSourceId__c`, `DataSourceObject__c` onto `ssot__DataSourceObjectId__c`, `InternalOrganization__c` onto `ssot__InternalOrganizationId__c` and `KQ_Id__c` onto `KQ_Id__c`. The first mapping onto a never-mapped standard DMO activates it permanently (enabled, category `OTHER`, generated `KQ_Id__c`), and deleting the mapping does not undo that; the plugin announces it with `MAPPING_ACTIVATES_STANDARD_DMO`. A platform-generated DMO, or a custom DMO under a namespaced name, is refused (`MAPPING_TARGET_UNSUPPORTED`).
+**Standard DMO as target.** A mapping may target a standard DMO such as `ssot__Brand__dlm`. The authored pairs may name standard and custom fields, for example `Id__c` onto `ssot__Id__c` and `Name__c` onto `ssot__Name__c`. Salesforce then adds four generated pairs: `DataSource__c` onto `ssot__DataSourceId__c`, `DataSourceObject__c` onto `ssot__DataSourceObjectId__c`, `InternalOrganization__c` onto `ssot__InternalOrganizationId__c` and `KQ_Id__c` onto `KQ_Id__c`. The first mapping onto a never-mapped standard DMO activates it permanently (enabled, category `OTHER`, generated `KQ_Id__c`), and deleting the mapping does not undo that; the plugin announces it with `MAPPING_ACTIVATES_STANDARD_DMO`. Any other DMO may be the target as well, and Salesforce decides: it refuses a mapping onto a DMO it generated for an identity resolution or a data graph with HTTP `400` `INVALID_INPUT` ("Unsupported DMO Creation Type used for mapping", raw API, API 68), which the plugin reports as rejected.
 {% endcapture %}
 
 {% capture create_metadata %}

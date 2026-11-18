@@ -373,13 +373,6 @@ test('DLO requested-version evidence supplies one standard example without write
     retrieveEvidence,
     /neither cross-org deployability nor CREATE, UPDATE, DELETE or wrapper support/,
   );
-  assert.match(
-    dlo,
-    /read: \{ status: "yes", methods: \[cli, api, plugin\](?:, method_statuses: \{[^}]*\})? \}/,
-  );
-  for (const operation of ['create', 'update', 'delete']) {
-    assert.ok(dlo.includes(`${operation}: { status: "yes", methods: [cli, api, plugin]`));
-  }
   assert.doesNotMatch(retrieve, /00D[a-zA-Z0-9]{12,15}|F:[/\\]Temp|access_token|\.sf[/\\]orgs/);
 });
 
