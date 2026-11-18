@@ -34,3 +34,61 @@
     border-color: #fca5a5;
   }
 }
+
+// Overview matrix: one chip per operation (R/C/U/D) and tool.
+.crud-chip {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0.15em 0.35em;
+  font-size: $text-sm;
+  font-weight: 600;
+  text-align: center;
+  border-radius: $radius-sm;
+
+  &--yes {
+    color: #1f7a4d;
+    background: #e3f4ea;
+  }
+
+  &--partial {
+    color: #8a5a00;
+    background: #fbf0d9;
+  }
+
+  &--no {
+    color: #a1303a;
+    background: #fbe5e7;
+  }
+
+  &--none {
+    color: #5a6475;
+    background: #eceff3;
+  }
+}
+
+.crud-matrix td small {
+  display: block;
+  margin-top: 0.2em;
+}
+
+[data-theme='dark'] .crud-chip {
+  &--yes {
+    color: #6fd39c;
+    background: #143225;
+  }
+
+  &--partial {
+    color: #f0c060;
+    background: #3a2d10;
+  }
+
+  &--no {
+    color: #f08a93;
+    background: #3b171b;
+  }
+
+  &--none {
+    color: #9aa5b5;
+    background: #222a35;
+  }
+}

@@ -322,7 +322,7 @@ test('dark reasons have an explicit padded surface with at least 4.5:1 text cont
 // dependencies are reported). Limits Salesforce imposes and verification breadth do not make an
 // operation partial; bare -m data-graph retrieves every graph, so read is yes.
 const PLUGIN_GRADES = {
-  'data-graphs': { read: 'yes', create: 'yes', update: 'partial', delete: 'partial' },
+  'data-graphs': { read: 'yes', create: 'yes', update: 'partial', delete: 'yes' },
   'calculated-insights': { read: 'yes', create: 'yes', update: 'yes', delete: 'yes' },
 };
 

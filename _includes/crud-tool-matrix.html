@@ -1,0 +1,40 @@
+{%- comment -%}
+  Per-tool R/C/U/D grades for every row of page.crud_rows, read from each linked page's `crud`
+  front matter, so the overview never drifts from the type pages. A page without
+  `method_statuses` has one combined grade per operation; it is shown for each listed method.
+{%- endcomment -%}
+{%- assign operations = 'read,create,update,delete' | split: ',' -%}
+{%- assign tools = 'cli,api,plugin' | split: ',' -%}
+<table class="crud-overview crud-matrix">
+  <thead><tr><th scope="col">Type</th><th scope="col">Standard CLI</th><th scope="col">API</th><th scope="col">Plugin</th><th scope="col">Verified failures</th></tr></thead>
+  <tbody>
+  {%- for row in page.crud_rows %}
+    {%- assign resource = site.pages | where: 'path', row.path | first %}
+    {%- if resource %}
+      {%- unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
+    <tr>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% unless resource.crud.read.method_statuses %}<small>one combined grade per operation</small>{% endunless %}</td>
+      {%- for tool in tools %}
+      <td>
+        {%- for operation in operations -%}
+          {%- assign capability = resource.crud[operation] -%}
+          {%- assign grade = capability.method_statuses[tool] -%}
+          {%- unless grade -%}
+            {%- if capability.methods contains tool -%}{%- assign grade = capability.status -%}
+            {%- elsif capability.status == 'no' -%}{%- assign grade = 'no' -%}
+            {%- else -%}{%- assign grade = 'none' -%}{%- endif -%}
+          {%- endunless -%}
+          {%- if grade == 'unknown' -%}{%- assign grade = 'none' -%}{%- endif -%}
+          {%- assign letter = operation | slice: 0 | upcase -%}
+          {%- if grade == 'yes' -%}{%- assign word = 'yes' -%}{%- elsif grade == 'partial' -%}{%- assign word = 'partial' -%}{%- elsif grade == 'no' -%}{%- assign word = 'not supported' -%}{%- else -%}{%- assign word = 'not offered' -%}{%- endif %}
+        <span class="crud-chip crud-chip--{{ grade }}" data-crud-tool="{{ tool }}" data-crud-op="{{ operation }}" data-crud-status="{{ grade }}" title="{{ operation | capitalize }}: {{ word }}">{{ letter }}</span>
+        {%- endfor %}
+      </td>
+      {%- endfor %}
+      <td>{{ row.failures | default: '—' | markdownify }}</td>
+    </tr>
+      {%- endunless %}
+    {%- endif %}
+  {%- endfor %}
+  </tbody>
+</table>

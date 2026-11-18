@@ -16,6 +16,8 @@ Marketing Cloud Next changes what you can ship in content and automation compare
 | [AMPscript function reference](/next/ampscript/functions/) | The supported AMPscript subset on its own searchable page, with the Handlebars mapping |
 | [Handlebars helper reference](/next/handlebars/helpers/) | The complete Handlebars helper catalog, searchable by category and origin |
 | [Differs from official docs](/next/differs-from-docs/) | AMPscript behaviour on Next that contradicts the official documentation |
+| [Data Cloud DevOps](/next/data-cloud-devops/) | Tested metadata operations, prerequisites and migration limits at API 65 |
+| [Data Spaces](/next/data-spaces/) | Name uniqueness, space membership and how each Data 360 API route treats the space |
 
 ## Tooling for Next
 

@@ -92,30 +92,30 @@ Type-specific items, each checked against the UI: [relationship label, cardinali
 
 Each linked page covers one logical resource, with Retrieve, Create, Update and Delete sections. Prefer a dedicated standard CLI command when the verified workflow provides one; otherwise use a native API through `sf api request rest`, or the explicitly identified facade where native support is not qualified. Using Salesforce CLI as a request runner does not make an API workflow standard resource-specific CLI support. XML definitions and runtime state are views of the same resource, not separate feature types.
 
-{% include crud-legend.html %}
+## Which tool works for which type
 
-The ratings cover usable workflows supplied in this guide, not every observed operation. DMO creation and DLO native API68 standalone definition workflows are supplied on their resource pages within their stated scopes; other observations remain background evidence. Some metadata deletion examples depend on integration-generated manifests rather than a self-contained workflow. Write permissions, dependencies and processing warnings still apply.
+<p class="crud-legend"><span class="crud-chip crud-chip--yes">yes</span> usable workflow · <span class="crud-chip crud-chip--partial">partial</span> part of the operation is missing or refused · <span class="crud-chip crud-chip--no">no</span> not supported · <span class="crud-chip crud-chip--none">—</span> not offered or not tested</p>
 
-<table class="crud-overview">
-  <thead><tr><th scope="col">Configuration or runtime data</th><th scope="col">Read</th><th scope="col">Create</th><th scope="col">Update</th><th scope="col">Delete</th><th scope="col">Verified failures</th></tr></thead>
-  <tbody>
-  {% for row in page.crud_rows %}
-    {% assign resource = site.pages | where: 'path', row.path | first %}
-    {% if resource %}
-      {% unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
-    <tr>
-      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
-      <td>{% include crud-cell.html capability=resource.crud.read %}</td>
-      <td>{% include crud-cell.html capability=resource.crud.create %}</td>
-      <td>{% include crud-cell.html capability=resource.crud.update %}</td>
-      <td>{% include crud-cell.html capability=resource.crud.delete %}</td>
-      <td>{{ row.failures | default: '—' | markdownify }}</td>
-    </tr>
-      {% endunless %}
-    {% endif %}
-  {% endfor %}
-  </tbody>
-</table>
+Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata API). API means direct REST calls. Plugin means `sf data360`. The four letters are read, create, update and delete; hover a letter for its grade. Grades come from each type page and cover the usable workflows supplied there, not every observed operation; write permissions, dependencies and processing warnings still apply. The plugin grade follows the plugin README's definition: a refusal or gap in the plugin itself is partial; Salesforce limits, API-version and data-space limits and verification breadth are not. Data transforms are graded on their own page.
+
+{% include crud-tool-matrix.html %}
+
+### Behaviour worth knowing
+
+- **Segment side objects.** Creating a segment makes Salesforce add two Segment Membership DMOs (`<DMO>_SM_<ms>__dlm` and `_SMH_`) with relationships, in the segment's space and without a prefix. They stay after the segment is deleted.
+- **The default space can be renamed** but not deleted. Every other space has a prefix (for example `ds2`) that shows up on segment names and on the copies of standard DMOs in that space.
+- **Delete quirks.** A segment deletes by name only (by ID: `405`). A DMO deletes by name only. A data stream's create response ID is not the record ID its DELETE needs. Deleting a DMO's only mapping is refused (`500`); deleting the DMO removes it.
+- **DLO delete may need repeating.** In two separate runs, a DLO used by a just-deleted transform answered `204` to DELETE but then read `ERROR` for about 19 minutes; a second DELETE removed it.
+- **Transform not found.** Its `404` text says a transform in another space is found as `<prefix>_<name>`. That is wrong: a transform created in a custom space is stored without a prefix, read by its plain name, and `<prefix>_<name>` answers `404`.
+- **A DLO's spaces change on the space, not on the DLO.** A DLO `PATCH` with `dataspaceInfo` or `dataSpaceInfo` is refused as an unrecognized field, and `PUT` on the DLO answers `405`. `PUT /services/data/vXX.0/ssot/data-spaces/<space>/members` with `{"members":{"members":[{"memberName":"<Name>__dll"}]}}` adds the DLO (a flat `members` list answers `400`); it answers `PROCESSING` and the DLO reads both spaces a few seconds later, under the same name. `DELETE …/data-spaces/<space>/members?memberNames=<Name>__dll` removes it from that space and keeps the DLO; `DELETE …/members/<name>` answers `405`.
+
+### What this means for the plugin
+
+- Two files in different spaces can never carry the same name, so a folder per space is not needed to avoid clashes. The space can be a field inside each file for types that live in one space.
+- DLOs belong to several spaces at once, so their file keeps the list of spaces. A deploy cannot send that list with the DLO; it compares the file's list with the org's and adds or removes each difference through the space's members route.
+- A segment in another space keeps its stored name (`<prefix>_<Name>`) as its file name. The same goes for references to a standard DMO there: a mapping in that space names `ds2_Individual__dlm`, not `Individual__dlm`.
+- Identity resolution rules need required fields mapped in their space (ContactPointEmail for email rules); rules on Individual fields alone are refused as "criteria are too weak".
+- Because most routes ignore an unknown space, the plugin should check a space name once per command against `/ssot/data-spaces`. See [Data Spaces](/next/data-spaces/) for how each route treats the space.
 
 ## Before you start
 
@@ -194,20 +194,4 @@ Some standard-CLI deletions on the resource pages use a destructive-change manif
 
 ## Data Spaces
 
-A data space is a partition of one Data Cloud org; each space has a name and, for custom spaces, a short `prefix` (for example `ds2`). Every org has a `default` space. The tools record the space in different places:
-
-| Tool | How it handles the space |
-|---|---|
-| Salesforce CLI (source format) | No data-space folders and no DataSpace metadata type. The space is a field inside some files: `mktDataModelAttributes/dataSpaceName` in a DMO, `dataSpaceDefinitionDevName` in a data kit. DLO files carry no space. |
-| Metadata API | Uses the same fields. A DMO created with `dataSpaceName` set to a custom space lands in that space, under the API name you gave it. |
-| Connect API (`/ssot/…`) | Takes the space in the body (`dataSpaceName` for DMOs, `dataspaceInfo` for DLOs) and returns it on reads. Many routes ignore the `dataspace` query parameter; list routes for mappings, relationships and segments do filter by it. `GET /ssot/data-spaces` lists the spaces and their prefixes. |
-| sf-plugin-data | Works in the default space. An object from another space is saved as-is and is not deployed. |
-| Data kits | The package does not fix the space; you pick the target space in the separate data-kit deploy step. |
-
-**Names are unique per org, not per space**, for DLOs, DMOs, calculated insights, data transforms and data graphs: creating a second object with an existing name in another space is refused. The prefix is not added to their API names either. A DMO named `Example__dlm` in a custom space keeps exactly that name.
-
-**Segments are the exception.** A segment in a custom space is stored as `<prefix>_<Name>` (for example `ds2_Example`), so the same segment name can exist once per space. A name that already starts with the prefix is not prefixed twice.
-
-**Generated names** for mappings, relationships and Ingestion API data streams are created by Salesforce and get no prefix, so they cannot clash between spaces.
-
-**DLOs and several spaces.** A DLO can belong to more than one space, and some standard DLOs do. Creating a DLO with an empty or missing `dataspaceInfo` puts it in `default`, so a new DLO always has a space. The DLO `PATCH` route does not accept `dataspaceInfo`; membership of a space is listed at `/ssot/data-spaces/<name>/members`, which accepts `GET`, `PUT` and `DELETE`.
+A data space is a partition of one Data Cloud org. How names, membership and each API route behave per space, and where each tool records the space, is on the [Data Spaces](/next/data-spaces/) page.

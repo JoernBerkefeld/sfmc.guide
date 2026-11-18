@@ -1001,6 +1001,13 @@
     "description": "Salesforce CLI workflows and verified operation limits for Data Model Object (DMO): CustomObject, __dlm."
   },
   {
+    "name": "Data Spaces",
+    "url": "/next/data-spaces/",
+    "section": "Next",
+    "type": "page",
+    "description": "How Data 360 data spaces affect names, membership and each API route, and where each tool records the space, measured live at API 68."
+  },
+  {
     "name": "Data Streams",
     "url": "/next/data-cloud-devops/data-stream-definition/",
     "section": "Data Cloud DevOps",
