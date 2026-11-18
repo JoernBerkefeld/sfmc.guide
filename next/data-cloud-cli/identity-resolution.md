@@ -13,12 +13,10 @@ crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
   update: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
-  delete: { status: "yes", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "yes" } }
+  delete: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
-
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
 
 This badge does not verify untested writes or general CRUD support.
 
@@ -45,7 +43,7 @@ Saves the ruleset settings to a file in your project. Run this from the Salesfor
 sf data360 retrieve --metadata identity-resolution:Individual_cust --target-org SOURCE_ALIAS --api-version 68.0 --data-space default
 ```
 
-The file is saved at `force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json`. It is a JSON document with `schemaVersion: 1`, `kind: identity-resolution`, an `identity` (`dataSpace`, `apiName`) and a `spec` with the configuration type, label, description, automatic-run and case flags, secondary DMO, `filters`, `matchRules` and `reconciliationRules`. `trustedSources` is optional in the file: retrieve writes it (an empty list when the API omits it), and a hand-written file may leave it out.
+The file is saved at `data360/identityResolution/Individual_cust.identityResolution.json`. It is a JSON document with `schemaVersion: 1`, `kind: identity-resolution`, an `identity` (`dataSpace`, `apiName`) and a `spec` with the configuration type, label, description, automatic-run and case flags, secondary DMO, `filters`, `matchRules` and `reconciliationRules`. `trustedSources` is optional in the file: retrieve writes it (an empty list when the API omits it), and a hand-written file may leave it out.
 
 To save every ruleset of the default data space at once, use `--metadata identity-resolution` without a name:
 
@@ -81,8 +79,8 @@ The full response also holds `id`, `filters`, `trustedSources`, the match rules 
 Creates the ruleset in the target org from the saved file. Preview first. The preview only reads.
 
 ```sh
-sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
-sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
+sf data360 deploy --source-dir data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
+sf data360 deploy --source-dir data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
 ```
 
 Use an unused ruleset suffix of at most four characters, such as `cust`. Use the returned `objectApiName` exactly after creation. Create runs only when the owner is confirmed absent. Creation enters `PUBLISHING` and provisions generated outputs, so `--allow-processing` is required. 
@@ -94,7 +92,7 @@ Salesforce names a new ruleset `<configurationType>_<rulesetId>`, for example `I
 **Return without waiting (`--async`).** By default the deploy waits after the create until Salesforce reports the ruleset `PUBLISHED`, then checks its settings and its generated unified and link DMOs. Add `--async` to return as soon as Salesforce accepts the create:
 
 ```sh
-sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing --async
+sf data360 deploy --source-dir data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing --async
 ```
 
 The result is `creation-processing` with mutation `acknowledged-processing`, and the command exits 0. `--async` works for Identity Resolution only; a selection without a ruleset is refused with `INVALID_ASYNC_SCOPE`.
@@ -154,12 +152,12 @@ Save `ir-native-create.json`. It matches on first name, last name and normalized
 }
 ```
 
-The body carries the configuration type, the unused `rulesetId` suffix, the data space, the secondary DMO, the label, the description, the automatic-run and case flags, the match rules and all six reconciliation entities with ordered `sources` and field overrides in `fields`. It omits server IDs, status and generated output names. Empty `filters` and `trustedSources` are left out. Check exact absence, capacity, dependencies and publication permission before you submit.
+The body carries the configuration type, the unused `rulesetId` suffix, the data space, the secondary DMO, the label, the description, the automatic-run and case flags, the match rules and all six reconciliation entities with ordered `sources` and field overrides in `fields`. It omits server IDs, status and generated output names. Empty `filters` and `trustedSources` are left out. Check exact absence, room under the limit of 10 rulesets per entity (see **Ruleset limit** in the evidence below), dependencies and publication permission before you submit.
 
-Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
+Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example `Individual_cust`. The create publishes the ruleset straight away; there is no option to keep it as a draft. `doesRunAutomatically: true` is accepted. In a live test such a ruleset with one match rule went from `PUBLISHING` to `PUBLISHED` in about 11.5 minutes, and its unified output DMO was then readable.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-create" label="Create" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no IdentityResolution file in the zip." split_api=true metadata_state="unknown" metadata_reason="Not tried at API 68.0: the default data space already holds seven rulesets, which may be its limit, so no test ruleset was created. The IdentityResolution type describes only fullName." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
+{% include operation-tabs.html id="ir-create" label="Create" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no IdentityResolution file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, createMetadata is refused with REQUIRED_FIELD_MISSING (DeveloperName, MasterLabel), and the type cannot carry them: a developerName, DeveloperName or masterLabel element is rejected as invalid in type IdentityResolution." connect_state="available" connect_reason="Native API68 full-settings POST. Creation publishes." connect_body=create_connect plugin_state="available" plugin_reason="Qualified native API68 create of an absent Individual owner, with processing acknowledgement." plugin_body=create_plugin %}
 
 ## Update
 
@@ -167,8 +165,8 @@ Salesforce names the new ruleset `<configurationType>_<rulesetId>`, for example 
 Retrieves the current ruleset, then changes only the settings you need. Preview first, then apply the change:
 
 ```sh
-sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
-sf data360 deploy --source-dir force-app/main/default/data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
+sf data360 deploy --source-dir data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview
+sf data360 deploy --source-dir data360/identityResolution/Individual_cust.identityResolution.json --target-org TARGET_ALIAS --api-version 68.0 --data-space default --allow-processing
 ```
 
 Run the retrieve first with `--target-org TARGET_ALIAS`. Keep all other settings and the identity unchanged. Source priority order matters, so do not sort it. An empty explicit field-override list resets fields to object inheritance. An unchanged definition returns `unchanged`, writes nothing and needs no processing acknowledgement. `--async` also works for an update and returns `update-processing` once Salesforce accepts the PATCH; no live PATCH was run with it (offline-tested).
@@ -226,7 +224,7 @@ The body leaves out the identity settings (`configurationType`, `rulesetId`, `da
 - Do not send an update while the ruleset is `PUBLISHING`; you cannot tell your change from the work already running. Read the ruleset back after it reaches `PUBLISHED` and check that your change is there.
 
 {% endcapture %}
-{% include operation-tabs.html id="ir-update" label="Update" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no IdentityResolution file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, the IdentityResolution type carries only fullName, so updateMetadata has no setting to send. It reported success for a ruleset that does not exist and changed nothing." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ir-update" label="Update" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no IdentityResolution file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, the IdentityResolution type carries only fullName, so updateMetadata has no setting to send. On an existing test ruleset it reported success and changed nothing, and a masterLabel element is rejected as invalid in type IdentityResolution." connect_state="available" connect_reason="Native API68 full matching and reconciliation PATCH." connect_body=update_connect plugin_state="available" plugin_reason="Full-settings update with ordered sources and override reset; an equal settled definition is unchanged." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -246,7 +244,7 @@ deleted identity-resolution Individual_cust (server is still processing)
 
 Before the DELETE the plugin checks that the resolved ruleset ID starts with `1ir` and has the length of a record ID. The command then reads the ruleset by ID and by name up to 13 times, 10 seconds apart, within 180 seconds. The output shows `deletion-processing` and `acknowledged-processing`. That acknowledges ongoing removal. It does not confirm deletion.
 
-After the delete is accepted, the plugin removes the ruleset's canonical file, `data360/identityResolution/Individual_cust.identityResolution.json` under the default package directory of `sfdx-project.json` (`force-app/main/default` without one), when it is a regular file. Add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), or for an unchanged, blocked, failed or unconfirmed delete. A failed removal keeps the org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`.
+After the delete is accepted, the plugin removes the ruleset's canonical file, `data360/identityResolution/Individual_cust.identityResolution.json` in the current project, when it is a regular file. Add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), or for an unchanged, blocked, failed or unconfirmed delete. A failed removal keeps the org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`.
 
 A ruleset with automatic run on or off can be deleted. In a live test the deleted ruleset read `DELETING` for about 3.5 minutes, then not found, and its unified output DMO was gone.
 
@@ -255,6 +253,7 @@ A ruleset with automatic run on or off can be deleted. In a live test the delete
 - A later read can show `DELETING_OFFCORE`. That is not confirmed deletion.
 - A ruleset that reads `PUBLISHING` or `DELETING` is refused with `IDENTITY_RESOLUTION_NOT_SETTLED`.
 - A timeout or unknown result stops the batch. Do not replay DELETE. Check the state with read-only calls.
+- Several deletes sent seconds apart can end `DELETE_FAILED`. Delete one ruleset at a time and wait until it is gone before the next.
 {% endcapture %}
 {% capture delete_connect %}
 ### Native API68 delete (owned disposable ruleset only)
@@ -271,8 +270,10 @@ Replace both placeholders with the owner's ID and API name. A successful DELETE 
 
 A ruleset with `doesRunAutomatically: true` can be deleted too. In a live test it read `DELETING` for about 3.5 minutes, then the reads by ID and by name returned not found, the ruleset was gone from the list, and its unified output DMO answered `ITEM_NOT_FOUND`.
 
+Delete one ruleset at a time. In a live test four DELETEs sent seconds apart were all accepted, but two of the rulesets then read `DELETE_FAILED` and stayed that way; a second DELETE sent for each, one at a time, removed them in about 90 seconds. So a ruleset that reads `DELETE_FAILED` can be deleted again, on its own.
+
 {% endcapture %}
-{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7: sf project delete source stops with a RegistryError. A destructive metadata-format deploy at API 68.0 passed with zero components for a ruleset that does not exist; deleting an existing ruleset this way was not tried." split_api=true metadata_state="unknown" metadata_reason="At API 68.0, deleteMetadata for a ruleset that does not exist is refused as a standard component that cannot be deleted. Deleting an existing ruleset was not tried." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ir-delete" label="Delete" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: sf project delete source stops with a RegistryError. A destructive metadata-format deploy at API 68.0 naming an existing test ruleset reported success with zero components, and the ruleset stayed PUBLISHED." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, deleteMetadata on an existing test ruleset is refused with FIELD_INTEGRITY_EXCEPTION: the ruleset is called standard and cannot be deleted." connect_state="available" connect_reason="Owned native API68 cleanup by ID, confirmed by exact ID and name." connect_body=delete_connect plugin_state="available" plugin_reason="Bounded native API68 source-backed DELETE: acknowledged processing, not terminal absence or physical cleanup." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -307,11 +308,20 @@ The plugin's graph `--preview` does this lookup for you: it reads the rulesets a
 
 **Metadata API (API 68.0):** `IdentityResolution` is not listed by `describeMetadata`, yet `listMetadata` on `IdentityResolution` returned names of the rulesets in the org (as `default.<name>`, six of the seven the native list shows), and `describeValueType` describes the type with only `fullName`, marked creatable, updatable and deletable. `readMetadata` for one of them returned only its name, and a `retrieve` of that member returned no file. So the Metadata API gives no ruleset settings to read or redeploy; use the native API 68 Connect routes or the plugin. Writes on new `Cli…` names (2026-11-16):
 
-- `createMetadata` was not tried. The default data space held seven rulesets, and an earlier Setup validation reported `identityResolutionLimitPerDataSpace` 7, so the data space may be at its limit. On `DataGraph`, which has the same `fullName`-only type, `createMetadata` was refused with `REQUIRED_FIELD_MISSING` (DeveloperName, MasterLabel); see [Data Graphs](/next/data-cloud-cli/data-graphs/).
+- `createMetadata` with `fullName` `default.CliB4 IRM` was refused with `REQUIRED_FIELD_MISSING` "Required fields are missing: [DeveloperName, MasterLabel]". The type cannot carry those fields: a `developerName`, `DeveloperName` or `masterLabel` element is rejected before any write with "Element … invalid at this location in type IdentityResolution". So the Metadata API cannot create a ruleset. Nothing was created; the native list kept the same count.
 - `updateMetadata` on a ruleset that does not exist returned `success: true` and changed nothing: the ruleset list was the same before and after. With only `fullName` in the type, an update has no setting to carry.
-- `deleteMetadata` on a ruleset that does not exist was refused with `FIELD_INTEGRITY_EXCEPTION` "… is standard and cannot be deleted". Deleting an existing ruleset was not tried: only new `Cli…` test objects may be written, and no test ruleset was created.
+- `deleteMetadata` on a ruleset that does not exist was refused with `FIELD_INTEGRITY_EXCEPTION` "… is standard and cannot be deleted".
 
-**Salesforce CLI (CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `IdentityResolution`, while `sf org list metadata --metadata-type IdentityResolution` lists the ruleset names. `sf project retrieve start --metadata IdentityResolution:<name>`, `sf project deploy start --metadata IdentityResolution:CliW4Ir` and `sf project delete source --metadata IdentityResolution:CliW4IrD` all stop with `RegistryError` "Missing metadata type definition in registry for id 'IdentityResolution'" (exit code 1), and so does a retrieve from a `package.xml` manifest. A metadata-format check-only deploy (`--metadata-dir`, `--dry-run`) naming `IdentityResolution` `CliW4Ir` in `identityResolutions/` was refused with "An object 'CliW4Ir' of type IdentityResolution was named in package.xml, but was not found in zipped directory": without a `describeMetadata` entry the server has no folder for the type. A destructive check-only deploy naming a ruleset that does not exist passed with zero components. The standard CLI therefore cannot create or update a ruleset; deleting an existing ruleset with a destructive deploy was not tried.
+On an existing test ruleset, `Individual_cb4` with the label `CliB4 IR`, created and `PUBLISHED` through the native API 68 POST (2026-11-16). `listMetadata` names a ruleset by its label, here `default.CliB4 IR`, not by its API name:
+
+- `readMetadata` returned only the name.
+- `updateMetadata` with only `fullName` returned `success: true`; the native read (label, description, `PUBLISHED`) was unchanged. An update that also carries `masterLabel` or `description` is rejected as an invalid element.
+- `deleteMetadata` was refused with `FIELD_INTEGRITY_EXCEPTION` "The IdentityResolution called 'default.CliB4 IR' is standard and cannot be deleted". The ruleset stayed `PUBLISHED`.
+- The test ruleset was then deleted through the native API 68 DELETE by ID. It read `DELETING` for about 2 minutes and `DELETING_OFFCORE` by ID, and about 3 minutes after the DELETE both the ID and the API name answered `ITEM_NOT_FOUND`, its unified Individual DMO too.
+
+**Ruleset limit.** A data space holds at most 10 rulesets per entity: `Individual` and `Account` each have their own 10. Every ruleset of the entity counts, whatever its status, so a `NEW` ruleset that was never published takes a place too. The limit is not in Salesforce's documentation, and `sf org list limits` does not show it. In a live test (2026-11-16) the 11th `Individual` ruleset was refused with `INVALID_INPUT` "You can't create a new ruleset for ${dmoName} because it already has 10 published rulesets…"; Salesforce leaves `${dmoName}` unfilled. An `Account` ruleset in the same data space was still accepted.
+
+**Salesforce CLI (CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `IdentityResolution`, while `sf org list metadata --metadata-type IdentityResolution` lists the ruleset names. `sf project retrieve start --metadata IdentityResolution:<name>`, `sf project deploy start --metadata IdentityResolution:CliW4Ir` and `sf project delete source --metadata IdentityResolution:CliW4IrD` all stop with `RegistryError` "Missing metadata type definition in registry for id 'IdentityResolution'" (exit code 1), and so does a retrieve from a `package.xml` manifest. A metadata-format check-only deploy (`--metadata-dir`, `--dry-run`) naming `IdentityResolution` `CliW4Ir` in `identityResolutions/` was refused with "An object 'CliW4Ir' of type IdentityResolution was named in package.xml, but was not found in zipped directory": without a `describeMetadata` entry the server has no folder for the type. A destructive check-only deploy naming a ruleset that does not exist passed with zero components. On the existing test ruleset, the same update deploy (member `default.CliB4 IR`) was refused with "not found in zipped directory". A destructive deploy naming it, as `default.CliB4 IR`, `CliB4 IR` or `Individual_cb4`, passed with zero components as a check-only run. Run for real with `default.CliB4 IR`, it reported `Succeeded` with zero components, and the ruleset was still `PUBLISHED` afterwards. The standard CLI therefore cannot create, update or delete a ruleset.
 
 **Not verified:** general cross-org migration or creation, released-package acceptance, successful profile computation or IR data runs, other matching-rule combinations, other orgs, arbitrary editing, a mutating native PATCH in the latest acceptance, the already-absent DELETE repeat, physical profile-row cleanup, the complete optional preservation and output follow-up, exhaustive external-consumer exclusion, an update that empties filters or trusted sources, and configuration types other than `Individual`.
 

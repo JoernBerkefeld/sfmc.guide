@@ -18,8 +18,6 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
-
 A **segment** selects an audience by rules. Publishing prepares it for use. Refreshing recalculates it. Activation sends the audience to a destination.
 
 A **unified DMO** holds the combined customer profiles from identity resolution. Use an existing one, with its real key.
@@ -52,7 +50,7 @@ Saves the segment on API68 as one JSON file plus one SQL file per model. You can
 sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --output-dir retrieved
 ```
 
-The command writes `retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/<package>/main/default/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model, where `<package>` is the default package directory of `sfdx-project.json`. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
+The command writes `retrieved/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
 
 To save every segment of the default data space at once, use `--metadata segment` without a name:
 
@@ -198,8 +196,8 @@ The record holds `fullName`, `masterLabel` and `segmentType`. For a DBT segment,
 Creates the segment from the saved files on API68, if it does not exist yet. Preview first; the preview writes nothing.
 
 ```sh
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --preview
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --allow-processing
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
 The JSON file or any of its SQL files selects the segment, and so does `-m segment:OwnedSegment`. The plugin joins the JSON with exactly one SQL file per model; a missing or extra `OwnedSegment.segment.*` file, or a `sql` key left in the JSON, is refused with `INVALID_SOURCE`. Create and update need `--allow-processing`. The DMO named in `segmentOn` must exist in the target. Do not reuse a source record ID. `--changed-since <git-ref>` can select changed segment files instead of `--source-dir`; a change to the JSON or to any SQL file selects the segment. The plugin always sends the schedule `NoRefresh`.
@@ -282,6 +280,8 @@ Use a project that contains only this file. The deploy uses the whole folder. Sa
 
 The `includeCriteria` value is pipeline XML with escaped text. Keep the escapes (`&lt;` for `<`, `&gt;` for `>`) when you edit it. This form has no `segmentOn` element. Replace the model and the DMO and key together.
 
+A UI definition deploys the same way. Its file has `<segmentType>UI</segmentType>`, a `segmentOn` element with the DMO API name, and the criteria as escaped JSON in `includeCriteria`, for example one text comparison of a field with `"operator":"equal"` and a `values` list.
+
 ```sh
 sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
@@ -312,6 +312,8 @@ Send `createMetadata` to the same SOAP endpoint and headers as the Read tab. The
 ```
 
 The answer is `success` `true` with the full name. `readMetadata` then returns the same pipeline, label and type, and `listMetadata` shows the name. This saves the definition only: in the live run, the segment read on the Connect API tab kept answering `ITEM_NOT_FOUND`, so no live segment was created and no processing started.
+
+A UI definition is created the same way, with `segmentType` `UI`, a `segmentOn` element and the criteria JSON as `includeCriteria` text. It also created no live segment.
 {% endcapture %}
 {% include operation-tabs.html id="segments-create" label="Create" cli_state="available" cli_reason="Saves a DBT segment definition as XML. It does not prove that a live segment exists." cli_body=create_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata. Saves the DBT definition only; no live segment is created." metadata_body=create_metadata connect_state="available" connect_reason="Native API68 POST creates a live DBT segment. It can start processing." connect_body=create_connect plugin_state="available" plugin_reason="Creates a missing segment from its JSON and SQL files, then reads it back." plugin_body=create_plugin %}
 
@@ -321,11 +323,11 @@ The answer is `success` `true` with the full name. `readMetadata` then returns t
 Changes the saved files on API68, then deploys them. Preview before you run the deploy.
 
 ```sh
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --preview
-sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/force-app/main/default/data360/segments/OwnedSegment.segment.json --allow-processing
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --preview
+sf data360 deploy --target-org SOURCE_ALIAS --source-dir retrieved/data360/segments/OwnedSegment.segment.json --allow-processing
 ```
 
-Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Salesforce can refuse an update right after a create with HTTP 403 while the segment is still processing; deploy again once it is `ACTIVE`. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
+Edit the label or description in the JSON file, or the SQL in a model's SQL file. An existing segment is updated with one PATCH of the whole definition, sent as written; Salesforce decides, and a 4xx answer is reported as `rejected`. Keep every column fully qualified with the DMO API name. The schedule and lookback are not sent by the PATCH. Salesforce can refuse an update right after a create with HTTP 403 while the segment is still `PROCESSING` or `COUNTING`. The plugin shows Salesforce's text, for example `ENTITY_SAVE_ERROR: Segment cannot be updated when it is in PROCESSING state`, and reports the update as `rejected`; deploy again once it is `ACTIVE`. Running the same deploy again, after the segment settles, is `unchanged` and writes nothing; it needs no `--allow-processing`.
 
 The output reads (offline-tested; derived from the command's output code):
 
@@ -335,6 +337,8 @@ Deployed: 1 (0 created / 1 updated / 0 failed)
 ```
 
 The preview prints `Planned update: segment:OwnedSegment.`. An unclear result ends with `SEGMENT_UPDATE_UNCONFIRMED`; do not replay the update, read the segment first.
+
+Deploy never publishes. To publish the segment, run `sf data360 publish --target-org SOURCE_ALIAS --metadata segment:OwnedSegment` (`--preview` publishes nothing). It sends one POST, never resent, and waits for `SUCCESS` or `FAILED` (`--wait-timeout`, default 1800 seconds; a timeout reports `publishing`, still processing, exit 0). See [Segment members](/next/data-cloud-cli/segment-members/#update).
 {% endcapture %}
 
 {% capture update_connect %}
@@ -375,16 +379,20 @@ The plugin sends this PATCH for any change of the label, description, segment-on
 {% endcapture %}
 
 {% capture update_cli %}
-Changes only `masterLabel` in the owned DBT XML file, then deploys it. Keep the criteria, model, SQL and type as they are. This is a note, not a verified step: no verification-database row records the label update (the exit code was not retained).
+Changes the label or the SQL in the owned XML file, then deploys it. Keep the model name and type as they are. The live run changed `masterLabel` in one deploy and the SQL in the next, on DBT and UI definitions without a live segment. Change the label and the SQL in separate deploys if you want to compare each result.
 
-Change `masterLabel` to `Customer Definition Updated`:
+Change `masterLabel` to `Customer Definition Updated`, or edit the SQL inside the escaped `<sql>` element:
 
 ```sh
 sf project deploy start --source-dir force-app --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 sf project retrieve start --metadata MarketSegmentDefinition:CustomerDefinition --target-org SOURCE_ALIAS --api-version 65.0 --wait 5
 ```
 
-The deploy reports the label change. An identical repeat can report `Unchanged`. The deploy job still runs in that case.
+The deploy reports the component with `changed` `true`, and the retrieved file shows the new label or SQL. For a UI definition, the criteria JSON in `includeCriteria` is edited the same way. An identical repeat reports `changed` `false`. The deploy job still runs in that case. None of these deploys creates a live segment: the runtime read kept answering `ITEM_NOT_FOUND`.
+
+**Known failures:**
+
+- On the definition of a live, published segment, a label deploy succeeds and the retrieved file shows the new label, but the live segment keeps its old `displayName`. Change a live segment on the Connect API tab instead.
 {% endcapture %}
 {% capture update_metadata %}
 ### Metadata API update of the definition
@@ -402,9 +410,11 @@ Send `updateMetadata` with the complete record from the Create tab, with only th
 </met:updateMetadata>
 ```
 
-The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged pipeline. This changes the definition only, not a live segment. Only a label change on a definition without a live segment is tested.
+The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged pipeline. An SQL change inside the pipeline works the same way: the live run changed the label and added `AND <field> IS NOT NULL` in one call, and `readMetadata` returned both. For a UI definition, a new value in the criteria JSON was saved too. These calls change the definition only, not a live segment.
+
+On the definition of a live, published segment, a label change also answers `success` `true` and `readMetadata` shows it, but the runtime read on the Connect API tab keeps the old `displayName`: the two views then disagree. Change a live segment on the Connect API tab instead.
 {% endcapture %}
-{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes only the DBT label in the XML file. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: a label change on a definition without a live segment." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited JSON and SQL files as one PATCH; Salesforce decides." plugin_body=update_plugin %}
+{% include operation-tabs.html id="segments-update" label="Update" cli_state="available" cli_reason="Changes the label, SQL or UI criteria of a definition. On a live segment only the definition changes, not the runtime label. Unchanged does not mean that nothing was written." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: label, SQL and UI criteria changes. On a live segment only the definition changes, not the runtime label." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 full-definition PATCH for the label and description." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited JSON and SQL files as one PATCH; Salesforce decides." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -418,7 +428,7 @@ sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --ap
 
 The selector must be exactly `segment:<Name>`. The segment is read from the org by that name before anything is deleted, also by the preview, and must pass fresh identity, definition and segment-on DMO checks; a segment the org does not have reports `unchanged`. Delete runs at API 68 (the default) in the default data space. Unknown outcomes are never replayed.
 
-After the org confirms the deletion (or accepts it and is still deleting), the command removes the segment's files: `data360/segments/OwnedSegment.segment.json` and every `OwnedSegment.segment.*.sql` beside it, under the default package directory of `sfdx-project.json` (`force-app/main/default` without one). Pass `--keep-local-files` to keep them. The preview removes nothing and lists each file as `Planned local file removal: <path>`. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. Deletion removes no shared unified DMO or membership table.
+After the org confirms the deletion (or accepts it and is still deleting), the command removes the segment's files: `data360/segments/OwnedSegment.segment.json` and every `OwnedSegment.segment.*.sql` beside it, in the current project. Pass `--keep-local-files` to keep them. The preview removes nothing and lists each file as `Planned local file removal: <path>`. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. Deletion removes no shared unified DMO or membership table.
 
 The output reads (offline-tested; derived from the command's output code):
 
@@ -483,7 +493,11 @@ sf project deploy start --manifest manifest/package.xml --post-destructive-chang
 sf org list metadata --metadata-type MarketSegmentDefinition --target-org SOURCE_ALIAS --api-version 65.0
 ```
 
-Check that the deletion completed, and that `CustomerDefinition` is absent from the list. This removes the definition only. The XML file stays on your computer.
+Check that the deletion completed, and that `CustomerDefinition` is absent from the list. This removes the definition only. The XML file stays on your computer. One manifest can name DBT and UI definitions together.
+
+**Known failures:**
+
+- The definition of a live segment cannot be deleted this way: the deploy fails with "This market segment definition is referenced elsewhere in Salesforce" and names the segment. Delete a live segment on the Connect API tab; that removes its definition too.
 {% endcapture %}
 {% capture delete_metadata %}
 ### Metadata API delete of the definition
@@ -497,9 +511,9 @@ Send `deleteMetadata` with the type and the definition name. Use it only on an o
 </met:deleteMetadata>
 ```
 
-The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. Only a definition without a live segment is tested; for a live segment, use the Connect API tab.
+The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. The definition of a live segment is refused: `success` `false` with `DEPENDENCY_EXISTS` ("referenced elsewhere in Salesforce"), and the segment stays `ACTIVE`. For a live segment, use the Connect API tab; its DELETE removes the definition too.
 {% endcapture %}
-{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition with a destructive deploy. A live segment is not removed." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live segment." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment selected by name, after a preview (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="segments-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition without a live segment with a destructive deploy. The definition of a live segment is refused." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live segment. The definition of a live segment is refused (DEPENDENCY_EXISTS)." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE of an owned live segment, then checks that it is gone." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one owned segment selected by name, after a preview (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -538,17 +552,23 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 
 **Route-specific SQL limits:** Salesforce's [native DBT validation guide](https://developer.salesforce.com/docs/data/connectapi/guide/features_cdp_dbt_validations.md) documents WHERE-only single-column subqueries and an optional key-qualifier join condition. The separately discovered MCP segment-create description disallows subqueries and compound join conditions. The discovery contract's API version was not supplied. Do not transfer these rules between the native examples on this page, the org-local API 67 MCP route and hosted MCP. Treat neither description as qualification of broader SQL edits.
 
-**Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML create and delete are verification-database rows at API 65; the label update is a note without a row. Retrieving UI criteria alone does not establish writes to UI definitions; the plugin's UI segment round trip below does, for one simple criterion. Saving XML alone need not create a usable live segment.
+**Runtime and XML routes:** The native runtime POST creates a live segment. Unlike saving XML alone, it can begin processing immediately, even with `NoRefresh` and empty-result SQL. The XML create and delete are verification-database rows at API 65, and so are the label and SQL updates. The standard CLI and the Metadata API also wrote UI definitions (create, criteria change, delete) without creating a live segment; the plugin's UI segment round trip below writes a live one, for one simple criterion. Saving XML alone need not create a usable live segment.
 
 **CLI scope:** The UI retrieval example in the Read chapter shows the XML shape only; its criteria are omitted. Unchanged is not zero writes: a deployment job still runs and package metadata can change. Require independent inventory absence of `CustomerDefinition` as well, after the deletion.
 
 **Standard CLI at API 68.0:** `sf org list metadata --metadata-type MarketSegmentDefinition` lists the definitions, and `sf project retrieve start` saved one by name (CLI 2.151.7). The create and delete XML workflows above were run at API 65.0: the deploy reported success, a retrieve matched the file, and after the destructive deploy the list no longer showed the definition.
 
-**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (label only) and `deleteMetadata` on one new single-model DBT probe definition each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect segment read answered `ITEM_NOT_FOUND` every time: no live segment, publication or activation followed. After the delete the definition was gone from both views, and the list held the same five definitions as before the run. Not tested: SQL or criteria changes, UI definitions, and these calls on a definition that has a live segment.
+**Standard CLI create, update and delete (API 65.0, CLI 2.151.7, one org, 2026-11-16):** One deploy created a new DBT definition and a new UI definition. A second deploy changed both labels, a third the DBT SQL (one added `IS NOT NULL` condition) and the UI criteria value; each reported `changed` `true`, and a retrieve after each matched the files. An identical fourth deploy reported `changed` `false`. One `--post-destructive-changes` deploy deleted both, and the list held the same definitions as before. The Connect segment read answered `ITEM_NOT_FOUND` after every step: no live segment, processing, publication or activation followed.
 
-**UI segment (native API 68 plugin, one org):** Created a UI segment from a hand-written JSON file with one text comparison (`operator` `equal`, a `values` list), retrieved it with the criteria Salesforce normalized, reported a repeat deploy `unchanged`, updated the criteria value and the lookback (`P90D` to `P30D`), and deleted it by name; a follow-up GET answered `ITEM_NOT_FOUND`. The plugin writes UI segments with `segmentCreationFlow` `Headless`, which the API requires. The first update attempt, about a minute after the create while the segment was still `PROCESSING`, was refused with HTTP 403 `ENTITY_SAVE_ERROR` and nothing was written; the same deploy succeeded once the segment was `ACTIVE`.
+**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (label only) and `deleteMetadata` on one new single-model DBT probe definition each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect segment read answered `ITEM_NOT_FOUND` every time: no live segment, publication or activation followed. After the delete the definition was gone from both views, and the list held the same five definitions as before the run. A second run repeated this with a label-and-SQL change on a new DBT definition and with a new UI definition (create, criteria value change, delete); every call answered `success` `true` and no live segment followed.
 
-**Not verified:** Cross-org replay of XML definitions. Deployment of XML definitions without processing through the CLI (the Metadata API calls above created no live segment). UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules. Populated audiences. Send destinations, membership export and cross-org migration. A released package.
+**Definition of a live segment (one org, 2026-11-16):** A DBT segment created with the Connect POST and published once has a `MarketSegmentDefinition` of the same name, which `readMetadata` and `listMetadata` return. `updateMetadata` and a standard CLI deploy (API 65.0) of a new label each succeeded and changed the definition, but the Connect read kept the old `displayName` and `lastModifiedDate`. `deleteMetadata` and a CLI `--post-destructive-changes` deploy were both refused with `DEPENDENCY_EXISTS`, and the segment stayed `ACTIVE`. The Connect DELETE then answered `204`; the segment read answered `ITEM_NOT_FOUND` and the definition was gone from `listMetadata`.
+
+**UI segment (native API 68 plugin, one org):** Created a UI segment from a hand-written JSON file with one text comparison (`operator` `equal`, a `values` list), retrieved it with the criteria Salesforce normalized, reported a repeat deploy `unchanged`, updated the criteria value and the lookback (`P90D` to `P30D`), and deleted it by name; a follow-up GET answered `ITEM_NOT_FOUND`. The plugin writes UI segments with `segmentCreationFlow` `Headless`, which the API requires. The first update attempt, about a minute after the create while the segment was still `PROCESSING`, was refused with HTTP 403 `ENTITY_SAVE_ERROR` and nothing was written; the same deploy succeeded once the segment was `ACTIVE`. A later run (2026-11-16) showed Salesforce's text: a raw PATCH right after the create answered "Segment cannot be updated when it is in PROCESSING state", and a plugin update a few seconds after a create reported "... when it is in COUNTING state" as `rejected`; a read showed the segment unchanged.
+
+**Publish and members:** One owned one-member segment was published once with the Connect API and its members read, and one owned zero-member segment was published with `sf data360 publish` (`SUCCESS` after 922 seconds, API 68, 2026-11-17); see [Segment members](/next/data-cloud-cli/segment-members/#update).
+
+**Outside these probes:** Cross-org replay of XML definitions and cross-org migration need a second org. UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules, send destinations and activations, and a released package were not tried: these probes run no schedule, activation or package.
 
 **Error codes:** `ITEM_NOT_FOUND` is returned by the GET after a successful delete. A successful XML deploy can still leave the runtime GET returning `ITEM_NOT_FOUND`.
 

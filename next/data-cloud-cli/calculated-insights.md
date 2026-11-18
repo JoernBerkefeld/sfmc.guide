@@ -18,8 +18,6 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
-
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limitations still apply; this badge does not verify untested writes or general CRUD support.
 
 A calculated insight computes values from your data, for example a customer count grouped by application. You define it with an SQL query. `GROUP BY` fields are dimensions, and calculated values are measures.
@@ -31,6 +29,8 @@ A calculated insight computes values from your data, for example a customer coun
 {% include crud-summary.html %}
 
 **Plugin qualification:** The plugin sends any SQL, status and schedule as written, and Salesforce decides. The live runs are listed under Evidence.
+
+**Enum letter case:** An enum value in `definitionType`, `queryDialect`, `publishScheduleInterval` or `historyPublishScheduleInterval` that differs from Salesforce's stored spelling only in letter case counts as unchanged on deploy. The plugin sends the value as written; retrieve writes Salesforce's spelling.
 
 ## Read
 
@@ -140,7 +140,7 @@ The record holds `fullName`, `creationType`, `expression` and `masterLabel`. It 
 {% capture create_cli %}
 Saves the definition as an XML file, then deploys it. The deploy stores the definition only. It does not guarantee that no processing happens.
 
-**Evidence:** this standard CLI create, the label update and the delete below were run at API 65 and are recorded on this page only. The verification database has no row for them (exit codes were not retained), so treat them as notes, not verified steps. Only the standard CLI read is a database row.
+**Evidence:** this create, the label and SQL updates and the delete below were run live at API 65 on a new definition (see Evidence). Each deploy succeeded, a retrieve matched the file, and the runtime read kept answering `ITEM_NOT_FOUND`.
 
 Write this file at `force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml`:
 
@@ -168,6 +168,7 @@ The result reports the component as created:
 **Known failures:**
 
 - A successful deploy does not create a live insight. A runtime lookup can still show that the insight is not found.
+- A live insight's definition cannot be changed this way, not even while it is a draft: the deploy fails with "Cannot update a MktCalcInsightObjectDef when DefinitionStatus is in use." Change a live insight on the Connect API tab.
 {% endcapture %}
 
 {% capture create_connect %}
@@ -256,7 +257,7 @@ The answer is `success` `true` with the full name. `readMetadata` then returns t
 ## Update
 
 {% capture update_cli %}
-Changes the label in the XML definition, then deploys the same file. This is a note, not a verified step: no verification-database row records it (see the Create tab).
+Changes the label or the SQL in the XML definition, then deploys the same file. Both were tested live on a definition without a live insight. Change the label and the SQL in separate deploys if you want to compare each result.
 
 ```sh
 sf project deploy start --source-dir force-app/main/default/mktCalcInsightObjectDefs/CustomerActivity.mktCalcInsightObjectDef-meta.xml --target-org TARGET_ALIAS --api-version 65.0 --wait 5
@@ -268,7 +269,11 @@ The result reports the component as changed:
 { "status": 0, "result": { "success": true, "details": { "componentSuccesses": [{ "componentType": "MktCalcInsightObjectDef", "fullName": "CustomerActivity", "created": false, "changed": true, "success": true }] } } }
 ```
 
-Retrieve the file again to confirm the new label and the unchanged SQL.
+Retrieve the file again to confirm the new label or SQL. An identical repeat reports the component with `changed` `false`.
+
+**Known failures:**
+
+- The definition of a live insight, even a draft, cannot be updated: the deploy fails with "Cannot update a MktCalcInsightObjectDef when DefinitionStatus is in use." Change its label or SQL on the Connect API tab; a label PATCH there also changes the definition's `masterLabel`.
 {% endcapture %}
 
 {% capture update_connect %}
@@ -305,9 +310,11 @@ The plugin reads the insight up to 12 times, one second apart, within 120 second
 
 A PATCH must not carry `definitionType`, not even an unchanged one: Salesforce refuses it with "Cannot change the calculated insight definition type". A PATCH without `draft` publishes a draft, so the plugin sends `"draft": true` on every update of a draft and publishes only through `sf data360 publish`.
 
+To change only the label of a draft, send `{ "displayName": "Customer Activity Updated", "draft": true }`. At API 68 this answered HTTP 200; the insight stayed `DRAFT` and `NOT_SCHEDULED` with the new label, and the Metadata API definition showed the same new `masterLabel`.
+
 ### API 65 update route
 
-The publish with a `SystemManaged` schedule is a verification-database row at API 65 only. The label and schedule change after it is a note: no row records it.
+The publish with a `SystemManaged` schedule is a verification-database row at API 65 only. The schedule change after it was not repeated: this sweep runs no schedule on probes. The label change alone is tested at API 68 above.
 
 To publish the draft with a system-managed schedule, save `ci-publish.json`:
 
@@ -392,15 +399,17 @@ Send `updateMetadata` with the complete record, in the same form as the create o
 </met:updateMetadata>
 ```
 
-The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged SQL. This changes the definition only; it does not change or publish a live insight. Only a label change on a definition without a live insight is tested.
+The answer is `success` `true`. `readMetadata` then shows the new label and the unchanged SQL. An SQL change in `expression` works the same way: the live run added `AND <field> IS NOT NULL` to the filter and `readMetadata` returned the new SQL. Both change the definition only; they do not create, change or publish a live insight.
+
+The definition of a live insight, even a draft, cannot be updated: the answer is `success` `false` with `FIELD_NOT_UPDATABLE` ("Cannot update a MktCalcInsightObjectDef when DefinitionStatus is in use."), and the insight keeps its values. Use the Connect API tab for a live insight.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Only a change to the XML label is verified." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: a label change on a definition without a live insight." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 publish and qualified expression PATCH; the API 65 label and schedule change is separate." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited files with one PATCH; deploy keeps a draft, publish activates it." plugin_body=update_plugin %}
+{% include operation-tabs.html id="ci-update" label="Update" cli_state="available" cli_reason="Label and SQL changes of a definition without a live insight. A live insight's definition is refused." cli_body=update_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with updateMetadata: label and SQL changes of a definition without a live insight. A live insight's definition is refused." metadata_body=update_metadata connect_state="available" connect_reason="Native API68 publish, draft label change and qualified expression PATCH; the API 65 schedule change is separate." connect_body=update_connect plugin_state="available" plugin_reason="Sends the edited files with one PATCH; deploy keeps a draft, publish activates it." plugin_body=update_plugin %}
 
 ## Delete
 
 {% capture delete_cli %}
-Deletes an owned definition through a deployment manifest. It does not remove a live insight or its generated data. Check ownership and dependencies first. This is a note, not a verified step: no verification-database row records it (see the Create tab).
+Deletes an owned definition through a deployment manifest. It does not remove a live insight or its generated data. Check ownership and dependencies first. Tested live at API 65 on a definition without a live insight. The definition of a live insight, even a draft, is refused with `DEPENDENCY_EXISTS` ("referenced elsewhere in Salesforce"); delete a live insight on the Connect API tab, which removes its definition too.
 
 Create the manifest files. `destructiveChangesPost.xml` names the definition:
 
@@ -446,6 +455,7 @@ sf org list metadata --metadata-type MktCalcInsightObjectDef --target-org TARGET
 
 - A DELETE without a body can fail in the CLI with a missing `mode` error. Use the whole-request file shown above.
 - The plugin reads up to 12 times within 120 seconds. A delete can end unconfirmed within that budget (`CI_DELETION_UNCONFIRMED`) while the insight is still being removed. Read the insight again instead of sending another DELETE.
+- Salesforce sometimes answers a DELETE or a later read with HTTP 404 `ENTITY_IS_DELETED` instead of `ITEM_NOT_FOUND`. The plugin counts both as gone and reports the delete confirmed once a read finds the insight absent.
 {% endcapture %}
 
 {% capture delete_plugin %}
@@ -489,10 +499,10 @@ Send `deleteMetadata` with the type and the metadata name. Check ownership and d
 </met:deleteMetadata>
 ```
 
-The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. Only a definition without a live insight is tested; for a live insight, use the Connect API tab.
+The answer is `success` `true`. Confirm with reads: `readMetadata` returns an empty record and `listMetadata` no longer shows the name. The definition of a live insight, even a draft, is refused: `success` `false` with `DEPENDENCY_EXISTS` ("referenced elsewhere in Salesforce"), and the insight and its definition stay. For a live insight, use the Connect API tab; its DELETE removes the definition too.
 {% endcapture %}
 
-{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition through a manifest. It does not remove runtime data." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live insight." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE by name, then item read and metadata checks." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one insight by name, then removes its JSON and SQL files. Uncertain results are not replayed." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="ci-delete" label="Delete" cli_state="available" cli_reason="Deletes an owned definition without a live insight through a manifest. A live insight's definition is refused." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on a definition without a live insight. A live insight's definition is refused." metadata_body=delete_metadata connect_state="available" connect_reason="Native API68 DELETE by name, then item read and metadata checks." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one insight by name, then removes its JSON and SQL files. Uncertain results are not replayed." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -522,10 +532,12 @@ The answer is `success` `true`. Confirm with reads: `readMetadata` returns an em
 - The plugin does not prove the original creator owns the insight. Check the owner before you run the delete.
 - After a write, confirm absence with reads. Do not replay DELETE.
 
-**Standard CLI:** `sf org list metadata --metadata-type MktCalcInsightObjectDef` lists the definitions, and `sf project retrieve start` saved one by its metadata name at API 68.0 (CLI 2.151.7). The standard CLI create, label update and `--post-destructive-changes` delete at API 65.0 are recorded on this page only, with no verification-database row (exit codes not retained). They act on the definition only: a deployed name is reserved without a live insight.
+**Standard CLI:** `sf org list metadata --metadata-type MktCalcInsightObjectDef` lists the definitions, and `sf project retrieve start` saved one by its metadata name at API 68.0 (CLI 2.151.7). **Standard CLI create, update and delete (API 65.0, CLI 2.151.7, one org, 2026-11-16):** On one new probe definition, `sf project deploy start` created it, then changed its label, then its SQL (one added `IS NOT NULL` condition); each deploy reported `Succeeded` with `changed` `true`, and a retrieve after each matched the file. An identical repeat reported `changed` `false`. The `--post-destructive-changes` deploy deleted it, and the list held the same three definitions as before. The Connect item read answered `ITEM_NOT_FOUND` throughout: a deployed name is reserved without a live insight.
 
-**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (label only) and `deleteMetadata` on one new probe definition each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect item read answered `ITEM_NOT_FOUND` every time: no live insight was created and no job started. After the delete the definition was gone from both views, and the list held the same three definitions as before the run. Not tested: an SQL change, and these calls on a definition that has a live insight.
+**Metadata API create, update and delete (API 68.0, one org, 2026-11-16):** `createMetadata`, `updateMetadata` (a label change in one run, an SQL change in another) and `deleteMetadata` on new probe definitions each answered `success` `true`. After each call, `readMetadata` and `listMetadata` confirmed the result, and the Connect item read answered `ITEM_NOT_FOUND` every time: no live insight was created and no job started. After the delete the definition was gone from both views, and the list held the same three definitions as before the run.
 
-**Not verified:** populated-data calculations, storage or credit cleanup, released-package qualification, cross-org deployment of retrieved files, scheduled-processing behavior, successful calculation, and the standard CLI create, update and delete of the definition (no database row).
+**Definition of a live draft insight (one org, 2026-11-16):** A draft created with the Connect POST has a `MktCalcInsightObjectDef` with the same name (without `__cio`), SQL and label, so `readMetadata`, `listMetadata` and the standard CLI retrieve read it. Writes to it are refused, and the draft stays unchanged: `updateMetadata` and a CLI deploy of a new label failed with "Cannot update a MktCalcInsightObjectDef when DefinitionStatus is in use."; `deleteMetadata` and a CLI destructive deploy failed with `DEPENDENCY_EXISTS`. A Connect PATCH of `displayName` with `"draft": true` changed the label, and the definition's `masterLabel` followed. The Connect DELETE answered HTTP 204; the next read answered `ITEM_NOT_FOUND` and the definition was gone from `listMetadata`. The draft was never published, scheduled or run.
+
+**Outside these probes:** populated-data calculations, storage or credit cleanup, released-package qualification, cross-org deployment of retrieved files, scheduled-processing behavior and successful calculation. These need a run, a schedule, a package or a second org, which this page's probes do not use.
 
 </details>

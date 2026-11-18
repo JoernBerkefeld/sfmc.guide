@@ -9,8 +9,6 @@ platforms:
   - next
 ---
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
-
 ## Plugin commands
 
 The plugin has `sf data360` commands for transform definitions, at API 68 (`auto` or
@@ -53,10 +51,14 @@ when the transform is deleted.
   the write mode to `OVERWRITE`. A retrieved file holds every value.
 - **Schedule.** The schedule is not in the file, and a deploy does not change it. Set it
   in Data Cloud.
-- **Stored form.** Salesforce stores some values differently from how they were sent
-  (upper-case values such as `WEEKLY`; a DCSQL definition without a version and with
-  empty `macros` and `sources`). Retrieve after deploying a hand-written file to get the
-  stored form; a file that differs only in that form is updated again on each deploy.
+- **Enum letter case.** A value of `type`, `fullRunFrequency`, `category` or `writeMode`
+  that differs from Salesforce's stored spelling only in letter case (for example `Daily`
+  for `DAILY`) counts as unchanged on deploy. The plugin sends the value as written;
+  retrieve writes Salesforce's spelling. The definition type is the exception: it must be
+  spelled `DCSQL`, and Salesforce refuses `DcSql` with `JSON_PARSER_ERROR`.
+- **Stored form.** Salesforce stores a DCSQL definition without a version and with empty
+  `macros` and `sources`. Retrieve after deploying a hand-written file to get the stored
+  form; a file that differs only in that form is updated again on each deploy.
 
 ## Deploy and delete
 
@@ -79,7 +81,11 @@ when the transform is deleted.
   name several transforms, each deleted on its own. Each name is resolved to its record
   ID through the complete transform list, ignoring letter case: no match reports
   `unchanged`, two or more matches are refused with `TRANSFORM_TARGET_NOT_RESOLVED`.
-  The command sends one DELETE and never retries, then reads the transform list for up
+  A transform whose status is still `PROCESSING` is refused with
+  `TRANSFORM_DELETE_PROCESSING` and nothing is sent; `--preview` reports the same. In a
+  live test a new transform stayed `PROCESSING` for about 2.5 minutes after its create;
+  once it was `ACTIVE`, the same delete went through. Other states are left to
+  Salesforce. The command sends one DELETE and never retries, then reads the transform list for up
   to 60 seconds until it no longer shows the transform. A delete whose absence cannot be
   confirmed ends nonzero as unconfirmed; do not replay it. DLOs, runs and data are not
   touched unless the same command selects them.

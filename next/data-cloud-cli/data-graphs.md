@@ -13,12 +13,10 @@ crud:
   read: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "partial" } }
   create: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "yes" } }
   update: { status: "partial", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "partial" } }
-  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "unknown", api: "partial", plugin: "partial" } }
+  delete: { status: "partial", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "partial" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
-
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/). Start with its setup, placeholders and safety guidance before running these examples.
 
 This badge does not verify untested writes or general CRUD support.
 
@@ -48,7 +46,7 @@ The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin
 sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
 ```
 
-The command saves `ExampleGraph.native-dataGraph.json` under `data360/dataGraphs` in your source package. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed. A draft graph (saved but never built) is saved as-is too (`DATA_GRAPH_DRAFT`): Salesforce does not let the API update, build or delete a draft.
+The command saves `./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json`. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed. A draft graph (saved but never built) is saved as-is too (`DATA_GRAPH_DRAFT`): Salesforce does not let the API update or build a draft. A delete removes it (see Delete).
 
 A Real-Time Data Graph (`type` `REALTIME`) uses the same file. It also holds the settings of the UI page "Real-Time Consumption Limits" (`isRealTimeToggleEnabled`, `processIngestionApi`, `processSalesforceCrm`, `isRecordCachingDisabled`, `sessionEnd`, `sessionEndTimeUnit`, `cacheDurationInDays`, `maxRecordsCached`), sent as written on create and update with `--allow-processing`; Salesforce decides.
 
@@ -89,11 +87,11 @@ For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-re
 Creates the graph from the native file retrieved above. Confirm first that the name is absent in the target and the root exists there. Preview writes nothing.
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing
 ```
 
-Creation starts processing automatically and uses org resources. Get approval first. The command then requires `--allow-processing`.
+Creation starts processing automatically and uses org resources. Get approval first. The command then requires `--allow-processing`. Without it the create stops with `PROCESSING_ACKNOWLEDGEMENT_REQUIRED`. A create of a graph whose same-named predecessor is still being deleted (Salesforce still lists it) stops with `DATA_GRAPH_PENDING`; wait and run it again. In both cases nothing is written, and the run ends `DEPLOY_EXECUTION_BLOCKED`.
 
 Create sends the file as written: the root, related objects with their joins, field types and refresh schedule. Salesforce adjusts what it stores. It adds key-qualifier fields to related objects, and a unified root reads back with node type `derived`. Retrieve the graph after creating it to get the stored form.
 
@@ -161,7 +159,7 @@ The metadata route then reports `Inprogress` for about five minutes. A three-fie
 Do not send the POST again while the first one is building. If the outcome is unclear, read the graph by name first.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-create" label="Create" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip, whatever folder or suffix is used." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, createMetadata is refused with REQUIRED_FIELD_MISSING (DeveloperName, MasterLabel), while the DataGraph type describes only fullName." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
+{% include operation-tabs.html id="graphs-create" label="Create" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip, whatever folder or suffix is used." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, createMetadata is refused with REQUIRED_FIELD_MISSING (DeveloperName, MasterLabel), and the type cannot carry them: a developerName, DeveloperName or masterLabel element is rejected as invalid in type DataGraph." connect_state="available" connect_reason="Native API68 POST of any graph shape. Processing starts automatically." connect_body=create_connect plugin_state="available" plugin_reason="Creates a native graph after preview and absence checks; processing starts automatically." plugin_body=create_plugin %}
 
 ## Update
 
@@ -172,14 +170,14 @@ Retrieve the graph in the default data space first. Then edit the native file, f
 
 ```sh
 sf data360 retrieve -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview --wait-timeout 1800
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing --wait-timeout 1800
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview --wait-timeout 1800
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing --wait-timeout 1800
 ```
 
 After the update is confirmed, run the same file without `--allow-processing`:
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/force-app/main/default/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
 ```
 
 The plugin sends one PUT, and Salesforce decides what changes. Label, description, refresh schedule, incremental refresh, added fields, related objects, joins and field settings go as written. The plugin refuses changes to the graph name, data space, root object, and a node's object, path or type.
@@ -250,7 +248,7 @@ Use the generated names your read returns; the ones above only show their form. 
 - PATCH is refused with HTTP 405 on the tested routes.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-update" label="Update" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, the DataGraph type carries only fullName, so updateMetadata has no setting to send. It reported success for a graph that does not exist and changed nothing." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
+{% include operation-tabs.html id="graphs-update" label="Update" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: a source-format deploy stops with a RegistryError, and a metadata-format deploy at API 68.0 is refused because the server finds no DataGraph file in the zip." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, the DataGraph type carries only fullName, so updateMetadata has no setting to send. On an existing test graph it reported success and changed nothing, and a masterLabel element is rejected as invalid in type DataGraph." connect_state="available" connect_reason="Native API68 PUT of the full definition; needs a settled graph." connect_body=update_connect plugin_state="available" plugin_reason="Updates a native graph after preview and readiness checks; processing may start." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -264,7 +262,9 @@ sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0
 
 The delete takes no confirmation flag. The graph's current definition is read from the org by its name first, also by the preview; a graph the org does not have reports `unchanged`. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
 
-The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade. After a confirmed deletion the plugin removes the graph's canonical file, `data360/dataGraphs/ExampleGraph.native-dataGraph.json` under the default package directory of `sfdx-project.json` (`force-app/main/default` without one), when it is a regular file; add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), nor for an unchanged, blocked, failed, rejected or unconfirmed delete. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. A live delete confirmed in 66 seconds and removed the local file (verification DB: `graph-native-create-delete-settlement`). Preview is read-only.
+A draft graph saved as-is (`DATA_GRAPH_DRAFT`) can be deleted too: by name with `-m data-graph:Name`, or from its file, by deleting the as-is file and running `sf data360 delete --changed-since <ref> --confirm-delete`. A draft has no id or created date, so those two checks are skipped. The default data space and the empty dependency and related-segment lists are still required. A live draft deleted this way was `deleted` / `confirmed-deleted` and was then gone from the graph read, the graph list and the metadata list.
+
+The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade. After a confirmed deletion the plugin removes the graph's canonical file, `data360/dataGraphs/ExampleGraph.native-dataGraph.json` in the current project, when it is a regular file; add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), nor for an unchanged, blocked, failed, rejected or unconfirmed delete. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. A live delete confirmed in 66 seconds and removed the local file (verification DB: `graph-native-create-delete-settlement`). Preview is read-only.
 
 The plugin does not read the graph back after the delete, because the by-name metadata read is not reliable at that point (see Known failures).
 
@@ -285,13 +285,13 @@ sf api request rest '/services/data/v68.0/ssot/data-graphs/CustomerGraph' --targ
 A 2xx answer means the graph is deleted. In live tests the item read returned "Data Graph not found" at once, and a SOQL query on `DataGraph` for the name returned zero rows:
 
 ```sh
-sf data query --query "SELECT Id FROM DataGraph WHERE DeveloperName = 'CustomerGraph'" --target-org TARGET_ALIAS
+sf data query --query "SELECT Id FROM DataGraph WHERE DataGraphApiName = 'CustomerGraph'" --target-org TARGET_ALIAS
 ```
 
 Do not check deletion with the metadata route. After a delete it keeps returning a stale copy of the graph for about 11 to 12 minutes, alternating with not found, and the copy can carry an older description. Do not send the DELETE again because of that stale copy.
 
 {% endcapture %}
-{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="unknown" cli_reason="Salesforce CLI 2.151.7: sf project delete source stops with a RegistryError. A destructive metadata-format deploy at API 68.0 passed with zero components for a graph that does not exist; deleting an existing graph this way was not tried." split_api=true metadata_state="unknown" metadata_reason="At API 68.0, deleteMetadata for a graph that does not exist is refused as a standard component that cannot be deleted. Deleting an existing graph was not tried." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph selected by name, after a preview." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="graphs-delete" label="Delete" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7: sf project delete source stops with a RegistryError. A destructive metadata-format deploy at API 68.0 naming an existing test graph reported success with zero components, and the graph was still there afterwards." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, deleteMetadata on an existing test graph is refused with FIELD_INTEGRITY_EXCEPTION: the graph is called standard and cannot be deleted." connect_state="available" connect_reason="Native API68 DELETE by name, checked by item read and SOQL." connect_body=delete_connect plugin_state="available" plugin_reason="Deletes one native graph selected by name, after a preview." plugin_body=delete_plugin %}
 
 Never delete the shared `DataGraphStateTable__dlm` or the source unified object as guessed cleanup. Through the API route, local request files and retrieved files remain; the plugin removes only the graph file it was given.
 
@@ -314,6 +314,7 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 **Create:**
 
 - Native deploy creates the graph only after independent absence and root checks, with `--allow-processing`.
+- Blocked creates (live, 2026-11-16): a create without `--allow-processing` stopped before any write with `PROCESSING_ACKNOWLEDGEMENT_REQUIRED`. A graph created (about 300 s to ready), deleted with `sf data360 delete` and deployed again at once stopped with `DATA_GRAPH_PENDING`: the read by name already answered "Data Graph not found", while the metadata read or the graph list still held it. Both runs ended `DEPLOY_EXECUTION_BLOCKED`, and the graph read by name confirmed that nothing was created.
 - Creation materializes supporting resources. What Salesforce stores when the file omits the refresh schedule has no verification entry; name `fullRefreshConfig` and `incrementalRefreshConfig` explicitly and read the graph after creating it.
 - A three-field graph took about 7 minutes to build. A graph with one related object took about 17 minutes in a live test. A graph on a unified Identity Resolution root took about 16 minutes.
 - During the build the graph read `creating` with an empty `valuesDmoName`, then `creating` with the generated names set, then `processing` for about 9 seconds, then `ready`. The day-zero names appeared shortly after `ready`, and metadata stayed `Inprogress` for about 5 minutes.
@@ -353,15 +354,24 @@ Never delete the shared `DataGraphStateTable__dlm` or the source unified object 
 - `createMetadata` with `fullName` `default.CliW4Graph` or `CliW4GraphB` was refused with `REQUIRED_FIELD_MISSING` "Required fields are missing: [DeveloperName, MasterLabel]". The type has no such fields to send. Nothing was created: the list was unchanged and the Connect read by name answered "Data Graph not found".
 - `updateMetadata` on a graph that does not exist returned `success: true` and changed nothing. With only `fullName` in the type, an update has no setting to carry.
 - `deleteMetadata` on a graph that does not exist was refused with `FIELD_INTEGRITY_EXCEPTION` "… is standard and cannot be deleted".
-- Updating or deleting an existing graph through the Metadata API was not tried: only new `Cli…` test objects may be written, and a test graph can only be made through a create that starts a build.
+- `createMetadata` cannot be given the missing fields: a `developerName`, `DeveloperName` or `masterLabel` element is rejected before any write with "Element … invalid at this location in type DataGraph". So the Metadata API cannot create a graph.
 
-**Salesforce CLI (CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `DataGraph`, while `sf org list metadata --metadata-type DataGraph` lists the graph names. `sf project retrieve start --metadata DataGraph:<name>`, `sf project deploy start --metadata DataGraph:CliW4Graph` and `sf project delete source --metadata DataGraph:CliW4GraphD` all stop with `RegistryError` "Missing metadata type definition in registry for id 'DataGraph'" (exit code 1), and so does a retrieve from a `package.xml` manifest. A metadata-format deploy (`--metadata-dir`, `--dry-run`) naming `DataGraph` `CliW4Graph` was refused with "An object 'CliW4Graph' of type DataGraph was named in package.xml, but was not found in zipped directory" for every folder and suffix tried (`dataGraphs/*.dataGraph`, `dataGraph/`, `datagraphs/*.datagraph`, `*.dataGraph-meta.xml`, `dataGraphDefinitions/`): without a `describeMetadata` entry the server has no folder for the type. A destructive metadata-format deploy naming a graph that does not exist passed with zero components. The standard CLI therefore cannot create or update a graph; deleting an existing graph with a destructive deploy was not tried.
+On an existing test graph, `CliB4Graph`, built through the native API 68 create (2026-11-16; listed by `listMetadata` as `default.CliB4Graph`):
+
+- `readMetadata` returned only the name.
+- `updateMetadata` with only `fullName` returned `success: true`. The native read and the `DataGraph` record (label, description, `LastModifiedDate`) were unchanged. An update that also carries `masterLabel` or `description` is rejected as an invalid element.
+- `deleteMetadata` was refused with `FIELD_INTEGRITY_EXCEPTION` "The DataGraph called 'default.CliB4Graph' is standard and cannot be deleted". The graph stayed `ready`.
+- The test graph was then deleted through the native API 68 DELETE. The read by name answered "Data Graph not found", and a SOQL query on `DataGraph` returned zero rows.
+
+**Salesforce CLI (CLI 2.151.7, API 68.0):** `sf org list metadata-types` does not list `DataGraph`, while `sf org list metadata --metadata-type DataGraph` lists the graph names. `sf project retrieve start --metadata DataGraph:<name>`, `sf project deploy start --metadata DataGraph:CliW4Graph` and `sf project delete source --metadata DataGraph:CliW4GraphD` all stop with `RegistryError` "Missing metadata type definition in registry for id 'DataGraph'" (exit code 1), and so does a retrieve from a `package.xml` manifest. A metadata-format deploy (`--metadata-dir`, `--dry-run`) naming `DataGraph` `CliW4Graph` was refused with "An object 'CliW4Graph' of type DataGraph was named in package.xml, but was not found in zipped directory" for every folder and suffix tried (`dataGraphs/*.dataGraph`, `dataGraph/`, `datagraphs/*.datagraph`, `*.dataGraph-meta.xml`, `dataGraphDefinitions/`): without a `describeMetadata` entry the server has no folder for the type. A destructive metadata-format deploy naming a graph that does not exist passed with zero components. On the existing test graph `CliB4Graph`, the same update deploy (member `default.CliB4Graph`) was refused with "not found in zipped directory". A destructive deploy naming it, as `default.CliB4Graph` or `CliB4Graph`, passed with zero components as a check-only run. Run for real, it reported `Succeeded` with zero components, and the graph was still `ready` afterwards. The standard CLI therefore cannot create, update or delete a graph.
 
 **Not verified:** nested graphs; exhaustive external consumers; removal of generated objects, mappings, transforms or internal state; physical storage and credits; successful computation; general cross-org lifecycle; arbitrary edits; portable creation; live installed cross-org qualification.
 
 **Error codes:**
 
 - `DATA_GRAPH_CREATE_UNCONFIRMED`: plugin create could not confirm the graph; the graph may exist.
+- `PROCESSING_ACKNOWLEDGEMENT_REQUIRED`: a create or update without `--allow-processing`; nothing written, run ends `DEPLOY_EXECUTION_BLOCKED`.
+- `DATA_GRAPH_PENDING`: a graph of the same name is still being deleted or built; nothing written, run ends `DEPLOY_EXECUTION_BLOCKED`.
 - `DATA_GRAPH_ROOT_NOT_FOUND`: preview found no root object.
 - `DATA_GRAPH_OWNER_NOT_FOUND`: preview found no Identity Resolution ruleset that owns the unified root.
 - `DATA_GRAPH_OWNER_NOT_PUBLISHED`: the owning ruleset is not published.

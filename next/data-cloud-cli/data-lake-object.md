@@ -18,8 +18,6 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
-
 This badge does not verify untested writes or general CRUD support.
 
 <a id="data-lake-object-dlo-customobject-dll"></a>
@@ -31,6 +29,8 @@ This badge does not verify untested writes or general CRUD support.
 {% include crud-summary.html %}
 
 **Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every DLO. The plugin selects a DLO with `-m dlo:Name__dll`. It needs no `--source-dir`, and its commands accept an optional `--dataspace NAME` (alias `--data-space`); a non-default data space is offline-tested only.
+
+**Enum letter case:** An enum value in `category` or a field's `dataType` that differs from Salesforce's stored spelling only in letter case counts as unchanged on deploy. The plugin sends the value as written; retrieve writes Salesforce's spelling.
 
 ## Read
 
@@ -336,7 +336,9 @@ The result reports `outcome: "retrieved"`, or `"unchanged"` when the local file 
 <details markdown="1">
 <summary>What the saved file leaves out</summary>
 
-The file holds only the authored fields. Salesforce generated fields are left out: `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`, `cdp_sys_PartitionDate__c` on Engagement DLOs, and the key qualifier of the primary key, for example `KQ_Id__c`. A key qualifier combines an ID with its source context to avoid collisions. The field named by `eventDateTimeFieldName` always stays, and so does the primary key `Id__c`. Native CREATE generates the left-out fields again, and deploy keeps them from the org. Leaving them out is therefore not field deletion or proof of mapping auto-pair behavior. A retrieved file deploys back `unchanged`. The raw API response remains complete. Custom qualifiers and `keyQualifierName` references stay as read. DLO Metadata marks the qualifier with `definitionCreationType=System` and `usageTag=KEY_QUALIFIER`.
+The file holds only the authored fields. Salesforce generated fields are left out: `cdp_sys_SourceVersion__c`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`, `cdp_sys_PartitionDate__c` on Engagement DLOs, and the key qualifier `KQ_<Name>__c` that Salesforce can add for any field `<Name>__c` of the DLO: `KQ_Id__c` for the primary key, or `KQ_RefId__c` once a relationship starts at `RefId__c`. A key qualifier combines an ID with its source context to avoid collisions. The field named by `eventDateTimeFieldName` always stays, and so does the primary key `Id__c`. Native CREATE generates the left-out fields again, and deploy keeps them from the org. Leaving them out is therefore not field deletion or proof of mapping auto-pair behavior. A retrieved file deploys back `unchanged`. The raw API response remains complete. Custom qualifiers and `keyQualifierName` references stay as read. DLO Metadata marks the qualifier with `definitionCreationType=System` and `usageTag=KEY_QUALIFIER`.
+
+A DLO with a record-modified field keeps it in the file as `spec.recordModifiedFieldName`, for example `SystemModstamp__c` on a CRM stream DLO. `capabilities` is left out: Salesforce owns it, and every DLO read so far returned it empty.
 
 </details>
 {% endcapture %}
@@ -393,6 +395,8 @@ The file's `spec.category` is sent as written and Salesforce decides. Its API li
 ```
 
 Salesforce adds the DateTime field `cdp_sys_PartitionDate__c` to an Engagement DLO. It counts as generated, is never sent and may be left out of the file.
+
+`spec.recordModifiedFieldName` is optional. It names one listed DateTime field that tells Salesforce when a record last changed. The plugin sends it without the `__c` suffix, and Salesforce reads it back with the suffix. `capabilities` cannot be set: Salesforce answers HTTP 403 to a non-empty value and accepts only `{}`, so the file has no such key.
 {% endcapture %}
 
 {% capture create_connect %}
@@ -430,7 +434,7 @@ Success is HTTP 201 with status `PROCESSING`. Read the object by name until it s
 {% capture create_cli %}
 Deploys the object with only the fields you author. Salesforce adds the key qualifier `KQ_Id__c`. Leave out every field that Salesforce generates (`KQ_…`, `cdp_sys_…`, `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`): a deploy that restates them fails.
 
-**The result is a disabled definition only.** It reads back with `isEnabled` `false`, and no Data Lake Object instance exists for it: the Connect API answers HTTP 400 `INVALID_INPUT` for its name, and the plugin cannot see it. To get a DLO that the Connect API, the plugin and mappings can use, create it on the Connect API or plugin tab.
+**The result is a disabled definition only.** It reads back with `isEnabled` `false`, and no Data Lake Object instance exists for it: the Connect API answers HTTP 400 `INVALID_INPUT` for its name, and the plugin cannot see it. Such a definition cannot feed a mapping: the Connect API mapping create answers `ITEM_NOT_FOUND` ("DLO not found"), and `createMetadata` of an `ObjectSourceTargetMap` fails with `UNKNOWN_EXCEPTION`. A Connect API create under the same name is refused ("A Data Lake Object with the given name already exists"). To get a DLO that the Connect API, the plugin and mappings can use, create it on the Connect API or plugin tab under a name that has no definition.
 
 Save the object file as `force-app/main/default/objects/CustomerSource__dll/CustomerSource__dll.object-meta.xml`:
 
@@ -546,6 +550,8 @@ sf data360 deploy -m dlo:CustomerSource__dll -o TARGET_ALIAS
 
 After a label change, the result reports `outcome: "updated"` and `mutation: "confirmed-updated"`. Running the command again with no change reports `outcome: "unchanged"`.
 
+`spec.recordModifiedFieldName` can be added to a DLO that has none, also in the same deploy that adds the DateTime field it names. Once it is set, Salesforce refuses to change it: the deploy sends the PATCH and reports `DLO_HTTP_ERROR` with HTTP 400 "Record modified field already present".
+
 **Refused before anything is written:**
 
 - Changing the category (`UNSUPPORTED_DLO_CATEGORY_CHANGE`) or the event field (`UNSUPPORTED_DLO_EVENT_FIELD_CHANGE`).
@@ -578,11 +584,13 @@ Replace `OWNED_DLO_ID` with the ID of an owned test object, from a GET request. 
 
 - A PATCH that restates an existing field with a new label returns HTTP 400 `INVALID_INPUT`: the fields already exist and only new fields can be added.
 - A PATCH that names `category` or `eventDateTimeFieldName` returns HTTP 400 `JSON_PARSER_ERROR` (unrecognized field). Neither can change after creation.
+- A PATCH can set `recordModifiedFieldName` on a DLO that has none. Once it is set, any PATCH that names it returns HTTP 400 `INVALID_INPUT` "Record modified field already present", even with the same value.
+- A non-empty `capabilities` object returns HTTP 403 `INVALID_INPUT`, an unknown key in it HTTP 400 `JSON_PARSER_ERROR`. Only `{}` is accepted.
 - Removing a field is not possible through these routes. The REST field DELETE (`/ssot/data-lake-objects/NAME/fields/FIELD`) works only for external DLOs and answers HTTP 400 otherwise. A Metadata API destructive change for a `CustomField` is refused with "setup object in use".
 {% endcapture %}
 
 {% capture update_cli %}
-Changes the label and adds a field on an existing DLO, including an active DLO that the Connect API or the plugin created. Retrieve the object first so the project holds every field, edit the object file's `label`, add a field file, then deploy:
+Changes the label and adds a field on an existing DLO, including an active DLO that the Connect API or the plugin created, and a DLO that a stream feeds. Retrieve the object first so the project holds every field, edit the object file's `label`, add a field file, then deploy:
 
 ```sh
 sf project deploy start --metadata CustomObject:CustomerSource__dll --target-org TARGET_ALIAS --api-version 68.0 --wait 10
@@ -590,7 +598,7 @@ sf project deploy start --metadata CustomObject:CustomerSource__dll --target-org
 
 The deploy reports the object as `Changed`, the new field as `Created` and every retrieved field, generated ones included, as `Unchanged`. The Connect API GET then shows the new label and the added field, and the DLO stays `ACTIVE`.
 
-Existing fields cannot change or be removed this way: setting the primary-key order on an existing field fails, and a destructive change that names one DLO field is refused with "setup object in use".
+Existing fields cannot change or be removed this way: setting the primary-key order on an existing field fails, and a destructive change that names one DLO field is refused with "setup object in use". The refusal was observed on a deployed definition, on an active standalone DLO and on a stream-owned DLO, for unmapped fields too.
 {% endcapture %}
 
 {% capture update_metadata %}
@@ -619,10 +627,14 @@ Existing fields cannot change or be removed this way: setting the primary-key or
 </soapenv:Envelope>
 ```
 
-To add a field, send `createMetadata` with one `CustomField` record whose `fullName` is `CustomerSource__dll.Extra__c` and whose attributes match `Note__c` on the Create tab. A new field listed inside an `updateMetadata` object record is refused with `INVALID_CROSS_REFERENCE_KEY` (no `CustomField` of that name found). Both calls worked on an active DLO created through the Connect API: its GET showed the new label and field and stayed `ACTIVE`.
+To add a field, send `createMetadata` with one `CustomField` record whose `fullName` is `CustomerSource__dll.Extra__c` and whose attributes match `Note__c` on the Create tab. A new field listed inside an `updateMetadata` object record is refused with `INVALID_CROSS_REFERENCE_KEY` (no `CustomField` of that name found). Both calls worked on an active DLO created through the Connect API and on a DLO that a stream feeds: the GET showed the new label and field and stayed `ACTIVE`, and the stream stayed `ACTIVE` with its mappings unchanged.
+
+**Known failures:**
+
+- `deleteMetadata` of a `CustomField` is refused with `DELETE_FAILED` "setup object in use", on a definition, an active standalone DLO and a stream-owned DLO alike.
 {% endcapture %}
 
-{% include operation-tabs.html id="dlo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and a text field addition, on a deployed definition and on an active DLO (see Evidence)." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field, on a definition and on an active DLO (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." plugin_body=update_plugin %}
+{% include operation-tabs.html id="dlo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and a text field addition, on a deployed definition, an active DLO and a stream-owned DLO. Field removal is refused (see Evidence)." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field, on a definition, an active DLO and a stream-owned DLO. Field removal is refused (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested at API 68 for a label change and a text field addition (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -735,7 +747,7 @@ For an active DLO the result is `success` `false` with status code `DEPENDENCY_E
 
 **Why a native API plugin workflow:** Standard `sf project retrieve start` successfully retrieved this DLO definition at requested API versions 65–68; the saved XML was identical. The reason to choose a native API workflow is **not** missing Metadata retrieval support: replaying a complete retrieved definition encountered the primary-key and key-qualifier failures described below. Separate API 68 experiments completed a standalone DLO lifecycle, with the service creating the primary key, qualifier and system fields. Neither result establishes unrestricted Metadata support or ingestion readiness.
 
-The plugin still delegates authenticated requests to `sf api request rest`, so standard Salesforce CLI authentication remains in use. Its benefit beyond a redundant command wrapper is a manifest-free workflow with canonical `data360/dlo/<FullApiName>__dll.dlo-meta.json`, portable JSON without the source record ID, separate save/create/update field policies, and target-name lookup selecting PATCH for an existing target or POST only after confirmed absence. This avoids handcrafting each API request or blindly replaying generated response fields. Plugin command acceptance is distinct from the separate API experiments below.
+The plugin sends its requests over one in-process connection that uses the Salesforce CLI's stored authentication; it does not start a CLI process per request. Its benefit beyond a redundant command wrapper is a manifest-free workflow with canonical `data360/dlo/<FullApiName>__dll.dlo-meta.json`, portable JSON without the source record ID, separate save/create/update field policies, and target-name lookup selecting PATCH for an existing target or POST only after confirmed absence. This avoids handcrafting each API request or blindly replaying generated response fields. Plugin command acceptance is distinct from the separate API experiments below.
 
 **Plugin API versions:** The raw native DLO routes (POST, GET, PATCH and DELETE) worked from API 61.0 through 68.0 in the tested org. At 60.0 all four answered `NOT_FOUND`, although the reference documents them from 60.0. Plugin deploy and delete take the default (`auto`, 68.0) or an explicit numeric pin from 61.0; an exact `dlo:` retrieve always reads at 68.0. Live plugin runs used 68.0, so other numeric pins are offline-tested only.
 
@@ -910,16 +922,32 @@ says why.
 
 A file may omit the fields Salesforce generated: `cdp_sys_SourceVersion__c`,
 `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`,
-`cdp_sys_PartitionDate__c` on Engagement DLOs and the key
-qualifier of the primary key (`KQ_<Key>__c`, for example `KQ_Id__c`). They stay as
-they are, so a hand-written file with only the authored fields deploys onto its
-existing DLO. Any other target field that the file omits is refused
+`cdp_sys_PartitionDate__c` on Engagement DLOs and a key qualifier
+`KQ_<Name>__c` whenever `<Name>__c` is another field of the DLO (for example `KQ_Id__c`
+for the primary key, or `KQ_RefId__c`, which Salesforce adds when a relationship starts
+at the non-key field `RefId__c`). They stay as they are and do not count as changes, so
+a hand-written file with only the authored fields deploys onto its existing DLO. Any other target field that the file omits is refused
 (`UNSUPPORTED_DLO_FIELD_CHANGE`). A listed field is compared on the keys the file
 states: keys that only the org's copy carries are ignored, and a stated key that
 differs is refused. Observed at API 68 through the plugin in one org: a hand-written
 DLO file deployed again reported `unchanged`, and with one field added it reported
 `updated`; on an Engagement DLO a field was added and a changed event field was
 refused with nothing written.
+
+**Record-modified field and capabilities:** `spec.recordModifiedFieldName` is kept
+through retrieve, create and update. Create sends it without `__c`; update sends it
+only when it differs from the org, and Salesforce decides. At API 68 a raw POST with it
+created the DLO and a PATCH set it on a DLO that had none; once set, every PATCH naming
+it (another field, the same name with or without `__c`) was answered HTTP 400
+"Record modified field already present". `capabilities` is not authorable by a customer
+user: non-empty values were answered HTTP 403, unknown keys HTTP 400
+`JSON_PARSER_ERROR`, and only `{}` was accepted; all 98 DLOs of the test org read
+`{}`. The plugin leaves it out of the file. Observed at API 68 through the plugin in
+one org, on two custom DLOs with a relationship between their DMOs: create from
+hand-written files with the setting, a repeat deploy `unchanged`, a retrieve that saved
+the setting and left out `KQ_RefId__c`, a repeat deploy `unchanged`, a changed setting
+reported as `DLO_HTTP_ERROR` with Salesforce's HTTP 400, and the setting added on update
+together with its field (`confirmed-updated`, then `unchanged`).
 
 No schema removal or ingestion is qualified.
 
@@ -942,6 +970,9 @@ Only this standalone definition/provisioning lifecycle was verified at **API 68*
 - **Create.** A deploy and a `createMetadata` call, each with the object plus the authored `Id__c` (`primaryIndexOrder` `1`) and `Note__c`, succeeded. `readMetadata` and a retrieve returned both fields plus the generated `KQ_Id__c`, with `isEnabled` `false` although `true` was sent. No Data Lake Object instance was created: the Connect GET by name answered HTTP 400 `INVALID_INPUT`. The earlier create failures restated the generated fields; leaving them out is what works.
 - **Update.** On those definitions a deploy changed the label and added `Extra__c`; `updateMetadata` changed the label, and `createMetadata` of one `CustomField` added the field. A new field listed only inside an `updateMetadata` object record was refused with `INVALID_CROSS_REFERENCE_KEY`. On an active DLO created through the Connect API, `updateMetadata` (label), `createMetadata` (field) and then a deploy of the retrieved project (label plus a second field, every other field `Unchanged`) all persisted: the Connect GET showed the new label, both new fields and `ACTIVE`.
 - **Delete.** A destructive deploy and `deleteMetadata` each deleted a definition that a deploy or `createMetadata` created; `readMetadata` then returned no record. On the active DLO, whose dependency list was empty, both were refused with "referenced elsewhere" (`DEPENDENCY_EXISTS` on `deleteMetadata`), naming its own Data Lake Object instance. The Connect DELETE then removed it.
+- **Definitions and mappings (second run, 2026-11-16).** A deploy created a definition with `Id__c` and `Note__c`; `createMetadata` saves the same disabled definition (above). A Connect API mapping from it to a Connect-created DMO answered `ITEM_NOT_FOUND` ("DLO not found for the given developer name"), `createMetadata` of an `ObjectSourceTargetMap` from it failed with `UNKNOWN_EXCEPTION`, and a Connect API DLO create under the same name answered HTTP 400 `INVALID_INPUT` ("already exists"). Nothing was created. The definition was then deleted with `deleteMetadata`.
+- **Stream-owned DLO (same run).** On the DLO of an Ingestion API stream created through the Connect API, `updateMetadata` changed the label and `createMetadata` of one `CustomField` added a field. A deploy of the retrieved object then changed the label again and added a second field, with every other field `Unchanged`. The Connect GET showed each label and field with the DLO `ACTIVE`, and the stream stayed `ACTIVE` with the same six mappings.
+- **Field removal (same run).** A destructive deploy naming one `CustomField` each on a deployed definition, an active standalone DLO and the stream-owned DLO was refused with "setup object in use" for all three (unmapped fields). `deleteMetadata` of a `CustomField` on each of the three kinds was refused with `DELETE_FAILED` "setup object in use".
 
 **Metadata definition delete refused:** A Metadata definition delete was refused. A DLO definition can be blocked by its **own still-existing Data Lake Object instance**, even when no DMO dependencies or streams are listed:
 
@@ -957,10 +988,10 @@ That is a refusal, not a successful delete. Check the actual state after a failu
 
 **Portability:** Tested at API 68 from the plugin's source tree against two orgs, on empty, unmapped custom DLOs in the default data space: retrieval, an unchanged deploy into the second org, and deletion. Files retrieved from a source org and from a second org after an unchanged deploy were byte-identical in that run.
 
-**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, further deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". At API 68 a deploy also changed the label of, and added a field to, an active DLO that the Connect API created; see the CLI and Metadata API writes above.
+**Standard CLI:** `sf org list metadata --metadata-type CustomObject` lists no DLOs, so take the name from a mapping file or the API; `sf project retrieve start --metadata CustomObject:<name>__dll` then saved the object and its fields at API 68.0 (CLI 2.151.7). On a test DLO deployed as an object without fields, further deploys added fields, but setting the primary-key order on an existing field failed. A `destructiveChanges.xml` deploy naming one DLO field was refused with "setup object in use". At API 68 a deploy also changed the label of, and added a field to, an active DLO that the Connect API created and a stream-owned DLO; see the CLI and Metadata API writes above.
 
 **Plugin error codes:** `DLO_DEPENDENCY_EXISTS`, `DLO_DEPENDENCY_PENDING` and `DLO_DEPENDENCIES_UNCONFIRMED` concern the dependency check before a delete (the first two were observed live at API 68, the last is offline-tested). `DLO_DELETE_NOT_CONFIRMED` and `DLO_DELETE_UNCONFIRMED` report a DELETE whose result could not be confirmed; inspect the object before another attempt. `DLO_REQUEST_UNCONFIRMED` and `DLO_HTTP_ERROR` report a write whose outcome is unknown or a Salesforce rejection. `DLO_TARGET_IDENTITY_MISMATCH` and `DLO_DATASPACE_MISMATCH` stop a command whose target does not match the file. The `UNSUPPORTED_DLO_*` codes (category, event field, field change, field addition, selection, data space) are refusals before any write. `LOCAL_FILE_REMOVAL_FAILED` reports a local file that could not be removed after a confirmed delete. Everything except the live observations named above is offline-tested.
 
-**Not verified:** ingestion and populated data; whether a definition created by deploy or `createMetadata` can later get a Data Lake Object instance or feed a mapping; CLI and Metadata API writes on a stream-owned DLO; schema removal; nondefault data spaces; plugin numeric API pins other than 68 (offline-tested only); cascade behavior beyond the dependent selections shown in the Delete chapter; raw DLO routes below API 61; installed released packages.
+**Not verified:** ingestion and populated data; nondefault data spaces; plugin numeric API pins other than 68 (offline-tested only); cascade behavior beyond the dependent selections shown in the Delete chapter; raw DLO routes below API 61; installed released packages.
 
 </details>

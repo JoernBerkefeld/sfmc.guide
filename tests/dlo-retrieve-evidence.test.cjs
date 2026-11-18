@@ -30,6 +30,43 @@ const hashes = {
     '34c7d4f6c9d638dab65507eeaa5c69f3aedbd56ffde3af53597fb456ef2f7fa5',
 };
 
+test('DLO and transform pages describe transform outputs and the file as Salesforce returns it', () => {
+  const transform = fs.readFileSync(path.join(directory, 'data-transforms.md'), 'utf8');
+  const dloPage = dlo.replaceAll(/\s+/g, ' ');
+  for (const text of [
+    'without a DataStream for that output',
+    'Salesforce refuses an STL output DLO that does not exist',
+    'which creates the output DLOs it declares',
+  ])
+    assert.ok(dloPage.includes(text), text);
+  const page = transform.replaceAll(/\s+/g, ' ');
+  for (const text of [
+    'The file holds the transform as Salesforce returns it',
+    'Everything else is sent as written and Salesforce decides',
+    'An update replaces the whole transform',
+    'The schedule is not in the file, and a deploy does not change it',
+    'No match creates the transform with one POST',
+    'refuse system transforms and transforms with a namespace',
+  ])
+    assert.ok(page.includes(text), text);
+  assert.ok(dlo.replaceAll(/\s+/g, ' ').includes('offline-tested'));
+  assert.ok(overview.includes('[Data Transforms](/next/data-cloud-cli/data-transforms/)'));
+  assert.doesNotMatch(transform, /^crud:|plugin_state="available"/m);
+  const index = JSON.parse(fs.readFileSync(path.join(__dirname, '../site-index.json'), 'utf8'));
+  assert.equal(
+    index.filter((entry) => entry.url === '/next/data-cloud-cli/data-transforms/').length,
+    1,
+  );
+  assert.ok(
+    fs.existsSync(path.join(__dirname, '../_site/next/data-cloud-cli/data-transforms/index.html')),
+  );
+  const overviewHtml = fs.readFileSync(
+    path.join(__dirname, '../_site/next/data-cloud-cli/index.html'),
+    'utf8',
+  );
+  assert.match(overviewHtml, /href="\/next\/data-cloud-cli\/data-transforms\/"/);
+});
+
 test('DLO reader samples contain all nine exact saved XML files', () => {
   const samples = [...dlo.matchAll(/<summary>([^<]+)<\/summary>\n\n```xml\n([\s\S]*?)```/g)];
   assert.equal(samples.length, 9);
@@ -39,11 +76,23 @@ test('DLO reader samples contain all nine exact saved XML files', () => {
   }
 });
 
+test('DLO attributes native JSON to Connect REST and CLI XML to Metadata API', () => {
+  assert.match(dlo, /\*\*API family:\*\*[^]*\/services\/data\/vXX\.0\/ssot\/data-lake-objects/);
+  assert.match(dlo, /\*\*Data 360 Connect REST API\*\*/);
+  assert.match(dlo, /they do \*\*not\*\* use the SOAP-based Metadata API/);
+  const cli = dlo.split('{% capture read_cli %}')[1].split('{% endcapture %}')[0];
+  assert.match(cli, /\*\*Metadata API \(XML\):\*\*/);
+  assert.match(cli, /separate from the native Connect REST JSON route/);
+});
+
 test('native plugin rationale preserves CLI auth and distinguishes retrieval from redeploy limits', () => {
-  const rationale = dlo.split('### Why use a native API plugin workflow?')[1].split('## Retrieve')[0];
+  const rationale = dlo
+    .split('**Why a native API plugin workflow:**')[1]
+    .split('**Plugin API versions:**')[0];
   assert.match(rationale, /not.*missing Metadata retrieval support/s);
   assert.match(rationale, /primary-key and key-qualifier/);
-  assert.match(rationale, /standard Salesforce CLI authentication remains in use/);
+  assert.match(rationale, /uses the Salesforce CLI's stored authentication/);
+  assert.match(rationale, /does not start a CLI process per request/);
   assert.match(rationale, /manifest-free/);
   assert.match(rationale, /data360\/dlo\/<FullApiName>__dll\.dlo-meta\.json/);
   assert.match(rationale, /separate save\/create\/update field policies/);
@@ -51,21 +100,30 @@ test('native plugin rationale preserves CLI auth and distinguishes retrieval fro
 });
 
 test('DLO plugin tabs use explicit opt-in and preserve unknown defaults for other pages', () => {
-  const renderer = fs.readFileSync(path.join(__dirname, '../_includes/operation-tabs.html'), 'utf8');
+  const renderer = fs.readFileSync(
+    path.join(__dirname, '../_includes/operation-tabs.html'),
+    'utf8',
+  );
   assert.match(renderer, /include\.plugin_state \| default: 'unknown'/);
   assert.match(renderer, /include\.plugin_state == 'available'/);
   assert.equal((renderer.match(/include\.plugin_body \| markdownify/g) || []).length, 1);
   assert.equal((dlo.match(/plugin_state="available"/g) || []).length, 4);
 });
 
-test('native matrix minimum remains separate from the plugin version guard', () => {
-  assert.match(dlo, /API 61 as the minimum\nlive-tested successful version/);
-  assert.match(dlo, /API 60 returned `404` for all four CRUD operations/);
-  assert.match(dlo, /plugin currently admits \*\*API 68\/default only\*\*/);
+test('plugin version guard is API 68 and no pre-68 native route content remains', () => {
+  assert.match(dlo, /\*\*Plugin API versions:\*\* The raw native DLO routes/);
+  assert.match(dlo, /an exact `dlo:` retrieve always reads at 68\.0/);
+  assert.doesNotMatch(
+    dlo,
+    /API 61 as the minimum|API 60 returned `404`|needed two\nreads|APIs 64 and 67/,
+  );
+  assert.doesNotMatch(dlo, /\/ssot\/mcp\/execute|d360_|facade/);
 });
 
 test('DLO replacement command contract has explicit nondefault preview and exact portable path', () => {
-  const contract = dlo.split('### Plugin command and saved-file contract')[1].split('## Retrieve')[0];
+  const contract = dlo
+    .split('**Plugin command and saved-file contract:**')[1]
+    .split('**Public-command acceptance')[0];
   for (const operation of ['retrieve', 'deploy', 'delete']) {
     assert.ok(contract.includes(`sf data360 ${operation} -m dlo:CustomerSource__dll`));
   }
@@ -77,8 +135,22 @@ test('DLO replacement command contract has explicit nondefault preview and exact
   assert.match(contract, /Only confirmed absence permits POST/);
 });
 
+test('DLO unchanged deploy is a comparison rather than another PATCH', () => {
+  const update = dlo.split('**Update rules:**')[1].split('**Stream-owned DLO updates:**')[0];
+  assert.match(update, /outcome: "unchanged"/);
+  assert.match(update, /mutation: "not-attempted"/);
+  assert.match(update, /sends no\nPOST or PATCH/);
+  assert.match(update, /Field ordering does not trigger a write/);
+  assert.match(
+    update,
+    /omission of the\ngenerated fields from a retrieved file does not count as removing them/,
+  );
+});
+
 test('DLO asynchronous acceptance is distinct from terminal settlement and DMO response semantics', () => {
-  const asynchronous = dlo.split('### Accepted requests and asynchronous completion')[1].split('## Retrieve')[0];
+  const asynchronous = dlo
+    .split('**Accepted requests and asynchronous completion:**')[1]
+    .split('**Standard retrieve across requested API versions:**')[0];
   assert.match(asynchronous, /POST HTTP `201` with `PROCESSING`/);
   assert.match(asynchronous, /PATCH HTTP `200` with `PROCESSING`/);
   assert.match(asynchronous, /DELETE HTTP `204`/);
@@ -89,23 +161,28 @@ test('DLO asynchronous acceptance is distinct from terminal settlement and DMO r
 });
 
 test('DLO wrapper success is limited to live API68 and preserves the standard sample', () => {
-  const wrapper = dlo.split('**Separate wrapper readback')[1].split('## Create')[0];
+  const wrapper = dlo
+    .split('**Separate wrapper readback')[1]
+    .split('**Standard Metadata CREATE comparison')[0];
   assert.match(wrapper, /only API 68 was live-verified for this wrapper/);
   assert.match(wrapper, /zero missing, extra or different files/);
   assert.match(wrapper, /definition-only retrieval/);
-  assert.match(wrapper, /earlier API 65 wrapper refusal predates that implementation change/);
+  assert.doesNotMatch(wrapper, /earlier API 65 wrapper refusal/);
   assert.match(
     wrapper,
     /does not enable the guide's plugin tab or change any CREATE qualification/,
   );
-  assert.match(overview, /Other resource tabs remain Unknown/);
+  assert.match(overview, /\*\*Standard CLI:\*\*/);
+  assert.match(overview, /\*\*Plugin:\*\*[^\n]*`sf-plugin-data`/);
   assert.equal((dlo.match(/plugin_state="available"/g) || []).length, 4);
 });
 
 test('DLO standard CREATE failures remain schema-specific and preserve distinct API evidence', () => {
-  const create = dlo.split('## Create')[1].split('### Later controlled Metadata experiments')[0];
+  const create = dlo
+    .split('**Standard Metadata CREATE comparison')[1]
+    .split('**Controlled Metadata experiments')[0];
   assert.equal((create.match(/sf project deploy start --metadata/g) || []).length, 1);
-  assert.match(create, /--api-version 68\.0 --test-level NoTestRun --wait 5 --json/);
+  assert.match(create, /--api-version 68\.0 --test-level NoTestRun --wait 5/);
   assert.match(
     create,
     /unchanged retrieved test schema failed standard creation at all four requested versions/,
@@ -119,17 +196,17 @@ test('DLO standard CREATE failures remain schema-specific and preserve distinct 
   assert.match(create, /does \*\*not establish its underlying cause\*\*/);
   assert.match(create, /does \*\*not mean all DLO CREATE is unsupported\*\*/);
   assert.match(create, /Independent exact-name Metadata retrieves after each failure/);
-  assert.match(dlo, /cli_state="blocked"/);
-  assert.match(dlo, /api_state="unknown"/);
-  assert.match(dlo, /We did create a new, owned Ingestion API connection/);
-  assert.match(dlo, /confirmed `CONNECTED`, then stream\/DLO `ACTIVE`/);
-  assert.match(overview, /November 2 DLO CREATE reconciliation/);
+  // The unchanged-schema failure stays evidence; an authored-fields-only deploy creates a definition.
+  assert.match(dlo, /id="dlo-create"[^\n]+cli_state="available"[^\n]+disabled definition/);
+  assert.doesNotMatch(dlo, /connect_state="unknown"/);
+  assert.match(dlo, /\*\*Stream-owned DLO creation:\*\* A Data Stream creates its own landing DLO/);
+  assert.match(dlo, /data-stream-definition\/#create\)/);
 });
 
 test('API68 Metadata isolation distinguishes persisted fields from rolled-back successes', () => {
   const isolation = dlo
-    .split('### Later controlled Metadata experiments: API 68 only')[1]
-    .split('### Native standalone DLO creation')[0];
+    .split('**Controlled Metadata experiments')[1]
+    .split('**Native standalone DLO creation')[0];
   assert.match(isolation, /none of the following variants was tested at API 65–67/);
   assert.match(isolation, /zero fields: no `Id__c` or other field was automatically generated/);
   assert.match(isolation, /\(-64830600\)/);
@@ -141,15 +218,15 @@ test('API68 Metadata isolation distinguishes persisted fields from rolled-back s
   assert.match(isolation, /failed at `KQ_Id__c` with signature `\(2099634494\)`/);
   assert.match(isolation, /Removing the primary-index annotation alone was insufficient/);
   assert.match(isolation, /not an invalidity criterion/);
-  assert.match(isolation, /was a hypothesis, not a result/);
+  assert.match(isolation, /Whether a stream is required to enable a DLO is not established/);
   assert.match(isolation, /not support a universal stream requirement for enabling/);
   assert.doesNotMatch(isolation, /00D[a-zA-Z0-9]{12,15}|F:[/\\]Temp|access_token/);
 });
 
 test('native API68 DLO creation records corrected payload, settled state and generated metadata', () => {
   const native = dlo
-    .split('### Native standalone DLO creation: verified API 68 experiment')[1]
-    .split('### Distinct API ingestion-chain observation')[0];
+    .split('**Native standalone DLO creation')[1]
+    .split('**Stream-owned DLO creation:**')[0];
   assert.match(native, /POST \/services\/data\/v68\.0\/ssot\/data-lake-objects/);
   const body = JSON.parse(native.match(/```json\n([\s\S]*?)\n```/)[1]);
   assert.deepEqual(body, {
@@ -193,19 +270,20 @@ test('native API68 DLO creation records corrected payload, settled state and gen
 });
 
 test('standalone API68 GET distinguishes response envelopes and documented availability', () => {
-  const read = dlo.split('{% capture retrieve_api %}')[1].split('{% endcapture %}')[0];
+  const read = dlo.split('{% capture read_connect %}')[1].split('{% endcapture %}')[0];
   assert.match(read, /--method GET --include/);
-  assert.match(read, /available since API 60\.0/);
-  assert.match(read, /Live GET\/PATCH\/DELETE evidence here is API 68 only/);
-  assert.match(read, /HTTP `200`, `ACTIVE` and \*\*seven fields\*\*/);
-  assert.match(read, /GET body contains a `dataLakeObjects` array/);
-  assert.match(read, /POST and PATCH bodies contain a \*\*single DLO object\*\*/);
-  assert.match(read, /handles authentication/);
-  assert.match(read, /not dedicated native CLI DLO commands or plugin support/);
+  const readEvidence = dlo.split('**Standalone native API read')[1].split('**Create rules:**')[0];
+  assert.match(readEvidence, /available since API 60\.0/);
+  assert.match(readEvidence, /Live GET\/PATCH\/DELETE evidence here is API 68 only/);
+  assert.match(readEvidence, /HTTP `200`, `ACTIVE` and \*\*seven fields\*\*/);
+  assert.match(readEvidence, /GET body contains a `dataLakeObjects` array/);
+  assert.match(readEvidence, /POST and PATCH bodies contain a \*\*single DLO object\*\*/);
+  assert.match(readEvidence, /handles authentication/);
+  assert.match(readEvidence, /not dedicated native CLI DLO commands or plugin support/);
 });
 
 test('standalone API68 PATCH supplies only earned label and field addition', () => {
-  const update = dlo.split('{% capture update_api %}')[1].split('{% endcapture %}')[0];
+  const update = dlo.split('{% capture update_connect %}')[1].split('{% endcapture %}')[0];
   const body = JSON.parse(update.match(/```json\n([\s\S]*?)\n```/)[1]);
   assert.deepEqual(body, {
     label: 'CLI API CRUD updated',
@@ -215,18 +293,21 @@ test('standalone API68 PATCH supplies only earned label and field addition', () 
   });
   assert.match(update, /OWNED_DLO_ID --target-org SOURCE_ALIAS --method PATCH/);
   assert.match(update, /--body @dlo-patch\.json --header Content-Type:application\/json/);
-  assert.match(update, /independent Connect GET confirmed `ACTIVE`/);
-  assert.match(update, /\*\*eight fields\*\*/);
-  assert.match(update, /all seven original fields/);
-  assert.match(update, /primaryIndexOrder=1` and `isEnabled=true/);
-  assert.match(update, /No existing primary-key mutation was tested/);
-  assert.match(update, /stream-owned direct updates, cross-org replay or ingestion/);
+  const updateEvidence = dlo
+    .split('**Standalone native API update')[1]
+    .split('**Standalone native API delete')[0];
+  assert.match(updateEvidence, /independent Connect GET confirmed `ACTIVE`/);
+  assert.match(updateEvidence, /\*\*eight fields\*\*/);
+  assert.match(updateEvidence, /all seven original fields/);
+  assert.match(updateEvidence, /primaryIndexOrder=1` and `isEnabled=true/);
+  assert.match(updateEvidence, /No existing primary-key mutation was tested/);
+  assert.match(updateEvidence, /stream-owned direct updates, cross-org replay or ingestion/);
 });
 
 test('standalone API68 DELETE retains working empty-raw request and independent absence', () => {
-  const deletion = dlo.split('{% capture delete_api %}')[1].split('{% endcapture %}')[0];
-  const standalone = deletion.split('### Standalone native API delete: verified API 68')[1];
-  const request = JSON.parse(standalone.match(/```json\n([\s\S]*?)\n```/)[1]);
+  const deletion = dlo.split('{% capture delete_connect %}')[1].split('{% endcapture %}')[0];
+  const request = JSON.parse(deletion.match(/```json\n([\s\S]*?)\n```/)[1]);
+  const deleteEvidence = dlo.split('**Standalone native API delete')[1].split('</details>')[0];
   assert.deepEqual(request, {
     url: '/services/data/v68.0/ssot/data-lake-objects/OWNED_DLO_ID',
     method: 'DELETE',
@@ -236,52 +317,91 @@ test('standalone API68 DELETE retains working empty-raw request and independent 
     deletion,
     /sf api request rest --file dlo-delete-request\.json --target-org SOURCE_ALIAS --include/,
   );
-  assert.match(deletion, /org identity and the exact ID\/name were rechecked/);
-  assert.match(deletion, /dependencies=\[\]`, `totalSize=0/);
-  assert.match(deletion, /API 67 `d360_dlo_dependencies_list` facade/);
-  assert.match(deletion, /Empty dependencies alone are not deletion authorization/);
-  assert.match(deletion, /no cascade was requested/);
   assert.match(deletion, /No mode found in body entry/);
-  assert.match(deletion, /before any HTTP receipt/);
-  assert.match(deletion, /HTTP `204`/);
-  assert.match(deletion, /both ID and exact developer name returned `404`/);
-  assert.match(deletion, /zero exact-name matches/);
-  assert.match(deletion, /cannot be found/);
-  assert.match(deletion, /top-level retrieve success alone would not establish absence/);
-  assert.match(deletion, /owning-stream `DELETING` observation remains unresolved/);
-  for (const operation of ['retrieve', 'update', 'delete']) {
+  assert.match(deleteEvidence, /org identity and the exact ID\/name were rechecked/);
+  assert.match(deleteEvidence, /dependencies=\[\]`, `totalSize=0/);
+  assert.match(
+    deleteEvidence,
+    /GET \/services\/data\/v68\.0\/ssot\/data-lake-objects\/CustomerSource__dll\/dependencies/,
+  );
+  assert.match(deleteEvidence, /Empty dependencies alone are not deletion authorization/);
+  assert.match(deleteEvidence, /no cascade was requested/);
+  assert.match(deleteEvidence, /before any HTTP receipt/);
+  assert.match(deleteEvidence, /HTTP `204`/);
+  assert.match(deleteEvidence, /both ID and exact developer name returned `404`/);
+  assert.match(deleteEvidence, /zero exact-name matches/);
+  assert.match(deleteEvidence, /cannot be found/);
+  assert.match(deleteEvidence, /top-level retrieve success alone would not establish absence/);
+  assert.match(deleteEvidence, /removed with its stream: the native API 68 stream DELETE/);
+  assert.match(deleteEvidence, /data-stream-definition\/#delete\)/);
+  for (const operation of ['read', 'create', 'update', 'delete']) {
     const tab = dlo.match(
       new RegExp(`{% include operation-tabs\\.html id="dlo-${operation}"[^\\n]+`),
     )[0];
-    assert.match(tab, /api_state="available"/);
-    assert.match(tab, new RegExp(`api_body=${operation}_api`));
+    assert.match(tab, /connect_state="available"/);
+    assert.match(tab, new RegExp(`connect_body=${operation}_connect`));
   }
   assert.doesNotMatch(
-    deletion,
+    deleteEvidence,
     /00D[a-zA-Z0-9]{12,15}|1dl[a-zA-Z0-9]{12,15}|F:[/\\]Temp|access_token/,
   );
 });
 
+test('DLO installed cross-org evidence retains lifecycle and cleanup limits', () => {
+  assert.match(dlo, /Installed cross-org acceptance/);
+  assert.match(dlo, /Org-local IDs differed/);
+  assert.match(dlo, /native-client capture recorded GET only/);
+  assert.match(dlo, /independently returned 404 by name and ID/);
+  assert.match(dlo, /does not qualify target delete preview/);
+  assert.match(dlo, /not ingestion, populated data, mixed-family/);
+});
+
 test('DLO requested-version evidence supplies one standard example without write promotion', () => {
-  const retrieve = dlo.split('## Retrieve')[1].split('## Create')[0];
+  const retrieve = dlo.split('## Read')[1].split('## Update')[0];
   assert.equal((retrieve.match(/sf project retrieve start/g) || []).length, 1);
-  assert.match(retrieve, /--api-version 68\.0 --wait 5 --json/);
-  assert.match(retrieve, /Verified requested API 65–68 on test fixture/);
-  assert.match(retrieve, /did \*\*not independently echo an effective API version\*\*/);
-  assert.match(retrieve, /No `package\.xml` was emitted to disk/);
+  assert.match(retrieve, /--api-version 68\.0 --wait 5/);
+  const retrieveEvidence = dlo
+    .split('**Standard retrieve across requested API versions:**')[1]
+    .split('**Separate wrapper readback')[0];
+  assert.match(retrieveEvidence, /Verified requested API 65–68 on test fixture/);
+  assert.match(retrieveEvidence, /did \*\*not independently echo an effective API version\*\*/);
+  assert.match(retrieveEvidence, /No `package\.xml` was emitted to disk/);
   assert.match(
-    retrieve,
+    retrieveEvidence,
     /neither cross-org deployability nor CREATE, UPDATE, DELETE or wrapper support/,
   );
-  assert.match(dlo, /retrieve: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
-  assert.ok(dlo.includes('create: { status: "yes", methods: [api, plugin] }'));
-  for (const operation of ['update', 'delete']) {
-    assert.ok(dlo.includes(`${operation}: { status: "yes", methods: [api, plugin] }`));
+  assert.match(
+    dlo,
+    /read: \{ status: "yes", methods: \[cli, api, plugin\](?:, method_statuses: \{[^}]*\})? \}/,
+  );
+  for (const operation of ['create', 'update', 'delete']) {
+    assert.ok(dlo.includes(`${operation}: { status: "yes", methods: [cli, api, plugin]`));
   }
   assert.doesNotMatch(retrieve, /00D[a-zA-Z0-9]{12,15}|F:[/\\]Temp|access_token|\.sf[/\\]orgs/);
-  assert.match(overview, /November 2 DLO retrieval reconciliation/);
-  assert.match(
-    overview,
-    /CREATE, UPDATE and DELETE ratings and other resources' live-verification dates are unchanged/,
+});
+
+test('native API68 DLO create tab sends the plugin create body with suffix-free names', () => {
+  const create = dlo.split('{% capture create_connect %}')[1].split('{% endcapture %}')[0];
+  const body = JSON.parse(create.match(/```json\n([\s\S]*?)\n```/)[1]);
+  assert.deepEqual(body, {
+    name: 'CustomerSource',
+    label: 'CustomerSource',
+    category: 'Other',
+    dataspaceInfo: [{ name: 'default' }],
+    dataLakeFieldInputRepresentations: [
+      { name: 'Id', label: 'Id', dataType: 'Text', isPrimaryKey: true },
+      { name: 'Note', label: 'Note', dataType: 'Text', isPrimaryKey: false },
+    ],
+  });
+  assert.ok(
+    create.includes(
+      "sf api request rest '/services/data/v68.0/ssot/data-lake-objects' --method POST --body '@dlo-create.json' --header 'Content-Type:application/json' --target-org TARGET_ALIAS",
+    ),
   );
+  assert.match(create, /HTTP 201 with status `PROCESSING`/);
+  assert.match(create, /until it shows `ACTIVE`/);
+  assert.match(create, /label longer than 40 characters returns HTTP 400/);
+  const tab = dlo.match(/{% include operation-tabs\.html id="dlo-create"[^\n]+/)[0];
+  assert.match(tab, /connect_state="available"/);
+  assert.match(tab, /connect_body=create_connect/);
 });

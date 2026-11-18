@@ -18,8 +18,6 @@ crud:
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
-[Back to Data Cloud with Salesforce CLI](/next/data-cloud-cli/).
-
 This badge does not verify untested writes or general CRUD support. A claim marked **offline-tested** rests on the plugin code and its offline tests; no live run is recorded for it.
 
 <a id="data-model-object-dmo-customobject-dlm"></a>
@@ -31,6 +29,8 @@ This badge does not verify untested writes or general CRUD support. A claim mark
 {% include crud-summary.html %}
 
 **Plugin qualification:** "Yes" means the plugin workflow works in the tested scope listed under Evidence, not for every DMO.
+
+**Enum letter case:** An enum value in a field's `dataType` that differs from Salesforce's stored spelling only in letter case counts as unchanged on deploy. The plugin sends the value as written; retrieve writes Salesforce's spelling.
 
 "API" means the Metadata API or the Connect API. Each one is listed on its own. The CLI runs on the Metadata API, but that alone does not show that the Metadata API works when called directly.
 
@@ -249,6 +249,8 @@ sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS
 
 The keys `creationType`, `isDistinct`, `usageTag` and `keyQualifierName` come from reads only. A retrieved file keeps them, a deploy never sends them, and a file may differ from the org in them without causing an update. `spec.description` is present only when the object has a description.
 
+The fields are saved sorted by `name`, because Salesforce returns them in a different order from one read to the next. Deploy matches fields by name, so their order in the file does not matter.
+
 **Output:**
 
 ```text
@@ -268,6 +270,8 @@ The optional `--dataspace NAME` (alias `--data-space`) selects a data space othe
 The file holds only the authored fields. Salesforce-generated fields are left out: `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c`, and the key qualifier, for example `KQ_Id__c`. A key qualifier combines the ID with source context to avoid collisions. The primary key `Id__c` always stays. Custom qualifiers and `keyQualifierName` references stay as read. Native CREATE generates the left-out fields again, and deploy keeps them from the org. Leaving them out is therefore not field deletion or proof of mapping auto-pair behavior. A retrieved file deploys back `unchanged`. The raw API response remains complete. The file is not a complete ingestion/mapping/relationship export.
 
 Current default/`auto` is API68; explicit numeric versions from `61.0` are kept as given. The standard fields of a standard DMO are compared only when they are listed. Fields read as `creationType=System` are generated. On the DMO API the key qualifier is marked `creationType=System` and `usageTag=KeyQualifier`, unlike DLO Metadata's `usageTag=KEY_QUALIFIER`.
+
+`isSegmentable` is left out too. Salesforce derives it and does not accept it as input, so the file has no such key.
 
 </details>
 {% endcapture %}
@@ -457,7 +461,7 @@ sf project deploy start --metadata CustomObject:Customer__dlm --target-org TARGE
 
 The deploy reports the object and both fields as `Created`. The Connect API GET then returns the DMO with `Id__c` as its primary key and `Note__c`.
 
-**Unlike a Connect API create, a deploy adds no generated fields:** the DMO has only the fields you deployed, without `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` or the key qualifier `KQ_Id__c`. Whether such a DMO can be mapped is not tested; to get the same DMO as the other tabs, create it through the Connect API or the plugin.
+**Unlike a Connect API create, a deploy adds no generated fields:** the DMO has only the fields you deployed, without `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` or the key qualifier `KQ_Id__c`. Such a DMO can be mapped: a Connect API mapping from a Connect-created DLO read `ACTIVE`. Salesforce then added only `KQ_Id__c` to the DMO, plus a generated `KQ_Id__c` pair; `DataSource__c`, `DataSourceObject__c` and `InternalOrganization__c` stayed absent. To get the same DMO as the other tabs, create it through the Connect API or the plugin.
 {% endcapture %}
 
 {% capture create_metadata %}
@@ -851,7 +855,11 @@ Save `destructiveChanges.xml` beside it, naming the object:
 sf project deploy start --metadata-dir destructive --target-org TARGET_ALIAS --api-version 68.0 --wait 10
 ```
 
-The result lists the object with `deleted` `true`. Afterwards the Connect API GET answers `ITEM_NOT_FOUND`. This was tested on an empty, unmapped DMO that a deploy created.
+The result lists the object with `deleted` `true`. Afterwards the Connect API GET answers `ITEM_NOT_FOUND`. This was tested on empty DMOs: an unmapped one that a deploy created, an unmapped one that the Connect API created, and mapped ones. A DMO's mappings are deleted with it (the mapping GET answers `404`), also its only mapping.
+
+**Known failures:**
+
+- A DMO that is the target of a relationship is refused: "This object is referenced elsewhere in Salesforce. : The object … cannot be deleted because it is referenced by the following lookup fields: …". Delete the relationship first ([Field relationship](/next/data-cloud-cli/field-source-target-relationship/#delete)).
 {% endcapture %}
 
 {% capture delete_metadata %}
@@ -873,10 +881,10 @@ Send `deleteMetadata` with the exact name:
 </soapenv:Envelope>
 ```
 
-The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_FOUND`. This worked both on a DMO that `createMetadata` created and on an empty, unmapped DMO that the Connect API created.
+The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_FOUND`. This worked on a DMO that `createMetadata` created, on an empty, unmapped DMO that the Connect API created, and on an empty, mapped DMO that the Connect API created; its only mapping was deleted with it (the mapping GET answers `404`).
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on an empty, unmapped DMO that a deploy created (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on empty, unmapped DMOs created by createMetadata and by the Connect API (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Offline-tested for the whole object; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on empty DMOs created by deploy and by the Connect API, unmapped and mapped. A relationship target is refused (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on empty DMOs created by createMetadata and by the Connect API, unmapped and mapped (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Offline-tested for the whole object; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -903,6 +911,7 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 - The field data types `Number`, `Text`, `Date`, `DateTime`, `Url`, `Phone`, `Email`, `Percent`, `Boolean` and `Currency` are created. `ArrayOfFloats` and `ArrayOfTexts` return HTTP `400`. A `Currency` field adds `cdp_sys_record_currency__c`.
 - Object and field labels longer than 40 characters return HTTP `400`.
 - Supplying `keyQualifierName` is refused. The key qualifier `KQ_<key>__c` is generated.
+- `isSegmentable` is derived and read-only: a create with it (`true` or `false`) returns HTTP `400` `JSON_PARSER_ERROR` (unrecognized field). New `Other` and `Profile` DMOs read `false`.
 - Keys outside the input schema return HTTP `400`.
 - A field `description` and `isDynamicLookup` are accepted but never returned, so neither can be confirmed. The object `description` round-trips.
 
@@ -911,6 +920,7 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 - PATCH sets and clears the object description and changes existing field labels. It adds Number, DateTime and Boolean fields as well as Text.
 - A changed field data type returns HTTP `200`, but reads still show the original type and key after 60 seconds of polling.
 - A PATCH that leaves out existing fields keeps them. Omission is not removal.
+- A PATCH with `isSegmentable` returns HTTP `400` `JSON_PARSER_ERROR`, like a create.
 - Field item paths return `404`, and PUT on the object returns `405`. Removing a custom field goes through the Metadata API with a destructive change for the member `<ObjectName>__dlm.<FieldName>__c` (API `65.0` and `68.0`, empty custom DMOs).
 - Salesforce removes a mapped field and silently drops exactly that field's pairs. The mappings stay active.
 
@@ -934,8 +944,10 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 - **Create.** A deploy and a `createMetadata` call, each with the object plus `Id__c` (`primaryIndexOrder` `1`) and `Note__c`, succeeded. `readMetadata` and the Connect GET returned only those two fields, with `Id__c` as the primary key; no `DataSource__c`, `DataSourceObject__c`, `InternalOrganization__c` or `KQ_Id__c` was generated. The same two fields sent to the Connect API create produce six.
 - **Update.** A deploy changed the label and added `Extra__c`; `updateMetadata` changed the label and `createMetadata` of one `CustomField` added a field. The Connect GET showed each change. `updateMetadata` also changed the label of a DMO that the Connect API created.
 - **Delete.** A destructive deploy that named the `CustomObject` and a `deleteMetadata` call each deleted their DMO; `deleteMetadata` also deleted a DMO that the Connect API created. Afterwards the Connect GET answered `ITEM_NOT_FOUND` and `readMetadata` returned no record.
+- **Mapping a deployed DMO (second run, 2026-11-16).** A deploy created a DMO with `Id__c` and `Note__c` only. A Connect API mapping onto it from a Connect-created DLO (`Id__c` and `Note__c` pairs) answered HTTP 201 and read `ACTIVE`, with a generated `KQ_Id__c` pair. The DMO then listed `Id__c`, `KQ_Id__c` and `Note__c`; no `DataSource__c`, `DataSourceObject__c` or `InternalOrganization__c` was added.
+- **Destructive deploys of Connect-created and mapped DMOs (same run).** Destructive deploys naming the `CustomObject` deleted an unmapped DMO that the Connect API created (the plugin creates DMOs with the same Connect request), the mapped DMO above (its only mapping) and, in one deploy, two Connect-created DMOs with one mapping each, one of which had been the source of a relationship. Each DMO's GET then answered `ITEM_NOT_FOUND` and each mapping's GET `404`. A destructive deploy of a mapped DMO that was still the target of a relationship failed: "referenced by the following lookup fields", naming the source DMO's `rel_<number>_end__c` lookup. Nothing changed until the relationship was deleted. `deleteMetadata` also deleted a Connect-created DMO with one mapping: the DMO's GET answered `ITEM_NOT_FOUND` and the mapping's GET `404`.
 
-**Not verified:** Populated, mapped or related DMOs. Whether a DMO created by deploy or `createMetadata`, without generated fields, can be mapped. A destructive deploy of a DMO that the Connect API or the plugin created. Standard DMOs in active use. Non-default data spaces. SQL or flex DMOs. An installed released package. The API `68.0` breadth at any other version. Cascade behavior and DMOs with dependencies, including a DMO that a segment or calculated insight references. Whether `isDynamicLookup` is stored.
+**Not verified:** Populated DMOs. Related DMOs beyond the relationship refusal above. Standard DMOs in active use. Non-default data spaces. SQL or flex DMOs. An installed released package. The API `68.0` breadth at any other version. Cascade behavior and DMOs with dependencies, including a DMO that a segment or calculated insight references. Whether `isDynamicLookup` is stored.
 
 **Existing objects:** A SQL query against an existing DMO can return SQLSTATE `42P01` even when the object exists. That is not an empty result. GET `404` can also mean the caller cannot access the DMO. Neither is proof that no record store exists.
 
