@@ -71,6 +71,10 @@
   margin-top: 0.2em;
 }
 
+.crud-matrix td:nth-child(n + 2):nth-child(-n + 4) {
+  white-space: nowrap;
+}
+
 [data-theme='dark'] .crud-chip {
   &--yes {
     color: #6fd39c;

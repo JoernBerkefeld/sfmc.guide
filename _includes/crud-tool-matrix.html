@@ -13,7 +13,7 @@
     {%- if resource %}
       {%- unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
     <tr>
-      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% unless resource.crud.read.method_statuses %}<small>one combined grade per operation</small>{% endunless %}</td>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% unless resource.crud.read.method_statuses %}<br><small>one combined grade per operation</small>{% endunless %}</td>
       {%- for tool in tools %}
       <td>
         {%- for operation in operations -%}
