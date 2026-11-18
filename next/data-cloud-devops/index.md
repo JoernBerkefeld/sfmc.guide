@@ -26,7 +26,7 @@ crud_rows:
     anchor: data-model-object-dmo-customobject-dlm
     failures: 'A changed field type is accepted (HTTP 200) but silently ignored. API 60.0 returns 404 for every method.'
     api_note: 'no field removal; a changed field type is accepted but silently ignored'
-    plugin_note: 'never deletes a standard DMO; never changes generated fields except their label on deploy'
+    plugin_note: 'never changes generated fields except their label on deploy'
   - path: next/data-cloud-devops/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -122,6 +122,9 @@ Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata A
 - **DLO delete may need repeating.** In two separate runs, a DLO used by a just-deleted transform answered `204` to DELETE but then read `ERROR` for about 19 minutes; a second DELETE removed it.
 - **Transform not found.** Its `404` text says a transform in another space is found as `<prefix>_<name>`. That is wrong: a transform created in a custom space is stored without a prefix, read by its plain name, and `<prefix>_<name>` answers `404`.
 - **A DLO's spaces change on the space, not on the DLO.** A DLO `PATCH` with `dataspaceInfo` or `dataSpaceInfo` is refused as an unrecognized field, and `PUT` on the DLO answers `405`. `PUT /services/data/vXX.0/ssot/data-spaces/<space>/members` with `{"members":{"members":[{"memberName":"<Name>__dll"}]}}` adds the DLO (a flat `members` list answers `400`); it answers `PROCESSING` and the DLO reads both spaces a few seconds later, under the same name. `DELETE …/data-spaces/<space>/members?memberNames=<Name>__dll` removes it from that space and keeps the DLO; `DELETE …/members/<name>` answers `405`.
+- **Generated DMOs are open to writes, and their fields are not protected.** On the DMOs that identity resolution and data graphs create, Salesforce accepts label, description and custom-field changes, and also relabels or deletes their own system and standard fields. It refuses a mapping onto them (`400` "Unsupported DMO Creation Type used for mapping") and deletes them only after their ruleset or graph is gone (`412` before).
+- **System transforms cannot be changed.** The transform a data graph creates reads as one hidden `STL_HIDDEN` definition. Salesforce refuses a `PUT` of it (`400`), a schedule change and a delete (`403`), and a create from its file (`400`). A graph built on a DMO without a mapping leaves this transform in `ERROR` for good.
+- **Transform schedules have their own route.** `PUT …/data-transforms/<name>/schedule` takes `Hourly`, `Daily` or `None` (`Weekly` is refused), only while the transform is active; `{"frequency":"None"}` turns it off, and `DELETE` on the route answers `405`. The `GET` answer cannot be sent back as is.
 
 ### What this means for the plugin
 

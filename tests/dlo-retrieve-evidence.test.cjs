@@ -44,7 +44,7 @@ test('DLO and transform pages describe transform outputs and the file as Salesfo
     'The file holds the transform as Salesforce returns it',
     'Everything else is sent as written and Salesforce decides',
     'An update replaces the whole transform',
-    'A transform without a schedule is saved as',
+    'A transform without a schedule gets no `schedule` key',
     'No match creates the transform with one POST',
     'Salesforce refuses writes to the system transforms a data graph creates',
   ])

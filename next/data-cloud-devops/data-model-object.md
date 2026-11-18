@@ -15,7 +15,7 @@ crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
   update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "partial", plugin: "yes" } }
-  delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
+  delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -654,7 +654,7 @@ An equal definition returns `outcome: "unchanged"` and `mutation: "not-attempted
 <details markdown="1">
 <summary>Standard DMOs such as ssot__Brand__dlm</summary>
 
-A standard DMO (`creationType` `Standard`) is never created and never deleted by the plugin. The same deploy rules apply to the DMOs Salesforce generates for identity resolution (`Derived`, `Bridge`), data graphs (`Adg`) and segments, and to a custom DMO under a namespaced name. A deploy onto an existing one writes only:
+A standard DMO (`creationType` `Standard`) is never created by the plugin. A delete of the whole DMO is sent, and Salesforce decides. The same deploy rules apply to the DMOs Salesforce generates for identity resolution (`Derived`, `Bridge`), data graphs (`Adg`) and segments, and to a custom DMO under a namespaced name. A deploy onto an existing one writes only:
 
 - custom fields: add, relabel, and remove with `--allow-field-removal`;
 - the label of any other field;
@@ -811,7 +811,7 @@ The object is gone and its local file is removed. Running the command again repo
 
 **Known failures:**
 
-- A standard DMO, and a DMO read without `creationType`, is refused before anything is deleted, in the preview as well (`UNSUPPORTED_DMO_TARGET`).
+- Every DMO delete is sent, also for a standard DMO and a DMO read without `creationType`, and Salesforce decides. A refusal (HTTP `4xx`) is reported as rejected and the local file stays. Whether Salesforce deletes a standard DMO is not tested.
 - A DMO that Salesforce generated for an identity resolution or a data graph is sent; Salesforce refuses it while its owner exists with HTTP `412` `MATCH_PRECONDITION_FAILED` ("The resource is referenced in other features and thereby cannot be deleted"), reported as rejected. The local file stays. Delete the owner instead, which removes its DMOs.
 - The last mapping of a custom DMO cannot be deleted on its own. Deleting the DMO removes its mapping.
 
@@ -932,7 +932,7 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 
 - The plugin keeps no local allowlists. It checks only the shape of the saved file. Category, field data types, labels and descriptions are sent as authored, and Salesforce decides. Its error is reported.
 - Default and `auto` select API `68.0`; explicit numeric versions from `61.0` are kept as given, and admitting a version is not a live test of it.
-- Refused before any write: `UNSUPPORTED_DMO_FIELD_CHANGE` (a type change or a moved key, or a missing custom field without `--allow-field-removal`), `UNSUPPORTED_DMO_FIELD_ADDITION` (a generated field or a second key), `UNSUPPORTED_DMO_TARGET` (creating a namespaced DMO, or deleting a standard or untyped DMO), and `DMO_FIELD_REMOVAL_MAPPED`.
+- Refused before any write: `UNSUPPORTED_DMO_FIELD_CHANGE` (a type change or a moved key, or a missing custom field without `--allow-field-removal`), `UNSUPPORTED_DMO_FIELD_ADDITION` (a generated field or a second key), `UNSUPPORTED_DMO_TARGET` (creating a namespaced DMO, or a write to a DMO whose read has no name), and `DMO_FIELD_REMOVAL_MAPPED`.
 - Preview lists planned removals as `removedFields` and `DMO_FIELD_REMOVAL_PLANNED` and writes nothing.
 - After a deploy, polled reads (up to 6, five seconds apart) confirm the result. The plugin never repeats a write. If the reads do not confirm, it fails with `DMO_PERSISTENCE_UNCONFIRMED`.
 - If the local file cannot be removed after a deletion, the command fails with `LOCAL_FILE_REMOVAL_FAILED` after the org result.
