@@ -44,9 +44,9 @@ test('DLO and transform pages describe transform outputs and the file as Salesfo
     'The file holds the transform as Salesforce returns it',
     'Everything else is sent as written and Salesforce decides',
     'An update replaces the whole transform',
-    'The schedule is not in the file, and a deploy does not change it',
+    'A transform without a schedule is saved as',
     'No match creates the transform with one POST',
-    'refuse system transforms and transforms with a namespace',
+    'Salesforce refuses writes to the system transforms a data graph creates',
   ])
     assert.ok(page.includes(text), text);
   assert.ok(dlo.replaceAll(/\s+/g, ' ').includes('offline-tested'));

@@ -50,7 +50,7 @@ crud_rows:
     failures: 'An update replaces the whole transform: a value left out is reset. PATCH answers 405.'
     cli_note: 'no Metadata API type; a hidden DataTransform lists names only'
     api_note: 'an update replaces the whole transform: a value left out is reset; PATCH answers 405'
-    plugin_note: 'the file leaves out the schedule; update and delete refuse system and namespaced transforms'
+    plugin_note: 'the file holds the schedule; a deployed schedule makes the transform run in the target org; Salesforce refuses writes to system transforms'
   - path: next/data-cloud-devops/segments.md
     label: Segments
     anchor: read
@@ -196,7 +196,7 @@ Append `--json` to either command for structured output. Salesforce decides what
 The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others. A retrieve without `-m` saves all DLOs, DMOs and mappings; every other type is retrieved only when `-m` names it.
 
 - A key the plugin does not know stays in the saved file. Deploy checks files strictly and refuses that file, naming the key path. Unknown keys in a data stream's read-only `observed` section do not block deploy.
-- An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams that are not Ingestion API streams, segments built in the UI or without DBT models, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, system or packaged data transforms, and data graph schedules the format does not hold.
+- An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams that are not Ingestion API streams, segments built in the UI or without DBT models, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, data transforms with both `definition` and `definitions`, and data graph schedules the format does not hold.
 - Deploy skips as-is files in a folder or Git range with a warning. Naming one refuses with `VERBATIM_NOT_DEPLOYABLE`, and so does publish. Deleting an as-is file in a Git range deletes the object by type and name, with the usual checks.
 - An object still fails when the read fails (HTTP or connection error), when it does not exist, when the answer names another object or data space, or when the org was caught mid-change or a list was incomplete.
 
