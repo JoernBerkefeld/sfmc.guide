@@ -43,7 +43,8 @@ const CRUD_OPERATIONS = ['read', 'create', 'update', 'delete'];
 const ANCHOR = { read: 'read', create: 'create', update: 'update', delete: 'delete' };
 const CRUD_EXPECTED = [
   // data-stream-definition: B3 sweep (CLI and Metadata API change the stream label).
-  ['partial:cli,api,plugin', 'partial:api,plugin', 'partial:cli,api,plugin', 'partial:api,plugin'],
+  // Read and delete are yes through the native API and plugin (best single route).
+  ['yes:cli,api,plugin', 'partial:api,plugin', 'partial:cli,api,plugin', 'yes:api,plugin'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'partial:cli,api,plugin', 'yes:cli,api,plugin'],
@@ -52,15 +53,10 @@ const CRUD_EXPECTED = [
   // data-source-object: B1 sweep (API 68 CLI + Metadata API CRUD).
   ['yes:cli,api', 'yes:cli,api', 'yes:cli,api', 'yes:cli,api'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
-  [
-    'yes:cli,api,plugin',
-    'partial:cli,api,plugin',
-    'partial:cli,api,plugin',
-    'partial:cli,api,plugin',
-  ],
+  ['yes:cli,api,plugin', 'partial:cli,api,plugin', 'partial:cli,api,plugin', 'yes:cli,api,plugin'],
   // segment-members: B2 sweep (full paged read, 405 on writes, publish recomputes membership).
   // Q4: the plugin publish recomputes membership (update). Q5: the plugin exports members (read).
-  ['yes:api,plugin', 'no:', 'partial:api,plugin', 'no:'],
+  ['yes:api,plugin', 'no:', 'yes:api,plugin', 'no:'],
   // data-graphs: plugin delete is yes (the dependency block is a sound prerequisite).
   ['yes:api,plugin', 'yes:api,plugin', 'partial:api,plugin', 'yes:api,plugin'],
   ['yes:api,plugin', 'yes:api,plugin', 'yes:api,plugin', 'yes:api,plugin'],
@@ -753,13 +749,20 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     const methodTable = targetHtml.match(/<table class="crud-methods">([\s\S]*?)<\/table>/)?.[1];
     if (
       [
+        'data-stream-definition',
         'data-lake-object',
         'data-model-object',
         'dlo-dmo-mapping',
         'field-source-target-relationship',
+        'data-source-object',
         'calculated-insights',
+        'segments',
+        'segment-members',
         'data-graphs',
         'identity-resolution',
+        'data-kit-object-template',
+        'data-package-kit-definition',
+        'data-package-kit-object',
       ].includes(DATA_CLOUD_SLUGS[rowIndex])
     ) {
       assert.ok(methodTable, 'Explicit method grades render separately from overall');
@@ -772,6 +775,46 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
       );
       for (const [methodIndex, row] of methodRows.entries()) {
         const gradesByPage = {
+          // CLI read/update: the XML definition and its label only. API create/update: Ingestion
+          // API streams on an existing connection, additive mappings only. Unlisted = not graded.
+          'data-stream-definition': [
+            ['partial', 'unknown', 'partial', 'unknown'],
+            ['yes', 'partial', 'partial', 'yes'],
+            ['yes', 'partial', 'partial', 'yes'],
+          ],
+          'data-source-object': [
+            ['yes', 'yes', 'yes', 'yes'],
+            ['yes', 'yes', 'yes', 'yes'],
+            ['unknown', 'unknown', 'unknown', 'unknown'],
+          ],
+          // CLI: definitions only, never a live segment. API create/update: DBT shape, label and
+          // description PATCH. Plugin create/update: unexpressible variants are refused.
+          segments: [
+            ['partial', 'partial', 'partial', 'partial'],
+            ['yes', 'partial', 'partial', 'yes'],
+            ['yes', 'partial', 'partial', 'yes'],
+          ],
+          // API update: no per-member edit, only a full publish recompute.
+          'segment-members': [
+            ['unknown', 'unknown', 'unknown', 'unknown'],
+            ['yes', 'unknown', 'partial', 'unknown'],
+            ['yes', 'unknown', 'yes', 'unknown'],
+          ],
+          'data-kit-object-template': [
+            ['yes', 'partial', 'partial', 'yes'],
+            ['yes', 'partial', 'partial', 'yes'],
+            ['unknown', 'unknown', 'unknown', 'unknown'],
+          ],
+          'data-package-kit-definition': [
+            ['partial', 'yes', 'partial', 'yes'],
+            ['partial', 'yes', 'partial', 'yes'],
+            ['unknown', 'unknown', 'unknown', 'unknown'],
+          ],
+          'data-package-kit-object': [
+            ['yes', 'yes', 'yes', 'yes'],
+            ['yes', 'yes', 'yes', 'yes'],
+            ['unknown', 'unknown', 'unknown', 'unknown'],
+          ],
           // CLI create/delete: a disabled definition only; an active DLO is not deleted.
           'data-lake-object': [
             ['yes', 'partial', 'yes', 'partial'],

@@ -12,9 +12,9 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [api, plugin] }
+  read: { status: "yes", methods: [api, plugin], method_statuses: { api: "yes", plugin: "yes" } }
   create: { status: "no", methods: [] }
-  update: { status: "partial", methods: [api, plugin] }
+  update: { status: "yes", methods: [api, plugin], method_statuses: { api: "partial", plugin: "yes" } }
   delete: { status: "no", methods: [] }
 ---
 

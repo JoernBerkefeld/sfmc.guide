@@ -1,7 +1,6 @@
 {%- comment -%}
   Per-tool R/C/U/D grades for every row of page.crud_rows, read from each linked page's `crud`
-  front matter, so the overview never drifts from the type pages. A page without
-  `method_statuses` has one combined grade per operation; it is shown for each listed method.
+  front matter, so the overview never drifts from the type pages.
 {%- endcomment -%}
 {%- assign operations = 'read,create,update,delete' | split: ',' -%}
 {%- assign tools = 'cli,api,plugin' | split: ',' -%}
@@ -13,7 +12,7 @@
     {%- if resource %}
       {%- unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
     <tr>
-      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% unless resource.crud.read.method_statuses %}<br><small>one combined grade per operation</small>{% endunless %}</td>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
       {%- for tool in tools %}
       <td>
         {%- for operation in operations -%}

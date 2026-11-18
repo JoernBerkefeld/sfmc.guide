@@ -12,10 +12,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [cli, api] }
-  create: { status: "partial", methods: [cli, api] }
-  update: { status: "partial", methods: [cli, api] }
-  delete: { status: "yes", methods: [cli, api] }
+  read: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
+  create: { status: "partial", methods: [cli, api], method_statuses: { cli: "partial", api: "partial" } }
+  update: { status: "partial", methods: [cli, api], method_statuses: { cli: "partial", api: "partial" } }
+  delete: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}

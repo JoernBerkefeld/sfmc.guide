@@ -66,11 +66,6 @@
   }
 }
 
-.crud-matrix td small {
-  display: block;
-  margin-top: 0.2em;
-}
-
 .crud-matrix td:nth-child(n + 2):nth-child(-n + 4) {
   white-space: nowrap;
 }

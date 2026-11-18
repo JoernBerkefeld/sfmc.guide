@@ -28,7 +28,9 @@ test('native API68 stream create and update tabs send the plugin request bodies'
   for (const operation of ['read', 'create', 'update', 'delete']) {
     // B3 sweep (2026-11-16): the CLI label deploy makes Update cli, api, plugin.
     const methods = ['read', 'update'].includes(operation) ? 'cli, api, plugin' : 'api, plugin';
-    assert.ok(stream.includes(`${operation}: { status: "partial", methods: [${methods}] }`));
+    // Read and delete are yes through the native API and plugin (best single route).
+    const status = ['read', 'delete'].includes(operation) ? 'yes' : 'partial';
+    assert.ok(stream.includes(`${operation}: { status: "${status}", methods: [${methods}], `));
     const tab = stream.match(
       new RegExp(`{% include operation-tabs\\.html id="stream-definition-${operation}"[^\\n]+`),
     )[0];
@@ -107,7 +109,10 @@ test('segment predicate qualification stays native, source-only and narrowly bou
   assert.match(segment, /separate standard Metadata retrieval confirmed that same SQL/);
   assert.match(segment, /not audience membership or successful computation/);
   assert.match(segment, /does not qualify the reverse change/);
-  assert.match(segment, /update: \{ status: "partial", methods: \[cli, api, plugin\] \}/);
+  assert.match(
+    segment,
+    /update: \{ status: "partial", methods: \[cli, api, plugin\](?:, method_statuses: \{ [^{}]+ \})? \}/,
+  );
   assert.doesNotMatch(segment, /segment-predicate-|OwnedSegRetest|compiled.worktree/);
 });
 
