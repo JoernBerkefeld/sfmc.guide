@@ -47,7 +47,8 @@ const CRUD_EXPECTED = [
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'partial:cli,api,plugin', 'yes:cli,api,plugin'],
-  ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'partial:cli,api,plugin', 'yes:cli,api,plugin'],
+  // field-source-target-relationship: plugin update is yes (Salesforce refuses target/owner changes).
+  ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
   // data-source-object: B1 sweep (API 68 CLI + Metadata API CRUD).
   ['yes:cli,api', 'yes:cli,api', 'yes:cli,api', 'yes:cli,api'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
@@ -275,6 +276,10 @@ puts JSON.generate(inputs.map { |capability| template.render!('include' => { 'ca
   assert.match(legend, /Not supported<\/span>: tested in the stated scope and not supported\./);
   assert.match(legend, /Not tested<\/span>: nothing has been tested or researched here\./);
   assert.match(legend, /Neither\s+Not supported nor Not tested displays method icons\./);
+  assert.match(
+    legend,
+    /The sf-plugin-data grade follows the plugin README's definition: a refusal or gap in the plugin itself is Partial; Salesforce limits, API-version and data-space limits and verification breadth are not\./,
+  );
 });
 
 function dataCloudGuide() {
@@ -737,6 +742,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     if (
       [
         'data-lake-object',
+        'data-model-object',
         'dlo-dmo-mapping',
         'field-source-target-relationship',
         'calculated-insights',
@@ -760,15 +766,25 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
             ['yes', 'yes', 'yes', 'yes'],
             ['yes', 'yes', 'yes', 'yes'],
           ],
+          // API update: no field-removal route; a type change is accepted but ignored.
+          // Plugin update/delete: platform-generated and namespaced DMOs (and a whole standard
+          // DMO on delete) are refused by the plugin itself.
+          'data-model-object': [
+            ['yes', 'yes', 'yes', 'yes'],
+            ['yes', 'yes', 'partial', 'yes'],
+            ['yes', 'yes', 'partial', 'partial'],
+          ],
+          // Plugin create/update: platform-generated and namespaced target DMOs are refused by the
+          // plugin; update also never changes the mapping label.
           'dlo-dmo-mapping': [
             ['yes', 'yes', 'partial', 'partial'],
             ['yes', 'yes', 'partial', 'partial'],
-            ['yes', 'yes', 'partial', 'yes'],
+            ['yes', 'partial', 'partial', 'yes'],
           ],
           'field-source-target-relationship': [
             ['yes', 'partial', 'partial', 'partial'],
             ['yes', 'yes', 'partial', 'yes'],
-            ['yes', 'yes', 'partial', 'yes'],
+            ['yes', 'yes', 'yes', 'yes'],
           ],
           'calculated-insights': [
             ['yes', 'partial', 'partial', 'partial'],
@@ -778,7 +794,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
           'data-graphs': [
             ['no', 'no', 'no', 'no'],
             ['yes', 'partial', 'partial', 'partial'],
-            ['partial', 'yes', 'partial', 'partial'],
+            ['yes', 'yes', 'partial', 'partial'],
           ],
           'identity-resolution': [
             ['no', 'no', 'no', 'no'],
@@ -1012,7 +1028,9 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   );
   const index = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
   const main = fs.readFileSync(path.join(dir, 'index.md'), 'utf8');
-  assert.ok(main.trimEnd().endsWith("The plugin's `delete` command needs no manifest."));
+  assert.ok(main.includes("The plugin's `delete` command needs no manifest."));
+  assert.match(main, /^## Data Spaces$/m);
+  assert.ok(main.trimEnd().endsWith('which accepts `GET`, `PUT` and `DELETE`.'));
   assert.doesNotMatch(main, /^## Data Model Object/m);
   assert.match(main, /all linked type-page details/);
   assert.match(main, /^crud_rows:$/m);

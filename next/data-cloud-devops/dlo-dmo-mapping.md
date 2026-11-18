@@ -14,7 +14,7 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
-  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
   delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "yes" } }
 ---
@@ -125,7 +125,7 @@ Downloaded mapping: 1
 
 If the file already exists and differs, the command stops unless you add `--overwrite` (`-x`). `--output-dir` (`-d`) sets the project root, which defaults to the current directory. The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`; non-default spaces are offline-tested only. The default and `auto` select API `68.0`; numeric pins from `61.0` are kept as given.
 
-`sf data360 retrieve -m mapping -o SOURCE_ALIAS` saves every mapping of the org, and `sf data360 retrieve -o SOURCE_ALIAS` without `-m` saves all DLOs, DMOs and mappings. One retrieve takes any mix of families: bare `-m mapping` or `mapping:Name` selectors can stand beside segments, calculated insights, streams, transforms, graphs or identity resolution, and each family is read in turn.
+`sf data360 retrieve -m mapping -o SOURCE_ALIAS` saves every mapping of the org. A retrieve without `-m` includes every mapping as well. One retrieve takes any mix of families: bare `-m mapping` or `mapping:Name` selectors can stand beside segments, calculated insights, streams, transforms, graphs or identity resolution, and each family is read in turn.
 
 A bare `-m mapping` reads the per-DMO mapping lists six at a time and takes each mapping from its list entry instead of a separate read; in a live test the list entry equalled the separate read for all 143 mappings of the test org. Each source DLO is read once per run, however many mappings name it. Files, warnings and errors keep the name order. In a live test the bare retrieve of those 143 mappings took 138 s instead of 547 s and wrote byte-identical files.
 

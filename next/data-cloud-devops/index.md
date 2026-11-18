@@ -179,7 +179,7 @@ Append `--json` to either command for structured output. Salesforce decides what
 
 ### What retrieve saves
 
-The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others.
+The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others. A retrieve without `-m` saves all DLOs, DMOs and mappings; every other type is retrieved only when `-m` names it.
 
 - A key the plugin does not know stays in the saved file. Deploy checks files strictly and refuses that file, naming the key path. Unknown keys in a data stream's read-only `observed` section do not block deploy.
 - An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams that are not Ingestion API streams, segments built in the UI or without DBT models, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, system or packaged data transforms, and data graph schedules the format does not hold.
@@ -191,3 +191,23 @@ Lists are read page by page until the org has no more, and an unusable entry is 
 ### Deletion examples
 
 Some standard-CLI deletions on the resource pages use a destructive-change manifest (an XML file naming the members to delete, applied with `--post-destructive-changes`). They describe the lower-level mechanism and are not self-contained workflows: use them only with files whose ownership and dependencies you have checked, keep those files temporary and out of Git, and never delete a shared or populated object to make an example work. The plugin's `delete` command needs no manifest.
+
+## Data Spaces
+
+A data space is a partition of one Data Cloud org; each space has a name and, for custom spaces, a short `prefix` (for example `ds2`). Every org has a `default` space. The tools record the space in different places:
+
+| Tool | How it handles the space |
+|---|---|
+| Salesforce CLI (source format) | No data-space folders and no DataSpace metadata type. The space is a field inside some files: `mktDataModelAttributes/dataSpaceName` in a DMO, `dataSpaceDefinitionDevName` in a data kit. DLO files carry no space. |
+| Metadata API | Uses the same fields. A DMO created with `dataSpaceName` set to a custom space lands in that space, under the API name you gave it. |
+| Connect API (`/ssot/…`) | Takes the space in the body (`dataSpaceName` for DMOs, `dataspaceInfo` for DLOs) and returns it on reads. Many routes ignore the `dataspace` query parameter; list routes for mappings, relationships and segments do filter by it. `GET /ssot/data-spaces` lists the spaces and their prefixes. |
+| sf-plugin-data | Works in the default space. An object from another space is saved as-is and is not deployed. |
+| Data kits | The package does not fix the space; you pick the target space in the separate data-kit deploy step. |
+
+**Names are unique per org, not per space**, for DLOs, DMOs, calculated insights, data transforms and data graphs: creating a second object with an existing name in another space is refused. The prefix is not added to their API names either. A DMO named `Example__dlm` in a custom space keeps exactly that name.
+
+**Segments are the exception.** A segment in a custom space is stored as `<prefix>_<Name>` (for example `ds2_Example`), so the same segment name can exist once per space. A name that already starts with the prefix is not prefixed twice.
+
+**Generated names** for mappings, relationships and Ingestion API data streams are created by Salesforce and get no prefix, so they cannot clash between spaces.
+
+**DLOs and several spaces.** A DLO can belong to more than one space, and some standard DLOs do. Creating a DLO with an empty or missing `dataspaceInfo` puts it in `default`, so a new DLO always has a space. The DLO `PATCH` route does not accept `dataspaceInfo`; membership of a space is listed at `/ssot/data-spaces/<name>/members`, which accepts `GET`, `PUT` and `DELETE`.

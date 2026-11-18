@@ -20,10 +20,13 @@ test('DMO attributes its own native route to Connect REST, not Metadata API', ()
 });
 
 test('DMO CRUD badges and tabs match bounded native matrix evidence', () => {
-  assert.match(page, /read: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
-  assert.match(page, /create: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
-  assert.match(page, /update: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
-  assert.match(page, /delete: \{ status: "yes", methods: \[cli, api, plugin\] \}/);
+  const grades = (cli, api, plugin) =>
+    `methods: \\[cli, api, plugin\\], method_statuses: \\{ cli: "${cli}", api: "${api}", plugin: "${plugin}" \\} \\}`;
+  assert.match(page, new RegExp(`read: \\{ status: "yes", ${grades('yes', 'yes', 'yes')}`));
+  assert.match(page, new RegExp(`create: \\{ status: "yes", ${grades('yes', 'yes', 'yes')}`));
+  // Plugin update/delete are partial: the plugin refuses platform-generated and namespaced DMOs.
+  assert.match(page, new RegExp(`update: \\{ status: "yes", ${grades('yes', 'partial', 'partial')}`));
+  assert.match(page, new RegExp(`delete: \\{ status: "yes", ${grades('yes', 'yes', 'partial')}`));
   for (const operation of ['read', 'create', 'update', 'delete']) {
     assert.match(
       page,

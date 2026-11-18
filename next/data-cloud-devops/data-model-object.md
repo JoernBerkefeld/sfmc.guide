@@ -12,10 +12,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [cli, api, plugin] }
-  create: { status: "yes", methods: [cli, api, plugin] }
-  update: { status: "yes", methods: [cli, api, plugin] }
-  delete: { status: "yes", methods: [cli, api, plugin] }
+  read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  create: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "yes" } }
+  update: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "partial", plugin: "partial" } }
+  delete: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "yes", api: "yes", plugin: "partial" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
@@ -262,7 +262,7 @@ Downloaded dmo: 1
 
 If that file already exists and differs, the command stops unless you add `--overwrite` (`-x`). `--output-dir` (`-d`) sets the project root, which defaults to the current directory.
 
-`sf data360 retrieve -m dmo -o SOURCE_ALIAS` saves every DMO of the data space, and `sf data360 retrieve -o SOURCE_ALIAS` without `-m` saves all DLOs, DMOs and mappings. Both are offline-tested. An empty inventory succeeds with no files. Standard, namespaced and platform-generated DMOs can be retrieved.
+`sf data360 retrieve -m dmo -o SOURCE_ALIAS` saves every DMO of the data space. A retrieve without `-m` includes every DMO as well. The `-m dmo` form ran live at API 68.0 over every DMO of an org. An empty inventory succeeds with no files. Standard, namespaced and platform-generated DMOs can be retrieved.
 
 The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`. A file saved for one data space is never replaced by another space's file, even with `--overwrite`. Non-default data spaces are offline-tested only.
 
@@ -300,7 +300,7 @@ Send `readMetadata` to the Metadata SOAP endpoint. Post the envelope to `https:/
 The record holds `fullName`, `label`, `mktDataModelAttributes` and the `fields` list. Each field carries `mktDataModelFieldAttributes`; the primary key field has `primaryIndexOrder` set. `listMetadata` with the type `CustomObject` did not return any DMO at API 68.0, so you need to know the name first; the Connect API tab lists them.
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object's XML definition and its fields." cli_body=read_cli metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata by exact name. listMetadata does not list DMOs." metadata_body=read_metadata connect_state="available" connect_reason="Tested at API versions 61.0 to 68.0 (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Offline-tested; the native routes it uses are observed at API 68.0 (see Evidence)." plugin_body=read_plugin %}
+{% include operation-tabs.html id="dmo-read" label="Read" split_api=true cli_state="available" cli_reason="Downloads the object's XML definition and its fields." cli_body=read_cli metadata_state="available" metadata_reason="Tested at API 68.0 with readMetadata by exact name. listMetadata does not list DMOs." metadata_body=read_metadata connect_state="available" connect_reason="Tested at API versions 61.0 to 68.0 (see Evidence)." connect_body=read_connect plugin_state="available" plugin_reason="Tested live at API 68.0, by exact name and for every DMO of an org (see Evidence)." plugin_body=read_plugin %}
 
 ## Create
 
@@ -528,7 +528,7 @@ Send `createMetadata` to `https://MyDomainName.my.salesforce.com/services/Soap/m
 The response holds one `success` `true` result each for the object and both fields. As with the CLI tab, the DMO has only `Id__c` (the primary key) and `Note__c`; no generated fields are added. The Connect API GET finds it.
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-create" label="Create" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." cli_body=create_cli metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." metadata_body=create_metadata connect_state="available" connect_reason="Tested for empty custom DMOs at API versions 61.0 to 68.0 (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Offline-tested; the native routes it uses are observed at API 68.0 (see Evidence)." plugin_body=create_plugin %}
+{% include operation-tabs.html id="dmo-create" label="Create" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." cli_body=create_cli metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata on a new name. Unlike a Connect API create, it adds no generated fields (see Evidence)." metadata_body=create_metadata connect_state="available" connect_reason="Tested for empty custom DMOs at API versions 61.0 to 68.0 (see Evidence)." connect_body=create_connect plugin_state="available" plugin_reason="Tested live at API 68.0 for custom DMOs, alone and together with DLOs, mappings and relationships (see Evidence)." plugin_body=create_plugin %}
 
 ## Update
 
@@ -762,7 +762,7 @@ Read the DMO and its mappings afterwards: the field and its pairs are gone, ever
 To add a field, send `createMetadata` with one `CustomField` record whose `fullName` is `Customer__dlm.Extra__c` and whose attributes match `Note__c` on the Create tab. Both calls persisted: the Connect API GET showed the new label and field. The label change also worked on a DMO that the Connect API created.
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and an added field, and at API 68 for removing one custom field on empty custom DMOs." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0 (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Offline-tested; field removal is observed at API 68.0 on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
+{% include operation-tabs.html id="dmo-update" label="Update" split_api=true cli_state="available" cli_reason="Tested at API 68.0 for a label change and an added field, and at API 68 for removing one custom field on empty custom DMOs." cli_body=update_cli metadata_state="available" metadata_reason="Tested at API 68.0: updateMetadata changed the label and createMetadata added a text field (see Evidence)." metadata_body=update_metadata connect_state="available" connect_reason="Tested for labels and added fields at API versions 61.0 to 68.0. Removing a field or changing its type is not possible here (see Evidence)." connect_body=update_connect plugin_state="available" plugin_reason="Tested live at API 68.0 for a label change and for field removal on empty custom DMOs (see Evidence)." plugin_body=update_plugin %}
 
 ## Delete
 
@@ -886,7 +886,7 @@ Send `deleteMetadata` with the exact name:
 The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_FOUND`. This worked on a DMO that `createMetadata` created, on an empty, unmapped DMO that the Connect API created, and on an empty, mapped DMO that the Connect API created; its only mapping was deleted with it (the mapping GET answers `404`).
 {% endcapture %}
 
-{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on empty DMOs created by deploy and by the Connect API, unmapped and mapped. A relationship target is refused (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on empty DMOs created by createMetadata and by the Connect API, unmapped and mapped (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Offline-tested for the whole object; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
+{% include operation-tabs.html id="dmo-delete" label="Delete" split_api=true cli_state="available" cli_reason="Tested at API 68.0 on empty DMOs created by deploy and by the Connect API, unmapped and mapped. A relationship target is refused (see Evidence)." cli_body=delete_cli metadata_state="available" metadata_reason="Tested at API 68.0 with deleteMetadata on empty DMOs created by createMetadata and by the Connect API, unmapped and mapped (see Evidence)." metadata_body=delete_metadata connect_state="available" connect_reason="Tested on empty, unmapped custom DMOs (see Evidence)." connect_body=delete_connect plugin_state="available" plugin_reason="Tested live at API 68.0 for whole custom DMOs, deleted with their mappings, DLOs and relationships; field removal is observed at API 68 (see Evidence)." plugin_body=delete_plugin %}
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
@@ -926,7 +926,7 @@ The result is `success` `true`, and the Connect API GET then answers `ITEM_NOT_F
 - Field item paths return `404`, and PUT on the object returns `405`. Removing a custom field goes through the Metadata API with a destructive change for the member `<ObjectName>__dlm.<FieldName>__c` (API `65.0` and `68.0`, empty custom DMOs).
 - Salesforce removes a mapped field and silently drops exactly that field's pairs. The mappings stay active.
 
-**Plugin behaviour (offline-tested):** the plugin code and its offline tests back everything in this block. The native DMO requests it sends are the raw routes recorded above. DMOs that the plugin deploys inside mapping and relationship batches are recorded at API 68; standalone plugin retrieve, create, update and delete of a DMO have no live record.
+**Plugin behaviour (offline-tested):** the plugin code and its offline tests back everything in this block. The native DMO requests it sends are the raw routes recorded above. Live plugin runs at API 68 cover retrieve by exact name and of every DMO in an org, create of a DMO alone and inside DLO, mapping and relationship batches, a label update, field removal, and delete together with the DMO's mappings, DLOs and relationships; they settle the method grades, not the rules below.
 
 - The plugin keeps no local allowlists. It checks only the shape of the saved file. Category, field data types, labels and descriptions are sent as authored, and Salesforce decides. Its error is reported.
 - Default and `auto` select API `68.0`; explicit numeric versions from `61.0` are kept as given, and admitting a version is not a live test of it.
