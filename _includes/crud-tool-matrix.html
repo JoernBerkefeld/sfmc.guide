@@ -12,7 +12,7 @@
     {%- if resource %}
       {%- unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls[resource.url] %}
     <tr>
-      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a></td>
+      <td><a href="{{ resource.url | relative_url }}#{{ row.anchor | escape }}">{{ row.label | escape }}</a>{% if row.notes %}<small>{{ row.notes | escape }}</small>{% endif %}</td>
       {%- for tool in tools %}
       <td>
         {%- for operation in operations -%}

@@ -26,6 +26,7 @@ const DATA_CLOUD_SLUGS = [
   'field-source-target-relationship',
   'data-source-object',
   'calculated-insights',
+  'data-transforms',
   'segments',
   'segment-members',
   'data-graphs',
@@ -34,9 +35,7 @@ const DATA_CLOUD_SLUGS = [
   'data-package-kit-definition',
   'data-package-kit-object',
 ];
-const NAV_SLUGS = DATA_CLOUD_SLUGS.flatMap((slug) =>
-  slug === 'calculated-insights' ? [slug, 'data-transforms'] : [slug],
-);
+const NAV_SLUGS = DATA_CLOUD_SLUGS;
 
 const CRUD_OPERATIONS = ['read', 'create', 'update', 'delete'];
 // Frontmatter key -> page anchor. The anchor matches the key.
@@ -53,6 +52,8 @@ const CRUD_EXPECTED = [
   // data-source-object: B1 sweep (API 68 CLI + Metadata API CRUD).
   ['yes:cli,api', 'yes:cli,api', 'yes:cli,api', 'yes:cli,api'],
   ['yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin', 'yes:cli,api,plugin'],
+  // data-transforms: no CLI type; direct API full CRUD; plugin read/update/delete partial.
+  ['yes:api,plugin', 'yes:api,plugin', 'yes:api,plugin', 'yes:api,plugin'],
   ['yes:cli,api,plugin', 'partial:cli,api,plugin', 'partial:cli,api,plugin', 'yes:cli,api,plugin'],
   // segment-members: B2 sweep (full paged read, 405 on writes, publish recomputes membership).
   // Q4: the plugin publish recomputes membership (update). Q5: the plugin exports members (read).
@@ -616,6 +617,7 @@ test('Data Cloud CLI caveats distinguish rejected changes from untested operatio
         'dlo-dmo-mapping',
         'field-source-target-relationship',
         'calculated-insights',
+        'data-transforms',
         'data-graphs',
         'identity-resolution',
         'segments',
@@ -647,6 +649,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     'dlo-to-dmo-mapping-objectsourcetargetmap',
     'field-relationship-fieldsrctrgtrelationship',
     'source-object-configuration-datasourceobject',
+    'read',
     'read',
     'read',
     'segment-members-runtime-data-not-metadata',
@@ -756,6 +759,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
         'field-source-target-relationship',
         'data-source-object',
         'calculated-insights',
+        'data-transforms',
         'segments',
         'segment-members',
         'data-graphs',
@@ -845,6 +849,14 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
             ['yes', 'partial', 'partial', 'partial'],
             ['yes', 'partial', 'partial', 'partial'],
             ['yes', 'yes', 'yes', 'yes'],
+          ],
+          // CLI: no DataTransform registry type. API: full CRUD, PUT is a full replace.
+          // Plugin read: the file leaves out the schedule. Update/delete: system and namespaced
+          // transforms are refused by the plugin; update also never changes the schedule.
+          'data-transforms': [
+            ['no', 'no', 'no', 'no'],
+            ['yes', 'yes', 'yes', 'yes'],
+            ['partial', 'yes', 'partial', 'partial'],
           ],
           'data-graphs': [
             ['no', 'no', 'no', 'no'],
@@ -987,6 +999,7 @@ test('CRUD overview preserves curated order and hides only explicit hidden targe
       'Relationships',
       'Source object definitions',
       'Calculated insights',
+      'Data Transforms',
       'Segments',
       'Segment members',
       'Data Graphs',
@@ -1007,7 +1020,7 @@ test('CRUD overview preserves curated order and hides only explicit hidden targe
   const renderedRows = [
     ...html.matchAll(/<td><a href="\/next\/data-cloud-devops\/[^"]+">[\s\S]*?<\/tr>/g),
   ];
-  assert.equal(renderedRows.length, 14, 'Absent discoverable flags remain visible');
+  assert.equal(renderedRows.length, 15, 'Absent discoverable flags remain visible');
   for (const [index, row] of rows.entries()) {
     const cells = [...renderedRows[index][0].matchAll(/<td>([\s\S]*?)<\/td>/g)];
     const text = cells[4][1].replaceAll(/<[^>]+>/g, '').trim();
@@ -1081,7 +1094,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   const dir = path.join(SITE, 'next', 'data-cloud-devops');
   assert.deepEqual(
     fs.readdirSync(dir).toSorted(),
-    ['index', 'data-transforms', ...DATA_CLOUD_SLUGS].map((slug) => slug + '.md').toSorted(),
+    ['index', ...DATA_CLOUD_SLUGS].map((slug) => slug + '.md').toSorted(),
   );
   const index = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
   const main = fs.readFileSync(path.join(dir, 'index.md'), 'utf8');

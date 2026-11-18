@@ -1019,7 +1019,7 @@
     "url": "/next/data-cloud-devops/data-transforms/",
     "section": "Data Cloud DevOps",
     "type": "page",
-    "description": "The plugin's transform commands: the file holds the transform as Salesforce returns it, deploy creates or updates by name and Salesforce decides."
+    "description": "Data transforms through the native API and sf-plugin-data: the standard CLI has no transform type, the API reads, creates, replaces and deletes them, and the plugin keeps them as files."
   },
   {
     "name": "DLO-DMO-mapping",

@@ -12,10 +12,10 @@ operation_tabs: true
 platforms:
   - next
 crud:
-  read: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
-  create: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
-  update: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
-  delete: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes" } }
+  read: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes", plugin: "no" } }
+  create: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes", plugin: "no" } }
+  update: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes", plugin: "no" } }
+  delete: { status: "yes", methods: [cli, api], method_statuses: { cli: "yes", api: "yes", plugin: "no" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}

@@ -116,8 +116,8 @@ test('segment predicate qualification stays native, source-only and narrowly bou
   assert.doesNotMatch(segment, /segment-predicate-|OwnedSegRetest|compiled.worktree/);
 });
 
-test('overview retains fourteen resources and separate API provenance', () => {
+test('overview retains fifteen resources and separate API provenance', () => {
   const overview = read('index');
-  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 14);
+  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 15);
   assert.doesNotMatch(overview, /mcp\/execute|paramsJson/);
 });

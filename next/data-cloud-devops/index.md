@@ -15,6 +15,7 @@ crud_rows:
     label: Data Streams
     anchor: data-stream-configuration-datastreamdefinition
     failures: '—'
+    notes: 'Ingestion API and Salesforce CRM streams.'
   - path: next/data-cloud-devops/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
@@ -23,6 +24,7 @@ crud_rows:
     label: DMOs
     anchor: data-model-object-dmo-customobject-dlm
     failures: 'A changed field type is accepted (HTTP 200) but silently ignored. API 60.0 returns 404 for every method.'
+    notes: 'API: no field removal. Plugin: refuses platform-generated and namespaced DMOs, and standard DMOs on delete.'
   - path: next/data-cloud-devops/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
@@ -39,6 +41,11 @@ crud_rows:
     label: Calculated insights
     anchor: read
     failures: '—'
+  - path: next/data-cloud-devops/data-transforms.md
+    label: Data Transforms
+    anchor: read
+    failures: 'An update replaces the whole transform: a value left out is reset. PATCH answers 405.'
+    notes: 'Plugin: refuses system and namespaced transforms on update and delete, and keeps the schedule out of its file and never changes it.'
   - path: next/data-cloud-devops/segments.md
     label: Segments
     anchor: read
@@ -47,6 +54,7 @@ crud_rows:
     label: Segment members
     anchor: segment-members-runtime-data-not-metadata
     failures: '—'
+    notes: 'Read is the member export, update is publish; runtime rows have no create or delete.'
   - path: next/data-cloud-devops/data-graphs.md
     label: Data Graphs
     anchor: operational-data-graphs
@@ -96,7 +104,7 @@ Each linked page covers one logical resource, with Retrieve, Create, Update and 
 
 <p class="crud-legend"><span class="crud-chip crud-chip--yes">yes</span> usable workflow · <span class="crud-chip crud-chip--partial">partial</span> part of the operation is missing or refused · <span class="crud-chip crud-chip--no">no</span> not supported · <span class="crud-chip crud-chip--none">—</span> not offered or not tested</p>
 
-Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata API). API means direct REST calls. Plugin means `sf data360`. The four letters are read, create, update and delete; hover a letter for its grade. Grades come from each type page and cover the usable workflows supplied there, not every observed operation; write permissions, dependencies and processing warnings still apply. The plugin grade follows the plugin README's definition: a refusal or gap in the plugin itself is partial; Salesforce limits, API-version and data-space limits and verification breadth are not. Data transforms are graded on their own page.
+Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata API). API means direct REST calls. Plugin means `sf data360`. The four letters are read, create, update and delete; hover a letter for its grade. Grades come from each type page and cover the usable workflows supplied there, not every observed operation; write permissions, dependencies and processing warnings still apply. The plugin grade follows the plugin README's definition: a refusal or gap in the plugin itself is partial; Salesforce limits, API-version and data-space limits and verification breadth are not.
 
 {% include crud-tool-matrix.html %}
 

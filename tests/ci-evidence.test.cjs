@@ -98,7 +98,7 @@ test('CI retains partial writes, four operation tabs and synchronized overview l
   assert.match(ci, /verification: verified/);
   assert.equal((ci.match(/include operation-tabs\.html/g) || []).length, 4);
   assert.ok(ci.indexOf('**Verification scope:**') < ci.indexOf('A calculated insight computes'));
-  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 14);
+  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 15);
 });
 
 test('every Data Cloud DevOps page still answers at its old data-cloud-cli URL', () => {

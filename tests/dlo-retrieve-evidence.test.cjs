@@ -53,7 +53,8 @@ test('DLO and transform pages describe transform outputs and the file as Salesfo
   const nav = fs.readFileSync(path.join(__dirname, '../_data/navigation.yml'), 'utf8');
   assert.match(nav, /- title: Data Transforms\n {10}url: \/next\/data-cloud-devops\/data-transforms\//);
   assert.ok(!overview.includes('[Data Transforms]('), 'no transform paragraph on the overview');
-  assert.doesNotMatch(transform, /^crud:|plugin_state="available"/m);
+  assert.match(transform, /^crud:$/m);
+  assert.equal((transform.match(/plugin_state="available"/g) || []).length, 4);
   const index = JSON.parse(fs.readFileSync(path.join(__dirname, '../site-index.json'), 'utf8'));
   assert.equal(
     index.filter((entry) => entry.url === '/next/data-cloud-devops/data-transforms/').length,

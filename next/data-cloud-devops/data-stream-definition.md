@@ -13,9 +13,9 @@ platforms:
   - next
 crud:
   read: { status: "yes", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "yes", plugin: "yes" } }
-  create: { status: "partial", methods: [api, plugin], method_statuses: { api: "partial", plugin: "partial" } }
+  create: { status: "partial", methods: [api, plugin], method_statuses: { cli: "no", api: "partial", plugin: "partial" } }
   update: { status: "partial", methods: [cli, api, plugin], method_statuses: { cli: "partial", api: "partial", plugin: "partial" } }
-  delete: { status: "yes", methods: [api, plugin], method_statuses: { api: "yes", plugin: "yes" } }
+  delete: { status: "yes", methods: [api, plugin], method_statuses: { cli: "no", api: "yes", plugin: "yes" } }
 ---
 
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
