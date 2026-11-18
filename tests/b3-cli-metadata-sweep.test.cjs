@@ -7,7 +7,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DIR = path.join(__dirname, '..', 'next', 'data-cloud-cli');
+const DIR = path.join(__dirname, '..', 'next', 'data-cloud-devops');
 const read = (slug) => fs.readFileSync(path.join(DIR, `${slug}.md`), 'utf8');
 const tab = (page, id) =>
   page.match(new RegExp(String.raw`{% include operation-tabs\.html id="${id}"[^\n]*%}`))[0];

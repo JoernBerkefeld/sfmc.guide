@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const directory = path.join(__dirname, '../next/data-cloud-cli');
+const directory = path.join(__dirname, '../next/data-cloud-devops');
 const read = (name) => fs.readFileSync(path.join(directory, `${name}.md`), 'utf8');
 
 const capture = (page, name) => page.split(`{% capture ${name} %}`)[1].split('{% endcapture %}')[0];
@@ -16,7 +16,7 @@ test('stream-owned DLO lifecycle points to the native API68 stream routes, not a
     /create: \{ status: "yes", methods: \[cli, api, plugin\](?:, method_statuses: \{[^}]*\})? \}/,
   );
   for (const anchor of ['create', 'update', 'delete'])
-    assert.ok(dlo.includes(`/next/data-cloud-cli/data-stream-definition/#${anchor})`), anchor);
+    assert.ok(dlo.includes(`/next/data-cloud-devops/data-stream-definition/#${anchor})`), anchor);
   assert.match(dlo, /Creating the connection or its event schema is not covered here/);
   assert.match(dlo, /Adding a field to the source event schema is not covered here/);
   assert.doesNotMatch(dlo, /d360_|\/ssot\/mcp\/execute|documented contract, not a qualified/);
@@ -113,6 +113,6 @@ test('segment predicate qualification stays native, source-only and narrowly bou
 
 test('overview retains fourteen resources and separate API provenance', () => {
   const overview = read('index');
-  assert.equal((overview.match(/^  - path: next\/data-cloud-cli\//gm) || []).length, 14);
+  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 14);
   assert.doesNotMatch(overview, /mcp\/execute|paramsJson/);
 });

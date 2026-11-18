@@ -2,9 +2,11 @@
 layout: page
 title: "Data Kit definition"
 description: "Salesforce CLI workflows and verified operation limits for Kit definition: DataPackageKitDefinition."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-package-kit-definition/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-package-kit-definition/
+redirect_from:
+  - /next/data-cloud-cli/data-package-kit-definition/
 verification: verified
 operation_tabs: true
 platforms:
@@ -35,7 +37,7 @@ crud:
 {% capture read_cli %}
 Downloads the example kit definition with its templates and membership links, using the combined retrieval.
 
-Use the [combined kit retrieval](/next/data-cloud-cli/data-package-kit-object/#read). It saves the definition at `force-app/main/default/dataPackageKitDefinitions/CustomerIdentityKit.dataPackageKitDefinition-meta.xml`. Keep the templates and membership links with it for a complete snapshot. To download every definition without naming each one, use `--metadata DataPackageKitDefinition`.
+Use the [combined kit retrieval](/next/data-cloud-devops/data-package-kit-object/#read). It saves the definition at `force-app/main/default/dataPackageKitDefinitions/CustomerIdentityKit.dataPackageKitDefinition-meta.xml`. Keep the templates and membership links with it for a complete snapshot. To download every definition without naming each one, use `--metadata DataPackageKitDefinition`.
 
 Excerpt of the saved definition. Other attributes are omitted:
 
@@ -159,7 +161,7 @@ A shortened result is under Evidence.
 {% endcapture %}
 {% include operation-tabs.html id="kit-definition-delete" label="Delete" cli_state="available" cli_reason="Deletes the definition with its template and membership link, or on its own after its links are gone." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="deleteMetadata removes a definition." metadata_body=delete_metadata connect_state="blocked" connect_reason="DELETE on the Connect kit resource undeploys runtime components; it does not delete the definition." plugin_state="blocked" plugin_reason="The sf data360 commands have no data kit family." %}
 
-For the difference between moving a kit and installing it, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
+For the difference between moving a kit and installing it, see [Moving a kit is not installing it](/next/data-cloud-devops/data-package-kit-object/#moving-a-kit-is-not-installing-it).
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>

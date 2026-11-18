@@ -2,9 +2,11 @@
 layout: page
 title: "Data Kit template"
 description: "Salesforce CLI workflows and verified operation limits for Kit template: DataKitObjectTemplate."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-kit-object-template/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-kit-object-template/
+redirect_from:
+  - /next/data-cloud-cli/data-kit-object-template/
 verification: verified
 operation_tabs: true
 platforms:
@@ -101,7 +103,7 @@ The deploy reports the component as `Changed`. The update changes the stored tem
 ## Delete
 
 {% capture delete_cli %}
-Deletes one stored template. Delete its membership links first (see the [membership page](/next/data-cloud-cli/data-package-kit-object/#delete)).
+Deletes one stored template. Delete its membership links first (see the [membership page](/next/data-cloud-devops/data-package-kit-object/#delete)).
 
 Save this as `manifest/empty.xml`:
 
@@ -136,7 +138,7 @@ The deploy reports the component as `Deleted`. The live graph is not touched.
 {% endcapture %}
 {% include operation-tabs.html id="kit-template-delete" label="Delete" cli_state="available" cli_reason="Deletes one stored template after its membership links are gone. The live component is not touched." cli_body=delete_cli split_api=true metadata_state="available" metadata_reason="deleteMetadata removes one stored template." metadata_body=delete_metadata connect_state="blocked" connect_reason="DELETE on the Connect kit resource undeploys runtime components; it does not delete a template." plugin_state="blocked" plugin_reason="The sf data360 commands have no data kit family." %}
 
-For how moving a kit differs from installing it, see [Moving a kit is not installing it](/next/data-cloud-cli/data-package-kit-object/#moving-a-kit-is-not-installing-it).
+For how moving a kit differs from installing it, see [Moving a kit is not installing it](/next/data-cloud-devops/data-package-kit-object/#moving-a-kit-is-not-installing-it).
 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 
-const directory = path.join(__dirname, '../next/data-cloud-cli');
+const directory = path.join(__dirname, '../next/data-cloud-devops');
 const dlo = fs.readFileSync(path.join(directory, 'data-lake-object.md'), 'utf8');
 const overview = fs.readFileSync(path.join(directory, 'index.md'), 'utf8');
 
@@ -50,21 +50,23 @@ test('DLO and transform pages describe transform outputs and the file as Salesfo
   ])
     assert.ok(page.includes(text), text);
   assert.ok(dlo.replaceAll(/\s+/g, ' ').includes('offline-tested'));
-  assert.ok(overview.includes('[Data Transforms](/next/data-cloud-cli/data-transforms/)'));
+  const nav = fs.readFileSync(path.join(__dirname, '../_data/navigation.yml'), 'utf8');
+  assert.match(nav, /- title: Data Transforms\n {10}url: \/next\/data-cloud-devops\/data-transforms\//);
+  assert.ok(!overview.includes('[Data Transforms]('), 'no transform paragraph on the overview');
   assert.doesNotMatch(transform, /^crud:|plugin_state="available"/m);
   const index = JSON.parse(fs.readFileSync(path.join(__dirname, '../site-index.json'), 'utf8'));
   assert.equal(
-    index.filter((entry) => entry.url === '/next/data-cloud-cli/data-transforms/').length,
+    index.filter((entry) => entry.url === '/next/data-cloud-devops/data-transforms/').length,
     1,
   );
   assert.ok(
-    fs.existsSync(path.join(__dirname, '../_site/next/data-cloud-cli/data-transforms/index.html')),
+    fs.existsSync(path.join(__dirname, '../_site/next/data-cloud-devops/data-transforms/index.html')),
   );
   const overviewHtml = fs.readFileSync(
-    path.join(__dirname, '../_site/next/data-cloud-cli/index.html'),
+    path.join(__dirname, '../_site/next/data-cloud-devops/index.html'),
     'utf8',
   );
-  assert.match(overviewHtml, /href="\/next\/data-cloud-cli\/data-transforms\/"/);
+  assert.match(overviewHtml, /href="\/next\/data-cloud-devops\/data-transforms\/"/);
 });
 
 test('DLO reader samples contain all nine exact saved XML files', () => {

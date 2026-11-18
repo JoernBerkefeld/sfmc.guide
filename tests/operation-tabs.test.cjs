@@ -232,7 +232,7 @@ test('human workflows default to readable output with exactly eight explicit RES
     "'/services/data/v67.0/ssot/query-sql/QUERY_ID/rows?offset=0&rowLimit=1'",
   ];
   for (const name of names) {
-    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-cli/${name}.md`), 'utf8');
+    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
     const commands = page.split('\n').filter((line) => /^(?:sf |Get-Content .*\| sf )/u.test(line));
     const structured = commands.filter((line) => / --json(?:\s|$)/u.test(line));
     if (name === 'segment-members') {
@@ -327,7 +327,7 @@ const PLUGIN_GRADES = {
 
 for (const name of ['data-graphs', 'calculated-insights']) {
   test(`${name}: all plugin recipes are operation-local and narrowly qualified`, () => {
-    const source = fs.readFileSync(path.join(SITE, `next/data-cloud-cli/${name}.md`), 'utf8');
+    const source = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
     const captures = [...source.matchAll(/{% capture (\w+)_plugin %}([\s\S]*?){% endcapture %}/g)];
     assert.equal(captures.length, 4);
     const withoutPlugin = source.replaceAll(
@@ -415,7 +415,7 @@ for (const name of ['data-graphs', 'calculated-insights']) {
     { skip: !process.env.OPERATION_TABS_RENDERED },
     () => {
       const html = fs.readFileSync(
-        path.join(SITE, `_site/next/data-cloud-cli/${name}/index.html`),
+        path.join(SITE, `_site/next/data-cloud-devops/${name}/index.html`),
         'utf8',
       );
       const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
@@ -439,7 +439,7 @@ for (const name of ['calculated-insights', 'segment-members']) {
     { skip: !process.env.OPERATION_TABS_RENDERED },
     () => {
       const html = fs.readFileSync(
-        path.join(SITE, `_site/next/data-cloud-cli/${name}/index.html`),
+        path.join(SITE, `_site/next/data-cloud-devops/${name}/index.html`),
         'utf8',
       );
       assert.doesNotMatch(html, /{%|```|{% endcapture/);
@@ -450,7 +450,7 @@ for (const name of ['calculated-insights', 'segment-members']) {
       }
       const before = childProcess.execFileSync(
         'git',
-        ['show', `HEAD:next/data-cloud-cli/${name}.md`],
+        ['show', `HEAD:next/data-cloud-devops/${name}.md`],
         { cwd: SITE, encoding: 'utf8' },
       );
       for (const heading of before.matchAll(/^#{3,6} (.+)$/gm)) {
@@ -514,7 +514,7 @@ const METADATA_API_UPDATE_ONLY = new Set(['data-stream-definition']);
 
 for (const [name, [prefix, readState, type]] of Object.entries(METADATA_API_STATES)) {
   test(`${name}: Metadata API read tab matches the API 68 readMetadata evidence`, () => {
-    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-cli/${name}.md`), 'utf8');
+    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
     const include = page.match(
       new RegExp(String.raw`{% include operation-tabs\.html id="${prefix}-read"[^\n]*%}`),
     )[0];
@@ -556,7 +556,7 @@ for (const [name, prefix] of [
   ['identity-resolution', 'ir'],
 ]) {
   test(`${name}: CLI and Metadata API write tabs are graded from live tests, none unknown`, () => {
-    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-cli/${name}.md`), 'utf8');
+    const page = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
     for (const operation of ['create', 'update', 'delete']) {
       const include = page.match(
         new RegExp(String.raw`{% include operation-tabs\.html id="${prefix}-${operation}"[^\n]*%}`),

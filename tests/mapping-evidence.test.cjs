@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const directory = path.join(__dirname, '../next/data-cloud-cli');
+const directory = path.join(__dirname, '../next/data-cloud-devops');
 const mapping = fs.readFileSync(path.join(directory, 'dlo-dmo-mapping.md'), 'utf8');
 const evidence = mapping.split('<details markdown="1">')[1];
 
@@ -81,8 +81,8 @@ test('Read tabs show the plugin file shape and a Connect response excerpt', () =
 
 test('mapping rename keeps canonical URL, redirect and legacy anchor', () => {
   assert.match(mapping, /^title: "DLO-DMO-mapping"$/m);
-  assert.match(mapping, /^permalink: \/next\/data-cloud-cli\/dlo-dmo-mapping\/$/m);
-  assert.match(mapping, /redirect_from:\n  - \/next\/data-cloud-cli\/object-source-target-map\//);
+  assert.match(mapping, /^permalink: \/next\/data-cloud-devops\/dlo-dmo-mapping\/$/m);
+  assert.match(mapping, /redirect_from:\n  - \/next\/data-cloud-cli\/dlo-dmo-mapping\/\n  - \/next\/data-cloud-cli\/object-source-target-map\//);
   assert.match(mapping, /id="dlo-to-dmo-mapping-objectsourcetargetmap"/);
 });
 

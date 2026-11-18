@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const page = fs.readFileSync(
-  path.join(__dirname, '../next/data-cloud-cli/data-model-object.md'),
+  path.join(__dirname, '../next/data-cloud-devops/data-model-object.md'),
   'utf8',
 );
 

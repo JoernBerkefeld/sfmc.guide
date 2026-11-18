@@ -2,10 +2,11 @@
 layout: page
 title: "DLO-DMO-mapping"
 description: "Salesforce CLI workflows and verified operation limits for DLO-to-DMO mapping: ObjectSourceTargetMap."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/dlo-dmo-mapping/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/dlo-dmo-mapping/
 redirect_from:
+  - /next/data-cloud-cli/dlo-dmo-mapping/
   - /next/data-cloud-cli/object-source-target-map/
 verification: verified
 operation_tabs: true
@@ -273,7 +274,7 @@ The answer is `success` `true`. The Connect GET by the same name then shows the 
 
 **Known failures:**
 
-- A source DLO that exists only as a definition (created by deploy or `createMetadata`, see [Data Lake Object](/next/data-cloud-cli/data-lake-object/)) is refused with `UNKNOWN_EXCEPTION`, "An unexpected error occurred". The Connect API refuses it too.
+- A source DLO that exists only as a definition (created by deploy or `createMetadata`, see [Data Lake Object](/next/data-cloud-devops/data-lake-object/)) is refused with `UNKNOWN_EXCEPTION`, "An unexpected error occurred". The Connect API refuses it too.
 {% endcapture %}
 
 {% include operation-tabs.html id="mapping-create" label="Create" cli_state="available" cli_reason="Creates a mapping between existing custom objects with a complete XML file." cli_body=create_cli split_api=true metadata_state="available" metadata_reason="Tested at API 68.0 with createMetadata between a Connect-created DLO and DMO. The mapping reads ACTIVE under the authored name." metadata_body=create_metadata connect_state="available" connect_reason="Creates the mapping with one native request, confirmed by a read." connect_body=create_connect plugin_state="available" plugin_reason="Creates the mapping from a project file, confirmed by a read. Observed at API 68.0 (see Evidence)." plugin_body=create_plugin %}

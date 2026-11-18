@@ -2,9 +2,11 @@
 layout: page
 title: "Data Kit membership"
 description: "Salesforce CLI workflows and verified operation limits for Kit membership: DataPackageKitObject."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-package-kit-object/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-package-kit-object/
+redirect_from:
+  - /next/data-cloud-cli/data-package-kit-object/
 verification: verified
 operation_tabs: true
 platforms:
@@ -82,7 +84,7 @@ Keep the references exactly as retrieved. Retrieval does not install the kit. To
 ## Create
 
 {% capture create_cli %}
-The membership can be created together with its kit definition and template, using the [kit definition example](/next/data-cloud-cli/data-package-kit-definition/#create), or on its own once the definition and template exist.
+The membership can be created together with its kit definition and template, using the [kit definition example](/next/data-cloud-devops/data-package-kit-definition/#create), or on its own once the definition and template exist.
 
 Save the membership as `force-app/main/default/DataPackageKitObjects/CustomerKitGraphMember.DataPackageKitObject-meta.xml` (the XML under Read), then deploy it:
 
@@ -90,7 +92,7 @@ Save the membership as `force-app/main/default/DataPackageKitObjects/CustomerKit
 sf project deploy start --metadata DataPackageKitObject:CustomerKitGraphMember --target-org SOURCE_ALIAS --api-version 68.0 --wait 10
 ```
 
-The deploy reports the component as `Created`. After that, a definition created through the CLI or the Metadata API can no longer be read or updated; see the [kit definition page](/next/data-cloud-cli/data-package-kit-definition/#read).
+The deploy reports the component as `Created`. After that, a definition created through the CLI or the Metadata API can no longer be read or updated; see the [kit definition page](/next/data-cloud-devops/data-package-kit-definition/#read).
 
 **Known failures:**
 
@@ -123,7 +125,7 @@ The deploy reports the component as `Changed`. Retrieve the file again to confir
 ## Delete
 
 {% capture delete_cli %}
-Deletes the membership together with its kit definition and template, using the [kit definition example](/next/data-cloud-cli/data-package-kit-definition/#kit-definition-datapackagekitdefinition). Use it only on objects you own.
+Deletes the membership together with its kit definition and template, using the [kit definition example](/next/data-cloud-devops/data-package-kit-definition/#kit-definition-datapackagekitdefinition). Use it only on objects you own.
 
 To delete only the link, save this as `manifest/destructiveChangesPost.xml` and use the `manifest/empty.xml` from that example:
 
@@ -181,7 +183,7 @@ The available tools do not expose canonical kit creation, component-add or templ
 
 **Update:** A CLI deploy reported `Changed` and `updateMetadata` returned `success: true` for a new `masterLabel`. Pointing a link from one template to another worked both ways: `updateMetadata` moved it to the second template, and a CLI deploy moved it back. Each change read back, and the Connect manifest listed the new template. Moving a link to another kit definition was not tried.
 
-**Side effect on the definition:** While a link existed, its CLI- or API-created definition could not be read or updated (`UNKNOWN_EXCEPTION`). See the [kit definition page](/next/data-cloud-cli/data-package-kit-definition/#read).
+**Side effect on the definition:** While a link existed, its CLI- or API-created definition could not be read or updated (`UNKNOWN_EXCEPTION`). See the [kit definition page](/next/data-cloud-devops/data-package-kit-definition/#read).
 
 **Connect API:** The kit resource `ssot/data-kits/{kit}` accepts `GET`, `POST`, `PATCH` and `DELETE` (a `PUT` returns `METHOD_NOT_ALLOWED`). `POST` and `PATCH` deploy runtime components and `DELETE` undeploys them. They were not run against a real kit, because that would create or remove live components.
 

@@ -2,9 +2,11 @@
 layout: page
 title: "Data Lake Object (DLO)"
 description: "Salesforce CLI workflows and verified operation limits for Data Lake Object (DLO): CustomObject, __dll."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-lake-object/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-lake-object/
+redirect_from:
+  - /next/data-cloud-cli/data-lake-object/
 verification: verified
 operation_tabs: true
 platforms:
@@ -428,7 +430,7 @@ Success is HTTP 201 with status `PROCESSING`. Read the object by name until it s
 **Known failures:**
 
 - A label longer than 40 characters returns HTTP 400.
-- For a DLO that a stream feeds, create the stream instead. It creates its landing DLO; see [Data Streams](/next/data-cloud-cli/data-stream-definition/#create).
+- For a DLO that a stream feeds, create the stream instead. It creates its landing DLO; see [Data Streams](/next/data-cloud-devops/data-stream-definition/#create).
 {% endcapture %}
 
 {% capture create_cli %}
@@ -662,7 +664,7 @@ Read the dependencies first (Read chapter). Salesforce refuses to delete an obje
 **Known failures:**
 
 - Sending an empty body on the command line fails locally with `No mode found in body entry`. Use the request file above.
-- This DELETE was tested only on standalone DLOs. For a DLO that a stream feeds, delete the stream with its DLO; see [Data Streams](/next/data-cloud-cli/data-stream-definition/#delete).
+- This DELETE was tested only on standalone DLOs. For a DLO that a stream feeds, delete the stream with its DLO; see [Data Streams](/next/data-cloud-devops/data-stream-definition/#delete).
 {% endcapture %}
 
 {% capture delete_plugin %}
@@ -754,7 +756,7 @@ The plugin sends its requests over one in-process connection that uses the Sales
 **Direct creation for a transform output:** a directly created DLO can serve as the output
 of an STL transform, without a DataStream for that output; Salesforce refuses an STL output
 DLO that does not exist. Precreation is not needed for a DCSQL transform, which creates the
-output DLOs it declares. See [Data Transforms](/next/data-cloud-cli/data-transforms/).
+output DLOs it declares. See [Data Transforms](/next/data-cloud-devops/data-transforms/).
 
 **Plugin command and saved-file contract:** The workflow uses exact `dlo:CustomerSource__dll` selections, API `68.0` in the examples below and the default data space. A full API name includes `__dll`; it is not the source object's record ID. Commands accept an optional `--dataspace NAME` (alias `--data-space`); the flag has no default. A non-default data space is offline-tested only; a mismatch with the object's data space stops with `DLO_DATASPACE_MISMATCH`. Readable retrieval counts successful DLO results, including unchanged files, not API `totalSize`; JSON output is unchanged.
 
@@ -892,7 +894,7 @@ The object read back with `isEnabled=true`; Connect category `Other` corresponde
 
 `MktDataLakeObject` is a Data360 concept, not evidence of MCN-only scope; the official AnalyticsWorkspace reference also names it. A file-based deployment warning about named setup metadata types does not by itself settle the separately observed `CustomObject`/`CustomField` behavior. Data Kit packaging is a separate concern, not a condition used to reject these experiments.
 
-**Stream-owned DLO creation:** A Data Stream creates its own landing DLO. The native API 68 stream create, on an existing Ingestion API connection, is in [Data Streams](/next/data-cloud-cli/data-stream-definition/#create). Salesforce names that stream and its DLO after the connection and event and ignores the proposed names. Creating the connection or its event schema is not covered here.
+**Stream-owned DLO creation:** A Data Stream creates its own landing DLO. The native API 68 stream create, on an existing Ingestion API connection, is in [Data Streams](/next/data-cloud-devops/data-stream-definition/#create). Salesforce names that stream and its DLO after the connection and event and ignores the proposed names. Creating the connection or its event schema is not covered here.
 
 **Standalone native API read: verified API 68:** The [Connect REST reference](https://developer.salesforce.com/docs/data/connectapi/references/spec) documents GET, PATCH and DELETE at `/ssot/data-lake-objects/{recordIdOrDeveloperName}` as available since API 60.0. **Live GET/PATCH/DELETE evidence here is API 68 only**, not API 65–67. These are API requests through standard `sf api request rest`, which handles authentication for `SOURCE_ALIAS`; they are not dedicated native CLI DLO commands or plugin support.
 
@@ -951,7 +953,7 @@ together with its field (`confirmed-updated`, then `unchanged`).
 
 No schema removal or ingestion is qualified.
 
-**Stream-owned DLO updates:** To add a field to a DLO that a stream feeds, update the stream, not the DLO: the native API 68 stream PATCH in [Data Streams](/next/data-cloud-cli/data-stream-definition/#update) maps an existing source field to a new DLO field. Adding a field to the source event schema is not covered here.
+**Stream-owned DLO updates:** To add a field to a DLO that a stream feeds, update the stream, not the DLO: the native API 68 stream PATCH in [Data Streams](/next/data-cloud-devops/data-stream-definition/#update) maps an existing source field to a new DLO field. Adding a field to the source event schema is not covered here.
 
 **Standalone native API update: verified API 68:** A PATCH on the **owned standalone test DLO** returned HTTP `200` after changing its label and adding one non-key Text field. An independent Connect GET confirmed `ACTIVE`, label `CLI API CRUD updated` and **eight fields**, including new `UpdateNote__c` and all seven original fields. Independent standard API 68 Metadata retrieval saved eight field files and confirmed the changed label, retained `Id__c` with `primaryIndexOrder=1` and `isEnabled=true`. PATCH returned a single DLO object; its HTTP `200` was not used instead of independent readback.
 
@@ -982,7 +984,7 @@ Only this standalone definition/provisioning lifecycle was verified at **API 68*
 
 That is a refusal, not a successful delete. Check the actual state after a failure; do not try an assumed instance-delete workaround. This does not mean every possible DLO deletion route is unsupported.
 
-**Stream-owned DLO deletion:** A DLO that a stream feeds is removed with its stream: the native API 68 stream DELETE with `shouldDeleteDataLakeObject=true`, in [Data Streams](/next/data-cloud-cli/data-stream-definition/#delete). The direct DLO DELETE here was tested only on standalone DLOs.
+**Stream-owned DLO deletion:** A DLO that a stream feeds is removed with its stream: the native API 68 stream DELETE with `shouldDeleteDataLakeObject=true`, in [Data Streams](/next/data-cloud-devops/data-stream-definition/#delete). The direct DLO DELETE here was tested only on standalone DLOs.
 
 **Cross-org acceptance:** **Installed cross-org acceptance:** an isolated locally packed plugin retrieved a fresh empty standalone Other/default DLO in `mcnext-sdo`, then created it in `mcnext-thuy` from the exact portable file. Org-local IDs differed; independent raw readbacks preserved generated fields and the primary key. A label change plus one nonprimary Text addition persisted. Repeated deploy returned `unchanged` / `not-attempted`; native-client capture recorded GET only, with no POST/PATCH/DELETE. Both exact owned fixtures were deleted after identity and empty-dependency checks, then independently returned 404 by name and ID. Source delete preview preserved its readback; the target campaign call omitted `--preview` and performed the authorized deletion, so this run does not qualify target delete preview. This is API68 standalone definition portability, not ingestion, populated data, mixed-family dependency deployment, lower-version or published-package qualification.
 

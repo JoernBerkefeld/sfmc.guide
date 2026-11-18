@@ -2,9 +2,11 @@
 layout: page
 title: "Data Streams"
 description: "Data Stream ingestion, source-to-DLO mappings, saved definitions and qualified native API and plugin limits."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-stream-definition/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-stream-definition/
+redirect_from:
+  - /next/data-cloud-cli/data-stream-definition/
 verification: verified
 operation_tabs: true
 platforms:
@@ -20,7 +22,7 @@ crud:
 
 <a id="data-stream-configuration-datastreamdefinition"></a>
 
-**Data Stream** brings data from a source into a [Data Lake Object (DLO)](/next/data-cloud-cli/data-lake-object/). Its saved XML definition is a `DataStreamDefinition`. A stream maps source fields into DLO fields. A separate [DLO-to-DMO mapping](/next/data-cloud-cli/dlo-dmo-mapping/) connects the DLO to a Data Model Object.
+**Data Stream** brings data from a source into a [Data Lake Object (DLO)](/next/data-cloud-devops/data-lake-object/). Its saved XML definition is a `DataStreamDefinition`. A stream maps source fields into DLO fields. A separate [DLO-to-DMO mapping](/next/data-cloud-devops/dlo-dmo-mapping/) connects the DLO to a Data Model Object.
 
 **Example used in every chapter:** `CustomerStream`, the stream that feeds the DLO `CustomerSource__dll`. Each method below works on this same stream.
 
@@ -433,7 +435,7 @@ sf api request rest '/services/data/v68.0/ssot/data-lake-objects/CustomerSource_
 
 **Verification scope:** Live-org reads and the explicitly described bounded operations were tested. The operation-specific limits still apply. This badge does not verify untested writes or general CRUD support.
 
-**Mapping order:** Changing a stream mapping does not deploy the DLO-to-DMO mapping, create a DMO or prove that downstream data is ready. Mapping creation does not create missing DMO fields. The DLO discussion is in [Data Lake Object](/next/data-cloud-cli/data-lake-object/#create).
+**Mapping order:** Changing a stream mapping does not deploy the DLO-to-DMO mapping, create a DMO or prove that downstream data is ready. Mapping creation does not create missing DMO fields. The DLO discussion is in [Data Lake Object](/next/data-cloud-devops/data-lake-object/#create).
 
 **Stream XML:** The `sf project retrieve start` command uses the Metadata API. The tested retrieve used `--api-version 65.0` and `--wait 5`. Retrieving the file does not start a refresh.
 

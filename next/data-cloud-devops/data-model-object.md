@@ -2,9 +2,11 @@
 layout: page
 title: "Data Model Object (DMO)"
 description: "Salesforce CLI workflows and verified operation limits for Data Model Object (DMO): CustomObject, __dlm."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-model-object/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-model-object/
+redirect_from:
+  - /next/data-cloud-cli/data-model-object/
 verification: verified
 operation_tabs: true
 platforms:
@@ -859,7 +861,7 @@ The result lists the object with `deleted` `true`. Afterwards the Connect API GE
 
 **Known failures:**
 
-- A DMO that is the target of a relationship is refused: "This object is referenced elsewhere in Salesforce. : The object … cannot be deleted because it is referenced by the following lookup fields: …". Delete the relationship first ([Field relationship](/next/data-cloud-cli/field-source-target-relationship/#delete)).
+- A DMO that is the target of a relationship is refused: "This object is referenced elsewhere in Salesforce. : The object … cannot be deleted because it is referenced by the following lookup fields: …". Delete the relationship first ([Field relationship](/next/data-cloud-devops/field-source-target-relationship/#delete)).
 {% endcapture %}
 
 {% capture delete_metadata %}

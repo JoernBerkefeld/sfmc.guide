@@ -34,6 +34,9 @@ const DATA_CLOUD_SLUGS = [
   'data-package-kit-definition',
   'data-package-kit-object',
 ];
+const NAV_SLUGS = DATA_CLOUD_SLUGS.flatMap((slug) =>
+  slug === 'calculated-insights' ? [slug, 'data-transforms'] : [slug],
+);
 
 const CRUD_OPERATIONS = ['read', 'create', 'update', 'delete'];
 // Frontmatter key -> page anchor. The anchor matches the key.
@@ -118,7 +121,7 @@ test('Data Cloud CLI ratings require supplied Metadata workflows, not generic AP
   const pages = new Map(
     DATA_CLOUD_SLUGS.map((slug) => [
       slug,
-      fs.readFileSync(path.join(SITE, `next/data-cloud-cli/${slug}.md`), 'utf8'),
+      fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${slug}.md`), 'utf8'),
     ]),
   );
   const metadataCommand = /\bsf project (?:retrieve|deploy) start\b/u;
@@ -151,7 +154,7 @@ test('Data Cloud CLI ratings require supplied Metadata workflows, not generic AP
       const shared = sharedRecipes[`${slug}:${operation}`];
       if (shared) {
         assert.ok(
-          body.includes(`/next/data-cloud-cli/${shared[0]}/#`),
+          body.includes(`/next/data-cloud-devops/${shared[0]}/#`),
           'Shared recipe is explicitly linked',
         );
         body = pages
@@ -198,7 +201,7 @@ test('Data Cloud CLI ratings require supplied Metadata workflows, not generic AP
       'Generic transport/authentication is not a Metadata workflow',
     );
   }
-  const overview = fs.readFileSync(path.join(SITE, 'next/data-cloud-cli/index.md'), 'utf8');
+  const overview = fs.readFileSync(path.join(SITE, 'next/data-cloud-devops/index.md'), 'utf8');
   assert.match(
     overview,
     /Using Salesforce CLI as a request runner does not make an API workflow standard resource-specific CLI support/u,
@@ -276,7 +279,9 @@ puts JSON.generate(inputs.map { |capability| template.render!('include' => { 'ca
 
 function dataCloudGuide() {
   return ['index', ...DATA_CLOUD_SLUGS]
-    .map((slug) => fs.readFileSync(path.join(SITE, 'next', 'data-cloud-cli', `${slug}.md`), 'utf8'))
+    .map((slug) =>
+      fs.readFileSync(path.join(SITE, 'next', 'data-cloud-devops', `${slug}.md`), 'utf8'),
+    )
     .join('\n');
 }
 
@@ -405,17 +410,17 @@ test('CMS catalog is discoverable and separates released and development capabil
 
 test('Next Data Cloud CLI guide is discoverable without promising general CRUD', () => {
   const page = dataCloudGuide();
-  assert.match(page, /^permalink: \/next\/data-cloud-cli\/\s*$/m);
-  const overview = fs.readFileSync(path.join(SITE, 'next', 'data-cloud-cli', 'index.md'), 'utf8');
-  assert.match(overview, /^title: "Data Cloud with Salesforce CLI"$/m);
-  const overviewHtml = fs.readFileSync(
-    path.join(SITE, '_site', 'next', 'data-cloud-cli', 'index.html'),
+  assert.match(page, /^permalink: \/next\/data-cloud-devops\/\s*$/m);
+  const overview = fs.readFileSync(
+    path.join(SITE, 'next', 'data-cloud-devops', 'index.md'),
     'utf8',
   );
-  assert.equal(
-    overviewHtml.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1].trim(),
-    'Data Cloud with Salesforce CLI',
+  assert.match(overview, /^title: "Data Cloud DevOps"$/m);
+  const overviewHtml = fs.readFileSync(
+    path.join(SITE, '_site', 'next', 'data-cloud-devops', 'index.html'),
+    'utf8',
   );
+  assert.equal(overviewHtml.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1].trim(), 'Data Cloud DevOps');
   assert.match(page, /^parent_url: \/next\/\s*$/m);
   assert.doesNotMatch(page, /^discoverable:\s*false\s*$/m);
   assert.match(page, /Standard CLI, API 65\.0 and the default dataspace/);
@@ -440,7 +445,7 @@ test('Next Data Cloud CLI guide is discoverable without promising general CRUD',
     )
       .map((slug) => {
         const resource = fs.readFileSync(
-          path.join(SITE, 'next/data-cloud-cli', `${slug}.md`),
+          path.join(SITE, 'next/data-cloud-devops', `${slug}.md`),
           'utf8',
         );
         // This bounded IR caveat is guidance, not an embedded evidence diary.
@@ -453,7 +458,7 @@ test('Next Data Cloud CLI guide is discoverable without promising general CRUD',
   );
   for (const slug of DATA_CLOUD_SLUGS) {
     const resource = fs.readFileSync(
-      path.join(SITE, 'next', 'data-cloud-cli', `${slug}.md`),
+      path.join(SITE, 'next', 'data-cloud-devops', `${slug}.md`),
       'utf8',
     );
     assert.deepEqual(
@@ -466,23 +471,20 @@ test('Next Data Cloud CLI guide is discoverable without promising general CRUD',
     );
     const title = resource.match(/^title: "([^"|]+)"$/m)?.[1];
     assert.ok(title, `${slug}: short resource title`);
-    assert.ok(!title.includes('Data Cloud with Salesforce CLI'), `${slug}: no title suffix`);
+    assert.ok(!title.includes('Data Cloud DevOps'), `${slug}: no title suffix`);
     const html = fs.readFileSync(
-      path.join(SITE, '_site', 'next', 'data-cloud-cli', slug, 'index.html'),
+      path.join(SITE, '_site', 'next', 'data-cloud-devops', slug, 'index.html'),
       'utf8',
     );
     assert.equal(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1].trim(), title);
     const documentTitle = html.match(/<title>([\s\S]*?)<\/title>/)?.[1];
     assert.ok(documentTitle?.includes(title), `${slug}: rendered document title`);
-    assert.ok(
-      !documentTitle.includes('Data Cloud with Salesforce CLI'),
-      `${slug}: no rendered suffix`,
-    );
+    assert.ok(!documentTitle.includes('Data Cloud DevOps'), `${slug}: no rendered suffix`);
     assert.doesNotMatch(resource, /^title: "Operational|^title: "[^"\n]*: /m);
   }
   assert.match(page, /separate asynchronous Connect deployment/);
   const metadataSegment = fs.readFileSync(
-    path.join(SITE, 'next', 'data-cloud-cli', 'segments.md'),
+    path.join(SITE, 'next', 'data-cloud-devops', 'segments.md'),
     'utf8',
   );
   assert.match(
@@ -527,10 +529,10 @@ test('Next Data Cloud CLI guide is discoverable without promising general CRUD',
   assert.doesNotMatch(page, /(?:\.\.\/|\.\/)docs\//);
   const nav = fs.readFileSync(path.join(SITE, '_data', 'navigation.yml'), 'utf8');
   const landing = fs.readFileSync(path.join(SITE, 'next', 'index.md'), 'utf8');
-  assert.match(nav, /\/next\/data-cloud-cli\//);
-  assert.match(landing, /\/next\/data-cloud-cli\//);
+  assert.match(nav, /\/next\/data-cloud-devops\//);
+  assert.match(landing, /\/next\/data-cloud-devops\//);
   const index = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
-  assert.equal(index.filter((entry) => entry.url === '/next/data-cloud-cli/').length, 1);
+  assert.equal(index.filter((entry) => entry.url === '/next/data-cloud-devops/').length, 1);
 });
 
 test('Data Cloud CLI onboarding precedes commands that assume a configured project', () => {
@@ -598,7 +600,7 @@ test('Data Cloud CLI caveats distinguish rejected changes from untested operatio
         'segments',
       ].includes(slug),
   )
-    .map((slug) => fs.readFileSync(path.join(SITE, 'next/data-cloud-cli', `${slug}.md`), 'utf8'))
+    .map((slug) => fs.readFileSync(path.join(SITE, 'next/data-cloud-devops', `${slug}.md`), 'utf8'))
     .join('\n');
   assert.doesNotMatch(unqualifiedResources, /sf data360 (?:retrieve|deploy)/);
 });
@@ -606,7 +608,7 @@ test('Data Cloud CLI caveats distinguish rejected changes from untested operatio
 test('all Data Cloud CLI introductory navigation fragments resolve in the built page', () => {
   // Build first: this deliberately checks Jekyll output, not an approximation of heading slugs.
   const html = fs.readFileSync(
-    path.join(SITE, '_site', 'next', 'data-cloud-cli', 'index.html'),
+    path.join(SITE, '_site', 'next', 'data-cloud-devops', 'index.html'),
     'utf8',
   );
   const intro = html.slice(0, html.indexOf('id="before-you-start"'));
@@ -648,9 +650,16 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     assert.equal(cells.length, 6);
     const links = [...cells[0][1].matchAll(/href="([^"#]+)#([^"]+)"/g)];
     assert.equal(links.length, 1);
-    assert.equal(links[0][1], `/next/data-cloud-cli/${DATA_CLOUD_SLUGS[rowIndex]}/`);
+    assert.equal(links[0][1], `/next/data-cloud-devops/${DATA_CLOUD_SLUGS[rowIndex]}/`);
     const targetHtml = fs.readFileSync(
-      path.join(SITE, '_site', 'next', 'data-cloud-cli', DATA_CLOUD_SLUGS[rowIndex], 'index.html'),
+      path.join(
+        SITE,
+        '_site',
+        'next',
+        'data-cloud-devops',
+        DATA_CLOUD_SLUGS[rowIndex],
+        'index.html',
+      ),
       'utf8',
     );
     for (const operation of CRUD_OPERATIONS) {
@@ -678,7 +687,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
       assertCrudCell(cell[1], CRUD_EXPECTED[rowIndex][operationIndex]);
     }
     const raw = fs.readFileSync(
-      path.join(SITE, 'next/data-cloud-cli', `${DATA_CLOUD_SLUGS[rowIndex]}.md`),
+      path.join(SITE, 'next/data-cloud-devops', `${DATA_CLOUD_SLUGS[rowIndex]}.md`),
       'utf8',
     );
     assert.deepEqual(crudSchema(raw), CRUD_EXPECTED[rowIndex]);
@@ -887,10 +896,10 @@ test('explicit method maps validate best single route without changing legacy ag
 });
 
 test('CRUD overview preserves curated order and hides only explicit hidden targets', () => {
-  const raw = fs.readFileSync(path.join(SITE, 'next/data-cloud-cli/index.md'), 'utf8');
+  const raw = fs.readFileSync(path.join(SITE, 'next/data-cloud-devops/index.md'), 'utf8');
   const rows = [
     ...raw.matchAll(
-      /^ {2}- path: next\/data-cloud-cli\/([^\n]+)\.md\n {4}label: ([^\n]+)\n {4}anchor: ([^\n]+)\n {4}failures: '([^\n]+)'$/gm,
+      /^ {2}- path: next\/data-cloud-devops\/([^\n]+)\.md\n {4}label: ([^\n]+)\n {4}anchor: ([^\n]+)\n {4}failures: '([^\n]+)'$/gm,
     ),
   ];
   assert.deepEqual(
@@ -921,9 +930,9 @@ test('CRUD overview preserves curated order and hides only explicit hidden targe
     /unless resource.discoverable == false or resource.discoverable == 'false' or resource.sitemap == false or resource.sitemap == 'false' or site.data.undiscoverable_urls\[resource.url\]/,
   );
   assert.doesNotMatch(raw, /if resource.discoverable|discoverable == true/);
-  const html = fs.readFileSync(path.join(SITE, '_site/next/data-cloud-cli/index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(SITE, '_site/next/data-cloud-devops/index.html'), 'utf8');
   const renderedRows = [
-    ...html.matchAll(/<td><a href="\/next\/data-cloud-cli\/[^"]+">[\s\S]*?<\/tr>/g),
+    ...html.matchAll(/<td><a href="\/next\/data-cloud-devops\/[^"]+">[\s\S]*?<\/tr>/g),
   ];
   assert.equal(renderedRows.length, 14, 'Absent discoverable flags remain visible');
   for (const [index, row] of rows.entries()) {
@@ -947,24 +956,24 @@ test('sidebar and plugin honor the undiscoverable lookup', () => {
 test('Data Cloud sidebar nests all resources and expands only for its current pages', () => {
   const nav = fs.readFileSync(path.join(SITE, '_data', 'navigation.yml'), 'utf8');
   const branch = nav.match(
-    /^ {4}- title: Data Cloud with Salesforce CLI\n {6}url: \/next\/data-cloud-cli\/\n {6}children:\n((?: {8}.+\n)+)/m,
+    /^ {4}- title: Data Cloud DevOps\n {6}url: \/next\/data-cloud-devops\/\n {6}children:\n((?: {8}.+\n)+)/m,
   );
   assert.ok(branch, 'Clickable Data Cloud parent has nested children');
   assert.deepEqual(
-    [...branch[1].matchAll(/^ {10}url: \/next\/data-cloud-cli\/([^/]+)\/$/gm)].map(
+    [...branch[1].matchAll(/^ {10}url: \/next\/data-cloud-devops\/([^/]+)\/$/gm)].map(
       (match) => match[1],
     ),
-    DATA_CLOUD_SLUGS,
+    NAV_SLUGS,
   );
-  assert.equal([...nav.matchAll(/url: \/next\/data-cloud-cli\//g)].length, 15);
-  for (const slug of ['index', ...DATA_CLOUD_SLUGS, '../index']) {
+  assert.equal([...nav.matchAll(/url: \/next\/data-cloud-devops\//g)].length, 16);
+  for (const slug of ['index', ...NAV_SLUGS, '../index']) {
     const html = fs.readFileSync(
       path.join(
         SITE,
         '_site',
         'next',
-        slug === '../index' ? '' : 'data-cloud-cli',
-        DATA_CLOUD_SLUGS.includes(slug) ? slug : '',
+        slug === '../index' ? '' : 'data-cloud-devops',
+        NAV_SLUGS.includes(slug) ? slug : '',
         'index.html',
       ),
       'utf8',
@@ -972,11 +981,11 @@ test('Data Cloud sidebar nests all resources and expands only for its current pa
     const sidebar = html.match(/<nav class="sidebar"[\s\S]*?<\/nav>/)?.[0];
     assert.ok(sidebar, `${slug}: sidebar exists`);
     const parent = sidebar.match(
-      /<li class="([^"]*)">\s*<a href="\/next\/data-cloud-cli\/"\s*class="([^"]*)">([\s\S]*?)<ul class="([^"]*)">([\s\S]*?)<\/ul>/,
+      /<li class="([^"]*)">\s*<a href="\/next\/data-cloud-devops\/"\s*class="([^"]*)">([\s\S]*?)<ul class="([^"]*)">([\s\S]*?)<\/ul>/,
     );
     assert.ok(parent, `${slug}: nested clickable parent exists`);
     assert.ok(parent[2].includes('sidebar-link--parent'));
-    assert.match(parent[3], /Data Cloud with Salesforce CLI[\s\S]*sidebar-chevron/);
+    assert.match(parent[3], /Data Cloud DevOps[\s\S]*sidebar-chevron/);
     const expanded = slug !== '../index';
     assert.equal(parent[1].includes('is-expanded'), expanded, `${slug}: parent expansion`);
     assert.equal(parent[4].includes('is-open'), expanded, `${slug}: child list expansion`);
@@ -984,19 +993,19 @@ test('Data Cloud sidebar nests all resources and expands only for its current pa
     const links = [...parent[5].matchAll(/<a href="([^"]+)"\s*class="([^"]*)">/g)];
     assert.deepEqual(
       links.map((match) => match[1]),
-      DATA_CLOUD_SLUGS.map((child) => `/next/data-cloud-cli/${child}/`),
-      `${slug}: all 14 child links`,
+      NAV_SLUGS.map((child) => `/next/data-cloud-devops/${child}/`),
+      `${slug}: all 15 child links`,
     );
     assert.deepEqual(
       links.filter((match) => match[2].includes('is-active')).map((match) => match[1]),
-      DATA_CLOUD_SLUGS.includes(slug) ? [`/next/data-cloud-cli/${slug}/`] : [],
+      NAV_SLUGS.includes(slug) ? [`/next/data-cloud-devops/${slug}/`] : [],
       `${slug}: only the current child is active`,
     );
   }
 });
 
 test('Data Cloud split pages retain search discovery, scoped verification and cross-page links', () => {
-  const dir = path.join(SITE, 'next', 'data-cloud-cli');
+  const dir = path.join(SITE, 'next', 'data-cloud-devops');
   assert.deepEqual(
     fs.readdirSync(dir).toSorted(),
     ['index', 'data-transforms', ...DATA_CLOUD_SLUGS].map((slug) => slug + '.md').toSorted(),
@@ -1012,7 +1021,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   assert.doesNotMatch(main, /^crud:$/m);
   for (const slug of ['index', ...DATA_CLOUD_SLUGS]) {
     const raw = fs.readFileSync(path.join(dir, slug + '.md'), 'utf8');
-    const url = '/next/data-cloud-cli/' + (slug === 'index' ? '' : slug + '/');
+    const url = '/next/data-cloud-devops/' + (slug === 'index' ? '' : slug + '/');
     assert.match(raw, /^verification: verified$/m);
     // The overview carries this limit in the verification badge title only; type pages also state it.
     assert.match(
@@ -1030,10 +1039,10 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
     );
     assert.doesNotMatch(html, /Every claim on this page was proven/);
     if (slug !== 'index') {
-      assert.match(raw, /^parent_url: \/next\/data-cloud-cli\/$/m);
-      assert.match(html, /href="\/next\/data-cloud-cli\/"/);
+      assert.match(raw, /^parent_url: \/next\/data-cloud-devops\/$/m);
+      assert.match(html, /href="\/next\/data-cloud-devops\/"/);
     }
-    for (const link of raw.matchAll(/\]\((\/next\/data-cloud-cli\/[^)#]*)(?:#([^)]*))?\)/g)) {
+    for (const link of raw.matchAll(/\]\((\/next\/data-cloud-devops\/[^)#]*)(?:#([^)]*))?\)/g)) {
       const target = fs.readFileSync(path.join(SITE, '_site', link[1], 'index.html'), 'utf8');
       if (link[2]) {
         assert.ok(target.includes('id="' + link[2] + '"'), 'Missing target: ' + link[0]);
@@ -1066,7 +1075,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   }
   for (const slug of ['calculated-insight-definition', 'segment-definition']) {
     assert.ok(!fs.existsSync(path.join(dir, `${slug}.md`)));
-    assert.ok(!index.some((entry) => entry.url === `/next/data-cloud-cli/${slug}/`));
+    assert.ok(!index.some((entry) => entry.url === `/next/data-cloud-devops/${slug}/`));
   }
   const graph = fs.readFileSync(path.join(dir, 'data-graphs.md'), 'utf8');
   const graphBody = (operation) =>

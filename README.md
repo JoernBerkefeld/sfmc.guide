@@ -30,7 +30,7 @@ node sfmc.guide/scripts/generate-tools.mjs
 
 ## Data Cloud sidebar navigation
 
-Under **Next**, **Data Cloud with Salesforce CLI** links to the overview and groups all 14 resource pages as nested children in `_data/navigation.yml`. Its chevron expands or collapses the list without navigating; clicking the title opens the overview. The list opens automatically on the overview or any resource page and starts collapsed on unrelated pages, using the existing sidebar behavior.
+Under **Next**, **Data Cloud DevOps** links to the overview and groups all 15 resource pages (the 14 in the CRUD table plus Data Transforms) as nested children in `_data/navigation.yml`. Its chevron expands or collapses the list without navigating; clicking the title opens the overview. The list opens automatically on the overview or any resource page and starts collapsed on unrelated pages, using the existing sidebar behavior.
 
 ## Data Cloud CRUD summaries
 
@@ -38,9 +38,9 @@ Each detail page's `crud` frontmatter is the canonical source for `retrieve`, `c
 
 Ratings describe usable **supplied, scoped workflows**, not universal capability. **Yes** means a usable scoped workflow; **Partial** means a usable workflow with unsupported or unqualified operation variants, independent steps or asynchronous completion. An optional inline `method_statuses` map records quoted grades for `cli`, `api` and `plugin` separately; missing grades mean not recorded, never a copy of the aggregate. For explicitly graded operations, the aggregate is the best single route: Yes before Partial, then unknown; No requires all three methods explicitly No. The `methods` array still lists every usable Yes/Partial route, not only the winner. Legacy operations without a map retain their authored aggregate and do not gain inferred method grades. The detail include adds a method table only when explicit grades exist; the overview continues reading the same aggregate fields. Observations alone or an unsupplied integration do not qualify as Partial. An incomplete asynchronous workflow qualifies as Partial only when it is usable within documented bounds and its terminal-state limitations are clearly explained. **No** means proven unavailable in the explicit scope; **?** means unknown, untested or no usable workflow supplied. Keep that visible distinction. API-led requests and facades remain `api` even when invoked through Salesforce CLI; `cli` means dedicated CLI commands. Summary qualification is separate from operation-tab availability: an available tab may explain an illustrative mechanism without supplying a usable summary workflow.
 
-Place `{% include crud-summary.html %}` immediately before `## Retrieve`, after shared context and safety warnings, as in `next/data-cloud-cli/calculated-insights.md`. The include reads `page.crud` directly and includes the shared legend; it takes no arguments.
+Place `{% include crud-summary.html %}` immediately before `## Retrieve`, after shared context and safety warnings, as in `next/data-cloud-devops/calculated-insights.md`. The include reads `page.crud` directly and includes the shared legend; it takes no arguments.
 
-The overview's `crud_rows` in `next/data-cloud-cli/index.md` contains only `path`, `label`, `anchor` and `scope`; never duplicate ratings there. Its table resolves each detail page by `path` and renders that page's `crud` through `crud-cell.html`. Keep scope notes, target anchors and the expected ratings/method mapping in `tests/site-index-discoverable.test.cjs` synchronized with justified changes. Use the fresh-build and rendered-verification sequence in **Data Cloud operation tabs** below after editing.
+The overview's `crud_rows` in `next/data-cloud-devops/index.md` contains only `path`, `label`, `anchor` and `scope`; never duplicate ratings there. Its table resolves each detail page by `path` and renders that page's `crud` through `crud-cell.html`. Keep scope notes, target anchors and the expected ratings/method mapping in `tests/site-index-discoverable.test.cjs` synchronized with justified changes. Use the fresh-build and rendered-verification sequence in **Data Cloud operation tabs** below after editing.
 
 ## Data Cloud operation tabs
 
@@ -48,7 +48,7 @@ For pages using `_includes/operation-tabs.html`, set `operation_tabs: true` in p
 
 Pass a unique page-local `id`, an operation `label`, and explicit `cli_state`, `cli_reason`, `api_state` and `api_reason` values. States are `available` (a documented workflow is supplied), `blocked` (a known limitation prevents it), or `unknown` (undocumented, untested or not implemented). Availability does not expand the workflow's verification scope. Supply captured `cli_body` / `api_body` only for available methods; the include renders those bodies with `markdownify`. Keep detailed negative evidence outside the panels so it remains visible when a method is disabled. The `sf-plugin-data` method defaults to unknown; explicitly qualified pages supply `plugin_state`, `plugin_reason` and a captured `plugin_body`. Method coverage grades do not enable or disable tabs.
 
-Preserve existing operation and legacy heading anchors, and give new internal headings unique explicit IDs. See `next/data-cloud-cli/calculated-insights.md` for complete dual-method captures and `segment-members.md` for API-only/all-disabled operations. Available workflows remain labeled and readable without JavaScript.
+Preserve existing operation and legacy heading anchors, and give new internal headings unique explicit IDs. See `next/data-cloud-devops/calculated-insights.md` for complete dual-method captures and `segment-members.md` for API-only/all-disabled operations. Available workflows remain labeled and readable without JavaScript.
 
 After editing, run lint autofix, zero-warning lint, a fresh build, then the full suite with rendered checks enabled (PowerShell, from this folder):
 

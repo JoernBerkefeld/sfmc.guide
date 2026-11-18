@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const directory = path.join(__dirname, '../next/data-cloud-cli');
+const directory = path.join(__dirname, '../next/data-cloud-devops');
 const ci = fs.readFileSync(path.join(directory, 'calculated-insights.md'), 'utf8');
 const overview = fs.readFileSync(path.join(directory, 'index.md'), 'utf8');
 const evidence = ci.split('**Native API 68 Connect routes:**')[1].split('**Deletion routes:**')[0];
@@ -98,5 +98,17 @@ test('CI retains partial writes, four operation tabs and synchronized overview l
   assert.match(ci, /verification: verified/);
   assert.equal((ci.match(/include operation-tabs\.html/g) || []).length, 4);
   assert.ok(ci.indexOf('**Verification scope:**') < ci.indexOf('A calculated insight computes'));
-  assert.equal((overview.match(/^  - path: next\/data-cloud-cli\//gm) || []).length, 14);
+  assert.equal((overview.match(/^  - path: next\/data-cloud-devops\//gm) || []).length, 14);
+});
+
+test('every Data Cloud DevOps page still answers at its old data-cloud-cli URL', () => {
+  const pages = fs.readdirSync(directory).filter((name) => name.endsWith('.md'));
+  assert.equal(pages.length, 16);
+  for (const name of pages) {
+    const page = fs.readFileSync(path.join(directory, name), 'utf8');
+    const permalink = /^permalink: (\/next\/data-cloud-devops\/\S*)$/m.exec(page);
+    assert.ok(permalink, name);
+    const old = permalink[1].replace('/data-cloud-devops/', '/data-cloud-cli/');
+    assert.ok(page.includes(`redirect_from:\n  - ${old}\n`), name);
+  }
 });

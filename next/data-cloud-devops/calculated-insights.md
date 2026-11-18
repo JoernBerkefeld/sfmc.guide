@@ -2,9 +2,11 @@
 layout: page
 title: "Calculated insights"
 description: "Salesforce CLI workflows and verified operation limits for calculated insight definitions and runtime state."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/calculated-insights/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/calculated-insights/
+redirect_from:
+  - /next/data-cloud-cli/calculated-insights/
 verification: verified
 operation_tabs: true
 platforms:

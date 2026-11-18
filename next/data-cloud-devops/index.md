@@ -1,67 +1,69 @@
 ---
 layout: page
-title: "Data Cloud with Salesforce CLI"
+title: "Data Cloud DevOps"
 description: "Data Cloud metadata commands, default source-format files, illustrative responses and supported lifecycle limits for Marketing Cloud Next."
 parent: Next
 parent_url: /next/
-permalink: /next/data-cloud-cli/
+permalink: /next/data-cloud-devops/
+redirect_from:
+  - /next/data-cloud-cli/
 verification: verified
 platforms:
   - next
 crud_rows:
-  - path: next/data-cloud-cli/data-stream-definition.md
+  - path: next/data-cloud-devops/data-stream-definition.md
     label: Data Streams
     anchor: data-stream-configuration-datastreamdefinition
     failures: '—'
-  - path: next/data-cloud-cli/data-lake-object.md
+  - path: next/data-cloud-devops/data-lake-object.md
     label: DLOs
     anchor: data-lake-object-dlo-customobject-dll
     failures: 'Standard-CLI create of the tested full schema fails; the plugin creates through the native API.'
-  - path: next/data-cloud-cli/data-model-object.md
+  - path: next/data-cloud-devops/data-model-object.md
     label: DMOs
     anchor: data-model-object-dmo-customobject-dlm
     failures: 'A changed field type is accepted (HTTP 200) but silently ignored. API 60.0 returns 404 for every method.'
-  - path: next/data-cloud-cli/dlo-dmo-mapping.md
+  - path: next/data-cloud-devops/dlo-dmo-mapping.md
     label: DLO-DMO-mapping
     anchor: dlo-to-dmo-mapping-objectsourcetargetmap
     failures: 'A direct native DELETE of a non-last mapping can remove DMO fields.'
-  - path: next/data-cloud-cli/field-source-target-relationship.md
+  - path: next/data-cloud-devops/field-source-target-relationship.md
     label: Relationships
     anchor: field-relationship-fieldsrctrgtrelationship
     failures: '—'
-  - path: next/data-cloud-cli/data-source-object.md
+  - path: next/data-cloud-devops/data-source-object.md
     label: Source object definitions
     anchor: source-object-configuration-datasourceobject
     failures: '—'
-  - path: next/data-cloud-cli/calculated-insights.md
+  - path: next/data-cloud-devops/calculated-insights.md
     label: Calculated insights
     anchor: read
     failures: '—'
-  - path: next/data-cloud-cli/segments.md
+  - path: next/data-cloud-devops/segments.md
     label: Segments
     anchor: read
     failures: '—'
-  - path: next/data-cloud-cli/segment-members.md
+  - path: next/data-cloud-devops/segment-members.md
     label: Segment members
     anchor: segment-members-runtime-data-not-metadata
     failures: '—'
-  - path: next/data-cloud-cli/data-graphs.md
+  - path: next/data-cloud-devops/data-graphs.md
     label: Data Graphs
     anchor: operational-data-graphs
     failures: '—'
-  - path: next/data-cloud-cli/identity-resolution.md
+  - path: next/data-cloud-devops/identity-resolution.md
     label: Identity Resolution
     anchor: operational-identity-resolution
     failures: '—'
-  - path: next/data-cloud-cli/data-kit-object-template.md
+  - path: next/data-cloud-devops/data-kit-object-template.md
     label: Kit templates
     anchor: kit-template-datakitobjecttemplate
     failures: '—'
-  - path: next/data-cloud-cli/data-package-kit-definition.md
+  - path: next/data-cloud-devops/data-package-kit-definition.md
     label: Kit definitions
     anchor: kit-definition-datapackagekitdefinition
     failures: '—'
-  - path: next/data-cloud-cli/data-package-kit-object.md
+  - path: next/data-cloud-devops/data-package-kit-object.md
     label: Kit membership
     anchor: kit-membership-datapackagekitobject
     failures: '—'
@@ -70,8 +72,6 @@ crud_rows:
 {% include verification-status.html title="Live Data Cloud reads and only the bounded operations described here were verified; this does not establish general CRUD support." %}
 
 You can use Salesforce CLI to download quite a bit of your Data Cloud (Data 360) configuration. Making changes is a little less straightforward: some commands work with saved definitions, while others work with the actual running component.
-
-[Data Transforms](/next/data-cloud-cli/data-transforms/) explains the plugin's transform commands: the file holds the transform as Salesforce returns it, and deploy creates or updates it by name. It is not a row in the CRUD table below.
 
 This page explains the difference and shows the commands next to the files and responses you can expect. Start with retrieving an existing component. Only move on to create, update or delete when you have checked the prerequisites for that section.
 
@@ -84,7 +84,7 @@ These come with the plugin's file-based workflow, which the UI's per-object wiza
 - **Deploy only what changed in a Git range** (plugin `--changed-since`). A range holding a data stream, a DMO and a mapping ran in dependency order and wrote nothing because nothing differed.
 - **Deploy or delete related objects of several types in one command**, in dependency order (plugin). One deploy created two DLOs, two DMOs, two mappings and a relationship; one delete removed two data graphs before the identity resolution ruleset they were built on.
 
-Type-specific items, each checked against the UI: [relationship label, cardinality and source field changes](/next/data-cloud-cli/field-source-target-relationship/#beyond-the-gui) and [SQL (DBT) segments](/next/data-cloud-cli/segments/#beyond-the-gui).
+Type-specific items, each checked against the UI: [relationship label, cardinality and source field changes](/next/data-cloud-devops/field-source-target-relationship/#beyond-the-gui) and [SQL (DBT) segments](/next/data-cloud-devops/segments/#beyond-the-gui).
 {% endcapture %}
 {% include callout.html type="tip" title="Beyond the Data Cloud GUI" content=beyond_gui %}
 

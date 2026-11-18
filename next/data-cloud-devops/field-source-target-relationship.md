@@ -2,9 +2,11 @@
 layout: page
 title: "Field relationship"
 description: "Salesforce CLI workflows and verified operation limits for Field relationship: FieldSrcTrgtRelationship."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/field-source-target-relationship/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/field-source-target-relationship/
+redirect_from:
+  - /next/data-cloud-cli/field-source-target-relationship/
 verification: verified
 operation_tabs: true
 platforms:
@@ -482,7 +484,7 @@ The answer is `success` `true`. Afterwards `readMetadata` returns an empty recor
 | `RELATIONSHIP_DEPENDENCIES_PLANNED` | The batch creates a DMO the relationship uses; the preview cannot compare it yet. |
 | `RELATIONSHIP_DATASPACE_COLLISION` / `UNSUPPORTED_RELATIONSHIP_DATASPACE` | The file's data space differs from the command's. |
 
-**CLI deploys to an `ACTIVE` relationship, API 68.0 (sf 2.151.7, two mapped empty custom DMOs created through the Connect API, relationship created through the native route, default data space):** `sf project retrieve start` saved the relationship under its generated name, with `lookupFieldName` `<SourceDmo>.rel_<number>_end__c` and an empty `targetEntity`. Deploys of that file changed the label alone, the cardinality alone (`ManyToOne` to `OneToOne`), the source field alone (in both directions), and the label, cardinality and source field together. Each time the native list showed the same id, the new values and `ACTIVE`, and `readMetadata` returned the same values. Two earlier deploys of valid changes failed with "An unexpected error occurred" and changed nothing; the same changes were accepted when sent again. A changed target object and owner `SObject` each failed with "An unexpected error occurred". A changed target field failed the same way in this run but was accepted in a later plugin run (below), so that failure was probably the same transient error. `ManyToMany` failed with "'ManyToMany' is not a valid value for the enum 'RelationshipCardinality'". The list was unchanged after each failure. The target DMO could not be deleted while the relationship existed (see [Data Model Object](/next/data-cloud-cli/data-model-object/)). The relationship, both DMOs and their DLOs were deleted afterwards.
+**CLI deploys to an `ACTIVE` relationship, API 68.0 (sf 2.151.7, two mapped empty custom DMOs created through the Connect API, relationship created through the native route, default data space):** `sf project retrieve start` saved the relationship under its generated name, with `lookupFieldName` `<SourceDmo>.rel_<number>_end__c` and an empty `targetEntity`. Deploys of that file changed the label alone, the cardinality alone (`ManyToOne` to `OneToOne`), the source field alone (in both directions), and the label, cardinality and source field together. Each time the native list showed the same id, the new values and `ACTIVE`, and `readMetadata` returned the same values. Two earlier deploys of valid changes failed with "An unexpected error occurred" and changed nothing; the same changes were accepted when sent again. A changed target object and owner `SObject` each failed with "An unexpected error occurred". A changed target field failed the same way in this run but was accepted in a later plugin run (below), so that failure was probably the same transient error. `ManyToMany` failed with "'ManyToMany' is not a valid value for the enum 'RelationshipCardinality'". The list was unchanged after each failure. The target DMO could not be deleted while the relationship existed (see [Data Model Object](/next/data-cloud-devops/data-model-object/)). The relationship, both DMOs and their DLOs were deleted afterwards.
 
 **Plugin target field and owner changes, API 68.0 (2026-11-16, one org, an `ACTIVE` `ManyToOne` relationship between two mapped empty custom DMOs, update calls counted):** a retrieved file with the target field changed from `Id__c` to `Note__c` deployed `updated` with one `updateMetadata` call answered `success` `true`; `readMetadata` then showed `Note__c`, owner `DataCloud`. The same file with owner `SObject` got `UNKNOWN_EXCEPTION` "An unexpected error occurred"; the plugin read the record, found it unchanged and sent the update once more, which got the same answer, and ended `RELATIONSHIP_UPDATE_REJECTED` after exactly two calls. The relationship, DMOs and DLOs were deleted afterwards and confirmed gone.
 

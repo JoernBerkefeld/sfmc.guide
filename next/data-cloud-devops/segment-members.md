@@ -2,9 +2,11 @@
 layout: page
 title: "Segment members"
 description: "API workflows using Salesforce CLI authentication and transport for Segment Members: runtime data, not metadata."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/segment-members/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/segment-members/
+redirect_from:
+  - /next/data-cloud-cli/segment-members/
 verification: verified
 operation_tabs: true
 platforms:
@@ -47,7 +49,7 @@ sf api request rest '/services/data/v67.0/ssot/segments/ActiveCustomers' --targe
 
 Keep `marketSegmentId`, `dataSpace`, `segmentMembershipDmo.latestTable` and `segmentOnApiName`. You need them for profile details. Do not guess a table name from the display name.
 
-The response has the shape shown on the Connect API tab of the [Segments](/next/data-cloud-cli/segments/#read) page.
+The response has the shape shown on the Connect API tab of the [Segments](/next/data-cloud-devops/segments/#read) page.
 
 The path is quoted so the shell does not read `&` as an operator. Next, request one member:
 

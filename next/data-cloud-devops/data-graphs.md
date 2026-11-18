@@ -2,9 +2,11 @@
 layout: page
 title: "Data Graphs"
 description: "API workflows using Salesforce CLI authentication and transport for Data Graphs, with separate optional plugin capabilities and verified limits."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-graphs/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-graphs/
+redirect_from:
+  - /next/data-cloud-cli/data-graphs/
 verification: verified
 operation_tabs: true
 platforms:
@@ -77,7 +79,7 @@ sf api request rest '/services/data/v68.0/ssot/data-graphs/metadata?dataspace=de
 
 Each entry under `dataGraphMetadata` has `developerName`, `status` and the root. Here the status is spelled `Ready`, while the item read says `ready`. Add `&dataGraphEntityName=CustomerGraph` to read one graph. This metadata read is not reliable right after a create or delete; see the Create and Delete chapters.
 
-For a root from an [Identity Resolution output](/next/data-cloud-cli/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
+For a root from an [Identity Resolution output](/next/data-cloud-devops/identity-resolution/#read), match the root to the exact unified Individual object before you use it.
 {% endcapture %}
 {% include operation-tabs.html id="graphs-read" label="Read" cli_state="blocked" cli_reason="Salesforce CLI 2.151.7 has no DataGraph metadata type: sf project retrieve start stops with a RegistryError. sf org list metadata lists graph names only." split_api=true metadata_state="blocked" metadata_reason="At API 68.0, listMetadata on DataGraph lists names, but readMetadata returns only the name and retrieve returns no file." connect_state="available" connect_reason="Native API68 read by name and list through the metadata route." connect_body=read_connect plugin_state="available" plugin_reason="Retrieves every graph (bare -m data-graph) or one by name, as a native file with API 68.0." plugin_body=read_plugin %}
 

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const read = (name) =>
-  fs.readFileSync(path.join(__dirname, '../next/data-cloud-cli', name), 'utf8');
+  fs.readFileSync(path.join(__dirname, '../next/data-cloud-devops', name), 'utf8');
 const dlo = read('data-lake-object.md');
 const dmo = read('data-model-object.md');
 const pluginTab = (page) =>

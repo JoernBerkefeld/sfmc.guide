@@ -2,9 +2,11 @@
 layout: page
 title: "Source object configuration"
 description: "Salesforce CLI workflows and verified operation limits for Source object configuration: DataSourceObject."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-source-object/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-source-object/
+redirect_from:
+  - /next/data-cloud-cli/data-source-object/
 verification: verified
 operation_tabs: true
 platforms:

@@ -3,8 +3,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const page = fs.readFileSync(path.join(__dirname, '../next/data-cloud-cli/segments.md'), 'utf8');
-const overview = fs.readFileSync(path.join(__dirname, '../next/data-cloud-cli/index.md'), 'utf8');
+const page = fs.readFileSync(path.join(__dirname, '../next/data-cloud-devops/segments.md'), 'utf8');
+const overview = fs.readFileSync(path.join(__dirname, '../next/data-cloud-devops/index.md'), 'utf8');
 
 for (const operation of ['read', 'create', 'update', 'delete']) {
   test(`Segment ${operation} supplies a bounded native JSON plugin workflow`, () => {
@@ -68,7 +68,7 @@ test('Segment Connect tabs use only the native API68 route with the plugin reque
 
 // B2 sweep: every segment, segment-member and calculated-insight tab state is resolved by a live test.
 test('B2 sweep leaves no unknown tab states and records live-segment definition limits', () => {
-  const dir = path.join(__dirname, '../next/data-cloud-cli');
+  const dir = path.join(__dirname, '../next/data-cloud-devops');
   for (const name of ['segments', 'segment-members', 'calculated-insights']) {
     const raw = fs.readFileSync(path.join(dir, `${name}.md`), 'utf8');
     assert.doesNotMatch(raw, /_state="unknown"|status: "unknown"|not a verified step|no verification-database row/u, name);

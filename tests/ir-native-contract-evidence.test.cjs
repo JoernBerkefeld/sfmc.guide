@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const page = fs.readFileSync(
-  path.join(__dirname, '../next/data-cloud-cli/identity-resolution.md'),
+  path.join(__dirname, '../next/data-cloud-devops/identity-resolution.md'),
   'utf8',
 );
 const operations = ['read', 'create', 'update', 'delete'];

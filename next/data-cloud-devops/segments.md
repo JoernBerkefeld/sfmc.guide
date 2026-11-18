@@ -2,9 +2,11 @@
 layout: page
 title: "Segments"
 description: "Salesforce CLI workflows and verified operation limits for Operational segments."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/segments/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/segments/
+redirect_from:
+  - /next/data-cloud-cli/segments/
 verification: verified
 operation_tabs: true
 platforms:
@@ -158,7 +160,7 @@ The full entry also holds `includeDbt.models` (name and SQL of each model), the 
 [{ "errorCode": "ITEM_NOT_FOUND", "message": "Segment not found: ActiveCustomers" }]
 ```
 
-The lookback is the time window the segment uses. `P90D` means 90 days. Check the returned value rather than assuming it. Check the segment name, SQL, type, data space, segment-on object, lookback and schedule. This request does not write an XML file. For audience rows, see [Segment members](/next/data-cloud-cli/segment-members/#read).
+The lookback is the time window the segment uses. `P90D` means 90 days. Check the returned value rather than assuming it. Check the segment name, SQL, type, data space, segment-on object, lookback and schedule. This request does not write an XML file. For audience rows, see [Segment members](/next/data-cloud-devops/segment-members/#read).
 
 The same route without a name lists the segments of the org. The listing takes `batchSize`, `offset` and `orderByExpression` and reports `totalSize`:
 
@@ -338,7 +340,7 @@ Deployed: 1 (0 created / 1 updated / 0 failed)
 
 The preview prints `Planned update: segment:OwnedSegment.`. An unclear result ends with `SEGMENT_UPDATE_UNCONFIRMED`; do not replay the update, read the segment first.
 
-Deploy never publishes. To publish the segment, run `sf data360 publish --target-org SOURCE_ALIAS --metadata segment:OwnedSegment` (`--preview` publishes nothing). It sends one POST, never resent, and waits for `SUCCESS` or `FAILED` (`--wait-timeout`, default 1800 seconds; a timeout reports `publishing`, still processing, exit 0). See [Segment members](/next/data-cloud-cli/segment-members/#update).
+Deploy never publishes. To publish the segment, run `sf data360 publish --target-org SOURCE_ALIAS --metadata segment:OwnedSegment` (`--preview` publishes nothing). It sends one POST, never resent, and waits for `SUCCESS` or `FAILED` (`--wait-timeout`, default 1800 seconds; a timeout reports `publishing`, still processing, exit 0). See [Segment members](/next/data-cloud-devops/segment-members/#update).
 {% endcapture %}
 
 {% capture update_connect %}
@@ -566,7 +568,7 @@ After **one PATCH**, independent runtime GET returned **ACTIVE** with the exact 
 
 **UI segment (native API 68 plugin, one org):** Created a UI segment from a hand-written JSON file with one text comparison (`operator` `equal`, a `values` list), retrieved it with the criteria Salesforce normalized, reported a repeat deploy `unchanged`, updated the criteria value and the lookback (`P90D` to `P30D`), and deleted it by name; a follow-up GET answered `ITEM_NOT_FOUND`. The plugin writes UI segments with `segmentCreationFlow` `Headless`, which the API requires. The first update attempt, about a minute after the create while the segment was still `PROCESSING`, was refused with HTTP 403 `ENTITY_SAVE_ERROR` and nothing was written; the same deploy succeeded once the segment was `ACTIVE`. A later run (2026-11-16) showed Salesforce's text: a raw PATCH right after the create answered "Segment cannot be updated when it is in PROCESSING state", and a plugin update a few seconds after a create reported "... when it is in COUNTING state" as `rejected`; a read showed the segment unchanged.
 
-**Publish and members:** One owned one-member segment was published once with the Connect API and its members read, and one owned zero-member segment was published with `sf data360 publish` (`SUCCESS` after 922 seconds, API 68, 2026-11-17); see [Segment members](/next/data-cloud-cli/segment-members/#update).
+**Publish and members:** One owned one-member segment was published once with the Connect API and its members read, and one owned zero-member segment was published with `sf data360 publish` (`SUCCESS` after 922 seconds, API 68, 2026-11-17); see [Segment members](/next/data-cloud-devops/segment-members/#update).
 
 **Outside these probes:** Cross-org replay of XML definitions and cross-org migration need a second org. UI criteria with several filters or related objects, UI exclusion criteria and UI refresh schedules, send destinations and activations, and a released package were not tried: these probes run no schedule, activation or package.
 

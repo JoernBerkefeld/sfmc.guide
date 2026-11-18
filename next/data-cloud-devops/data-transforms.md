@@ -2,9 +2,11 @@
 layout: page
 title: "Data Transforms"
 description: "The plugin's transform commands: the file holds the transform as Salesforce returns it, deploy creates or updates by name and Salesforce decides."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/data-transforms/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/data-transforms/
+redirect_from:
+  - /next/data-cloud-cli/data-transforms/
 platforms:
   - next
 ---

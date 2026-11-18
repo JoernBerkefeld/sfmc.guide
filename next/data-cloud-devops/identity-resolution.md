@@ -2,9 +2,11 @@
 layout: page
 title: "Identity Resolution"
 description: "API workflows using Salesforce CLI authentication and transport for Identity Resolution, with optional native API68 sf-plugin-data capabilities and verified limits."
-parent: Data Cloud with Salesforce CLI
-parent_url: /next/data-cloud-cli/
-permalink: /next/data-cloud-cli/identity-resolution/
+parent: Data Cloud DevOps
+parent_url: /next/data-cloud-devops/
+permalink: /next/data-cloud-devops/identity-resolution/
+redirect_from:
+  - /next/data-cloud-cli/identity-resolution/
 verification: verified
 operation_tabs: true
 platforms:
@@ -300,7 +302,7 @@ Only strict native `ITEM_NOT_FOUND` HTTP 404 reads for **both exact identities**
 
 **Data Graph root check.** Read the exact ruleset through the native endpoint. Its reconciliation entries identify the unified DMOs (`unifiedDmoName`). Correlate the returned unified Individual output with the graph's logical root. Do not derive ownership from a suffix, label, graph-node ID or DMO ID. Read the generated output objects and compare the root's field names, Text types and explicit Id key. A matching object name alone is insufficient.
 
-The plugin's graph `--preview` does this lookup for you: it reads the rulesets and names the published owner of a unified root, or reports that none owns it. In a live test, preview of a graph on a new unified root reported the missing root before the ruleset existed, and named the `PUBLISHED` owner afterwards. A graph on that root was then created, updated and deleted. See [Data Graphs](/next/data-cloud-cli/data-graphs/#create).
+The plugin's graph `--preview` does this lookup for you: it reads the rulesets and names the published owner of a unified root, or reports that none owns it. In a live test, preview of a graph on a new unified root reported the missing root before the ruleset existed, and named the `PUBLISHED` owner afterwards. A graph on that root was then created, updated and deleted. See [Data Graphs](/next/data-cloud-devops/data-graphs/#create).
 
 **Two-org qualification.** Retained owned `PUBLISHED` rulesets and all twelve output and link DMOs were correlated in each org. The paired outputs had the same portable API identities but different org-local IDs. The unified Individual roots had compatible Id, FirstName and LastName Text fields and an explicit Id key. This establishes owner, output and schema compatibility. It does not establish cross-org ruleset creation or migration, a successful IR data run, or permission to reuse source IDs. Resolve the owner and its outputs in each org.
 
