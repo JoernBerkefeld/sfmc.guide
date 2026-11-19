@@ -68,7 +68,9 @@ sf api request rest '/services/data/v68.0/ssot/data-spaces/dataspace2/members' -
 sf api request rest '/services/data/v68.0/ssot/data-spaces/dataspace2/members?memberNames=Example__dll' --method DELETE --target-org TARGET_ALIAS
 ```
 
-The `PUT` body needs the doubled `members` (a flat list answers `400`); it was only ever sent with every current member listed, so whether a shorter list removes the others is untested. The `default` space's member list states one more member (`totalSize`) than it lists. It answers `PROCESSING`; a few seconds later the member reads `ACTIVE` and the DLO lists both spaces, under the same name. The `DELETE` removes the DLO from that space only and keeps the DLO; `DELETE …/members/<name>` answers `405`.
+The `PUT` body needs the doubled `members` (a flat list answers `400`). It only adds: members the body leaves out stay, a member sent again changes nothing, and an empty list changes nothing. An unknown DLO answers `2xx` with `"success":"false"` and the error in the body, so check the body, not only the status. The `default` space's member list states one more member (`totalSize`) than it lists, and no read shows the missing one; as the `PUT` resends nothing, this does not matter for adding a DLO. It answers `PROCESSING`; a few seconds later the member reads `ACTIVE` and the DLO lists both spaces, under the same name. The `DELETE` removes the DLO from that space only and keeps the DLO; `DELETE …/members/<name>` answers `405`.
+
+**Creating and deleting a space.** `POST /services/data/v68.0/ssot/data-spaces` with `{"label":…,"prefix":…,"description":…}` creates one; its name is taken from the label. It reads `Active` after about 10 seconds and already holds one member nobody added (`StaticCurrencyRates_Home__dll`). `DELETE …/data-spaces/<name>` removes it, also with that member still in it.
 
 Access is granted per space through permission sets: standard Data 360 permission sets cover only `default`, and each other space must be linked to the permission sets that should reach it. What the APIs return to a user limited to one space has not been tested; an admin's lists without a `dataspace` parameter span every space.
 
@@ -78,6 +80,7 @@ Access is granted per space through permission sets: standard Data 360 permissio
 - **A DCSQL transform accepts the default spelling but reads the default space's object**; it does not translate the name.
 - **A standard DMO copy holds only the fields mapped in that space**, and it gains a field when a mapping names one.
 - **The first mapping onto a standard DMO in a space must use the default spelling** (`ssot__ContactPointEmail__dlm` with `ssot__` fields), because the copy does not exist yet; Salesforce stores it under the copy name. From then on only the copy spelling works.
+- **The last mapping onto a standard DMO copy cannot be deleted.** In `dataspace2` the Metadata API destructive deploy fails with "An unexpected error occurred" (also as a check-only run), and the native `DELETE` is refused because the copy is mapped to only one DLO. The copy and that DLO stay, so map onto a copy only from a DLO you mean to keep.
 - **Generated names follow the same rule.** Segment membership DMOs on a copy are `ds2_Individual_SM_<ms>__dlm`; on a custom DMO `<Custom>_SM_<ms>__dlm`. A ruleset's unified and link DMOs are `ds2_UnifiedIndividual<Id>__dlm` and `ds2_UnifiedLinkIndividual<Id>__dlm`.
 - **The prefix is only in the space list** (`GET /ssot/data-spaces`, key `prefix`); no queryable record holds it.
 
