@@ -19,7 +19,7 @@ A data space is a partition of one Data Cloud (Data 360) org. Every org has a `d
 ## The short answer
 
 - **Most names are unique per org.** DLO, DMO, calculated insight, transform and data graph names cannot repeat in another space.
-- **Segments and standard DMOs get a space prefix.** A segment in `dataspace2` is stored as `ds2_<Name>` (`<prefix>_<Name>`), and the standard DMO Individual there is `ds2_Individual__dlm`, so stored names still differ.
+- **Segments, identity resolution rulesets and standard DMOs get a space prefix.** A segment in `dataspace2` is stored as `ds2_<Name>` (`<prefix>_<Name>`), a ruleset as `ds2_Individual_<id>`, and the standard DMO Individual there is `ds2_Individual__dlm`, so stored names still differ. The fields of a standard DMO copy drop `ssot__` (`FirstName__c`).
 - **Some names are generated.** Mapping, relationship and data stream names come from Salesforce; a name you send is ignored.
 - **Routes rarely check the space.** Most routes silently ignore an unknown or other space. Only the mapping list answers with a clear `404`.
 
@@ -30,7 +30,7 @@ A data space is a partition of one Data Cloud (Data 360) org. Every org has a `d
 | Salesforce CLI (source format) | No data-space folders and no DataSpace metadata type. The space is a field inside some files: `mktDataModelAttributes/dataSpaceName` in a DMO, `dataSpaceDefinitionDevName` in a data kit. DLO files carry no space. |
 | Metadata API | Uses the same fields. A DMO created with `dataSpaceName` set to a custom space lands in that space, under the API name you gave it. |
 | Connect API (`/ssot/…`) | Takes the space in the body (`dataSpaceName` for DMOs, `dataspaceInfo` for DLOs) and returns it on reads. Many routes ignore the `dataspace` query parameter (see the route table below). `GET /ssot/data-spaces` lists the spaces and their prefixes. |
-| sf-plugin-data | Works in the default space. An object from another space is saved as-is and is not deployed. |
+| sf-plugin-data | Every type works in any data space. Each file carries a top-level `c__dataSpace` (a list for DLOs and data streams, a single name for every other type); `--dataspace` names the run's space (`default` when omitted), and a file of another space is refused. The org's spaces are read once per command, and an unknown space is refused before any other request. Names are written as Salesforce stores them (`ds2_…`). |
 | Data kits | The package does not fix the space; you pick the target space in the separate data-kit deploy step. |
 
 ## Uniqueness inside and across data spaces
@@ -48,7 +48,7 @@ A data space is a partition of one Data Cloud (Data 360) org. Every org has a `d
 | DLO-DMO mapping | <span class="crud-chip crud-chip--none">generated</span> `<dll>_map_<dlm>_<epochMs>`; a sent name is ignored | by generated name | <span class="crud-chip crud-chip--none">none</span> | <span class="crud-chip crud-chip--none">n/a</span> |
 | Relationship | <span class="crud-chip crud-chip--none">generated</span> | by generated name | <span class="crud-chip crud-chip--none">none</span> | <span class="crud-chip crud-chip--none">n/a</span> |
 | Data stream | <span class="crud-chip crud-chip--none">generated</span> `<connection>_<event>_<hash>`; one Ingestion API event backs one stream only | by generated name | <span class="crud-chip crud-chip--none">none</span> a stream DLO in `dataspace2` follows the same pattern | <span class="crud-chip crud-chip--none">n/a</span> |
-| Identity resolution | <span class="crud-chip crud-chip--none">open</span> a ruleset in `default` was accepted; the same ruleset in `dataspace2` was refused because ContactPointEmail is not mapped there, so name reuse across spaces is still untested | the `default` one, even with `?dataspace=`; `ds2_<Name>` answered ITEM_NOT_FOUND | not known yet | <span class="crud-chip crud-chip--none">n/a</span> (name is `Individual_<id>`, id at most 4 characters) |
+| Identity resolution | <span class="crud-chip crud-chip--yes">allowed</span> once ContactPointEmail is mapped in `dataspace2`, a ruleset there is accepted and stored as `ds2_Individual_<id>` | `ds2_Individual_<id>` returns it, with or without `?dataspace=`; `Individual_<id>` answers ITEM_NOT_FOUND | <span class="crud-chip crud-chip--partial">space prefix</span> also on its unified and link DMOs (`ds2_UnifiedIndividual<Id>__dlm`) | <span class="crud-chip crud-chip--none">n/a</span> (name is `Individual_<id>` in `default`, id at most 4 characters) |
 
 ## How many spaces a type belongs to
 
@@ -68,9 +68,18 @@ sf api request rest '/services/data/v68.0/ssot/data-spaces/dataspace2/members' -
 sf api request rest '/services/data/v68.0/ssot/data-spaces/dataspace2/members?memberNames=Example__dll' --method DELETE --target-org TARGET_ALIAS
 ```
 
-The `PUT` body needs the doubled `members` (a flat list answers `400`). It answers `PROCESSING`; a few seconds later the member reads `ACTIVE` and the DLO lists both spaces, under the same name. The `DELETE` removes the DLO from that space only and keeps the DLO; `DELETE …/members/<name>` answers `405`.
+The `PUT` body needs the doubled `members` (a flat list answers `400`); it was only ever sent with every current member listed, so whether a shorter list removes the others is untested. The `default` space's member list states one more member (`totalSize`) than it lists. It answers `PROCESSING`; a few seconds later the member reads `ACTIVE` and the DLO lists both spaces, under the same name. The `DELETE` removes the DLO from that space only and keeps the DLO; `DELETE …/members/<name>` answers `405`.
 
 Access is granted per space through permission sets: standard Data 360 permission sets cover only `default`, and each other space must be linked to the permission sets that should reach it. What the APIs return to a user limited to one space has not been tested; an admin's lists without a `dataspace` parameter span every space.
+
+## Names inside another space
+
+- **SQL, segment criteria and identity resolution rules need the stored spelling.** In `dataspace2`, DBT segments, segment criteria, the Query API and identity resolution rules accept `ds2_Individual__dlm` with `FirstName__c` and refuse `ssot__Individual__dlm` with `ssot__FirstName__c`. A custom DMO keeps its plain name; `ds2_` in front of it is refused.
+- **A DCSQL transform accepts the default spelling but reads the default space's object**; it does not translate the name.
+- **A standard DMO copy holds only the fields mapped in that space**, and it gains a field when a mapping names one.
+- **The first mapping onto a standard DMO in a space must use the default spelling** (`ssot__ContactPointEmail__dlm` with `ssot__` fields), because the copy does not exist yet; Salesforce stores it under the copy name. From then on only the copy spelling works.
+- **Generated names follow the same rule.** Segment membership DMOs on a copy are `ds2_Individual_SM_<ms>__dlm`; on a custom DMO `<Custom>_SM_<ms>__dlm`. A ruleset's unified and link DMOs are `ds2_UnifiedIndividual<Id>__dlm` and `ds2_UnifiedLinkIndividual<Id>__dlm`.
+- **The prefix is only in the space list** (`GET /ssot/data-spaces`, key `prefix`); no queryable record holds it.
 
 ## How each route treats the data space
 
@@ -79,14 +88,14 @@ What happens when a request names `dataspace2` or a space that does not exist.
 | Type | How the space is given | List | Read by name | Unknown space |
 |---|---|---|---|---|
 | DLO | body `dataspaceInfo`, a list: one DLO in several spaces | ignores the space | ignores the space | `200`, same answer |
-| DMO | body `dataSpaceName` on create | ignores the space; shows `default` items only | ignores the space | `200`, same answer |
+| DMO | body `dataSpaceName` on create | ignores the space; returns the DMOs of every space, each with its `dataSpaceName` | ignores the space | `200`, same answer |
 | Mapping | query `dataspace` | filters by space | — | <span class="crud-chip crud-chip--yes">404</span> "DataSpace not found" |
 | Relationship | query `dataspace`; none means `default` | filters by space (per source DMO); a DMO from another space answers `404` "DMO not found … in the data space" | no single-relationship read | <span class="crud-chip crud-chip--partial">500</span> INTERNAL_ERROR "end-user denied authorization" |
 | Calculated insight | body `dataSpaceName`; read form `dataSpace` | filters by space (drafts counted, not listed) | ignores the space | <span class="crud-chip crud-chip--partial">403</span> "end-user denied authorization" |
 | Segment | body on create; stored name carries `ds2_` | filters by space | ignores the space; use the stored name | <span class="crud-chip crud-chip--partial">403</span> same misleading text |
 | Data graph | body `dataspaceName` | metadata list filters by space; drafts left out | — | <span class="crud-chip crud-chip--partial">403</span> same misleading text |
 | Data transform | body `dataSpaceName` | ignores the space | ignores the space | `200`, same answer |
-| Identity resolution | body `dataSpaceName` | ignores the space | — | `200`, same answer |
+| Identity resolution | body `dataSpaceName` | ignores the space; returns every space's rulesets, each with its `dataSpaceName` | ignores the space; use the stored name | `200`, same answer |
 | Data stream | through its DLO's spaces | ignores the space | — | `200`, same answer |
 
 The space list itself is reliable: `GET /services/data/v68.0/ssot/data-spaces` lists every space with its `prefix`, and `GET …/data-spaces/<name>` answers `404` NOT_FOUND for a space that does not exist. That is the one cheap way to check a space name, because most routes above do not.

@@ -136,11 +136,12 @@ Standard CLI means Salesforce CLI's own `sf project retrieve|deploy` (Metadata A
 
 ### What this means for the plugin
 
-- Two files in different spaces can never carry the same name, so a folder per space is not needed to avoid clashes. The space can be a field inside each file for types that live in one space.
-- DLOs belong to several spaces at once, so their file keeps the list of spaces. A deploy cannot send that list with the DLO; it compares the file's list with the org's and adds or removes each difference through the space's members route.
-- A segment in another space keeps its stored name (`<prefix>_<Name>`) as its file name. The same goes for references to a standard DMO there: a mapping in that space names `ds2_Individual__dlm`, not `Individual__dlm`.
-- Identity resolution rules need required fields mapped in their space (ContactPointEmail for email rules); rules on Individual fields alone are refused as "criteria are too weak".
-- Because most routes ignore an unknown space, the plugin should check a space name once per command against `/ssot/data-spaces`. See [Data Spaces](/next/data-spaces/) for how each route treats the space.
+- Every type works in any data space. Two files in different spaces can never carry the same name, so files stay in one folder per type and the space is a field in each file: a top-level `c__dataSpace`, a list for DLOs and data streams and a single name for every other type.
+- `--dataspace` names the run's space (`default` when omitted). A file of another space is refused, never skipped, and the org's spaces are read once per command so an unknown space is refused before any other request.
+- A DLO's file lists all its spaces. Deploy adds a space through the space's members route, sending the complete member list it has just read; a member list that does not add up is refused. Removing a space needs `--allow-dataspace-removal`, and a DLO that still belongs to another space is not deleted.
+- Names are kept as Salesforce stores them: `ds2_<Name>` for segments, `ds2_Individual_<id>` for rulesets, `ds2_Individual__dlm` with fields like `FirstName__c` for standard DMO copies. A segment or ruleset file without the prefix is refused before any write. The first mapping onto a standard DMO copy that does not exist yet is retried once with the default spelling.
+- Reads by name cannot name a space, so the plugin checks the space the answer names before every write and delete.
+- See [Data Spaces](/next/data-spaces/) for how each route treats the space.
 
 ## Before you start
 
