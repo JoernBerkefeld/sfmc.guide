@@ -53,6 +53,17 @@ test('each scoped page receives its own latest commit timestamp', () => {
   assert.deepEqual(results.at(-1), {});
 });
 
+test('the data spaces page receives its latest commit timestamp', () => {
+  const file = 'next/data-spaces/index.md';
+  const [result] = run(root, [file]);
+  const raw = execFileSync('git', ['-C', root, 'log', '-1', '--format=%cI', '--', file], {
+    encoding: 'utf8',
+  }).trim();
+  assert.ok(raw, file);
+  assert.equal(result.data_cloud_git_date, new Date(raw).toISOString().replace('.000Z', 'Z'));
+  assert.equal(result.data_cloud_git_date_scoped, true);
+});
+
 test('missing file history or git does not fabricate a date', () => {
   const file = `${folder}/missing.md`;
   assert.equal(run(root, [file])[0].data_cloud_git_date, null);
@@ -64,7 +75,8 @@ test('missing file history or git does not fabricate a date', () => {
 
 test('layout distinguishes committed edits from retained evidence and deployment fetches history', () => {
   const layout = fs.readFileSync(path.join(root, '_layouts/page.html'), 'utf8');
-  assert.match(layout, /Latest committed page edit/);
+  assert.match(layout, /Last updated: /);
+  assert.doesNotMatch(layout, /Latest committed page edit/);
   assert.doesNotMatch(layout, /Prior documentation record/);
   assert.match(layout, /Git history not available/);
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/jekyll.yml'), 'utf8');
