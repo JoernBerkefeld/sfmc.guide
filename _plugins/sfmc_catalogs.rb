@@ -51,11 +51,14 @@ module SfmcGuide
 
     # Handlebars helpers available on Marketing Cloud Next.
     HANDLEBARS_HELPERS = Set.new(%w[
-      add and char compare concat dateAdd dateDiff divide each equals fallback filter flatten
-      format formatCurrency formatNumber get getContentBlock hash if iif indexOf isEmpty
-      jsonPath length lookup lowercase map modulo multiply not now or personalizationResult
-      properCase query queryFirst raiseError random repeat replace set slice sort substring
-      subtract timeZoneConversion trim unless uppercase with
+      add and assignCoupon base64Decode base64Encode buildRowSetFromString buildRowSetFromXml
+      buildUrl char claimRow compare concat dateAdd dateDiff datePart divide domain each encode
+      encodeURI encodeURIComponent equals fallback filter flatten format formatCurrency
+      formatNumber get getContentBlock guid hash if iif impressionRegion indexOf isEmailAddress
+      isEmpty isNullDefault jsonPath length lookup lowercase map md5 modulo multiply not now or
+      personalizationResult properCase query queryFirst raiseError random regExMatch repeat
+      replace set sha1 sha256 sha512 slice sort stringToHex substring subtract
+      timeZoneConversion trim unless uppercase with
     ]).freeze
 
     # Namespaces and full paths used by {!$binding} tokens.
