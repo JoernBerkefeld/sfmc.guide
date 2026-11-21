@@ -65,8 +65,11 @@
   syntax: "{{base64Decode encoded [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "Base64Decode"
+  ampscriptEquivalents:
+    - name: "Base64Decode"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Turns a Base64 string back into readable text."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-base64decode.html"
@@ -78,8 +81,11 @@
   syntax: "{{base64Encode text [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "Base64Encode"
+  ampscriptEquivalents:
+    - name: "Base64Encode"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Turns readable text into a Base64 string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-base64encode.html"
@@ -91,8 +97,11 @@
   syntax: "{{buildRowSetFromString text delimiter}}"
   returnType: "array"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "BuildRowSetFromString"
+  ampscriptEquivalents:
+    - name: "BuildRowSetFromString"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Splits a string at a delimiter into a rowset with a single unnamed column, one row per value."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-buildrowsetfromstring.html"
@@ -104,8 +113,11 @@
   syntax: "{{buildRowSetFromXml xml xpath ...options}}"
   returnType: "array"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "BuildRowSetFromXML"
+  ampscriptEquivalents:
+    - name: "BuildRowSetFromXML"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Builds a rowset from the XML nodes an XPath expression selects; each row carries the node value, its XML, and its attributes."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-buildrowsetfromxml.html"
@@ -146,8 +158,14 @@
   syntax: "{{claimRow ...options}}"
   returnType: "object"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "ClaimRow, ClaimRowValue"
+  ampscriptEquivalents:
+    - name: "ClaimRow"
+      kind: "function"
+      exact: false
+    - name: "ClaimRowValue"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Takes the first row of a marketing object that nobody has claimed yet, marks it as claimed, and returns it. Errors when every row is already claimed."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-claimrow.html"
@@ -235,8 +253,11 @@
   syntax: "{{datePart date part}}"
   returnType: "integer"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "DatePart"
+  ampscriptEquivalents:
+    - name: "DatePart"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Returns one component of a date or timestamp, such as the year, as a number."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-datepart.html"
@@ -264,8 +285,11 @@
   syntax: "{{domain emailAddress}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "Domain"
+  ampscriptEquivalents:
+    - name: "Domain"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Returns everything behind the first @ of an email address, or null when the input has no @ or is not a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-domain.html"
@@ -319,8 +343,11 @@
   syntax: "{{encodeURIComponent text}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "URLEncode"
+  ampscriptEquivalents:
+    - name: "URLEncode"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "URL-encodes the part of a string that comes after the address, such as a query string. For a whole string, use encodeURI."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-http-references/mcn-handlebars-reference-http-encodeuricomponent.html"
@@ -348,11 +375,8 @@
   syntax: "{{fallback value fallbackValue}}"
   returnType: "any"
   mcn: "65"
-  ampscriptEquivalent: "IsNullDefault"
-  ampscriptEquivalents:
-    - name: "IsNullDefault"
-      kind: "function"
-      exact: false
+  ampscriptEquivalent: ""
+  ampscriptEquivalents: []
   subexpressionOnly: false
   description: "Returns a fallback value when the first argument is null, empty, or throws an exception."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-fallback.html"
@@ -476,8 +500,11 @@
   syntax: "{{guid}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "GUID"
+  ampscriptEquivalents:
+    - name: "GUID"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Creates a new globally unique identifier (GUID). Takes no parameters; any that are passed are ignored."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-guid.html"
@@ -540,8 +567,14 @@
   syntax: "{{#impressionRegion name}}…{{/impressionRegion}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "BeginImpressionRegion, EndImpressionRegion"
+  ampscriptEquivalents:
+    - name: "BeginImpressionRegion"
+      kind: "function"
+      exact: false
+    - name: "EndImpressionRegion"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Marks the enclosed part of a message as a named impression region for reporting on dynamic content. Adds no output of its own."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-impressionregion.html"
@@ -569,8 +602,11 @@
   syntax: "{{isEmailAddress emailAddress}}"
   returnType: "boolean"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "IsEmailAddress"
+  ampscriptEquivalents:
+    - name: "IsEmailAddress"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Checks whether a value has the shape of an email address. It does not check that the mailbox or domain exists."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-isemailaddress.html"
@@ -601,8 +637,11 @@
   syntax: "{{isNullDefault value defaultValue}}"
   returnType: "any"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "IsNullDefault"
+  ampscriptEquivalents:
+    - name: "IsNullDefault"
+      kind: "function"
+      exact: true
   subexpressionOnly: false
   description: "Returns the first value, or the second one when the first is null."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-isnulldefault.html"
@@ -691,8 +730,11 @@
   syntax: "{{md5 text [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "MD5"
+  ampscriptEquivalents:
+    - name: "MD5"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Returns the MD5 digest (128 bit) of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-md5.html"
@@ -892,8 +934,11 @@
   syntax: "{{regExMatch subject pattern group [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "RegExMatch"
+  ampscriptEquivalents:
+    - name: "RegExMatch"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Applies a regular expression (Java regex syntax) to a string and returns the matched text or one capture group. Returns an empty string when nothing matches."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-regexmatch.html"
@@ -956,8 +1001,11 @@
   syntax: "{{sha1 text [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "SHA1"
+  ampscriptEquivalents:
+    - name: "SHA1"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Returns the SHA-1 digest (160 bit) of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha1.html"
@@ -969,8 +1017,11 @@
   syntax: "{{sha256 text [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "SHA256"
+  ampscriptEquivalents:
+    - name: "SHA256"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Returns the SHA-256 digest of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha256.html"
@@ -982,8 +1033,11 @@
   syntax: "{{sha512 text [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "SHA512"
+  ampscriptEquivalents:
+    - name: "SHA512"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Returns the SHA-512 digest of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha512.html"
@@ -1021,8 +1075,11 @@
   syntax: "{{stringToHex subject [...options]}}"
   returnType: "string"
   mcn: "68"
-  ampscriptEquivalent: ""
-  ampscriptEquivalents: []
+  ampscriptEquivalent: "StringToHex"
+  ampscriptEquivalents:
+    - name: "StringToHex"
+      kind: "function"
+      exact: false
   subexpressionOnly: false
   description: "Returns the hexadecimal representation of the encoded characters of a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-stringtohex.html"

@@ -213,7 +213,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "base64Decode"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.Base64Decode"
       url: "https://ssjs.guide/platform-functions/base64decode/"
@@ -230,7 +231,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "base64Encode"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.Base64Encode"
       url: "https://ssjs.guide/platform-functions/base64encode/"
@@ -247,11 +249,12 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "impressionRegion"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.BeginImpressionRegion"
       url: "https://ssjs.guide/platform-functions/beginimpressionregion/"
-  mcnNotes: ""
+  mcnNotes: "In Handlebars, the block helper impressionRegion replaces this function together with EndImpressionRegion: the region name goes on the opening tag and the closing tag ends the region."
   description: "Marks the start of an impression tracking region. The region name must be a literal — a variable argument aborts the page."
   guideUrl: "https://ampscript.guide/beginimpressionregion/"
 - name: "BuildOptionList"
@@ -295,7 +298,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "buildRowSetFromString"
+  handlebarsExact: true
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Splits a delimited string into a single-column rowset."
@@ -310,7 +314,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "buildRowSetFromXml"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Parses an XML string using an XPath expression and returns a rowset."
@@ -341,7 +346,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "claimRow"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Atomically claims an unclaimed row in a data extension by setting a key column value."
@@ -356,9 +362,10 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "claimRow"
+  handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Handlebars has no one-call counterpart: claimRow takes named arguments and returns the whole row, so read the wanted column from that row and wrap the call in fallback to supply a default when no row is left."
   description: "Atomically claims a row and returns a specific column value from it, or a caller-supplied fallback when no unclaimed rows remain."
   guideUrl: "https://ampscript.guide/claimrowvalue/"
 - name: "CloudPagesURL"
@@ -644,7 +651,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "datePart"
+  handlebarsExact: true
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Extracts one component from a date. The hour is reported on a 12-hour clock with no AM/PM indicator, so 19:35 yields 7 and any time at midnight — including a date with no time part at all — yields 12. Month and day come back zero-padded to two digits while hour and minute do not."
@@ -752,7 +760,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "domain"
+  handlebarsExact: true
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns everything after the first at sign, without validating the address or the domain. A value with no at sign, an empty string and a number all return an empty string."
@@ -798,11 +807,12 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "impressionRegion"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.EndImpressionRegion"
       url: "https://ssjs.guide/platform-functions/endimpressionregion/"
-  mcnNotes: ""
+  mcnNotes: "In Handlebars, the closing tag of the impressionRegion block helper ends its region; there is no argument for ending every open region at once."
   description: "Marks the end of an impression tracking region."
   guideUrl: "https://ampscript.guide/endimpressionregion/"
 - name: "EndSmsConversation"
@@ -1041,7 +1051,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "guid"
+  handlebarsExact: true
   ssjsEquivalents:
     - name: "Platform.Function.GUID"
       url: "https://ssjs.guide/platform-functions/guid/"
@@ -1336,7 +1347,8 @@
   differsFromDocs: true
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "isEmailAddress"
+  handlebarsExact: true
   ssjsEquivalents:
     - name: "Platform.Function.IsEmailAddress"
       url: "https://ssjs.guide/platform-functions/isemailaddress/"
@@ -1369,8 +1381,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: "fallback"
-  handlebarsExact: false
+  handlebarsEquivalent: "isNullDefault"
+  handlebarsExact: true
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the value if not null, otherwise returns the default. Outside a Smart Capture form the default is never reached: on a CloudPage every empty-ish input returns the empty string instead, so it cannot be used as a general fallback."
@@ -1567,7 +1579,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "md5"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.MD5"
       url: "https://ssjs.guide/platform-functions/md5/"
@@ -1846,7 +1859,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "regExMatch"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: "MC Next uses a different regex engine that excludes .NET-only constructs. Options must be literal comma-separated text and can only be IgnoreCase, Multiline, Singleline, IgnorePatternWhitespace, or ExplicitCapture."
   description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Matching is case-sensitive unless the IgnoreCase option is passed."
@@ -2043,7 +2057,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "sha1"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-1 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
@@ -2058,7 +2073,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "sha256"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-256 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
@@ -2073,7 +2089,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "sha512"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
@@ -2103,7 +2120,8 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "stringToHex"
+  handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: ""
   description: "Converts a string to its hexadecimal representation. The bytes rendered are the UTF-8 encoding of the input unless charSet names another encoding."
@@ -2373,11 +2391,12 @@
   differsFromDocs: false
   deprecated: false
   mcn: "68"
-  handlebarsEquivalent: ""
+  handlebarsEquivalent: "encodeURIComponent"
+  handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.UrlEncode"
       url: "https://ssjs.guide/platform-functions/urlencode/"
-  mcnNotes: ""
+  mcnNotes: "In Handlebars, encodeURIComponent encodes only what follows the address, such as a query string, which is what this function does by default; use encodeURI to encode a whole string. Neither helper takes the two switches of this function."
   description: "URL-encodes a string for safe inclusion in a URL. By default only the part after a question mark is touched, so a value that is not a URL passes through unchanged unless the third argument is switched on."
   guideUrl: "https://ampscript.guide/urlencode/"
 - name: "v"
