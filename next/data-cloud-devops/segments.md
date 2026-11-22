@@ -52,9 +52,9 @@ Saves the segment on API68 as one JSON file plus one SQL file per model. You can
 sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --output-dir retrieved
 ```
 
-The command writes `retrieved/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
+The command writes `retrieved/data360/segments/OwnedSegment.segment.json` and, beside it, `OwnedSegment.segment.OwnedSegment.sql`: `<output-dir>/data360/segments/<Name>.segment.json` plus one `<Name>.segment.<model>.sql` for each model. There is no Segment XML. Segments use API 68 only: the default (`auto`) selects it, an explicit `--api-version 68.0` is optional, and any other version is refused with `INVALID_SCOPE`. `--dataspace` names the data space (`default` when omitted), and a file of another space is refused; see [Data Spaces](/next/data-spaces/). Repeating the command writes nothing and reports `unchanged`; `-x` (`--overwrite`) replaces differing files and removes the SQL file of a model the segment no longer has.
 
-To save every segment of the default data space at once, use `--metadata segment` without a name:
+To save every segment of the run's data space at once, use `--metadata segment` without a name:
 
 ```sh
 sf data360 retrieve --target-org SOURCE_ALIAS --metadata segment --output-dir retrieved

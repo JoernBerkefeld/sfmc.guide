@@ -34,7 +34,7 @@ Use the native API 68.0 route first. The optional [sf-plugin-data plugin](https:
 
 **Plugin qualification:** The plugin does not keep its own list of allowed settings. It checks the shape and identity of the file and sends any ruleset the API accepts, in the default data space, at API 68.0: automatic run on or off, case sensitivity, a secondary DMO, filters, trusted sources, and rulesets that are not published yet. Live tests covered the `Individual` configuration type only; other configuration types are sent as written and Salesforce decides. The live-tested rulesets are listed under Evidence.
 
-**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` select API 68.0), `--data-space` (alias of `--dataspace`; only `default` is supported), `--preview` (read-only), `--allow-processing` (required because create and update publish the ruleset), `--async` (deploy only, see Create), `--keep-local-files` (delete only), and `--source-dir` / `-d` to name the ruleset file for `deploy`; `delete` selects the ruleset by name with `--metadata`.
+**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` select API 68.0), `--data-space` (alias of `--dataspace`; the run's data space, `default` when omitted), `--preview` (read-only), `--allow-processing` (required because create and update publish the ruleset), `--async` (deploy only, see Create), `--keep-local-files` (delete only), and `--source-dir` / `-d` to name the ruleset file for `deploy`; `delete` selects the ruleset by name with `--metadata`.
 
 ## Read
 

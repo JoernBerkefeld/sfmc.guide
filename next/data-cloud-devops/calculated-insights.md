@@ -32,6 +32,17 @@ A calculated insight computes values from your data, for example a customer coun
 
 **Plugin qualification:** The plugin sends any SQL, status and schedule as written, and Salesforce decides. The live runs are listed under Evidence.
 
+**SQL that fails silently:** Salesforce accepts the create and the publish of an insight whose SQL it cannot run. About three minutes after publishing, the insight reads `ERROR` with `CREATE_FAILED`, with no message, no dimensions or measures and no output table. Check the status after every publish. Tested live at API 68 (2026-11-22):
+
+- **Classic insights** (`queryDialect` `ANSI_SQL`) fail with:
+  - **a table alias**, also when every column has `AS`. `FROM CustomerEvent__dlm e` with `e.CustomerId__c` fails. Write the full name instead: `FROM CustomerEvent__dlm` with `CustomerEvent__dlm.CustomerId__c`.
+  - **a quoted column alias:** `AS "customer_count__c"`, `"customer_count__c"` or `` AS `customer_count__c` ``.
+  - **a text value as a column**, such as `'x' AS label__c`.
+  - **a `--` comment line**, even one that names nothing.
+- **SQL Insights Builder insights** (`queryDialect` `DC_SQL`) take table aliases, double-quoted aliases and text value columns. They fail only with a backtick alias.
+- **Both dialects** accept a column alias without `AS`, after a closing bracket (`COUNT(CustomerEvent__dlm.CustomerId__c) customer_count__c`), after a field or after a number.
+- **No quick check:** the validation route (`POST /ssot/calculated-insights/actions/validate`) answered "This feature is not supported for this org". The Query API accepts SQL that classic insights then fail on, so it is no substitute.
+
 **Enum letter case:** An enum value in `definitionType`, `queryDialect`, `publishScheduleInterval` or `historyPublishScheduleInterval` that differs from Salesforce's stored spelling only in letter case counts as unchanged on deploy. The plugin sends the value as written; retrieve writes Salesforce's spelling.
 
 ## Read
@@ -81,7 +92,7 @@ To download the XML too, run the retrieve command from the CLI tab. The XML does
 {% endcapture %}
 
 {% capture read_plugin %}
-These are API-led plugin operations, not out-of-the-box Salesforce CLI commands. Every plugin command for calculated insights uses API 68 only: the default `--api-version auto` selects it, an explicit `68.0` pin is optional, and any other version is refused with `INVALID_SCOPE`. Only the default data space is accepted. No plugin request goes through the Metadata API.
+These are API-led plugin operations, not out-of-the-box Salesforce CLI commands. Every plugin command for calculated insights uses API 68 only: the default `--api-version auto` selects it, an explicit `68.0` pin is optional, and any other version is refused with `INVALID_SCOPE`. `--dataspace` names the data space (`default` when omitted), and a file of another space is refused; see [Data Spaces](/next/data-spaces/). No plugin request goes through the Metadata API.
 
 <a id="optional-sf-plugin-data-native-lifecycle"></a>
 
@@ -104,7 +115,7 @@ The JSON file is the API 68 read with its key names and enum values exactly as t
 { "apiName": "CustomerActivity__cio", "displayName": "Customer Activity", "dataSpace": "default", "definitionType": "CALCULATED_METRIC", "isFromPackage": false, "queryDialect": "ANSI_SQL", "publishScheduleInterval": "NOT_SCHEDULED" }
 ```
 
-The SQL file holds the `expression` as plain SQL. The API returns it HTML-escaped (`&gt;`, `&#39;`); the file holds it unescaped:
+The SQL file holds the `expression` as plain SQL. Salesforce returns it HTML-escaped (`&gt;`, `&#39;`) unless the request asks for plain text; the plugin asks for plain text:
 
 ```sql
 SELECT APPROX_COUNT_DISTINCT(CustomerEvent__dlm.CustomerId__c) AS customer_count__c, CustomerEvent__dlm.ApplicationId__c AS app_id__c FROM CustomerEvent__dlm WHERE 1 = 0 GROUP BY CustomerEvent__dlm.ApplicationId__c
@@ -373,7 +384,7 @@ sf data360 publish -o TARGET_ALIAS -d data360/calculatedInsights/CustomerActivit
 
 An `ACTIVE` insight that holds every key of the file reports `unchanged`. Otherwise one PATCH sends the file with `"draft": false`, and the plugin reads the insight until it is `ACTIVE` and holds the file. An insight the org does not have is `CI_NOT_FOUND`; create it with deploy first.
 
-`publish` takes `-o`, one exact file as `-d`/`--source-dir` (the JSON or its SQL file, never a folder), `--api-version` (`auto` or `68.0`), `--dataspace` (`default` only) and `--preview`. It needs no acknowledgement flag. `publish` is also available as `datacloud:publish`, `d360:publish` and `dc:publish`.
+`publish` takes `-o`, one exact file as `-d`/`--source-dir` (the JSON or its SQL file, never a folder), `--api-version` (`auto` or `68.0`), `--dataspace` (the run's data space, `default` when omitted; `c__dataSpace` in the file must name it) and `--preview`. It needs no acknowledgement flag. `publish` is also available as `datacloud:publish`, `d360:publish` and `dc:publish`.
 
 The human-readable output is (derived from the command's output code; offline-tested):
 
@@ -511,7 +522,7 @@ The answer is `success` `true`. Confirm with reads: `readMetadata` returns an em
 
 
 
-**Plugin scope:** Every plugin command for calculated insights uses API 68 and the default data space. Default and `auto` use API 68; an explicit `68.0` pin is optional; any other version is refused with `INVALID_SCOPE`. The plugin sends no Metadata API request for calculated insights. Any SQL, status and schedule is sent as written; Salesforce decides.
+**Plugin scope:** Every plugin command for calculated insights uses API 68 in the run's data space (`--dataspace`, `default` when omitted). Default and `auto` use API 68; an explicit `68.0` pin is optional; any other version is refused with `INVALID_SCOPE`. The plugin sends no Metadata API request for calculated insights. Any SQL, status and schedule is sent as written; Salesforce decides.
 
 **Plugin evidence (API 68, one org):**
 
