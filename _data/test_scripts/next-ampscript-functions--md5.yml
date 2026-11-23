@@ -1,0 +1,74 @@
+# Next test scripts for /next/ampscript/functions/md5/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for MD5. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[900150983cd24fb0d6963f7d28e17f72] got=[%%=MD5("abc")=%%]</p>
+  <p>c2 expect=[672477678e312bd05531722d736f5f35] got=[%%=MD5("SFMC-Probe-2026")=%%]</p>
+  <p>c3 expect=[d41d8cd98f00b204e9800998ecf8427e] got=[%%=MD5("")=%%]</p>
+  <p>c4 expect=[827ccb0eea8a706c4c34a16891f84e7b] got=[%%=MD5(12345)=%%]</p>
+  <p>c5 expect=[32] got=[%%=Length(MD5("SFMC-Probe-2026"))=%%]</p>
+  <p>c6 expect=[479e7b3b0e52eee6bec133fe72cd42c3] got=[%%=MD5(Concat("Zurich", Char(228), "1"))=%%]</p>
+  <p>c7 expect=[672477678e312bd05531722d736f5f35] got=[%%=MD5("SFMC-Probe-2026","UTF-8")=%%]</p>
+  <p>c8 expect=[0871c872a59e5fc3d4fd72799f8f7138] got=[%%=MD5("SFMC-Probe-2026","UTF-16")=%%]</p>
+  <p>c9 expect=[9d5390fabd29cb49bb3b2a85e7725469] got=[%%=MD5(Concat("Zurich", Char(228), "1"),"UTF-16")=%%]</p>
+  <p>c10 expect=[672477678e312bd05531722d736f5f35] got=[%%=MD5("SFMC-Probe-2026","utf-8")=%%]</p>
+  <p>c11 expect=[0871c872a59e5fc3d4fd72799f8f7138] got=[%%=MD5("SFMC-Probe-2026","utf-16")=%%]</p>
+  <p>c12 expect=[45e83c6ea8202aae452acf5f61f0d660] got=[%%=MD5("Grusß €ä")=%%]</p>
+  <p>c13 expect=[75300cf3b34da08a0cfd6958b26e1bae] got=[%%=MD5("Grusß €ä","UTF-16")=%%]</p>
+  <p>c14 expect=[c92a10324374fac681719d63979d00fe] got=[%%=MD5(2026)=%%]</p>
+  <p>c15 expect=[f78066a00e33be48d6f2f9914f6b6066] got=[%%=MD5(StringToDate("2026-03-04T09:05:07"))=%%]</p>
+  <p>c16 expect=[f78066a00e33be48d6f2f9914f6b6066] got=[%%=MD5("3/4/2026 9:05:07 AM")=%%]</p>
+  <p>c17 expect=[2026-11-22T22:41:45|56a86d9ce6b533bf2372355939f52726] got=[%%[SET @md5now = Now()]%%%%=Concat(@md5now,"|",MD5(@md5now))=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","UTF-16BE")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","UTF-32")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","ASCII")=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=MD5(Concat("Zurich", Char(228), "1"),"ASCII")=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","ISO-8859-1")=%%
+
+  <!-- email 6: expect that the save is rejected (HTTP 400) -->
+  %%=MD5(Concat("Zurich", Char(228), "1"),"ISO-8859-1")=%%
+
+  <!-- email 7: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("Grusß €ä","ASCII")=%%
+
+  <!-- email 8: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","NOT-A-CHARSET")=%%
+
+  <!-- email 9: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","")=%%
+
+  <!-- email 10: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","banana")=%%
+
+  <!-- email 11: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","UTF8")=%%
+
+  <!-- email 12: expect that the save is rejected (HTTP 400) -->
+  %%=MD5()=%%
+
+  <!-- email 13: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026","UTF-8","UTF-8")=%%
+
+  <!-- email 14: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026",1)=%%
+
+  <!-- email 15: expect that the save is rejected (HTTP 400) -->
+  %%=MD5("SFMC-Probe-2026",true)=%%

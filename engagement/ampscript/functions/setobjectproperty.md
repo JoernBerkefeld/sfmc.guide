@@ -67,12 +67,7 @@ The property does not render anything on its own; it is read back only when the 
 
 {% include test-script.html bundle="ampscript-functions--setobjectproperty" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

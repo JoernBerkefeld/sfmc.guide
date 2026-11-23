@@ -1,0 +1,31 @@
+# Next test scripts for /next/ampscript/functions/stringtodate/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for StringToDate. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[2026-03-04] got=[%%=Format(StringToDate("2026-03-04"),"yyyy-MM-dd")=%%]</p>
+  <p>c2 expect=[3/4/2026 12:00:00 AM] got=[%%=StringToDate("2026-03-04")=%%]</p>
+  <p>c3 expect=[3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:00 AM|3/4/2026 12:00:00 AM|3/4/2026 12:00:00 AM] got=[%%=StringToDate("2026-03-04 09:05:07")=%%|%%=StringToDate("2026-03-04T09:05:07")=%%|%%=StringToDate("3/4/2026 9:05 AM")=%%|%%=StringToDate("4 March 2026")=%%|%%=StringToDate("March 4, 2026")=%%]</p>
+  <p>c4 expect=[3/4/2026 7:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM] got=[%%=StringToDate("2026-03-04T09:05:07+02:00")=%%|%%=StringToDate("2026-03-04T09:05:07Z")=%%|%%=StringToDate("Wed, 04 Mar 2026 09:05:07 GMT")=%%]</p>
+  <p>c5 expect=[0|20] got=[%%=DateDiff(StringToDate("2026-03-04 09:05:07"),DateParse("2026-03-04 09:05:07"),"H")=%%|%%=Length(StringToDate("2026-03-04"))=%%]</p>
+  <p>c6 expect=[5/8/2026 12:00:00 AM] got=[%%=StringToDate("5/8/2026")=%%]</p>
+  <p>c7 expect=[2026|5|2026-03-04|2026-03-05T00:00:00|2] got=[%%=DatePart(StringToDate("2026-03-04T09:05:07"),"Y")=%%|%%=DatePart(StringToDate("2026-03-04T09:05:07"),"MI")=%%|%%=FormatDate(StringToDate("2026-03-04T09:05:07"),"yyyy-MM-dd")=%%|%%=DateAdd(StringToDate("2026-03-04"),1,"D")=%%|%%=DateDiff(StringToDate("2026-03-04"),StringToDate("2026-03-06"),"D")=%%]</p>
+  <p>c8 expect=[0] got=[%%=DateDiff(StringToDate(Now()),Now(),"MI")=%%]</p>
+  <p>c9 expect=[13:41:00] got=[%%=Format(StringToDate("1:41 PM"),"HH:mm:ss")=%%]</p>
+  <p>c10 expect=[not a date at all] got=[%%=StringToDate("not a date at all")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=StringToDate()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=StringToDate("2026-03-04 09:05:07",1)=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=StringToDate("2026-03-04 09:05:07","UTF-8")=%%

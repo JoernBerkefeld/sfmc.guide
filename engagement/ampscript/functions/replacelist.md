@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/replacelist/
 platforms:
   - engagement
-  - next
 syntax: "ReplaceList(sourceString, replacementString, searchString1[, searchStringN, ...])"
 return_type: string
 min_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "String calls give the same results, including the sequential passes (`ReplaceList(\"a\", \"XY\", \"a\", \"X\")` gives `XYY` on both). A number or boolean argument, such as `ReplaceList(101101, \"9\", \"0\")` (here `191191`), makes the Next preview fail."
 ---
 
 {% include verification-status.html %}
@@ -98,15 +100,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`ReplaceList` in Marketing Cloud Next](/next/ampscript/functions/replacelist/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#replacelist-sequential-cascade) — the sequencing and casing findings in full
 - [`Replace`](/engagement/ampscript/functions/replace/) — one search value at a time, matching case the same way
 - [`Concat`](/engagement/ampscript/functions/concat/) — the other variadic String function

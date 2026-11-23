@@ -1,0 +1,59 @@
+# Next test scripts for /next/ampscript/functions/replace/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Replace. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[Hello There] got=[%%=Replace("Hello World","World","There")=%%]</p>
+  <p>c2 expect=[one / two / three] got=[%%=Replace("one,two,three", ",", " / ")=%%]</p>
+  <p>c3 expect=[aa] got=[%%=Replace("aaa","aa","a")=%%]</p>
+  <p>c4 expect=[xyz] got=[%%=Replace("abc", "abc", "xyz")=%%]</p>
+  <p>c5 expect=[Hello World] got=[%%=Replace("Hello World", "zzz", "!")=%%]</p>
+  <p>c6 expect=[ab] got=[%%=Replace("ab", "abcdef", "z")=%%]</p>
+  <p>c7 expect=[Hello There] got=[%%=Replace("Hello World", "WORLD", "There")=%%]</p>
+  <p>c8 expect=[Hello There] got=[%%=Replace("Hello World", "world", "There")=%%]</p>
+  <p>c9 expect=[Howdy World] got=[%%=Replace("Hello World", "hELLO", "Howdy")=%%]</p>
+  <p>c10 expect=[dog dog dog] got=[%%=Replace("Cat cat CAT", "cat", "dog")=%%]</p>
+  <p>c11 expect=[abc] got=[%%=Replace("a-b-c", "-", "")=%%]</p>
+  <p>c12 expect=[cat dog] got=[%%=Replace("cat", "cat", "cat dog")=%%]</p>
+  <p>c13 expect=[abc] got=[%%=Replace("abc", "", "X")=%%]</p>
+  <p>c14 expect=[abc] got=[%%=Replace("abc", "", "")=%%]</p>
+  <p>c15 expect=[] got=[%%=Replace("", "x", "y")=%%]</p>
+  <p>c16 expect=[cafe time] got=[%%=Replace(Concat("caf",Char(233)," time"), Char(233), "e")=%%]</p>
+  <p>c17 expect=[café Time] got=[%%=Replace("cafe time", "e t", Concat(Char(233), " T"))=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=Replace("abc","b")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace(101101, "0", "9")=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace("a1b1c", 1, "-")=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace("a-b", "-", 7)=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace(true, "ru", "X")=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace("is true here", true, "X")=%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Replace("a-b", "-", true)=%%
+
+  <!-- email 8: expect that the save is rejected (HTTP 400) -->
+  %%=Replace()=%%
+
+  <!-- email 9: expect that the save is rejected (HTTP 400) -->
+  %%=Replace("abc")=%%
+
+  <!-- email 10: expect that the save is rejected (HTTP 400) -->
+  %%=Replace("abc", "b", "z", "extra")=%%

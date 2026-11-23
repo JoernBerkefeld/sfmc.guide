@@ -81,12 +81,7 @@ The official reference states that this function and [`RequestParameter`](/engag
 
 The equivalence above is stated for GET only; a form post is a different request shape.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

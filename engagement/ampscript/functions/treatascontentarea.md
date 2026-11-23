@@ -68,12 +68,7 @@ There is no closed set of sentinel values: the result is whatever the rendered c
 
 The content store is scoped to a send and caps at 300 unique variations; beyond that, later variations render as the first. Those send-time semantics cannot be exercised from a CloudPage, where each request renders once. Because embedded content is executed, sanitise any user-supplied value before passing it in.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

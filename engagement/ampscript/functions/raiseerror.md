@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/raiseerror/
 platforms:
   - engagement
-  - next
 syntax: "RaiseError(message[, skipSubscriber, apiErrorCode, apiErrorNumber, preserveDataExt])"
 return_type: void
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 5
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "When the call runs, the Next email preview fails with HTTP 500, as Engagement aborts the render. `RaiseError()` is rejected at save in Next."
 ---
 
 {% include verification-status.html %}
@@ -100,15 +102,11 @@ So from outside the page the two cannot be distinguished. If you need a visitor-
 
 Email Preview proved that the second and fifth arguments accept the forms described above, but it cannot show the completed-send outcome: stopping an email job, skipping a single subscriber while the job continues, or whether earlier data-extension writes are retained. Those effects require a real send that reaches completion and were not exercised here. The official reference describes send behaviour and makes no landing-page claim, so the CloudPage abort above is undocumented territory rather than a contradiction.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`RaiseError` in Marketing Cloud Next](/next/ampscript/functions/raiseerror/) — how it behaves there
 - [Redirect](/engagement/ampscript/functions/redirect/) — the other page-terminating Utility function, which ends the request with a 302 instead
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-raise-error.html)
 - [ampscript.guide](https://ampscript.guide/raiseerror/)

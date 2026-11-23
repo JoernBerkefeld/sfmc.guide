@@ -1,0 +1,24 @@
+# Next test scripts for /next/ampscript/functions/contentblockbykey/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @cbk1 = ContentBlockByKey("nosuch-key-zzz-it1", "", 0, "FB-CBK", @cbks1) ]%%%%=v(@cbk1)=%% %%=v(@cbks1)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbykeyl = ContentBlockByKey("nosuch-key-zzz-it1", "", 0, "PRE-%%=Add(2,3)=%%-POST", @r2cbbykeyls) ]%%%%=v(@r2cbbykeyl)=%% %%=v(@r2cbbykeyls)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbykeyf0 = ContentBlockByKey("nosuch-key-zzz-it1", "", false, "FB-CBK", @r2cbbykeyfs0) SET @r2cbbykeyf1 = ContentBlockByKey("nosuch-key-zzz-it1", "", "false", "FB-CBK", @r2cbbykeyfs1) SET @r2cbbykeyf2 = ContentBlockByKey("nosuch-key-zzz-it1", "", "0", "FB-CBK", @r2cbbykeyfs2) ]%%%%=v(@r2cbbykeyf0)=%% %%=v(@r2cbbykeyfs0)=%%|%%=v(@r2cbbykeyf1)=%% %%=v(@r2cbbykeyfs1)=%%|%%=v(@r2cbbykeyf2)=%% %%=v(@r2cbbykeyfs2)=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=ContentBlockByKey()=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2cbbykey6 = ContentBlockByKey("nosuch-key-zzz-it1", "", 0, "FB-CBK", @r2cbbykey6s, "extra") ]%%%%=v(@r2cbbykey6)=%%
+
+  <!-- email 6: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%[ SET @r2cbbykeyt = ContentBlockByKey("nosuch-key-zzz-it1", "", 1, "FB-CBK", @r2cbbykeyts) ]%%%%=v(@r2cbbykeyt)=%%

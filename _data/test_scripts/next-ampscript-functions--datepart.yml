@@ -1,0 +1,50 @@
+# Next test scripts for /next/ampscript/functions/datepart/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for DatePart. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[2026] got=[%%=DatePart("2026-01-15","Y")=%%]</p>
+  <p>c2 expect=[1] got=[%%=DatePart("2026-01-15","M")=%%]</p>
+  <p>c3 expect=[19] got=[%%=DatePart("2026-11-23 19:35:47","H")=%%]</p>
+  <p>c4 expect=[2026|3|4|9|5|2026|11|23|19|35] got=[%%=DatePart("2026-03-04 09:05:07","Y")=%%|%%=DatePart("2026-03-04 09:05:07","M")=%%|%%=DatePart("2026-03-04 09:05:07","D")=%%|%%=DatePart("2026-03-04 09:05:07","H")=%%|%%=DatePart("2026-03-04 09:05:07","MI")=%%|%%=DatePart("2026-11-23 19:35:47","Y")=%%|%%=DatePart("2026-11-23 19:35:47","M")=%%|%%=DatePart("2026-11-23 19:35:47","D")=%%|%%=DatePart("2026-11-23 19:35:47","H")=%%|%%=DatePart("2026-11-23 19:35:47","MI")=%%]</p>
+  <p>c5 expect=[0|12|0] got=[%%=DatePart("2026-03-04 00:30:00","H")=%%|%%=DatePart("2026-03-04 12:30:00","H")=%%|%%=DatePart("2026-03-04","H")=%%]</p>
+  <p>c6 expect=[2027|30] got=[%%=Add(DatePart("2026-03-04 09:05:07","Y"),1)=%%|%%=Multiply(DatePart("2026-03-04 09:05:07","M"),10)=%%]</p>
+  <p>c7 expect=[2026|5] got=[%%=DatePart(Now(),"Y")=%%|%%=DatePart(DateAdd("2026-03-04 09:05:07",1,"D"),"D")=%%]</p>
+  <p>c8 expect=[4|4|3|5] got=[%%=DatePart("2026-03-04","D")=%%|%%=DatePart("3/4/2026 9:05 AM","D")=%%|%%=DatePart("4 March 2026","M")=%%|%%=DatePart("2026-03-04T09:05:07","MI")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","monthName")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","year")=%%|%%=DatePart("2026-03-04 09:05:07","month")=%%|%%=DatePart("2026-03-04 09:05:07","monthName")=%%|%%=DatePart("2026-03-04 09:05:07","day")=%%|%%=DatePart("2026-11-23 19:35:47","hour")=%%|%%=DatePart("2026-03-04 09:05:07","minute")=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","y")=%%|%%=DatePart("2026-03-04 09:05:07","m")=%%|%%=DatePart("2026-03-04 09:05:07","d")=%%|%%=DatePart("2026-11-23 19:35:47","h")=%%|%%=DatePart("2026-03-04 09:05:07","mi")=%%|%%=DatePart("2026-03-04 09:05:07","Mi")=%%|%%=DatePart("2026-03-04 09:05:07","YEAR")=%%|%%=DatePart("2026-03-04 09:05:07","MONTHNAME")=%%|%%=DatePart("2026-03-04 09:05:07","monthname")=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Length(DatePart("2026-03-04 09:05:07","M"))=%%|%%=Length(DatePart("2026-03-04 09:05:07","H"))=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("not a date at all","Y")=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","S")=%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","dayName")=%%
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DatePart("2026-03-04 09:05:07","ZZ")=%%
+
+  <!-- email 9: expect that the save is rejected (HTTP 400) -->
+  %%=DatePart("2026-03-04 09:05:07")=%%
+
+  <!-- email 10: expect that the save is rejected (HTTP 400) -->
+  %%=DatePart("2026-03-04 09:05:07","Y","extra")=%%

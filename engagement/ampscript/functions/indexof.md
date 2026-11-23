@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/indexof/
 platforms:
   - engagement
-  - next
 syntax: "IndexOf(sourceString, substring[, occurrence])"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Two-argument text searches match, including the case-insensitive search (`IndexOf('Hello World','WORLD')` gives `7`). Next rejects any third argument at save, gives `1` instead of `0` for an empty substring (`IndexOf(\"Hello\",\"\")`), and fails the preview for a number or boolean argument."
 ---
 
 {% include verification-status.html %}
@@ -109,15 +111,11 @@ Both findings are catalogued on [Differs from official docs](/engagement/differs
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`IndexOf` in Marketing Cloud Next](/next/ampscript/functions/indexof/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#indexof-is-case-insensitive) — the case-insensitivity and the occurrence argument in full
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit the returned positions use
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the strings you search

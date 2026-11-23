@@ -67,9 +67,10 @@ function q(value) {
  * Reference pages are flat files (functions/<name>.md), mirroring ssjs.guide.
  * index.md is the directory index, never a function page.
  */
-function pageSlugs() {
+function pageSlugs(dir = PAGES_DIR) {
   const slugs = new Set();
-  for (const entry of fs.readdirSync(PAGES_DIR, { withFileTypes: true })) {
+  if (!fs.existsSync(dir)) return slugs;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name === 'index.md') continue;
     slugs.add(entry.name.slice(0, -3).toLowerCase());
   }
@@ -77,6 +78,7 @@ function pageSlugs() {
 }
 
 const slugs = pageSlugs();
+const nextSlugs = pageSlugs(path.join(SITE, 'next/ampscript/functions'));
 const functions = [...amp.FUNCTIONS].sort((a, b) => a.name.localeCompare(b.name));
 
 let verified = 0;
@@ -120,6 +122,15 @@ for (const f of functions) {
   out += `  returnType: ${q(f.returnType || '—')}\n`;
   out += `  verified: ${isVerified}\n`;
   if (isVerified) out += `  url: ${q(`/engagement/ampscript/functions/${slug}/`)}\n`;
+  // the Next twin page, linked from /next/ampscript/functions/ whether or not the function is verified
+  if (nextSlugs.has(slug)) {
+    out += `  nextUrl: ${q(`/next/ampscript/functions/${slug}/`)}\n`;
+    // Next probe result vs. the official docs for Next, from the Next page's own front matter
+    const nextFm = fs
+      .readFileSync(path.join(SITE, 'next/ampscript/functions', `${slug}.md`), 'utf8')
+      .split(/\r?\n---/)[0];
+    out += `  nextDiffersFromDocs: ${/^differs_from_docs:\s*true\s*$/m.test(nextFm)}\n`;
+  }
   out += `  differsFromDocs: ${Boolean(f.differsFromOfficialDocs)}\n`;
   out += `  deprecated: ${Boolean(f.deprecated)}\n`;
   out += `  mcn: ${f.mcnSince ? q(String(f.mcnSince)) : '""'}\n`;

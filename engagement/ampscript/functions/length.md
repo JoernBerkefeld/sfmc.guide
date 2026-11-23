@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/length/
 platforms:
   - engagement
-  - next
 syntax: "Length(sourceString)"
 return_type: number
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Text and dates measure the same, in UTF-16 code units (an emoji counts as `2`). A number or boolean, `Length(12345)` or `Length(true)`, makes the Next email preview fail (HTTP 500); Engagement renders `5` and `0`."
 ---
 
 {% include verification-status.html %}
@@ -92,15 +94,11 @@ The practical consequence is truncation and validation. A limit enforced with `L
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct count look wrong. Render the input alongside the count and dump both as codepoints before drawing any conclusion." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Length` in Marketing Cloud Next](/next/ampscript/functions/length/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units) — the counting-unit finding in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the string you are measuring
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the sharp s survives uppercasing, so the measured length does not change

@@ -28,7 +28,7 @@ This badge does not verify untested writes or general CRUD support.
 
 **Example used in every chapter:** `Individual_cust`, a ruleset for the `Individual` profile.
 
-Use the native API 68.0 route first. The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data#native-identity-resolution-plugin-retrieve-and-deploy) adds retrieve, create, update and delete for the qualified profile.
+Use the native API 68.0 route first. The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data/blob/main/docs/types/identity-resolution.md) adds retrieve, create, update and delete for the qualified profile.
 
 {% include crud-summary.html %}
 

@@ -70,12 +70,7 @@ Two calls append two column names to the request's `Properties` array. To build 
 
 {% include test-script.html bundle="ampscript-functions--addobjectarrayitem" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

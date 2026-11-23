@@ -1,25 +1,1863 @@
-# AMPscript runtime behaviour that contradicts the official Salesforce docs.
-# PLATFORM: Marketing Cloud Next ONLY.
+# Where Marketing Cloud Next behaves differently from what the official docs say for Next.
+# PLATFORM: Marketing Cloud Next ONLY (AMPscript functions and Handlebars helpers).
 # Rendered by /next/differs-from-docs/ via _includes/differs-from-docs-list.html
 #
-# This file intentionally ships EMPTY. Append one entry per proven finding.
-# A finding belongs here when it was confirmed on Marketing Cloud Next, or when the
-# Next behaviour of a function diverges from the same function on Engagement.
-# Engagement-only functions (Char, RegExMatch, ...) have no entry here at all.
+# "Official docs for Next" = the official AMPscript reference page (examples, stated outputs,
+# parameter rules) plus its Next-specific parts (the Availability row for Next, the
+# "Differences between Engagement and Next" sections, inline Next sentences), or the official
+# Handlebars-for-Marketing-Cloud-Next helper page. The comparison is ALWAYS Next probe result vs.
+# those docs, never Next vs. Engagement (that lives in each page's Engagement section).
+# A card is due for a contradiction of a documented statement, or for notable behaviour the docs
+# do not mention (A5). Every card's page carries a "## Differs from official docs" section that
+# links the card; AMPscript pages set `differs_from_docs: true`, Handlebars pages
+# `mcn: differs-from-docs` or `mcn: unsupported` (tests/ampscript-next-sync.test.cjs).
 #
-# Row format (all keys except `testScript` and `officialUrl` are required):
+# Row format (all keys except `testScript` are required):
 #
-# - name: "FunctionName"                       # AMPscript function / construct as written in code
-#   url: "/next/ampscript/functions/#anchor"   # sfmc.guide page documenting it (omit if none yet)
-#   officialUrl: "https://..."                 # the official Salesforce doc page that is wrong
+# - name: "FunctionName"                         # AMPscript function, or "{{helper}}" for Handlebars
+#   url: "/next/ampscript/functions/<slug>/"     # the sfmc.guide page with the Differs section
+#   officialUrl: "https://..."                   # the official page the finding is measured against
 #   tagline: "short one-line summary of the discrepancy"
-#   category: "Date functions"                 # ampscript-data category, shown as a pill
-#   object: "Date functions"                   # grouping key for the "Sort by object" mode
-#   severity: "high"                           # high | medium | low
-#   discrepancy: "A1"                          # A1..A7, see the legend in the include
-#   anchor: "functionname-wrong-return-type"   # unique slug, becomes the card id
+#   category: "Date functions"                   # shown as a pill
+#   object: "Date functions"                     # grouping key for the "Sort by object" mode
+#   severity: "high"                             # high | medium | low
+#   discrepancy: "A1"                            # A1..A7, see the legend on /next/differs-from-docs/
+#   anchor: "functionname-short-finding"         # unique slug, becomes the card id
 #   body: |
-#     Markdown paragraph explaining what the docs claim and what the runtime
-#     actually does. Keep it factual and based on observed behaviour.
+#     What the docs say (paraphrased) and what a Next email actually rendered.
 #   testScript: |
-#     %%[ /* AMPscript that reproduces the discrepancy */ ]%%
+#     %%[ /* code that reproduces the discrepancy */ ]%%
+
+- name: "Add"
+  url: "/next/ampscript/functions/add/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-add.html"
+  tagline: "Sums wrap around at the 32-bit limit"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "add-32bit-wraparound"
+  body: |
+    The official reference states no limit on the size of the operands or of the sum.
+
+    In a Marketing Cloud Next email, `Add(2147483647, 1)` renders `-2147483648`: the sum overflows a signed 32-bit integer and silently turns negative, with no error.
+  testScript: |
+    %%=Add(2147483647,1)=%%
+
+- name: "Add"
+  url: "/next/ampscript/functions/add/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-add.html"
+  tagline: "A negative first operand broke the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "add-negative-operand-fails"
+  body: |
+    The official reference says both operands may be positive or negative, whole or decimal.
+
+    In a Marketing Cloud Next email, `Add(-5, 3)` saved, but the email preview then failed with HTTP 500 and no message. This was one probe, so a negative literal as the first argument was not shown to work in Next; positive whole and decimal operands rendered correctly.
+  testScript: |
+    %%=Add(-5,3)=%%
+
+- name: "BeginImpressionRegion"
+  url: "/next/ampscript/functions/beginimpressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-begin-impression-region.html"
+  tagline: "Listed as unavailable in Next, but emails using it save and render"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A6"
+  anchor: "beginimpressionregion-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In a Next email (2026-11-22/23), `%%[ BeginImpressionRegion("ProbeRegion") ]%%X%%[ EndImpressionRegion() ]%%` saved, published and rendered `X`, and a variable as the region name (`BeginImpressionRegion(@name)`) rendered too. Whether impressions are actually tracked against the region was not tested: that only shows in send reports, not in a preview.
+  testScript: |
+    %%[ BeginImpressionRegion("ProbeRegion") ]%%X%%[ EndImpressionRegion() ]%%
+
+- name: "BuildRowsetFromJSON"
+  url: "/next/ampscript/functions/buildrowsetfromjson/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "A decimal such as 100.0 keeps its .0, unlike the documented rowset"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "buildrowsetfromjson-decimal-kept"
+  body: |
+    The reference walks through a flights payload whose prices are written as `100.0`, `200.0` and `500.0` and shows the resulting rowset with the prices `100`, `200` and `500`.
+
+    In a Next email (2026-11-22/23), the same kind of payload read back through `Field(Row(@rows, 1), "Price")` rendered `100.0`. Code that compares or prints the price as shown in the docs gets the trailing `.0`.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) ]%%
+    %%=Field(Row(@rows, 1), "Price")=%%
+
+- name: "BuildRowsetFromJSON"
+  url: "/next/ampscript/functions/buildrowsetfromjson/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "An unset variable as the payload breaks the render, and an empty string never renders"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "buildrowsetfromjson-empty-payload-fails"
+  body: |
+    The reference says that with the flag `1` or `true`, a payload that is not valid JSON gives an empty rowset, and recommends checking `RowCount` to show fallback content.
+
+    In a Next email (2026-11-23), an unset variable as the payload made the preview fail (HTTP 500), and with an empty string (`BuildRowsetFromJSON("", "$.Flights[*]", 1)`) the preview never showed a new rendered version, so no `RowCount` check is ever reached. A `[]` payload and a path that matches nothing do give `0` rows. Test the variable for content before calling the function.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromJSON("", "$.Flights[*]", 1) ]%%%%=RowCount(@rows)=%%
+
+- name: "BuildRowsetFromJSON"
+  url: "/next/ampscript/functions/buildrowsetfromjson/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "On invalid JSON the error flag does not behave as either part of the reference describes"
+  category: "Content"
+  object: "Content"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "buildrowsetfromjson-invalid-json-flag"
+  body: |
+    The reference's Errors section says invalid JSON raises an exception when the third argument is `0` or `false`, and gives an empty rowset when it is `1` or `true`. (Its parameter list describes the flag the other way round.)
+
+    In a Next email (2026-11-23):
+
+    - `BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 0)` did not fail: the text after it rendered normally.
+    - `BuildRowsetFromJSON("not json", "$.Flights[*]", 1)` gave `0` rows, as the Errors section says.
+    - An email that called it on `{ not json ` with `true`, `"true"` and `"1"` together failed to render (HTTP 500) instead of giving three empty rowsets. Which of the three spellings causes the failure was not isolated.
+
+    Do not rely on the flag to choose between an error and an empty rowset; check the payload first.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 0) ]%%X
+
+- name: "BuildRowsetFromJSON"
+  url: "/next/ampscript/functions/buildrowsetfromjson/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-json.html"
+  tagline: "Columns cannot be read by number, and the Value column of a scalar path returns the Field flag"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromjson-ordinal-and-value-reads"
+  body: |
+    The reference says a path that selects plain values yields a rowset with a `Value` column holding them, and its full code example reads the flight columns by number (`Field(Row(@rows, @row), @col)` with `@col` running from 1 to 4).
+
+    In a Next email (2026-11-23):
+
+    - On object rows (`$.Flights[*]`), `Field(Row(@rows, 1), 1)` and `Field(Row(@rows, 1), 2)` rendered empty strings instead of `IND` and `NYC`. Reading by key name (`"Origin"`) works.
+    - On a scalar path (`$.Flights[*].Price`), the row count is right (`3`), but `Field(row, "Value", 0)` rendered `false` and `Field(row, 1)` rendered `true`, not `200`. The same happened for `$.Shapes[*]` over a string array; see [Field returns the flag](/next/differs-from-docs/#field-returns-flag-not-value).
+
+    The documented example table would therefore come out with empty cells, and scalar results are not readable at all.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromJSON('{"Shapes":["Triangle","Circle","Square"]}', "$.Shapes[*]", 1) ]%%
+    %%=RowCount(@rows)=%%|%%=Field(Row(@rows, 2), 1)=%%|%%=Field(Row(@rows, 2), "Value", 0)=%%
+
+- name: "BuildRowSetFromString"
+  url: "/next/ampscript/functions/buildrowsetfromstring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-string.html"
+  tagline: "Listed as unavailable in Next, but emails using it save and render"
+  category: "Content"
+  object: "Content"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "buildrowsetfromstring-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In a Next email (2026-11-22/23), `RowCount(BuildRowSetFromString("North**South**East**West", "**"))` rendered `4`, `a,b,` gave `3` rows and an empty string gave `0`. The function is accepted and splits the string; reading the segments back is a separate problem (see the card on reading values).
+  testScript: |
+    %%=RowCount(BuildRowSetFromString("North**South**East**West", "**"))=%%
+
+- name: "BuildRowSetFromString"
+  url: "/next/ampscript/functions/buildrowsetfromstring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-string.html"
+  tagline: "Reading a segment by column number returns true instead of the text"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromstring-ordinal-returns-true"
+  body: |
+    The reference explains that the single, unnamed column is read by its number, for example `Field(Row(BuildRowSetFromString('123|456', '|'), 1), 1)`, and its query-parameter example relies on that to get each name.
+
+    In a Next email (2026-11-22/23), `Field(Row(BuildRowSetFromString("North**South**East**West", "**"), 1), 1)` rendered `true` instead of `North`; row 4 gave `true` instead of `West`, and input without the separator gave `true` instead of the text. The documented read by column number therefore does not return the segment; see [Field returns the flag](/next/differs-from-docs/#field-returns-flag-not-value).
+  testScript: |
+    %%=Field(Row(BuildRowSetFromString("North**South**East**West", "**"), 1), 1)=%%
+
+- name: "BuildRowSetFromXML"
+  url: "/next/ampscript/functions/buildrowsetfromxml/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
+  tagline: "Listed as unavailable in Next, but emails using it save and render"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A6"
+  anchor: "buildrowsetfromxml-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In Next emails (2026-11-22/23), calls such as `BuildRowSetFromXML("<root></root>", "//Flight", 1)` saved, published and rendered, giving `0` rows. Whether the function returns real rows in Next is still open: with the XML written as a literal in the email's HTML component, well-formed XML also gave `0` rows, and the save step may have altered that markup (see the card on zero rows).
+  testScript: |
+    %%[ SET @rows = BuildRowSetFromXML("<root></root>", "//Flight", 1) ]%%%%=RowCount(@rows)=%%
+
+- name: "BuildRowSetFromXML"
+  url: "/next/ampscript/functions/buildrowsetfromxml/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
+  tagline: "A falsy error flag breaks the render on malformed XML instead of giving an empty rowset"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "buildrowsetfromxml-false-flag-fails"
+  body: |
+    The reference describes the third argument as giving an empty rowset on a syntax error when it is `false`, and an exception when it is `true`.
+
+    In a Next email (2026-11-23), `BuildRowSetFromXML("<root><a>1</a>", "//a", 0)` made the preview fail (HTTP 500), while the same malformed XML with `1` gave `0` rows: the opposite of the documented direction. The same caveat as for the zero-row result applies: the XML was a literal in the email's HTML component, which the save step may have altered.
+  testScript: |
+    %%[ SET @rows = BuildRowSetFromXML("<root><a>1</a>", "//a", 0) ]%%X
+
+- name: "BuildRowSetFromXML"
+  url: "/next/ampscript/functions/buildrowsetfromxml/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
+  tagline: "The spelling BuildRowsetFromXML (lower-case s), used in the reference's own example, breaks the render"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A4"
+  anchor: "buildrowsetfromxml-lowercase-s-fails"
+  body: |
+    The reference's usage example calls the function as `BuildRowsetFromXml`, with a lower-case `s` in "Rowset".
+
+    In a Next email (2026-11-23), `BuildRowsetFromXML(..., "//Flight", 1)` on its own made the preview fail (HTTP 500), while the identical call spelled `BuildRowSetFromXML` (capital `S`) rendered. Write the name with a capital `S` in Next.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1) ]%%
+    %%=RowCount(@rows)=%%
+
+- name: "BuildRowSetFromXML"
+  url: "/next/ampscript/functions/buildrowsetfromxml/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
+  tagline: "Well-formed XML gave zero rows in the test emails (not yet confirmed)"
+  category: "Content"
+  object: "Content"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "buildrowsetfromxml-zero-rows-unconfirmed"
+  body: |
+    The reference shows an XML document with three `Flight` elements parsed with `//Flight` into three rows with `Value`, `Xml` and attribute columns.
+
+    In Next test emails (2026-11-22/23), `BuildRowSetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1)` gave `0` rows, and so did a three-flight document and the attribute path `/root/Flight[1]/@origin`. Reads from those rows returned the `Field` flag (`false` or `true`), not node content.
+
+    **Not yet confirmed:** in every case the XML was a literal inside the email's HTML component, and the save step may have changed that markup (for example the tag case, so `//Flight` would no longer match). Treat this as unverified until it is re-tested with the XML kept out of the HTML markup.
+  testScript: |
+    %%[ SET @rows = BuildRowSetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1) ]%%
+    %%=RowCount(@rows)=%%
+
+- name: "Char"
+  url: "/next/ampscript/functions/char/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-char.html"
+  tagline: "The docs mark Char as unavailable in Next, but it renders there"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "char-available-in-next"
+  body: |
+    The availability table on the official Char page says the function is not available in Marketing Cloud Next. In a Next email preview it works: `Char(65)` gives `A`, `Char(65,3)` gives `AAA`, `Char("65")` gives `A`, and `Char(64)` gives `@`. Codes 0 to 255 each return one character (`Length(Char(190))` is `1`).
+
+    Codes outside 0 to 255 (`Char(256)`, `Char(8364)`, `Char(-1)`) let the email save but make the preview fail with HTTP 500; that stays within the 0 to 255 range the page names.
+  testScript: |
+    %%=Char(65, 3)=%%
+
+- name: "ContentBlockByID"
+  url: "/next/ampscript/functions/contentblockbyid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-id.html"
+  tagline: "A missing block breaks the render even with the error flag off, so the fallback and status code are never used"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A2"
+  anchor: "contentblockbyid-missing-block-fails"
+  body: |
+    The reference says a falsy third argument suppresses the error for a block that cannot be found: the function then returns the fallback text from the fourth argument and sets the status variable to `-1`, and its status-code example builds on that.
+
+    In a Next email (2026-11-22/23), `ContentBlockByID(999999999, "", 0, "FB-CBID", @sc)` for a block that does not exist saved and published, but the preview failed (HTTP 500). An email combining the flag spellings `false`, `"false"` and `"0"` also failed (not isolated per value), as did the flag `1`. The fallback text and the status code are never reached, so the documented fallback pattern does not protect the email. Loading a block that does exist was not tested.
+  testScript: |
+    %%[ SET @out = ContentBlockByID(999999999, "", 0, "FB-CBID", @sc) ]%%%%=v(@out)=%% %%=v(@sc)=%%
+
+- name: "ContentBlockByKey"
+  url: "/next/ampscript/functions/contentblockbykey/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-key.html"
+  tagline: "A missing block breaks the render even with the error flag off, so the fallback and status code are never used"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A2"
+  anchor: "contentblockbykey-missing-block-fails"
+  body: |
+    The reference says a falsy third argument suppresses the error for a block that cannot be found: the function then returns the fallback text from the fourth argument and sets the status variable to `-1`, and its status-code example builds on that.
+
+    In a Next email (2026-11-22/23), `ContentBlockByKey("nosuch-key", "", 0, "FB-CBK", @sc)` for a block that does not exist saved and published, but the preview failed (HTTP 500). An email combining the flag spellings `false`, `"false"` and `"0"` also failed (not isolated per value), as did the flag `1`. The fallback text and the status code are never reached, so the documented fallback pattern does not protect the email. Loading a block that does exist was not tested.
+  testScript: |
+    %%[ SET @out = ContentBlockByKey("nosuch-key", "", 0, "FB-CBK", @sc) ]%%%%=v(@out)=%% %%=v(@sc)=%%
+
+- name: "ContentBlockByName"
+  url: "/next/ampscript/functions/contentblockbyname/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-name.html"
+  tagline: "A missing block breaks the render even with the error flag off, so the fallback and status code are never used"
+  category: "Content"
+  object: "Content"
+  severity: "high"
+  discrepancy: "A2"
+  anchor: "contentblockbyname-missing-block-fails"
+  body: |
+    The reference says a falsy third argument suppresses the error for a block that cannot be found: the function then returns the fallback text from the fourth argument and sets the status variable to `-1`, and its status-code example builds on that.
+
+    In a Next email (2026-11-22/23), `ContentBlockByName("Content Builder\nosuch-name", "", 0, "FB-CBN", @sc)` for a block that does not exist saved and published, but the preview failed (HTTP 500). An email combining the flag spellings `false`, `"false"` and `"0"` also failed (not isolated per value), as did the flag `1`. The fallback text and the status code are never reached, so the documented fallback pattern does not protect the email. Loading a block that does exist was not tested.
+  testScript: |
+    %%[ SET @out = ContentBlockByName("Content Builder\nosuch-name", "", 0, "FB-CBN", @sc) ]%%%%=v(@out)=%% %%=v(@sc)=%%
+
+- name: "DateAdd"
+  url: "/next/ampscript/functions/dateadd/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html"
+  tagline: "A decimal amount is silently cut to a whole number"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "dateadd-decimal-amount-truncated"
+  body: |
+    The reference types the amount as a number and does not say that fractions are dropped.
+
+    In a Next email (2026-11-23), `DateAdd("2026-03-04 13:52:07", 1.5, "D")` rendered `2026-03-05T13:52:07`: one day was added and the half day was discarded without any error. Convert fractional amounts to a smaller unit (for example `36` with `H`) before calling it.
+  testScript: |
+    %%=DateAdd("2026-03-04 13:52:07", 1.5, "D")=%%
+
+- name: "DateAdd"
+  url: "/next/ampscript/functions/dateadd/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-add.html"
+  tagline: "The result prints in ISO form, not in the US form the reference shows"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "dateadd-prints-iso"
+  body: |
+    The reference's example prints a `DateAdd` result as a US date with a 12-hour clock (one day after a 13:41:23 timestamp comes out as `8/6/2023 1:41:23 PM`); the `DateDiff` reference shows the same form for a `DateAdd` value.
+
+    In a Next email (2026-11-22), `%%=DateAdd("2026-01-15", 7, "D")=%%` rendered `2026-01-22T00:00:00`, and `DateAdd("2026-03-04 13:52:07", -3, "H")` rendered `2026-03-04T10:52:07`: date and time joined by `T`, 24-hour clock, no time zone. Wrap the value in `Format` or `FormatDate` when the shape matters.
+  testScript: |
+    %%=DateAdd("2026-01-15", 7, "D")=%%
+
+- name: "DateDiff"
+  url: "/next/ampscript/functions/datediff/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-diff.html"
+  tagline: "Counts whole elapsed units and drops the remainder, which the reference never states"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "datediff-whole-elapsed-units"
+  body: |
+    The reference only says the start date is subtracted from the end date in the chosen unit; it does not say whether a partial unit or a crossed calendar boundary counts.
+
+    In a Next email (2026-11-23) the result is the elapsed time divided by the unit with the remainder discarded:
+
+    - `DateDiff("2026-01-10 08:00:00", "2026-01-11 07:00:00", "D")` gives `0` (23 hours across midnight).
+    - `DateDiff("2026-12-31 23:59:00", "2027-01-01 00:00:00", "Y")` gives `0`, and `"M"` and `"D"` give `0` too (one minute across New Year).
+    - `DateDiff("2026-01-10 08:00:00", "2027-01-09 08:00:00", "Y")` gives `0` (364 days); 29 days from January 10 give `0` months.
+    - From `2026-03-04 13:52:07` to `2027-05-09 09:15:31` the day count is `430`.
+
+    Code that counts calendar days ("is the date tomorrow?") gets `0` where a boundary count would give `1`.
+  testScript: |
+    %%=DateDiff("2026-01-10 08:00:00", "2026-01-11 07:00:00", "D")=%%
+
+- name: "DateParse"
+  url: "/next/ampscript/functions/dateparse/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-parse.html"
+  tagline: "Text that is not a date is returned unchanged instead of failing"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "dateparse-unreadable-input-echoed"
+  body: |
+    The reference lists the supported and unsupported date formats but does not say what the function returns for text it cannot read as a date.
+
+    In a Next email (2026-11-23), `DateParse("not a date at all")` rendered `not a date at all`, and the numeric string `"1772614800"` came back as those digits. The email does not fail and nothing marks the value as invalid, so a later comparison or format call works on the raw text. Validate the input before relying on the result.
+  testScript: |
+    %%=DateParse("not a date at all")=%%
+
+- name: "DatePart"
+  url: "/next/ampscript/functions/datepart/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-date-part.html"
+  tagline: "Listed as unavailable in Next, but emails using it save and render"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "datepart-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In a Next email (2026-11-22/23) the five documented tokens worked: from `2026-03-04 09:05:07`, `Y`, `M`, `D`, `H` and `MI` gave `2026`, `3`, `4`, `9` and `5`, and `DatePart(Now(), "Y")` gave the current year. Month and day come back without leading zeros and the hour on a 24-hour clock (`19` for 19:35). One combination failed: wrapping the result in `Length()` made the preview fail (HTTP 500).
+  testScript: |
+    %%=DatePart("2026-03-04 09:05:07", "Y")=%%|%%=DatePart("2026-03-04 09:05:07", "M")=%%
+
+- name: "Divide"
+  url: "/next/ampscript/functions/divide/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html"
+  tagline: "The quotient is rounded to two decimals"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "divide-rounds-two-decimals"
+  body: |
+    The official reference only says the function returns the quotient; it mentions no rounding.
+
+    In a Marketing Cloud Next email, `Divide(10, 3)` renders `3.33`. A quotient that does not come out even is rounded to two decimals, so further arithmetic on the result loses precision.
+  testScript: |
+    %%=Divide(10,3)=%%
+
+- name: "Divide"
+  url: "/next/ampscript/functions/divide/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html"
+  tagline: "A zero divisor breaks the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "divide-zero-divisor-fails"
+  body: |
+    The official reference does not say what happens when the divisor is zero, and returns no special value for it.
+
+    In a Marketing Cloud Next email, `Divide(100, 0)`, `Divide(1, 0)`, `Divide(7.5, 0)`, `Divide(-100, 0)`, `Divide(0, 0)` and `Divide(100, "0")` all save, but the email preview then fails with HTTP 500 and no message. Check the divisor before dividing.
+  testScript: |
+    %%=Divide(100,0)=%%
+
+- name: "Domain"
+  url: "/next/ampscript/functions/domain/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html"
+  tagline: "Documented as unavailable in Next, yet it renders in a Next email"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "domain-available-in-next"
+  body: |
+    The availability table of the official reference marks `Domain` as not supported in Marketing Cloud Next.
+
+    A Marketing Cloud Next email containing it saved, published and rendered in the preview on 2026-11-22 and 2026-11-23. For example, `Domain("tomas.q@a.b.example.co.uk")` rendered `a.b.example.co.uk`, and the other results also match the value table of the same page (an address with two at signs keeps the second one, a value without an at sign or a number gives nothing).
+  testScript: |
+    %%=Domain("tomas.q@a.b.example.co.uk")=%%
+
+- name: "EndImpressionRegion"
+  url: "/next/ampscript/functions/endimpressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-end-impression-region.html"
+  tagline: "Listed as unavailable in Next, but emails using it save and render"
+  category: "Content"
+  object: "Content"
+  severity: "low"
+  discrepancy: "A6"
+  anchor: "endimpressionregion-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In a Next email (2026-11-22/23) every form tested saved, published and rendered without adding anything: no argument, `0`, `1`, `true` and `"true"`. For example `%%[ BeginImpressionRegion("nav-region") ]%%A%%[ EndImpressionRegion(0) ]%%B` rendered `AB`. Which regions get closed only shows in impression tracking, which a preview does not produce, so that part is untested.
+  testScript: |
+    A%%[ EndImpressionRegion(true) ]%%B
+
+- name: "Field"
+  url: "/next/ampscript/functions/field/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-field.html"
+  tagline: "The not-found flag neither yields an empty string nor raises an error for a missing column"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "field-flag-not-honoured"
+  body: |
+    The reference says the third argument controls a missing column: a falsy value gives an empty string, a truthy value (the default when the argument is left out) raises an error.
+
+    In a Marketing Cloud Next email:
+
+    - On a `BuildRowSetFromString("a,b,c", ",")` row, `Field(@row, "NoSuchColumn", flag)` rendered `false` for `false`, `0`, `"false"`, `"0"`, `"1"` and `"notabool"`, and `true` for `true`, `1` and `"true"`. None of these returned an empty string and none failed.
+    - On a `BuildRowsetFromJSON` row, the two-argument call on a column that is not there (`Field(row, "NoSuchColumn")`, and `Field(row, "dest")` where the key is `Dest`) rendered an empty string instead of failing.
+    - Only the two-argument call on a missing column of a `BuildRowSetFromString` row failed (HTTP 500), as described.
+
+    Code that relies on the flag to get an empty string, or to stop on a typo in a column name, does neither in Next.
+  testScript: |
+    %%[
+      SET @rs = BuildRowSetFromString("a,b,c", ",")
+      SET @row = Row(@rs, 1)
+      SET @v = Field(@row, "NoSuchColumn", 0)
+    ]%%
+    [%%=v(@v)=%%]
+
+- name: "Field"
+  url: "/next/ampscript/functions/field/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-field.html"
+  tagline: "On BuildRowSetFromString rows, Field returns its true/false flag instead of the column value"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "field-returns-flag-not-value"
+  body: |
+    The reference describes `Field` as handing back the content of the named column of a row; its own example reads a column of a rowset row and prints the stored value.
+
+    In a Marketing Cloud Next email, on the first row of `BuildRowSetFromString("a,b,c", ",")` (whose single column holds `a`):
+
+    - `Field(@row, "Value")` rendered `true`, in the variable form and in the nested inline form.
+    - With an explicit third argument, the same call rendered the flag itself: `true` for `true`, `1` and `"true"`; `false` for `false`, `0`, `"false"` and `"0"` (and also for `"1"`). The cell value `a` never came back.
+
+    The flag comes back on `BuildRowSetFromString` rows and on the `Value` column of `BuildRowsetFromJSON` rows, while named object columns of `BuildRowsetFromJSON` rows and `RetrieveSalesforceObjects` rows return the value.
+  testScript: |
+    %%[
+      SET @rs = BuildRowSetFromString("a,b,c", ",")
+      SET @row = Row(@rs, 1)
+      SET @v = Field(@row, "Value")
+    ]%%
+    %%=v(@v)=%%
+
+- name: "Format"
+  url: "/next/ampscript/functions/format/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-format.html"
+  tagline: "The French long date keeps the US order of day and month"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "format-french-long-date-order"
+  body: |
+    The reference lists the pre-defined date pattern `D` as working in Marketing Cloud Next and shows a French long date with the day number before the month name and no comma after the weekday.
+
+    In a Marketing Cloud Next email, `Format(@d, "D", "Date", "fr-FR")` on `2026-03-04 13:52:07` rendered `mercredi, mars 4, 2026`: the names are French, but the parts follow the US order (weekday, comma, month, day). The same output came back with the date passed as a literal.
+  testScript: |
+    %%[ SET @d = "2026-03-04 13:52:07" ]%%
+    %%=Format(@d, "D", "Date", "fr-FR")=%%
+
+- name: "Format"
+  url: "/next/ampscript/functions/format/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-format.html"
+  tagline: "Percent, scientific and custom number patterns give results the page does not describe"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "format-number-pattern-output"
+  body: |
+    The reference names the numeric codes `C`, `D`, `E`, `F`, `G`, `N` and `P` without showing their output.
+
+    In a Marketing Cloud Next email, on `1234.555`:
+
+    - `Format(1234.555, "P")` rendered `123,455.500%`, with three decimals.
+    - `Format(1234.555, "E")` rendered `1.234555E03`.
+    - `Format(1234.555, "#,##0.00")` rendered `1234.555`: a custom pattern is not applied and the number comes back as it was, with no error.
+  testScript: |
+    %%=Format(1234.555, "#,##0.00")=%%
+
+- name: "FormatCurrency"
+  url: "/next/ampscript/functions/formatcurrency/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatCurrency.html"
+  tagline: "The decimal-places and currency-symbol arguments have no effect"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "formatcurrency-ignores-decimals-and-symbol"
+  body: |
+    The reference describes the third argument as setting the number of decimals (rounding to a whole number with `0`, forcing two decimals for the yen with `2`) and the fourth as replacing the locale's currency symbol, with `Mex$` for Mexico as its example.
+
+    In a Marketing Cloud Next email both arguments are accepted at save but change nothing:
+
+    - `FormatCurrency(1234.555, "de-CH", 0)` rendered `CHF 1’234.56`, still with two decimals.
+    - `FormatCurrency(1234.555, "ja-JP", 2)` rendered `￥1,235`, still without decimals.
+    - `FormatCurrency(1234.555, "de-DE", 3)` and `FormatCurrency(1234.555, "en-US", "3")` kept two decimals.
+    - `FormatCurrency(1234.555, "es-MX", 2, "Mex$")` rendered `$1,234.56`, and `FormatCurrency(1234.555, "de-DE", 2, "CHF")` rendered `1.234,56 €`.
+
+    Only the locale decides the decimals and the symbol.
+  testScript: |
+    %%=FormatCurrency(1234.555, "es-MX", 2, "Mex$")=%%
+
+- name: "FormatCurrency"
+  url: "/next/ampscript/functions/formatcurrency/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatCurrency.html"
+  tagline: "Output contains non-ASCII spaces, apostrophes and a full-width yen sign"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "formatcurrency-non-ascii-characters"
+  body: |
+    The sample outputs on the reference page are written with ordinary spaces, a plain apostrophe for Switzerland and the regular yen sign `¥` (U+00A5).
+
+    In a Marketing Cloud Next email the rendered amounts contain other characters:
+
+    - `de-DE`: `1.234,56 €` with a non-breaking space (U+00A0) before the euro sign.
+    - `fr-FR`: `1 234,56 €` with a narrow no-break space (U+202F) between the groups and U+00A0 before the sign.
+    - `pt-BR`: `R$ 1.234,56` with U+00A0 after the symbol.
+    - `de-CH`: `CHF 1’234.56` with a typographic apostrophe (U+2019) as group separator.
+    - `ja-JP`: `￥1,235` with the full-width yen sign (U+FFE5).
+
+    A comparison or replacement written against the characters shown in the docs does not match these results.
+  testScript: |
+    %%=FormatCurrency(1234.555, "ja-JP")=%%
+
+- name: "FormatCurrency"
+  url: "/next/ampscript/functions/formatcurrency/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatCurrency.html"
+  tagline: "`2.345` rounds down, and an unknown locale returns the raw number"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "formatcurrency-rounding-and-unknown-locale"
+  body: |
+    The reference says nothing about the rounding rule or about a locale code it does not know.
+
+    In a Marketing Cloud Next email:
+
+    - `FormatCurrency(2.345, "en-US")` rendered `$2.34`, while `FormatCurrency(2.355, "en-US")` rendered `$2.36`. `2.345` is rounded down although the docs show no rounding rule; whether this comes from the binary representation of the number or from rounding halves to the even digit was not isolated.
+    - `FormatCurrency(1234.555, "zz-ZZ")` and `FormatCurrency(1234.555, "")` rendered `1234.555`, unformatted and without any error.
+    - The language-only code `de` rendered `1.234,56 ¤`, with the generic currency sign (U+00A4) instead of a real symbol.
+  testScript: |
+    %%=FormatCurrency(2.345, "en-US")=%%
+
+- name: "FormatDate"
+  url: "/next/ampscript/functions/formatdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html"
+  tagline: "Locale formatting with D, S and L does not produce locale dates"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "formatdate-locale-formats-ignored"
+  body: |
+    The reference shows the standard format `D` producing a long date per locale (for example a French long date for `fr_FR`), and documents `S` and `L` with a locale code as short and long dates in that locale's notation (for example `05.08.2024` for `uk_UA`).
+
+    In a Next email (2026-11-23), with an empty time pattern and a locale code:
+
+    - `FormatDate(@d, "D", "", "fr-FR")` rendered `63 ` (the day of the year), and so did `fr_FR` and `ja-JP`.
+    - `FormatDate(@d, "S", "", "uk_UA")` and `FormatDate(@d, "S", "", "en-US")` rendered `0 `.
+    - Without a locale, `L` rendered `3` and `S` rendered `0`.
+
+    `@d` is `2026-03-04 13:52:07`. A locale does change month names in a custom pattern (`MMMM` with `fr-FR` gave `mars`), so use custom patterns for localised dates.
+  testScript: |
+    %%=FormatDate("2026-03-04 13:52:07", "S", "", "uk_UA")=%%|%%=FormatDate("2026-03-04 13:52:07", "D", "", "fr-FR")=%%
+
+- name: "FormatDate"
+  url: "/next/ampscript/functions/formatdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html"
+  tagline: "The reference's own input string (\"5 August 2024 1:41:23 PM\") is not parsed; unreadable input is returned unchanged"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "formatdate-long-form-input-not-parsed"
+  body: |
+    Every usage example in the reference, including the one marked for Marketing Cloud Next, formats the input `5 August 2024 1:41:23 PM` and shows a formatted result. The reference does not say what happens to input that cannot be read.
+
+    In a Next email (2026-11-23), `FormatDate("4 March 2026 1:52:07 PM", "yyyy-MM-dd", "HH:mm:ss")` rendered `4 March 2026 1:52:07 PM` unchanged: that spelled-out form with a time was not parsed. `not a date at all` and the number `20260304` were returned unchanged too, with no error. ISO and US slash dates (`2026-03-04`, `3/4/2026`, `03/04/2026 13:52:07`) format as expected.
+  testScript: |
+    %%=FormatDate("4 March 2026 1:52:07 PM", "yyyy-MM-dd", "HH:mm:ss")=%%
+
+- name: "FormatDate"
+  url: "/next/ampscript/functions/formatdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html"
+  tagline: "The round-trip format o adds a +0000 offset the reference's example does not show"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "formatdate-o-adds-offset"
+  body: |
+    The reference's table of standard formats shows `o` as a timestamp with seven fractional digits and no offset (`2026-08-05T13:45:30.1230000` in every locale).
+
+    In a Next email (2026-11-23), `FormatDate("2026-03-04 13:52:07", "o")` rendered `2026-03-04T13:52:07.0000000+0000`, with a `+0000` suffix. The other standard formats tested (`d`, `D`, `f`, `F`, `g`, `G`, `M`, `r`, `s`, `t`, `T`, `u`, `U`, `Y`) matched the reference's `en_US` examples.
+  testScript: |
+    %%=FormatDate("2026-03-04 13:52:07", "o")=%%
+
+- name: "FormatNumber"
+  url: "/next/ampscript/functions/formatnumber/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatNumber.html"
+  tagline: "Halves round to the even digit"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "formatnumber-half-even-rounding"
+  body: |
+    The reference presents the precision digit as a way to round, and its rounding example goes up on a trailing 5, but it does not state the rounding rule.
+
+    In a Marketing Cloud Next email a half goes to the even digit:
+
+    - `FormatNumber(2.5, "N0")` rendered `2` and `FormatNumber(-2.5, "N0")` rendered `-2`, while `FormatNumber(3.5, "N0")` rendered `4`.
+
+    Totals or prices rounded with `FormatNumber` can therefore end up one unit lower than expected.
+  testScript: |
+    %%=FormatNumber(2.5, "N0")=%%
+
+- name: "FormatNumber"
+  url: "/next/ampscript/functions/formatnumber/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatNumber.html"
+  tagline: "Localised output contains non-ASCII spaces and a full-width yen sign"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "formatnumber-non-ascii-characters"
+  body: |
+    The localisation example on the reference page shows the German currency result with an ordinary space before the euro sign.
+
+    In a Marketing Cloud Next email:
+
+    - `FormatNumber(1234.555, "C2", "de-DE")` rendered `1.234,56 €` with a non-breaking space (U+00A0) before the euro sign.
+    - `FormatNumber(1234.555, "N2", "fr-FR")` rendered `1 234,56` with a narrow no-break space (U+202F) between the groups.
+    - `FormatNumber(1234.555, "C", "ja-JP")` rendered `￥1,235` with the full-width yen sign (U+FFE5).
+
+    A comparison or replacement written against plain spaces does not match these results.
+  testScript: |
+    %%=FormatNumber(1234.555, "C2", "de-DE")=%%
+
+- name: "FormatNumber"
+  url: "/next/ampscript/functions/formatnumber/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-formatNumber.html"
+  tagline: "Percent and scientific codes produce shapes the page does not describe"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "formatnumber-percent-scientific-shape"
+  body: |
+    The reference lists `P` (percentage) and `E` (scientific notation) as accepted codes; it shows `P3` with an explicit precision but not what the codes give without one.
+
+    In a Marketing Cloud Next email, on `1234.555`:
+
+    - `FormatNumber(1234.555, "P")` rendered `123,455.500%`, with three decimals.
+    - `FormatNumber(1234.555, "E")` rendered `1.234555E03`.
+
+    Add a precision digit (for example `P2`) when the number of decimals matters.
+  testScript: |
+    %%=FormatNumber(1234.555, "P")=%%
+
+- name: "GUID"
+  url: "/next/ampscript/functions/guid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-guid.html"
+  tagline: "Documented as unavailable in Next, yet it renders in a Next email"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "guid-available-in-next"
+  body: |
+    The availability table of the official reference marks `GUID` as not supported in Marketing Cloud Next.
+
+    A Marketing Cloud Next email containing it saved, published and rendered in the preview on 2026-11-22 and 2026-11-23. Each call produced a new 36-character identifier in the usual hyphenated 8-4-4-4-12 layout, such as `b3699a44-8716-4950-a23a-026a10263c12`.
+  testScript: |
+    %%=GUID()=%%
+
+- name: "IIf"
+  url: "/next/ampscript/functions/iif/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-iif.html"
+  tagline: "Both branches are evaluated, so a failing call in the unused branch breaks the email"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "iif-evaluates-both-branches"
+  body: |
+    The reference describes `IIf` as handing back one of its two values depending on the condition, and its example uses a function call in a branch. It does not warn that the branch that is not chosen still runs.
+
+    In a Marketing Cloud Next email both branches are evaluated:
+
+    - `IIf(1 == 1, "T", RaiseError("…"))` saved and published, but the preview failed with HTTP 500.
+    - `IIf(1 == 2, RaiseError("…"), "F")` failed the same way.
+
+    Use an `IF` block, not `IIf`, to keep a failing or costly call from running.
+  testScript: |
+    %%=IIf(1 == 1, "T", RaiseError("false branch evaluated"))=%%
+
+- name: "IIf"
+  url: "/next/ampscript/functions/iif/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-iif.html"
+  tagline: "A plain string as the condition: \"0\" and whitespace count as true, \"false\" as false"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "iif-string-condition-truthiness"
+  body: |
+    The reference types the condition as a string but does not say which string values count as true.
+
+    In a Marketing Cloud Next email, with a variable as the whole condition (`IIf(@x, "T", "F")`):
+
+    - `"hello"`, `"0"` and three spaces selected the true branch.
+    - the empty string, the number `0`, the string `"false"`, a declared but unset variable and an undeclared variable selected the false branch.
+
+    So the string `"0"` is true while the number `0` is false, and whitespace counts as a value. Use `Empty(@x)` or an explicit comparison as the condition instead of the bare value.
+  testScript: |
+    %%[ SET @x = "0" ]%%
+    %%=IIf(@x, "T", "F")=%%
+
+- name: "IndexOf"
+  url: "/next/ampscript/functions/indexof/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html"
+  tagline: "An empty search value reports a match at position 1"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "indexof-empty-substring"
+  body: |
+    The docs do not cover an empty search value. In Next, `IndexOf("Hello", "")` gives `1`, the same result as a real match at the first character, while an empty source gives `0` (`IndexOf("", "a")` and `IndexOf("", "")`).
+
+    Code that treats any non-zero result as "found" reads an empty search value as a hit.
+  testScript: |
+    %%=IndexOf("Hello", "")=%%
+
+- name: "IndexOf"
+  url: "/next/ampscript/functions/indexof/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html"
+  tagline: "The search ignores letter case, which the docs never mention"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "indexof-ignores-case"
+  body: |
+    The official page explains that IndexOf returns where a character or substring starts, and its own example looks for a capital `C` in a ticket ID. It says nothing about letter case. In a Next email the search is case-insensitive: `IndexOf("Hello World","WORLD")`, `IndexOf("Hello World","world")` and `IndexOf("Hello World","World")` all give `7`, and `IndexOf("Hello World","h")` gives `1`.
+
+    A test for an upper-case code letter therefore also matches the lower-case letter.
+  testScript: |
+    %%=IndexOf("Hello World", "WORLD")=%%
+
+- name: "IndexOf"
+  url: "/next/ampscript/functions/indexof/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-index-of.html"
+  tagline: "A number or boolean argument makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "indexof-number-breaks-preview"
+  body: |
+    The official page types both parameters as strings but does not say what happens to other values. In Next, a bare number or boolean in either position lets the email save, then the preview fails with HTTP 500: `IndexOf(9876543, "65")`, `IndexOf("a1b2c3", 2)`, `IndexOf(true, "ru")` and `IndexOf("is true here", true)` each failed on their own.
+
+    There is no error value to test for; pass numbers as quoted strings.
+  testScript: |
+    %%=IndexOf(9876543, "65")=%%
+
+- name: "IsEmailAddress"
+  url: "/next/ampscript/functions/isemailaddress/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-email-address.html"
+  tagline: "Documented as unavailable in Next, yet it renders in a Next email"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "isemailaddress-available-in-next"
+  body: |
+    The availability table of the official reference marks `IsEmailAddress` as not supported in Marketing Cloud Next.
+
+    A Marketing Cloud Next email containing it saved, published and rendered in the preview on 2026-11-22 and 2026-11-23. Every result matched the result table of the same page: `IsEmailAddress("tomas.q@example.com")` rendered `true`, an address without a dot in the domain also rendered `true`, and addresses without an at sign, with two at signs or with an empty local part rendered `false`.
+  testScript: |
+    %%=IsEmailAddress("tomas.q@example.com")=%%
+
+- name: "IsNull"
+  url: "/next/ampscript/functions/isnull/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-null.html"
+  tagline: "The empty string counts as null"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "isnull-empty-string-is-null"
+  body: |
+    The reference sets `IsNull` apart from `Empty` exactly on this point: `Empty` treats the empty string as empty, `IsNull` is said not to.
+
+    In a Marketing Cloud Next email, a variable set to `""` made `IsNull` render `true`, the same as a declared but unset variable and an undeclared one. `IsNull(v(@unset))` also rendered `true`. Three spaces, `0`, `"0"`, `"false"` and `"hello"` rendered `false`.
+
+    Code that relies on `IsNull` to tell an empty string from a missing value cannot do so in Next.
+  testScript: |
+    %%[ SET @s = "" ]%%
+    %%=IsNull(@s)=%%
+
+- name: "IsNullDefault"
+  url: "/next/ampscript/functions/isnulldefault/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-sites/mc-ampscript-reference-sites-is-null-default.html"
+  tagline: "Documented as unavailable in Next, yet it renders in a Next email"
+  category: "Utility"
+  object: "Utility"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "isnulldefault-available-in-next"
+  body: |
+    The availability table of the official reference marks `IsNullDefault` as not supported in Marketing Cloud Next.
+
+    A Marketing Cloud Next email containing it saved, published and rendered in the preview on 2026-11-22 and 2026-11-23. The page also ties the function to Smart Capture form fields; in a plain Next email it works on ordinary variables. A variable declared and never set rendered the fallback (`IsNullDefault(@unset, "DEF")` gave `DEF`), as did the empty string, while a set value such as `"hello"` came back unchanged.
+  testScript: |
+    %%[ VAR @tier ]%%%%=IsNullDefault(@tier, "DEF")=%%
+
+- name: "Length"
+  url: "/next/ampscript/functions/length/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-length.html"
+  tagline: "Length counts UTF-16 code units, so an emoji measures 2"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "length-counts-utf16-units"
+  body: |
+    The official page describes Length as the length of the string without naming the unit. In Next it counts UTF-16 code units: `Length("café")` is `4` and `Length("Straße")` is `6`, but a single emoji, `Length("😀")`, is `2`.
+
+    A character limit enforced with Length allows one character fewer for every emoji or other character outside the Basic Multilingual Plane.
+  testScript: |
+    %%=Length("😀")=%%
+
+- name: "Length"
+  url: "/next/ampscript/functions/length/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-length.html"
+  tagline: "A number or boolean argument makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "length-number-breaks-preview"
+  body: |
+    The official page asks for a string and does not say what happens to other values. In Next, `Length(12345)` and `Length(true)` let the email save, but the preview fails with HTTP 500.
+
+    Pass a number as a quoted string when you need its length.
+  testScript: |
+    %%=Length(12345)=%%
+
+- name: "Lowercase"
+  url: "/next/ampscript/functions/lowercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-lowercase.html"
+  tagline: "The dotted capital I turns into two characters"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "lowercase-dotted-capital-i"
+  body: |
+    The official page only says the function converts a string to lower case. In Next, `Lowercase("İ")` (capital I with dot above) gives a plain `i` followed by a combining dot above (U+0307): two code units instead of one.
+
+    Other accented capitals keep their length: `Lowercase("CAFÉ")` gives `café`.
+  testScript: |
+    %%=Lowercase("İ")=%%
+
+- name: "MD5"
+  url: "/next/ampscript/functions/md5/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-md5.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "md5-available-in-next"
+  body: |
+    The official reference lists MD5 as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=MD5("abc")=%%` gives `900150983cd24fb0d6963f7d28e17f72`, which is the correct MD5 digest. Calls with the documented `UTF-8` and `UTF-16` character sets rendered too.
+  testScript: |
+    %%=MD5("abc")=%%
+
+- name: "Mod"
+  url: "/next/ampscript/functions/mod/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html"
+  tagline: "The documented decimal example renders a different value"
+  category: "Math"
+  object: "Math"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "mod-decimal-result-format"
+  body: |
+    The official reference shows a negative decimal example whose stated result carries a floating-point tail (`-1.88300000000001`).
+
+    In a Marketing Cloud Next email, the same call `Mod(-500.123, 12.456)` renders `-1.883`. Whole results of a decimal divisor keep a trailing `.0`: `Mod(10, 3.5)` renders `3.0`, not `3`. Compare results numerically, not as text.
+  testScript: |
+    %%=Mod(-500.123,12.456)=%%
+
+- name: "Mod"
+  url: "/next/ampscript/functions/mod/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html"
+  tagline: "A dividend smaller than the divisor broke the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "mod-small-dividend-fails"
+  body: |
+    The official reference accepts any two numbers and does not exclude a dividend smaller than the divisor.
+
+    In a Marketing Cloud Next email, `Mod(3, 10)` saved, but the email preview then failed with HTTP 500 instead of giving `3`. This was one probe; `Mod(10, 3)`, `Mod(500, 12)` and `Mod(10.5, 3)` rendered correctly.
+  testScript: |
+    %%=Mod(3,10)=%%
+
+- name: "Mod"
+  url: "/next/ampscript/functions/mod/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html"
+  tagline: "A zero divisor breaks the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "mod-zero-divisor-fails"
+  body: |
+    The official reference does not say what happens when the divisor is zero.
+
+    In a Marketing Cloud Next email, `Mod(10, 0)`, `Mod(-10, 0)` and `Mod(0, 0)` all save, but the email preview then fails with HTTP 500 and no message. Check the divisor first.
+  testScript: |
+    %%=Mod(10,0)=%%
+
+- name: "Multiply"
+  url: "/next/ampscript/functions/multiply/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-multiply.html"
+  tagline: "The product is rounded to two decimals"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "multiply-rounds-two-decimals"
+  body: |
+    The official reference allows decimal operands and only says the function returns the product; it mentions no rounding.
+
+    In a Marketing Cloud Next email, `Multiply(1.5, 2.25)` renders `3.38`, not the exact product `3.375`. Results with more than two decimals are rounded.
+  testScript: |
+    %%=Multiply(1.5,2.25)=%%
+
+- name: "Now"
+  url: "/next/ampscript/functions/now/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-now.html"
+  tagline: "The documented optional argument is rejected: any Now(...) with an argument cannot be saved"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "now-argument-rejected"
+  body: |
+    The reference documents one optional boolean argument that switches between the current time and the email send time, with `Now(true)` in its comparison table.
+
+    In Next (2026-11-23), an email containing `Now(1)`, `Now(true)`, `Now(false)`, `Now("1")`, `Now("true")` or any other single argument could not be saved: the content API answered HTTP 400 with "The AMPscript syntax isn't valid", pointing at the call. Only `Now()` without arguments is accepted.
+  testScript: |
+    %%=Now(true)=%%
+
+- name: "Output"
+  url: "/next/ampscript/functions/output/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html"
+  tagline: "The function-call argument the docs require is rejected, and other arguments render nothing"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "output-function-argument-rejected"
+  body: |
+    The reference lists `Output` as available in Marketing Cloud Next, requires the argument to be a function call, and says any other kind of value raises an error.
+
+    In a Marketing Cloud Next email it is the other way round:
+
+    - An email containing `Output(Concat("x"))` cannot be saved: the content API answers HTTP 400 with "The AMPscript syntax isn't valid", even when the call sits in an `IF` branch that never runs. Two nested calls as arguments are rejected the same way.
+    - `Output("bare")`, `Output(@word)` and `Output(123)` save and render, but write nothing and raise no error.
+
+    In a Next email `Output` cannot write anything; use `v()` inline instead.
+  testScript: |
+    %%[ Output("bare") ]%%
+
+- name: "OutputLine"
+  url: "/next/ampscript/functions/outputline/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html"
+  tagline: "The function-call argument the docs require is rejected; other arguments write only a line break"
+  category: "Utility"
+  object: "Utility"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "outputline-function-argument-rejected"
+  body: |
+    The reference lists `OutputLine` as available in Marketing Cloud Next, requires the argument to be a function call, and says a CRLF line break follows the result.
+
+    In a Marketing Cloud Next email:
+
+    - An email containing `OutputLine(Concat("A"))` cannot be saved: the content API answers HTTP 400 with "The AMPscript syntax isn't valid". Two or three nested calls as arguments, and two such calls in a row, are rejected the same way.
+    - `OutputLine("bare")`, `OutputLine(@word)` and `OutputLine(456)` save, but write only a bare line feed (no carriage return) and none of the value.
+
+    To write a value into a Next email, use `v()` inline instead.
+  testScript: |
+    %%[ OutputLine("bare") ]%%
+
+- name: "ProperCase"
+  url: "/next/ampscript/functions/propercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-propercase.html"
+  tagline: "Only a space starts a new word; hyphens and apostrophes do not"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "propercase-only-spaces-start-words"
+  body: |
+    The official page says the first letter of every word is raised to upper case, without saying what separates words. In Next only a space does: `ProperCase("o'neill mcdonald-smith")` gives `O'neill Mcdonald-smith`, and `ProperCase("a.b,c")` gives `A.b,c`. Letters after a digit stay lower case too (`ProperCase("abc3def")` gives `Abc3def`).
+
+    Names with an apostrophe or a hyphen come out with the second part in lower case.
+  testScript: |
+    %%=ProperCase("o'neill mcdonald-smith")=%%
+
+- name: "ProperCase"
+  url: "/next/ampscript/functions/propercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-propercase.html"
+  tagline: "A leading ß becomes SS and the result grows by one character"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "propercase-sharp-s-expands"
+  body: |
+    The docs do not mention characters whose capital form is longer. In Next, a word starting with `ß` gets `SS`: `ProperCase(Concat(Char(223), "trasse"))` gives `SStrasse`, and `Length` of the result is `8` where the input measured `7`.
+  testScript: |
+    %%=ProperCase(Concat(Char(223), "trasse"))=%%
+
+- name: "Random"
+  url: "/next/ampscript/functions/random/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html"
+  tagline: "Decimal bounds can return a whole number outside the range"
+  category: "Math"
+  object: "Math"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "random-decimal-bounds-outside-range"
+  body: |
+    The official reference allows decimal bounds and says the result is never below the lower bound or above the upper bound.
+
+    In a Marketing Cloud Next email, `Random(1.2, 1.8)` rendered `1`, which lies below the lower bound. Results are whole numbers, so decimal bounds are rounded in some way first. Each decimal case was a single sample, so the exact rounding rule was not established.
+  testScript: |
+    %%=Random(1.2,1.8)=%%
+
+- name: "Random"
+  url: "/next/ampscript/functions/random/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html"
+  tagline: "Reversed bounds break the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "random-reversed-bounds-fail"
+  body: |
+    The official reference says the order of the two bounds does not matter.
+
+    In a Marketing Cloud Next email, an email with a 60-draw loop calling `Random(3, 1)` saved, but the email preview then failed with HTTP 500 (one probe). Pass the lower bound first.
+  testScript: |
+    %%=Random(3,1)=%%
+
+- name: "RegExMatch"
+  url: "/next/ampscript/functions/regexmatch/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-regex-match.html"
+  tagline: "The docs mark RegExMatch as unavailable in Next, but one call form renders"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "regexmatch-available-in-next"
+  body: |
+    The availability table on the official RegExMatch page says the function is not available in Marketing Cloud Next. In a Next email, `RegExMatch("order-4821-eu", "[0-9]+", "0")`, with the group selector in quotes, rendered `4821`.
+
+    That is the only form proven so far: most other tested calls saved but made the preview fail (see the companion card on the group selector), so treat support in Next as partial.
+  testScript: |
+    %%=RegExMatch("order-4821-eu", "[0-9]+", "0")=%%
+
+- name: "RegExMatch"
+  url: "/next/ampscript/functions/regexmatch/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-regex-match.html"
+  tagline: "A bare number as the group selector makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "regexmatch-numeric-group-breaks-preview"
+  body: |
+    The official page lets the third argument be a group name or ordinal, and its examples pass a bare `0`. In Next every tested call with an unquoted number there saved, then the preview failed (HTTP 500, or no new rendered version): `RegExMatch("SAVE23", "^[A-Z0-9]{5,7}$", 0)`, `RegExMatch("order-4821-eu", "[0-9]+", 0)`, `RegExMatch("order-4821-eu", "order-([0-9]+)-", 1)` and `RegExMatch("order-4821-eu", "order-([0-9]+)-([a-z]+)", 2)`.
+
+    Only the quoted `"0"` rendered. A named group (`"num"`) failed too, so it is open whether quoted group numbers above 0 work.
+  testScript: |
+    %%=RegExMatch("order-4821-eu", "[0-9]+", 0)=%%
+
+- name: "Replace"
+  url: "/next/ampscript/functions/replace/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html"
+  tagline: "The search value matches regardless of letter case"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replace-ignores-case"
+  body: |
+    The official page says Replace swaps the search substring for the replacement and says nothing about case. In Next the match is case-insensitive: `Replace("Cat cat CAT", "cat", "dog")` gives `dog dog dog`, `Replace("Hello World", "WORLD", "There")` gives `Hello There`, and `Replace("Hello World", "hELLO", "Howdy")` gives `Howdy World`.
+
+    A replacement aimed at one spelling hits every casing of it.
+  testScript: |
+    %%=Replace("Cat cat CAT", "cat", "dog")=%%
+
+- name: "Replace"
+  url: "/next/ampscript/functions/replace/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace.html"
+  tagline: "A number or boolean argument makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replace-number-breaks-preview"
+  body: |
+    All three parameters are typed as strings on the official page, which does not say what happens to other values. In Next, a bare number or boolean in any position lets the email save, then the preview fails with HTTP 500: `Replace(101101, "0", "9")`, `Replace("a1b1c", 1, "-")`, `Replace("a-b", "-", 7)`, `Replace(true, "ru", "X")`, `Replace("is true here", true, "X")` and `Replace("a-b", "-", true)` each failed on their own.
+
+    Quote numeric values.
+  testScript: |
+    %%=Replace("a-b", "-", 7)=%%
+
+- name: "ReplaceList"
+  url: "/next/ampscript/functions/replacelist/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html"
+  tagline: "Search values match regardless of letter case"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replacelist-ignores-case"
+  body: |
+    The official page does not say whether the search strings are case-sensitive. In Next they are not: `ReplaceList("Hello World", "There", "WORLD")` gives `Hello There`, `ReplaceList("Cat cat CAT", "dog", "cat")` gives `dog dog dog`, and `ReplaceList("Red BLUE green", "-", "red", "blue", "GREEN")` gives `- - -`.
+  testScript: |
+    %%=ReplaceList("Cat cat CAT", "dog", "cat")=%%
+
+- name: "ReplaceList"
+  url: "/next/ampscript/functions/replacelist/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html"
+  tagline: "A number or boolean argument makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "replacelist-number-breaks-preview"
+  body: |
+    The official page types every parameter as a string and does not say what happens to other values. In Next, a bare number or boolean in any position lets the email save, then the preview fails with HTTP 500: `ReplaceList(101101, "9", "0")`, `ReplaceList("a-b", 7, "-")`, `ReplaceList("a1b", "-", 1)`, `ReplaceList(true, "X", "ru")`, `ReplaceList("a-b", true, "-")` and `ReplaceList("is true here", "X", true)` each failed on their own.
+
+    Quote numeric values.
+  testScript: |
+    %%=ReplaceList("a1b", "-", 1)=%%
+
+- name: "ReplaceList"
+  url: "/next/ampscript/functions/replacelist/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-replace-list.html"
+  tagline: "Each search value runs on the output of the previous one"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "replacelist-search-values-chain"
+  body: |
+    The official page presents the search strings as a list that are all replaced, without saying they are applied one after another. In Next they are, on the already-changed text: `ReplaceList("a", "XY", "a", "X")` gives `XYY`, because the second search value finds the `X` the first one inserted. Order also matters: `ReplaceList("abc", "-", "ab", "bc")` gives `-c`, while `ReplaceList("abc", "-", "bc", "ab")` gives `a-`.
+
+    A replacement that contains a later search value is replaced again.
+  testScript: |
+    %%=ReplaceList("a", "XY", "a", "X")=%%
+
+- name: "SHA1"
+  url: "/next/ampscript/functions/sha1/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-sha1.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "sha1-available-in-next"
+  body: |
+    The official reference lists SHA1 as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=SHA1("abc")=%%` gives `a9993e364706816aba3e25717850c26c9cd0d89d`, which is the correct SHA-1 digest. Calls with the documented `UTF-8` and `UTF-16` character sets rendered too.
+  testScript: |
+    %%=SHA1("abc")=%%
+
+- name: "SHA256"
+  url: "/next/ampscript/functions/sha256/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-sha256.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "sha256-available-in-next"
+  body: |
+    The official reference lists SHA256 as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=SHA256("abc")=%%` gives `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`, which is the correct SHA-256 digest. Calls with the documented `UTF-8` and `UTF-16` character sets rendered too.
+  testScript: |
+    %%=SHA256("abc")=%%
+
+- name: "SHA512"
+  url: "/next/ampscript/functions/sha512/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-encryption/mc-ampscript-reference-encryption-sha512.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "sha512-available-in-next"
+  body: |
+    The official reference lists SHA512 as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=SHA512("abc")=%%` gives `ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f`, which is the correct SHA-512 digest. Calls with the documented `UTF-8` and `UTF-16` character sets rendered too.
+  testScript: |
+    %%=SHA512("abc")=%%
+
+- name: "StringToDate"
+  url: "/next/ampscript/functions/stringtodate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-string-to-date.html"
+  tagline: "Text that is not a date is returned unchanged instead of failing"
+  category: "Date and Time"
+  object: "Date and Time"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "stringtodate-unreadable-input-echoed"
+  body: |
+    The reference lists the supported and unsupported date formats but does not say what the function returns for text it cannot read as a date.
+
+    In a Next email (2026-11-23), `StringToDate("not a date at all")` rendered `not a date at all`. The email does not fail and nothing marks the value as invalid, so a later comparison or format call works on the raw text. Validate the input before relying on the result.
+  testScript: |
+    %%=StringToDate("not a date at all")=%%
+
+- name: "StringToHex"
+  url: "/next/ampscript/functions/stringtohex/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-to-hex.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "stringtohex-available-in-next"
+  body: |
+    The official reference lists StringToHex as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=StringToHex("A")=%%` gives `41`, which is the correct hexadecimal form. Calls with the documented `UTF-8` and `UTF-16` character sets rendered too.
+  testScript: |
+    %%=StringToHex("A")=%%
+
+- name: "Substring"
+  url: "/next/ampscript/functions/substring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-substring.html"
+  tagline: "A start position past the end breaks the preview instead of returning an empty string"
+  category: "String"
+  object: "String"
+  severity: "high"
+  discrepancy: "A2"
+  anchor: "substring-start-past-end-fails"
+  body: |
+    The official page says that a start position beyond the length of the source gives an empty string. In Next, `Substring("Hello World", 12)` and `Substring("Hello World", 20, 3)` let the email save, but the preview fails (HTTP 500, or no new rendered version). A start of `0` (`Substring("Hello World", 0, 5)`) or a negative start (`Substring("Hello World", -3, 5)`) fails the same way.
+
+    Check the start against `Length` before calling Substring.
+  testScript: |
+    %%=Substring("Hello World", 12)=%%
+
+- name: "Substring"
+  url: "/next/ampscript/functions/substring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-substring.html"
+  tagline: "A numeric source or a position given as text makes the preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "substring-strict-argument-types"
+  body: |
+    The official page types the source as a string and the positions as numbers, but does not say what happens when a value arrives in the other form, as it does when read from a text field. In Next, a quoted position (`Substring("Hello World", "7", 3)`, `Substring("Hello World", 7, "3")`, `Substring("Hello World", "1", "5")`) and a numeric or boolean source (`Substring(9876543, 3, 2)`, `Substring(true, 1, 2)`) each let the email save, then the preview fails.
+  testScript: |
+    %%=Substring("Hello World", "7", 3)=%%
+
+- name: "Subtract"
+  url: "/next/ampscript/functions/subtract/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-subtract.html"
+  tagline: "A negative first operand broke the email preview"
+  category: "Math"
+  object: "Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "subtract-negative-operand-fails"
+  body: |
+    The official reference says both operands may be positive or negative, whole or decimal.
+
+    In a Marketing Cloud Next email, `Subtract(-5, 3)` saved, but the email preview then failed with HTTP 500 and no message. This was one probe, so a negative literal as the first argument was not shown to work in Next; a negative result such as `Subtract(1.5, 2.25)` (`-0.75`) renders correctly.
+  testScript: |
+    %%=Subtract(-5,3)=%%
+
+- name: "Trim"
+  url: "/next/ampscript/functions/trim/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-trim.html"
+  tagline: "The non-breaking space is not treated as whitespace"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "trim-keeps-non-breaking-space"
+  body: |
+    The official page says Trim strips whitespace from both ends. In Next, tab, line feed and carriage return are stripped, but the non-breaking space (`Char(160)`) is not: `Length(Trim(Concat(Char(160), "x", Char(160))))` is `3`.
+
+    Values pasted from web pages or word processors often carry non-breaking spaces; remove them with `Replace` first.
+  testScript: |
+    %%=Length(Trim(Concat(Char(160), "x", Char(160))))=%%
+
+- name: "Trim"
+  url: "/next/ampscript/functions/trim/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-trim.html"
+  tagline: "A number or boolean argument makes the email preview fail"
+  category: "String"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "trim-number-breaks-preview"
+  body: |
+    The official page asks for a string and does not say what happens to other values. In Next, `Trim(12345)` and `Trim(true)` let the email save, but the preview fails (no new rendered version, or HTTP 500). A quoted number works: `Trim("  42  ")` gives `42`.
+  testScript: |
+    %%=Trim(12345)=%%
+
+- name: "Uppercase"
+  url: "/next/ampscript/functions/uppercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-uppercase.html"
+  tagline: "ß becomes SS, so the result is longer than the input"
+  category: "String"
+  object: "String"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "uppercase-sharp-s-expands"
+  body: |
+    The official page only says the string is converted to capitals. In Next, `Uppercase("Straße")` gives `STRASSE`, and `Length` of the result is `7` where the input measured `6`. Allow for the longer value where the output has a size limit.
+  testScript: |
+    %%=Uppercase("Straße")=%%
+
+- name: "URLEncode"
+  url: "/next/ampscript/functions/urlencode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html"
+  tagline: "Marked as not available in Next, but it renders in a Next email"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "urlencode-available-in-next"
+  body: |
+    The official reference lists URLEncode as not available in Marketing Cloud Next. A reader following it would avoid the function, or replace it with a workaround.
+
+    In a Marketing Cloud Next email it saved and rendered: `%%=URLEncode("spring sale",0,1)=%%` gives `spring%20sale`, which is the correct encoding. The calls with the flags switched off or `encodeAllStrings` on rendered as well; the output with `encodeAllChars` on is covered by a separate card.
+  testScript: |
+    %%=URLEncode("spring sale",0,1)=%%
+
+- name: "URLEncode"
+  url: "/next/ampscript/functions/urlencode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html"
+  tagline: "encodeAllChars leaves = and & alone and never writes spaces as +"
+  category: "Encryption and Encoding"
+  object: "Encryption and Encoding"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "urlencode-encodeallchars-output"
+  body: |
+    The official reference's examples for the second (and third) flag show the query string fully escaped: `=` and `:` become lowercase `%3d` / `%3a`, and spaces become `+`.
+
+    In a Marketing Cloud Next email, `URLEncode("https://example.org/go?promo=spring sale&tags=a,b", 1)` renders `https://example.org/go?promo=spring%20sale&tags=a%2Cb`: `=` and `&` are kept, the space is `%20`, and the only escape added is an uppercase `%2C` for the comma. With both flags on, `URLEncode("spring sale", 1, 1)` renders `spring%20sale`, not `spring+sale`. Every spelling of the flags (`1`, `true`, `"1"`, `"true"`) gives the same result.
+  testScript: |
+    %%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",1)=%%
+    %%=URLEncode("spring sale",1,1)=%%
+
+- name: "v"
+  url: "/next/ampscript/functions/v/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-v.html"
+  tagline: "A quoted variable name is written out literally instead of the variable value"
+  category: "Utility"
+  object: "Utility"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "v-quoted-name-written-literally"
+  body: |
+    The reference types the argument as a string naming the variable whose value should be written. It does not say what happens when that name is passed as a quoted string.
+
+    In a Marketing Cloud Next email, `v("p")` rendered the letter `p`, not the value of a variable `@p`; a number literal such as `v(5)` rendered `5`. A quoted or mistyped name therefore prints itself silently instead of failing. Pass the variable itself, such as `v(@p)`.
+  testScript: |
+    %%[ SET @p = "value" ]%%
+    %%=v("p")=%%
+
+- name: "{{add}}"
+  url: "/next/handlebars/helpers/add/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-add.html"
+  tagline: "A decimal passed as a string breaks the email preview (HTTP 500)"
+  category: "Handlebars Math"
+  object: "Handlebars Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "hb-add-decimal-string-http-500"
+  body: |
+    The reference says `add` accepts numbers or strings that convert to numbers, handles decimals, and rounds the sum to two decimal places.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{add "1.5" 2.25}}` let the email save and publish, but the preview then failed with HTTP 500 and no message instead of rendering `3.75`. Whole numbers work: `{{add 2 3}}` rendered `5`.
+  testScript: |
+    {{add "1.5" 2.25}}
+
+- name: "{{char}}"
+  url: "/next/handlebars/helpers/char/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-char.html"
+  tagline: "A code above 65535 breaks the email preview instead of wrapping around"
+  category: "Handlebars String"
+  object: "Handlebars String"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "hb-char-code-above-65535-http-500"
+  body: |
+    The reference says a code outside 0-65535 is wrapped into range with modulo 65536, and gives `{{char 65602 1}}` returning `B` as its own example.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{char 65602 1}}` let the email save and publish, but the preview then failed with HTTP 500 and no message. Codes inside the range work: `{{char 65 3}}` rendered `AAA`.
+  testScript: |
+    {{char 65602 1}}
+
+- name: "{{claimRow}}"
+  url: "/next/handlebars/helpers/claimrow/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-claimrow.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-claimrow-rejected-on-save"
+  body: |
+    The reference documents `claimRow` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{claimRow "MyObject"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `claimRow` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
+  testScript: |
+    {{#if false}}{{claimRow "MyObject"}}{{/if}}
+
+- name: "{{dateAdd}}"
+  url: "/next/handlebars/helpers/dateadd/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-dateadd.html"
+  tagline: "Returns a T between date and time, not the documented space"
+  category: "Handlebars Date & Time"
+  object: "Handlebars Date & Time"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-dateadd-t-separator"
+  body: |
+    The reference states the result is a date-time string shaped `yyyy-MM-dd HH:mm:ss`, with a space between date and time, and shows `2025-02-28 00:00:00` for its leap-year example.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: The date math was right, but the separator is a `T`: `{{dateAdd "2024-02-29" 1 "Y"}}` rendered `2025-02-28T00:00:00` and `{{dateAdd "2025-01-31" 1 "D"}}` rendered `2025-02-01T00:00:00`. Code that compares or splits the result on the space breaks.
+  testScript: |
+    {{dateAdd "2024-02-29" 1 "Y"}}
+
+- name: "{{encodeURI}}"
+  url: "/next/handlebars/helpers/encodeuri/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-http-references/mcn-handlebars-reference-http-encodeuri.html"
+  tagline: "Without the second argument, spaces are not encoded"
+  category: "Handlebars HTTP"
+  object: "Handlebars HTTP"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-encodeuri-default-leaves-spaces"
+  body: |
+    The reference says that when `onlySpaces` is left out (it defaults to `false`), anything that does not belong in a URL gets percent-encoded.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{encodeURI "a b"}}` rendered `a b`: the space stayed as it is. A link built this way still contains a raw space.
+  testScript: |
+    {{encodeURI "a b"}}
+
+- name: "{{encodeURI}}"
+  url: "/next/handlebars/helpers/encodeuri/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-http-references/mcn-handlebars-reference-http-encodeuri.html"
+  tagline: "Passing true for onlySpaces breaks the email preview (HTTP 500)"
+  category: "Handlebars HTTP"
+  object: "Handlebars HTTP"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "hb-encodeuri-onlyspaces-http-500"
+  body: |
+    The reference says that with `onlySpaces` set to `true`, only spaces are converted (to `%20`).
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{encodeURI "a b/c" true}}` let the email save and publish, but the preview then failed with HTTP 500 and no message instead of rendering `a%20b/c`.
+  testScript: |
+    {{encodeURI "a b/c" true}}
+
+- name: "{{equals}}"
+  url: "/next/handlebars/helpers/equals/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-equals.html"
+  tagline: "Comparing as number treats \"5.0\" and 5 as different"
+  category: "Handlebars Comparison"
+  object: "Handlebars Comparison"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-equals-number-compare-false"
+  body: |
+    The reference says the optional third argument picks the comparison type, and `number` compares the two values as numbers.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{equals "5.0" 5 "number"}}` rendered `false`, although both values are the number 5. A plain string comparison, `{{equals "a" "a"}}`, rendered `true`.
+  testScript: |
+    {{equals "5.0" 5 "number"}}
+
+- name: "{{filter}}"
+  url: "/next/handlebars/helpers/filter/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-filter.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Objects"
+  object: "Handlebars Objects"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-filter-rejected-on-save"
+  body: |
+    The reference documents `filter` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{filter myList "name" "x"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `filter` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
+  testScript: |
+    {{#if false}}{{filter myList "name" "x"}}{{/if}}
+
+- name: "{{format}}"
+  url: "/next/handlebars/helpers/format/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-format.html"
+  tagline: "The negative-number section of a format string is ignored"
+  category: "Handlebars Utility"
+  object: "Handlebars Utility"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-format-negative-section-ignored"
+  body: |
+    The reference says a format string may be split by `;` into one section each for numbers above, below and equal to zero, and its own example formats `-1234.567` with `"N2;(F2);N0"` as `(1,234.57)`.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{format -1234.567 "N2;(F2);N0"}}` rendered `-1,234.57`: the first section was used and the negative section ignored. The positive case, `{{format 1234.567 "N2;N0;N2"}}`, rendered `1,234.57` as documented.
+  testScript: |
+    {{format -1234.567 "N2;(F2);N0"}}
+
+- name: "{{format}}"
+  url: "/next/handlebars/helpers/format/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-format.html"
+  tagline: "A zero-padding format such as \"000000\" is ignored"
+  category: "Handlebars Utility"
+  object: "Handlebars Utility"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-format-zero-padding-ignored"
+  body: |
+    The reference lists the custom format `000000` as padding `123` with leading zeros to `000123`.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{format 123 "000000"}}` rendered `123`, without the leading zeros.
+  testScript: |
+    {{format 123 "000000"}}
+
+- name: "{{formatCurrency}}"
+  url: "/next/handlebars/helpers/formatcurrency/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatcurrency.html"
+  tagline: "de-DE puts a non-breaking space before the euro sign"
+  category: "Handlebars Utility"
+  object: "Handlebars Utility"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "hb-formatcurrency-de-nbsp"
+  body: |
+    The reference shows the `de-DE` result as `1.234,56 €` with an ordinary space before the euro sign.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{formatCurrency 1234.56 "de-DE"}}` rendered `1.234,56 €` with a non-breaking space (U+00A0) before `€`. It looks identical, but a plain text comparison against the documented value fails. `en-US` and `ja-JP` matched the docs.
+  testScript: |
+    {{formatCurrency 1234.56 "de-DE"}}
+
+- name: "{{impressionRegion}}"
+  url: "/next/handlebars/helpers/impressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-impressionregion.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Content"
+  object: "Handlebars Content"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-impressionregion-rejected-on-save"
+  body: |
+    The reference documents `impressionRegion` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#impressionRegion name="Banner"}}in{{/impressionRegion}}` could not be saved: the CMS answered HTTP 400 and named `impressionRegion` as an unsupported handlebars helper.
+  testScript: |
+    {{#impressionRegion name="Banner"}}in{{/impressionRegion}}
+
+- name: "{{jsonPath}}"
+  url: "/next/handlebars/helpers/jsonpath/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-jsonpath.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Objects"
+  object: "Handlebars Objects"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-jsonpath-rejected-on-save"
+  body: |
+    The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}` could not be saved: the CMS answered HTTP 400 and named `jsonPath` as an unsupported handlebars helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either.
+  testScript: |
+    {{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}
+
+- name: "{{lookup}}"
+  url: "/next/handlebars/helpers/lookup/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-lookup.html"
+  tagline: "A missing key renders the whole object instead of nothing"
+  category: "Handlebars Objects"
+  object: "Handlebars Objects"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "hb-lookup-missing-key-renders-object"
+  body: |
+    The reference says that a key which does not exist gives `undefined`, which renders as an empty string.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{lookup (hash k="v") "missing"}}` rendered `{k=v}`, the whole object, instead of an empty string. An existing key, `{{lookup (hash k="v") "k"}}`, rendered `v`.
+  testScript: |
+    {{lookup (hash k="v") "missing"}}
+
+- name: "{{properCase}}"
+  url: "/next/handlebars/helpers/propercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-propercase.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars String"
+  object: "Handlebars String"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-propercase-rejected-on-save"
+  body: |
+    The reference documents `properCase` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{properCase "hELLO wORLD"}}` could not be saved: the CMS answered HTTP 400 and named `properCase` as an unsupported handlebars helper.
+  testScript: |
+    {{properCase "hELLO wORLD"}}
+
+- name: "{{query}}"
+  url: "/next/handlebars/helpers/query/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-query-rejected-on-save"
+  body: |
+    The reference documents `query` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{#query "MyObject"}}x{{/query}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `query` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
+  testScript: |
+    {{#if false}}{{#query "MyObject"}}x{{/query}}{{/if}}
+
+- name: "{{queryFirst}}"
+  url: "/next/handlebars/helpers/queryfirst/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-queryfirst-rejected-on-save"
+  body: |
+    The reference documents `queryFirst` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `queryFirst` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
+  testScript: |
+    {{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}
+
+- name: "{{replace}}"
+  url: "/next/handlebars/helpers/replace/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-replace.html"
+  tagline: "The search ignores case although the docs call it case-sensitive"
+  category: "Handlebars String"
+  object: "Handlebars String"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-replace-ignores-case"
+  body: |
+    The reference says the search string is matched case-sensitively.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{replace "Aa" "a" "x"}}` rendered `xx`: the uppercase `A` was replaced too. A case-sensitive match would give `Ax`.
+  testScript: |
+    {{replace "Aa" "a" "x"}}
+
+- name: "{{slice}}"
+  url: "/next/handlebars/helpers/slice/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-slice.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Objects"
+  object: "Handlebars Objects"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-slice-rejected-on-save"
+  body: |
+    The reference documents `slice` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}` could not be saved: the CMS answered HTTP 400 and named `slice` as an unsupported handlebars helper. (These examples also use `jsonPath`, which is rejected too; `slice` is named in the same error.)
+  testScript: |
+    {{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}
+
+- name: "{{sort}}"
+  url: "/next/handlebars/helpers/sort/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-sort.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Utility"
+  object: "Handlebars Utility"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-sort-rejected-on-save"
+  body: |
+    The reference documents `sort` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{sort myList}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `sort` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
+  testScript: |
+    {{#if false}}{{sort myList}}{{/if}}
+
+- name: "{{substring}}"
+  url: "/next/handlebars/helpers/substring/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-substring.html"
+  tagline: "With triple braces it renders an internal Java object name"
+  category: "Handlebars String"
+  object: "Handlebars String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "hb-substring-triple-brace-object-name"
+  body: |
+    The reference does not say that the helper cannot be used with triple braces, the usual Handlebars way to output a value without HTML escaping.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{{substring "<i>abc</i>" 1 6}}}` rendered `com.salesforce.e360.messaging.rendering.helper.HandlebarResultWrapper@539b5bf2` instead of the text. With double braces the helper works: `{{substring "abcdef" 2 3}}` rendered `bcd`.
+  testScript: |
+    {{{substring "<i>abc</i>" 1 6}}}
+
+- name: "{{subtract}}"
+  url: "/next/handlebars/helpers/subtract/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-subtract.html"
+  tagline: "Decimal values break the email preview (HTTP 500)"
+  category: "Handlebars Math"
+  object: "Handlebars Math"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "hb-subtract-decimals-http-500"
+  body: |
+    The reference says `subtract` handles decimals as well as whole numbers and rounds the difference to two decimal places.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{subtract 1.5 2.25}}` let the email save and publish, but the preview then failed with HTTP 500 and no message instead of rendering `-0.75`. Whole numbers work: `{{subtract 5 3}}` rendered `2`.
+  testScript: |
+    {{subtract 1.5 2.25}}
+
+- name: "{{timeZoneConversion}}"
+  url: "/next/handlebars/helpers/timezoneconversion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-timezoneconversion.html"
+  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  category: "Handlebars Date & Time"
+  object: "Handlebars Date & Time"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-timezoneconversion-rejected-on-save"
+  body: |
+    The reference documents `timeZoneConversion` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}` could not be saved: the CMS answered HTTP 400 and named `timeZoneConversion` as an unsupported handlebars helper.
+  testScript: |
+    {{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}
+
+- name: "{{uppercase}}"
+  url: "/next/handlebars/helpers/uppercase/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-uppercase.html"
+  tagline: "With triple braces it renders an internal Java object name"
+  category: "Handlebars String"
+  object: "Handlebars String"
+  severity: "medium"
+  discrepancy: "A5"
+  anchor: "hb-uppercase-triple-brace-object-name"
+  body: |
+    The reference does not say that the helper cannot be used with triple braces, the usual Handlebars way to output a value without HTML escaping.
+
+    In a Marketing Cloud Next email tested on 2026-11-22: `{{{uppercase "<i>a</i>"}}}` rendered `com.salesforce.e360.messaging.rendering.helper.HandlebarResultWrapper@451c8ea0` instead of the text. With double braces the helper works: `{{uppercase "mcn"}}` rendered `MCN`.
+  testScript: |
+    {{{uppercase "<i>a</i>"}}}

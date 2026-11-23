@@ -1,0 +1,38 @@
+# Next test scripts for /next/ampscript/functions/dateparse/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for DateParse. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[2026-03-04] got=[%%=Format(DateParse("2026-03-04"),"yyyy-MM-dd")=%%]</p>
+  <p>c2 expect=[3/4/2026 12:00:00 AM] got=[%%=DateParse("2026-03-04")=%%]</p>
+  <p>c3 expect=[3/4/2026 9:05:07 AM] got=[%%=DateParse("2026-03-04 09:05:07")=%%]</p>
+  <p>c4 expect=[3/4/2026 12:00:00 AM] got=[%%=DateParse("March 4, 2026")=%%]</p>
+  <p>c5 expect=[3/4/2026 9:05:07 AM] got=[%%=DateParse("2026-03-04 9:05:07 AM")=%%]</p>
+  <p>c6 expect=[3/4/2026 9:05:07 AM] got=[%%=DateParse("2026-03-04T09:05:07")=%%]</p>
+  <p>c7 expect=[3/4/2026 9:05:00 AM] got=[%%=DateParse("3/4/2026 9:05 AM")=%%]</p>
+  <p>c8 expect=[3/4/2026 12:00:00 AM] got=[%%=DateParse("4 March 2026")=%%]</p>
+  <p>c9 expect=[3/4/2026 9:05:07 AM] got=[%%=DateParse("Wed, 04 Mar 2026 09:05:07 GMT")=%%]</p>
+  <p>c10 expect=[13:41:00] got=[%%=Format(DateParse("1:41 PM"),"HH:mm:ss")=%%]</p>
+  <p>c11 expect=[3/4/2026 7:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 3:05:07 PM] got=[%%=DateParse("2026-03-04T09:05:07+02:00")=%%|%%=DateParse("2026-03-04T09:05:07Z")=%%|%%=DateParse("2026-03-04T09:05:07-06:00")=%%]</p>
+  <p>c12 expect=[5/8/2026 12:00:00 AM] got=[%%=DateParse("5/8/2026")=%%]</p>
+  <p>c13 expect=[3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM|3/4/2026 9:05:07 AM] got=[%%=DateParse("2026-03-04 09:05:07",0)=%%|%%=DateParse("2026-03-04 09:05:07",1)=%%|%%=DateParse("2026-03-04 09:05:07",true)=%%|%%=DateParse("2026-03-04 09:05:07",false)=%%|%%=DateParse("2026-03-04 09:05:07","1")=%%|%%=DateParse("2026-03-04 09:05:07","0")=%%|%%=DateParse("2026-03-04 09:05:07","true")=%%|%%=DateParse("2026-03-04 09:05:07","false")=%%]</p>
+  <p>c14 expect=[0] got=[%%=DateDiff(DateParse("2026-03-04 09:05:07",0),DateParse("2026-03-04 09:05:07",1),"H")=%%]</p>
+  <p>c15 expect=[3/4/2026 9:05:07 AM] got=[%%=DateParse("2026-03-04 09:05:07","spring")=%%]</p>
+  <p>c16 expect=[2026|5|2026-03-04|2026-03-05T00:00:00|2] got=[%%=DatePart(DateParse("2026-03-04T09:05:07"),"Y")=%%|%%=DatePart(DateParse("2026-03-04T09:05:07"),"MI")=%%|%%=FormatDate(DateParse("2026-03-04T09:05:07"),"yyyy-MM-dd")=%%|%%=DateAdd(DateParse("2026-03-04"),1,"D")=%%|%%=DateDiff(DateParse("2026-03-04"),DateParse("2026-03-06"),"D")=%%]</p>
+  <p>c17 expect=[0|0] got=[%%=DateDiff(DateParse(Now()),Now(),"MI")=%%|%%=DateDiff(Now(),DateParse(Now(),1),"H")=%%]</p>
+  <p>c18 expect=[20] got=[%%=Length(DateParse("2026-03-04"))=%%]</p>
+  <p>c19 expect=[1772614800] got=[%%=DateParse("1772614800")=%%]</p>
+  <p>c20 expect=[not a date at all] got=[%%=DateParse("not a date at all")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=DateParse()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=DateParse("2026-03-04 09:05:07",1,"extra")=%%

@@ -14,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "In Next test emails, with the XML written as a literal in the email's HTML component, valid XML gave `0` rows: `//Flight` over three `Flight` elements gave `0` instead of `3`, and `Field` on those rows returned its flag (`false` for `Value`, `Xml`, `origin_att` read with `0`; `true` for ordinals) instead of `200.00` and `IND`. Saving the email may have changed the markup (e.g. tag case, so `//Flight` would not match), which is not yet ruled out; do not rely on the function in Next until re-tested. Empty, unset and malformed input give `0` rows on both."
 ---
 
 {% include verification-status.html %}
@@ -93,15 +96,11 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`BuildRowSetFromXML` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromxml/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromxml-error-flag-inverted) — the inverted third argument in full
 - [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/) — the same shape for JSON payloads, with the same inverted flag
 - [`BuildRowSetFromString`](/engagement/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset

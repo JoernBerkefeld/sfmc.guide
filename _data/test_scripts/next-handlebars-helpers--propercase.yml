@@ -1,0 +1,9 @@
+# Next test scripts for /next/handlebars/helpers/propercase/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  {{properCase "hELLO wORLD"}}

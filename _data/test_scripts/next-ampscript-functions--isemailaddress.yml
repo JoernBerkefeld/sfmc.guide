@@ -1,0 +1,24 @@
+# Next test scripts for /next/ampscript/functions/isemailaddress/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for IsEmailAddress. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[true] got=[%%=IsEmailAddress("tomas.q@example.com")=%%]</p>
+  <p>c2 expect=[false] got=[%%=IsEmailAddress("tomas.q.example.com")=%%]</p>
+  <p>c3 expect=[true] got=[%%=IsEmailAddress("tomas.q+news@example.com")=%%]</p>
+  <p>c4 expect=[false] got=[%%=IsEmailAddress("")=%%]</p>
+  <p>c5 expect=[matches-true] got=[%%[ IF IsEmailAddress("tomas.q@example.com") == true THEN SET @r2iet = "matches-true" ELSE SET @r2iet = "no-match" ENDIF ]%%%%=v(@r2iet)=%%]</p>
+  <p>c6 expect=[matches-false] got=[%%[ IF IsEmailAddress("tomas.q.example.com") == false THEN SET @r2ief = "matches-false" ELSE SET @r2ief = "no-match" ENDIF ]%%%%=v(@r2ief)=%%]</p>
+  <p>c7 expect=[true] got=[%%=IsEmailAddress("tomas.q@mail.corp.example.com")=%%]</p>
+  <p>c8 expect=[true] got=[%%=IsEmailAddress("tomas.q@example")=%%]</p>
+  <p>c9 expect=[false] got=[%%=IsEmailAddress(" tomas.q@example.com")=%%]</p>
+  <p>c10 expect=[false] got=[%%=IsEmailAddress("tomas.q@example.com ")=%%]</p>
+  <p>c11 expect=[true] got=[%%=IsEmailAddress("a.b-c_d+e9@x-y.z.example.museum")=%%]</p>
+  <p>c12 expect=[false] got=[%%=IsEmailAddress("a@b@example.com")=%%]</p>
+  <p>c13 expect=[false] got=[%%=IsEmailAddress("@example.com")=%%]</p>
+  <p>c14 expect=[false] got=[%%=IsEmailAddress("a@.com")=%%]</p>
+  <p>c15 expect=[false] got=[%%=IsEmailAddress(123)=%%]</p>

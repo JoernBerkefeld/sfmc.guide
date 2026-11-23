@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/contentblockbykey/
 platforms:
   - engagement
-  - next
 syntax: "ContentBlockByKey(contentBlockKey[, impressionRegionName, errorOnMissingContentBlock, errorMessage, statusCode])"
 return_type: string
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 5
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "A key that does not exist with the error flag `0` (`ContentBlockByKey(\"nosuch-key\", \"\", 0, \"FB-CBK\", @status)`) breaks the email preview in Next (HTTP 500) instead of returning the fallback and status `-1`; `false`, `\"false\"` and `\"0\"` fail the same way. Loading a block that exists was not tested in Next."
 ---
 
 {% include verification-status.html %}
@@ -25,8 +27,8 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `contentBlockKey` | string | Yes | Customer key of the content block to retrieve |
-| `impressionRegionName` | string | No | Impression region name to associate with the block |
+| `contentBlockKey` | string | Yes | Key that identifies the content block to insert |
+| `impressionRegionName` | string | No | Name of an impression region that the inserted block is tracked under |
 | `errorOnMissingContentBlock` | string \| boolean \| number | No | When truthy (the default), a missing block aborts; when falsy, the page continues and the status variable is set to -1. Accepts `true`, `false`, `1`, `0`, `"true"`, `"false"`, `"1"`, `"0"` |
 | `errorMessage` | string | No | Default content returned when the block is missing — emitted literally |
 | `statusCode` | number | No | Output variable set to 0 on success or -1 when no content was found |
@@ -71,15 +73,11 @@ Renders `Block unavailable` and sets `@sc` to `-1`.
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`ContentBlockByKey` in Marketing Cloud Next](/next/ampscript/functions/contentblockbykey/) — how it behaves there
 - [`ContentBlockByID`](/engagement/ampscript/functions/contentblockbyid/) — retrieve the same block by its numeric ID
 - [`ContentArea`](/engagement/ampscript/functions/contentarea/)
 - [`ContentAreaByName`](/engagement/ampscript/functions/contentareabyname/) — the retired Classic-content equivalents

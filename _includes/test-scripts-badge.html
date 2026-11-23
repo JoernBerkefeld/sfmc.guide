@@ -9,6 +9,10 @@
   after every script on it was observed rendering its expected values in a
   single run.
 
+  On /next/ pages the badge means the page ships the generated Next test email
+  (.claude/skills/verify-mcn-language/generate-next-test-scripts.mjs in the root repo,
+  which also sets the flag); its tooltip says the calls were proven one email each.
+
   Partial coverage never ships the badge — the key is omitted entirely rather
   than written as `partial`.
 
@@ -18,7 +22,12 @@
 {% endcomment %}
 
 {%- if page.test_scripts == "complete" -%}
-  <span class="verified-badge test-scripts-complete" title="Every chapter on this page ships a runnable AMPscript test script that asserts each documented claim, including the deviations from the official docs. Expand &ldquo;Show test script&rdquo; in any chapter to see it.">
+  {%- if page.url contains "/next/" -%}
+    {%- assign tsb_title = "This page ships a Marketing Cloud Next test email built from the verification database: every call on it was rendered in a Next email, one call per email, and each line prints the expected result next to the actual one. Expand &ldquo;Show Next test script&rdquo; at the end of the Behaviour chapter to see it." -%}
+  {%- else -%}
+    {%- assign tsb_title = "Every chapter on this page ships a runnable AMPscript test script that asserts each documented claim, including the deviations from the official docs. Expand &ldquo;Show test script&rdquo; in any chapter to see it." -%}
+  {%- endif %}
+  <span class="verified-badge test-scripts-complete" title="{{ tsb_title }}">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M4 2.5v2.2L1.8 8.6A1 1 0 0 0 2.7 10h6.6a1 1 0 0 0 .9-1.4L8 4.7V2.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
       <path d="M3.2 2.5h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>

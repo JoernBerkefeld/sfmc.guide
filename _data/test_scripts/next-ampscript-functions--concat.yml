@@ -1,0 +1,27 @@
+# Next test scripts for /next/ampscript/functions/concat/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Concat. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[abc] got=[%%=Concat("a","b","c")=%%]</p>
+  <p>c2 expect=[HelloWorld] got=[%%=Concat("Hello","World")=%%]</p>
+  <p>c3 expect=[123.5] got=[%%=Concat(12, 3.5)=%%]</p>
+  <p>c4 expect=[truefalse] got=[%%=Concat(true, false)=%%]</p>
+  <p>c5 expect=[a-b] got=[%%=Concat("a", "-", "b")=%%]</p>
+  <p>c6 expect=[123456789ABC] got=[%%=Concat("1","2","3","4","5","6","7","8","9","A","B","C")=%%]</p>
+  <p>c7 expect=[abcdefghijklmnopqrst] got=[%%=Concat("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t")=%%]</p>
+  <p>c8 expect=[2026-11-22T23:21:17X] got=[%%=Concat(Now(), "X")=%%]</p>
+  <p>c9 expect=[] got=[%%=Concat("", "")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=Concat("only")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=Concat()=%%

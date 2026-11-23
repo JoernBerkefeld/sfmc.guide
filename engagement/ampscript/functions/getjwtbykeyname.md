@@ -107,12 +107,7 @@ Then upload it: **Key Management → Create → Asymmetric → Choose File → s
 
 To verify an `RS*` token, use the matching **public** `.asc`: convert it to SPKI PEM (parse the RSA modulus and exponent out of the PGP public-key packet and DER-encode a `SubjectPublicKeyInfo`) and hand that to any JWT library — `GetJWT` can't reproduce `RS*` because it is HMAC-only.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/output/
 platforms:
   - engagement
-  - next
 syntax: "Output(content)"
 return_type: void
 min_args: 0
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next cannot use `Output` to write anything into an email: `Output(Concat(\"x\"))` and `Output()` are rejected at save, even inside a branch that never runs, and a literal or variable argument renders an empty string. Use `v` to write a value in a Next email."
 ---
 
 {% include verification-status.html %}
@@ -93,15 +95,11 @@ differs-from-docs card](/engagement/differs-from-docs/#output-not-available-in-s
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes (CloudPages / landing pages; **not** in sendable email content — use `OutputLine` there) |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Output` in Marketing Cloud Next](/next/ampscript/functions/output/) — how it behaves there
 - [OutputLine](/engagement/ampscript/functions/outputline/) — the same, plus a carriage return and line feed
 - [Differs from docs: the literal argument](/engagement/differs-from-docs/#output-literal-renders-nothing)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html)

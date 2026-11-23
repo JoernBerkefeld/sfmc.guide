@@ -86,12 +86,7 @@ So they are trivially distinguishable from outside. If you want a visitor moved 
 
 Landing pages are the only context. Used in sendable email content, an isolated `%%[ Redirect("https://sfmc.guide/robots.txt") ]%%` is rejected with HTTP 400, errorcode 10005: *"Redirect Function is not valid in content. This function is only allowed in content with an HTTP context."* A sendable email has no HTTP response to redirect, so `Redirect` cannot be used there — use it only on CloudPages / landing pages. (By contrast, `RedirectTo` is *not* rejected in email content: it renders as a no-op, since it emits no redirect at all.)
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

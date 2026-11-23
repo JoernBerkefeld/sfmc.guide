@@ -57,12 +57,7 @@ Renders `ret=[OK] msg=[Data Extension updated.] err=[0]`.
 
 {% include test-script.html bundle="ampscript-functions--invokeupdate" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

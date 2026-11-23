@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/format/
 platforms:
   - engagement
-  - next
 syntax: "Format(value, formatString[, dataFormat, cultureCode])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 4
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next renders `Number` as the data format (`$1,234.56`) instead of aborting. Custom patterns such as `#,##0.00` return the raw `1234.555` in Next, and a negative `C2` gives `-$1,234.56` instead of `($1,234.56)`. `P`, `E` and the French long date give `123,455.500%`, `1.234555E03` and `mercredi, mars 4, 2026` in Next."
 ---
 
 {% include verification-status.html %}
@@ -108,15 +110,11 @@ The fourth parameter changes month and day names, not just the separators: `D` w
 
 {% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Format` in Marketing Cloud Next](/next/ampscript/functions/format/) — how it behaves there
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — numbers only, without the third-parameter trap
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — currency, with the symbol chosen for you
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only; compare the minutes before choosing it

@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/substring/
 platforms:
   - engagement
-  - next
 syntax: "Substring(sourceString, startPosition[, substringLength])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Starts inside the source give the same results. A start of `0` or below (here clamped, `Substring(\"Hello World\", 0, 5)` gives `Hello`), a start past the end, a numeric source and quoted positions make the Next preview fail. A decimal position aborts here but is cut down in Next: `Substring(\"Hello World\", 2.5, 3)` gives `ell`."
 ---
 
 {% include verification-status.html %}
@@ -94,15 +96,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#substr
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Substring` in Marketing Cloud Next](/next/ampscript/functions/substring/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#substring-negative-arguments-disagree) — the negative-argument asymmetry in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — locates the position to start at
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit positions and lengths use

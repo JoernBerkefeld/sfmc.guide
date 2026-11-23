@@ -14,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "Every address shape tried renders the same in Next, from `example.com` for a plain address to an empty result for a string without an at sign."
 ---
 
 {% include verification-status.html %}
@@ -83,15 +86,11 @@ There is no closed set of sentinel values to test for. An input with no at sign,
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Domain` in Marketing Cloud Next](/next/ampscript/functions/domain/) — how it behaves there
 - [IsEmailAddress](/engagement/ampscript/functions/isemailaddress/) — validate the address before splitting it, since this function will not
 - [Empty](/engagement/ampscript/functions/empty/) — how to detect the empty result
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html)

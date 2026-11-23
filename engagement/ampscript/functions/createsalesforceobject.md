@@ -77,14 +77,11 @@ There is no closed set of sentinel values: the return is an ID string when the i
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+## Context and requirements
 
 Requires an active Marketing Cloud Connect integration to a Sales or Service Cloud org on the business unit.
+
+{% include platform-compare.html %}
 
 ## See also
 

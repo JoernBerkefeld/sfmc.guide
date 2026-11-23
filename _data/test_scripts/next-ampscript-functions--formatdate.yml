@@ -1,0 +1,44 @@
+# Next test scripts for /next/ampscript/functions/formatdate/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for FormatDate. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[01/15/2026] got=[%%=FormatDate("2026-01-15","MM/dd/yyyy")=%%]</p>
+  <p>c2 expect=[2026] got=[%%=FormatDate("2026-03-04 13:52:07","yyyy")=%%]</p>
+  <p>c3 expect=[March] got=[%%=FormatDate("2026-03-04 13:52:07","MMMM")=%%]</p>
+  <p>c4 expect=[ 13:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","","HH:mm:ss")=%%]</p>
+  <p>c5 expect=[2026-03-04 13:52:07|52] got=[%%=FormatDate("2026-03-04 13:52:07","yyyy-MM-dd HH:mm:ss")=%%|%%=FormatDate("2026-03-04 13:52:07","mm")=%%]</p>
+  <p>c6 expect=[2026-03-04 13:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","yyyy-MM-dd","HH:mm:ss")=%%]</p>
+  <p>c7 expect=[March 2026|26|2026|52|52|52|March 4|63|0063|2026-52-04 01:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","Y")=%%|%%=FormatDate("2026-03-04 13:52:07","YY")=%%|%%=FormatDate("2026-03-04 13:52:07","YYYY")=%%|%%=FormatDate("2026-03-04 13:52:07","mmmm")=%%|%%=FormatDate("2026-03-04 13:52:07","mmm")=%%|%%=FormatDate("2026-03-04 13:52:07","mm")=%%|%%=FormatDate("2026-03-04 13:52:07","m")=%%|%%=FormatDate("2026-03-04 13:52:07","DD")=%%|%%=FormatDate("2026-03-04 13:52:07","DDDD")=%%|%%=FormatDate("2026-03-04 13:52:07","yyyy-mm-dd hh:mm:ss")=%%]</p>
+  <p>c8 expect=[ 52| 03| 000] got=[%%=FormatDate("2026-03-04 13:52:07","","mm")=%%|%%=FormatDate("2026-03-04 13:52:07","","MM")=%%|%%=FormatDate("2026-03-04 13:52:07","","fff")=%%]</p>
+  <p>c9 expect=[3/4/2026|March 4] got=[%%=FormatDate("2026-03-04 13:52:07","d")=%%|%%=FormatDate("2026-03-04 13:52:07","M")=%%]</p>
+  <p>c10 expect=[Wednesday|Wednesday] got=[%%=FormatDate("2026-03-04 13:52:07","dddd")=%%|%%=FormatDate("2026-03-04 13:52:07","ddddd")=%%]</p>
+  <p>c11 expect=[Wed|Fri] got=[%%=FormatDate("2026-03-04 13:52:07","ddd")=%%|%%=FormatDate("2026-12-25","ddd")=%%]</p>
+  <p>c12 expect=[26|2026|03|Mar|March|04|AD] got=[%%=FormatDate("2026-03-04 13:52:07","yy")=%%|%%=FormatDate("2026-03-04 13:52:07","yyyy")=%%|%%=FormatDate("2026-03-04 13:52:07","MM")=%%|%%=FormatDate("2026-03-04 13:52:07","MMM")=%%|%%=FormatDate("2026-03-04 13:52:07","MMMM")=%%|%%=FormatDate("2026-03-04 13:52:07","dd")=%%|%%=FormatDate("2026-03-04 13:52:07","gg")=%%]</p>
+  <p>c13 expect=[13|01|07|PM|GMT|Z] got=[%%=FormatDate("2026-03-04 13:52:07","HH")=%%|%%=FormatDate("2026-03-04 13:52:07","hh")=%%|%%=FormatDate("2026-03-04 13:52:07","ss")=%%|%%=FormatDate("2026-03-04 13:52:07","tt")=%%|%%=FormatDate("2026-03-04 13:52:07","zz")=%%|%%=FormatDate("2026-03-04 13:52:07","zzz")=%%]</p>
+  <p>c14 expect=[ 07| PM| 2026] got=[%%=FormatDate("2026-03-04 13:52:07","","ss")=%%|%%=FormatDate("2026-03-04 13:52:07","","tt")=%%|%%=FormatDate("2026-03-04 13:52:07","","yyyy")=%%]</p>
+  <p>c15 expect=[Wednesday, March 4, 2026|Wednesday, March 4, 2026 1:52 PM|Wednesday, March 4, 2026 1:52:07 PM|3/4/2026 1:52 PM|3/4/2026 1:52:07 PM|2026-03-04T13:52:07.0000000+0000|Wed, 04 Mar 2026 13:52:07 GMT|2026-03-04T13:52:07|1:52 PM|1:52:07 PM|2026-03-04 13:52:07Z|Wednesday, March 4, 2026 1:52:07 PM] got=[%%=FormatDate("2026-03-04 13:52:07","D")=%%|%%=FormatDate("2026-03-04 13:52:07","f")=%%|%%=FormatDate("2026-03-04 13:52:07","F")=%%|%%=FormatDate("2026-03-04 13:52:07","g")=%%|%%=FormatDate("2026-03-04 13:52:07","G")=%%|%%=FormatDate("2026-03-04 13:52:07","o")=%%|%%=FormatDate("2026-03-04 13:52:07","r")=%%|%%=FormatDate("2026-03-04 13:52:07","s")=%%|%%=FormatDate("2026-03-04 13:52:07","t")=%%|%%=FormatDate("2026-03-04 13:52:07","T")=%%|%%=FormatDate("2026-03-04 13:52:07","u")=%%|%%=FormatDate("2026-03-04 13:52:07","U")=%%]</p>
+  <p>c16 expect=[2026-03-04 13:52:07|3|0|2026-03-04 13:52:07|2026-03-04 13:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","l")=%%|%%=FormatDate("2026-03-04 13:52:07","L")=%%|%%=FormatDate("2026-03-04 13:52:07","S")=%%|%%=FormatDate("2026-03-04 13:52:07","iso")=%%|%%=FormatDate("2026-03-04 13:52:07","rfc")=%%]</p>
+  <p>c17 expect=[ 7|2026-03-04 13:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","","s")=%%|%%=FormatDate("2026-03-04 13:52:07","","t")=%%]</p>
+  <p>c18 expect=[63 |63 |mars |63 |0 |0 ] got=[%%=FormatDate("2026-03-04 13:52:07","D","","fr-FR")=%%|%%=FormatDate("2026-03-04 13:52:07","D","","fr_FR")=%%|%%=FormatDate("2026-03-04 13:52:07","MMMM","","fr-FR")=%%|%%=FormatDate("2026-03-04 13:52:07","D","","ja-JP")=%%|%%=FormatDate("2026-03-04 13:52:07","S","","uk_UA")=%%|%%=FormatDate("2026-03-04 13:52:07","S","","en-US")=%%]</p>
+  <p>c19 expect=[63 ] got=[%%=FormatDate("2026-03-04 13:52:07","D","","zz-ZZ")=%%]</p>
+  <p>c20 expect=[2026-03-04 13:52:07] got=[%%=FormatDate("2026-03-04 13:52:07","qqqq")=%%]</p>
+  <p>c21 expect=[not a date at all|] got=[%%=FormatDate("not a date at all","yyyy")=%%|%%=FormatDate("","yyyy")=%%]</p>
+  <p>c22 expect=[2026-03-04 20:52:07|2026-03-04 00:00:00|2026-03-04|2026-03-04 13:52:07|4 March 2026 1:52:07 PM] got=[%%=FormatDate("2026-03-04T13:52:07.123-0700","yyyy-MM-dd","HH:mm:ss")=%%|%%=FormatDate("2026-03-04","yyyy-MM-dd","HH:mm:ss")=%%|%%=FormatDate("3/4/2026","yyyy-MM-dd")=%%|%%=FormatDate("03/04/2026 13:52:07","yyyy-MM-dd","HH:mm:ss")=%%|%%=FormatDate("4 March 2026 1:52:07 PM","yyyy-MM-dd","HH:mm:ss")=%%]</p>
+  <p>c23 expect=[10|2026-03-04] got=[%%=Length(FormatDate(DateAdd(Now(),1,"D"),"yyyy-MM-dd"))=%%|%%=FormatDate(DateAdd("2026-03-04",0,"D"),"yyyy-MM-dd")=%%]</p>
+  <p>c24 expect=[20260304] got=[%%=FormatDate(20260304,"yyyy")=%%]</p>
+  <p>c25 expect=[3/4/2026 1:52:07 PM] got=[%%=FormatDate("2026-03-04 13:52:07")=%%]</p>
+  <p>c26 expect=[ 1] got=[%%=FormatDate("2026-03-04 13:52:07","","h")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=FormatDate()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=FormatDate("2026-03-04 13:52:07","D","","en-US","extra")=%%

@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/datediff/
 platforms:
   - engagement
-  - next
 syntax: "DateDiff(startDate, endDate, unitOfDifference)"
 return_type: number
 min_args: 3
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next counts whole elapsed units instead of unit boundaries: 23 hours across midnight give `0` days in Next and `1` in Engagement, and one minute across New Year gives `0` for `Y`, `M` and `D` in Next instead of `1`. A seconds unit works in Next (`DateDiff('2026-01-10 08:00:00','2026-01-10 08:00:59','S')` gives `59`) where Engagement aborts."
 ---
 
 {% include verification-status.html %}
@@ -99,15 +101,11 @@ Anything finer than the requested unit is discarded rather than contributing a f
 
 {% include callout.html type="warning" title="One rejected argument discards the whole page" content="AMPscript has no try/catch, so a bad unit or an unreadable date aborts the render and throws away everything already written above it. When testing, put each risky call behind its own `RequestParameter` branch and fetch them one at a time — otherwise a single failure hides every result on the page." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`DateDiff` in Marketing Cloud Next](/next/ampscript/functions/datediff/) — how it behaves there
 - [DateAdd](/engagement/ampscript/functions/dateadd/) — the inverse operation, sharing the same five-unit token set
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in as one of the two dates
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — formats a date, and swallows bad input where this function aborts

@@ -14,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "The default and `encodeAllStrings`-only results match. With `encodeAllChars` on, Next keeps `=` and `&`, writes spaces as `%20` and encodes only the comma as `%2C` (`promo=spring%20sale&tags=a%2Cb`, `spring%20sale`) instead of `promo%3dspring+sale%26tags%3da%2cb` and `spring+sale`. A flag value of `2` encodes in Next (`spring%20sale`) instead of acting as off."
 ---
 
 {% include verification-status.html %}
@@ -94,15 +97,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#urlenc
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`URLEncode` in Marketing Cloud Next](/next/ampscript/functions/urlencode/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#urlencode-flag-spellings-and-default-passthrough) — the flag spellings and the default pass-through in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — build the URL before encoding the part that needs it
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html)

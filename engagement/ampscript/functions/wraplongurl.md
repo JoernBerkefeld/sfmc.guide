@@ -59,12 +59,7 @@ The value domain is open, so there is no set of sentinel values to test for. Out
 
 The official reference states the shortening unconditionally: a URL longer than 975 characters comes back as a short link that redirects to the original. That did not happen in any page render. The community guide supplies the missing condition — shortening is applied when the message is sent — which explains the gap, but the official page does not mention it, so a reader of that page alone will draw the wrong conclusion.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

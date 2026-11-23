@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/guid/
 platforms:
   - engagement
-  - next
 syntax: "GUID()"
 return_type: string
 min_args: 0
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "GUID behaves the same in Next: 36 characters, hyphens at 9, 14, 19 and 24, no braces, a new value per call. One comparison test showed `==` ignoring case in Next."
 ---
 
 {% include verification-status.html %}
@@ -68,15 +70,11 @@ The value is an open domain, so there is no set of tokens to test against. What 
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`GUID` in Marketing Cloud Next](/next/ampscript/functions/guid/) — how it behaves there
 - [Output](/engagement/ampscript/functions/output/) — writing a generated value into the content
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-guid.html)
 - [ampscript.guide](https://ampscript.guide/guid/)

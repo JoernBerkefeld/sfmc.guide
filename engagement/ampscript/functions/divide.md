@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/divide/
 platforms:
   - engagement
-  - next
 syntax: "Divide(dividend, divisor)"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Even quotients, negatives and numeric strings render the same. Next rounds `Divide(10,3)` to `3.33` instead of `3.33333333333333`, and a zero divisor breaks the email preview (HTTP 500) instead of rendering `∞`, `-∞` or `NaN`. `Divide(\"true\",1)` renders `1` in Next where Engagement aborts."
 ---
 
 {% include verification-status.html %}
@@ -95,15 +97,11 @@ Both zero-divisor behaviours are catalogued as findings on [Differs from officia
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Divide` in Marketing Cloud Next](/next/ampscript/functions/divide/) — how it behaves there
 - [`Mod`](/engagement/ampscript/functions/mod/) — the sibling remainder function, which handles a zero divisor differently
 - [`Multiply`](/engagement/ampscript/functions/multiply/) — the inverse operation
 - [Differs from official docs](/engagement/differs-from-docs/#divide-zero-divisor-infinity) — the zero-divisor finding

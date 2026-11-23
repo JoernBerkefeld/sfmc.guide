@@ -64,12 +64,7 @@ All nine arguments together select formatting options and still return a single 
 
 {% include test-script.html bundle="ampscript-functions--barcodeurl" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

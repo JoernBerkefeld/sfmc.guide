@@ -1,0 +1,42 @@
+# Next test scripts for /next/ampscript/functions/random/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Random. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[1] got=[%%=Random(1,1)=%%]</p>
+  <p>c2 expect=[5] got=[%%=Random(5,5)=%%]</p>
+  <p>c3 expect=[43] got=[%%=Random(1,100)=%%]</p>
+  <p>c4 expect=[110] got=[%%[SET @rb12x = 0 SET @rb12f0 = 0 SET @rb12f1 = 0 FOR @rb12i = 1 TO 60 DO SET @rb12r = Random(1,2) IF @rb12r == 1 THEN SET @rb12f0 = 1 ELSEIF @rb12r == 2 THEN SET @rb12f1 = 1 ELSE SET @rb12x = 1 ENDIF NEXT @rb12i]%%%%=Concat(@rb12f0,@rb12f1,@rb12x)=%%]</p>
+  <p>c5 expect=[1110] got=[%%[SET @rb13x = 0 SET @rb13f0 = 0 SET @rb13f1 = 0 SET @rb13f2 = 0 FOR @rb13i = 1 TO 60 DO SET @rb13r = Random(1,3) IF @rb13r == 1 THEN SET @rb13f0 = 1 ELSEIF @rb13r == 2 THEN SET @rb13f1 = 1 ELSEIF @rb13r == 3 THEN SET @rb13f2 = 1 ELSE SET @rb13x = 1 ENDIF NEXT @rb13i]%%%%=Concat(@rb13f0,@rb13f1,@rb13f2,@rb13x)=%%]</p>
+  <p>c6 expect=[110] got=[%%[SET @rnegx = 0 SET @rnegf0 = 0 SET @rnegf1 = 0 FOR @rnegi = 1 TO 60 DO SET @rnegr = Random(-2,-1) IF @rnegr == -2 THEN SET @rnegf0 = 1 ELSEIF @rnegr == -1 THEN SET @rnegf1 = 1 ELSE SET @rnegx = 1 ENDIF NEXT @rnegi]%%%%=Concat(@rnegf0,@rnegf1,@rnegx)=%%]</p>
+  <p>c7 expect=[1] got=[%%=Random(1.2,1.8)=%%]</p>
+  <p>c8 expect=[2] got=[%%=Random(1,2.5)=%%]</p>
+  <p>c9 expect=[2] got=[%%=Random(1.0,3.0)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[SET @rmmx = 0 SET @rmmf0 = 0 SET @rmmf1 = 0 SET @rmmf2 = 0 FOR @rmmi = 1 TO 60 DO SET @rmmr = Random(3,1) IF @rmmr == 1 THEN SET @rmmf0 = 1 ELSEIF @rmmr == 2 THEN SET @rmmf1 = 1 ELSEIF @rmmr == 3 THEN SET @rmmf2 = 1 ELSE SET @rmmx = 1 ENDIF NEXT @rmmi]%%%%=Concat(@rmmf0,@rmmf1,@rmmf2,@rmmx)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[SET @rstrx = 0 SET @rstrf0 = 0 SET @rstrf1 = 0 FOR @rstri = 1 TO 60 DO SET @rstrr = Random("1","2") IF @rstrr == 1 THEN SET @rstrf0 = 1 ELSEIF @rstrr == 2 THEN SET @rstrf1 = 1 ELSE SET @rstrx = 1 ENDIF NEXT @rstri]%%%%=Concat(@rstrf0,@rstrf1,@rstrx)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Random("1.5","3.5")=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=Random(1)=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%=Random(1,3,5)=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Random("abc",3)=%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Random("true",3)=%%

@@ -64,12 +64,7 @@ Renders `st=[OK] rc=[1]` when a data extension with that key exists.
 
 {% include test-script.html bundle="ampscript-functions--invokeretrieve" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

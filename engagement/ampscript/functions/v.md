@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/v/
 platforms:
   - engagement
-  - next
 syntax: "v(variableName)"
 return_type: string
 min_args: 1
 max_args: 1
 verification: verified
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "`v` on a variable, a string literal and a number renders the same as in Engagement, and `v()` or two arguments are refused in both."
 ---
 
 {% include verification-status.html %}
@@ -70,15 +72,11 @@ The value domain is open, so there is no closed set of tokens to test against.
 
 The Marketing Cloud Next availability below is taken from the official reference.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`v` in Marketing Cloud Next](/next/ampscript/functions/v/) — how it behaves there
 - [RequestParameter](/engagement/ampscript/functions/requestparameter/) — reads a request parameter
 - [QueryParameter](/engagement/ampscript/functions/queryparameter/) — reads a query-string parameter
 - [Differs from docs: it accepts more than a variable](/engagement/differs-from-docs/#v-accepts-more-than-a-variable)

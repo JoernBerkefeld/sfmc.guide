@@ -57,12 +57,7 @@ The primary key does not exist, so the tag for the fallback asset (again, use a 
 
 {% include test-script.html bundle="ampscript-functions--contentimagebykey" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

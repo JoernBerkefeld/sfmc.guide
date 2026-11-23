@@ -96,12 +96,7 @@ function is only allowed in non sendable content."* It cannot be used inside a
 sendable email — which fits its purpose, since a user-agent is a request-time
 value that does not exist at send time.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes (non-sendable content only — CloudPages/landing pages, not emails) |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

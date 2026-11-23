@@ -1,0 +1,32 @@
+# Next test scripts for /next/ampscript/functions/sha512/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for SHA512. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f] got=[%%=SHA512("abc")=%%]</p>
+  <p>c2 expect=[bbad63c2db95ac233de3da35161f38d4370f41d6d02c2a54ac47202e1f4f308cdc91f95ab4151e727bf31750749e306e0b140d56e8210524dbd46fb7c5792f93] got=[%%=SHA512("Hash probe 2026")=%%]</p>
+  <p>c3 expect=[128] got=[%%=Length(SHA512("Hash probe 2026"))=%%]</p>
+  <p>c4 expect=[cf46d118822edbf29e37d45f1efe42c6fbfcd1c2b074bfe79b5040da34724b21bbb24acf3152a7772196e8d3e5874f2ae9456b2da711a3b04da624834c6bb4aa] got=[%%=SHA512("Grusß €ä")=%%]</p>
+  <p>c5 expect=[6a29f26db319056a20f359d817f42bafb5d487536dd856b371c65016053027d4a15ed748798d2d0dcc3a96a66e63937cbc83baa5d3362ea42d7adec25472e409] got=[%%=SHA512("Hash probe 2026","UTF-16")=%%]</p>
+  <p>c6 expect=[133c85ecdfdec3f533156b38e5972b37082ede8461802c95dafe591702a4c090db9ba262686e4a827e12b20f1bc447b6674ff0178746b381e90d88c6233dc2f7] got=[%%=SHA512("Grusß €ä","UTF-16")=%%]</p>
+  <p>c7 expect=[cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e] got=[%%=SHA512("")=%%]</p>
+  <p>c8 expect=[495a8104eef74ae73518705a8227555b596958343b4506860f1925a9cd7056e25473306a9d5ab841147d41cb7476dd965ab37f21bd379d625d42b40f18ef3356] got=[%%=SHA512("This is a string of text.")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=SHA512("Grusß €ä","ASCII")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=SHA512("Hash probe 2026","banana")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=SHA512()=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=SHA512("Hash probe 2026","UTF-8","extra")=%%

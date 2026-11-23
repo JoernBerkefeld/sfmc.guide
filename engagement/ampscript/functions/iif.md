@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/iif/
 platforms:
   - engagement
-  - next
 syntax: "IIf(expression, trueValue, falseValue)"
 return_type: string
 min_args: 3
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "In Next a non-empty string such as `\"hello\"`, `\"0\"` or three spaces as the condition selects the true branch (`T`), where Engagement gives `F`. Next evaluates both branches: a `RaiseError` in the branch that is not selected makes the email fail to render."
 ---
 
 {% include verification-status.html %}
@@ -96,15 +98,11 @@ The last column is constant, which is the point: feed this function a value and 
 
 {% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`IIf` in Marketing Cloud Next](/next/ampscript/functions/iif/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — the boolean this function is most often given
 - [IsNull](/engagement/ampscript/functions/isnull/) — returns a boolean too, but `False` for everything a page variable holds
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the fallback it looks like; pair `IIf` with `Empty` instead

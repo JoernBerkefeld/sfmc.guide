@@ -14,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "Every form tested renders the same as in Engagement: the call adds nothing, with no argument or with `0`, `1`, `true` or `\"true\"`."
 ---
 
 {% include verification-status.html %}
@@ -60,15 +63,11 @@ Close all open regions at once with a truthy argument:
 
 Impression regions are an **email-send** feature. The distinction between ending one region and ending all of them affects impression tracking in a sent message, which cannot be observed from a CloudPage — there the call simply renders empty regardless of argument.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`EndImpressionRegion` in Marketing Cloud Next](/next/ampscript/functions/endimpressionregion/) — how it behaves there
 - [`BeginImpressionRegion`](/engagement/ampscript/functions/beginimpressionregion/) — opens the region this closes
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-end-impression-region.html)
 - [ampscript.guide](https://ampscript.guide/endimpressionregion/)

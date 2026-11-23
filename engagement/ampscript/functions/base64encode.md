@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next rejects an email at save when the encoding is `UTF-16BE` or `ISO-8859-1`, where Engagement returns `AGMAYQBmAOkgrA==` and `Y2Fm6T8=` for `café€`. The default UTF-8 (`Y2Fmw6nigqw=`), `UTF-16`, `UTF-32` and `ASCII` encode the same in Next."
 ---
 
 {% include verification-status.html %}
@@ -82,15 +85,11 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="When a case involves non-ASCII characters, print the input string alongside the encoded value. A mangled test string produces a perfectly valid encoding of the wrong bytes, which is indistinguishable from a function defect unless the input is visible in the same output." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Base64Encode` in Marketing Cloud Next](/next/ampscript/functions/base64encode/) — how it behaves there
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — the same bytes in hexadecimal instead
 - [Encoding names are wider than documented](/engagement/differs-from-docs/#base64encode-wider-encoding-domain)

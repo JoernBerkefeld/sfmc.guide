@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/propercase/
 platforms:
   - engagement
-  - next
 syntax: "ProperCase(sourceString)"
 return_type: string
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Word casing matches (`McDONALD` gives `Mcdonald`, `iPhone` gives `Iphone`). In the Next email, runs of spaces came back single (`\"  spaced   out  \"` gave ` Spaced Out `), a leading `ß` became `SS` (`SStrasse`), and `ProperCase(true)` gives `True` instead of an empty string."
 ---
 
 {% include verification-status.html %}
@@ -52,7 +54,7 @@ Running it over mixed-case text is a different matter — the conversion destroy
 
 ## Return value
 
-**`string`** — the value with the first letter of each word capitalized and the rest lower-cased.
+**`string`** — the value with every word starting in upper case and all its other letters in lower case.
 
 The result is arbitrary cased text, so there is no closed set of sentinel values to test for.
 
@@ -92,15 +94,11 @@ The behaviour is catalogued on [Differs from official docs](/engagement/differs-
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct conversion look broken. Render the input alongside the result and dump both as codepoints before drawing any conclusion." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`ProperCase` in Marketing Cloud Next](/next/ampscript/functions/propercase/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#propercase-lowercases-the-rest) — the destructive lower-casing in full
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/)
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the non-destructive whole-string conversions

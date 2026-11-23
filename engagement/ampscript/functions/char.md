@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Codes from 0 to 255, the repeat count and numeric strings render the same (`Char(65,3)` gives `AAA`). Any code outside 0 to 255, such as `Char(256)`, `Char(9731)` or `Char(-1)`, makes the Next email preview fail (HTTP 500), where Engagement returns a character."
 ---
 
 {% include verification-status.html %}
@@ -90,15 +93,11 @@ The capability is catalogued on [Differs from official docs](/engagement/differs
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns a non-ASCII character into mojibake and can make a correct result look wrong. Dump the rendered value as codepoints before drawing any conclusion." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Char` in Marketing Cloud Next](/next/ampscript/functions/char/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#char-codes-above-255-work) — the uncapped code domain in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — joins the characters you build with `Char`
 - [`Length`](/engagement/ampscript/functions/length/) — how the resulting characters are counted

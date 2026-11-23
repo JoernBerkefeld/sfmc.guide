@@ -93,12 +93,7 @@ There is no sentinel value to test for. A rejected argument aborts the page rath
 
 {% include callout.html type="warning" title="Declare every VAR once, at the top" content="AMPscript has no block scope. Re-declaring a variable with `VAR` inside an `IF` branch aborts the whole page at compile time, even when that branch is never selected. Hoist every declaration into a single top-level block before the branches." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

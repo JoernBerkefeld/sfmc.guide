@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next accepts only `UTF-8` and `UTF-16` as the character set: an email using `ASCII`, `UTF-16BE`, `UTF-32` or `ISO-8859-1` is rejected at save, where Engagement returns a digest (for `ASCII` the digest of `Grus? ??`). Digests for UTF-8, `UTF-16`, numbers and dates are the same in Next."
 ---
 
 {% include verification-status.html %}
@@ -80,15 +83,11 @@ An unrecognised name is not tolerated at all. `banana`, the dashless spelling `U
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="When a case involves non-ASCII characters, print the input string alongside the digest. A mangled test string produces a perfectly valid digest of the wrong bytes, which is indistinguishable from a function defect unless the input is visible in the same output." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`MD5` in Marketing Cloud Next](/next/ampscript/functions/md5/) — how it behaves there
 - [SHA1](/engagement/ampscript/functions/sha1/)
 - [SHA256](/engagement/ampscript/functions/sha256/)
 - [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, longer digests

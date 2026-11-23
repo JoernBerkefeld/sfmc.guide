@@ -1,0 +1,24 @@
+# Next test scripts for /next/ampscript/functions/contentblockbyname/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @cbn1 = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", 0, "FB-CBN", @cbns1) ]%%%%=v(@cbn1)=%% %%=v(@cbns1)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbynamel = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", 0, "PRE-%%=Add(2,3)=%%-POST", @r2cbbynamels) ]%%%%=v(@r2cbbynamel)=%% %%=v(@r2cbbynamels)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbynamef0 = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", false, "FB-CBN", @r2cbbynamefs0) SET @r2cbbynamef1 = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", "false", "FB-CBN", @r2cbbynamefs1) SET @r2cbbynamef2 = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", "0", "FB-CBN", @r2cbbynamefs2) ]%%%%=v(@r2cbbynamef0)=%% %%=v(@r2cbbynamefs0)=%%|%%=v(@r2cbbynamef1)=%% %%=v(@r2cbbynamefs1)=%%|%%=v(@r2cbbynamef2)=%% %%=v(@r2cbbynamefs2)=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=ContentBlockByName()=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2cbbyname6 = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", 0, "FB-CBN", @r2cbbyname6s, "extra") ]%%%%=v(@r2cbbyname6)=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbynamet = ContentBlockByName("Content Builder\nosuch-name-zzz-it1", "", 1, "FB-CBN", @r2cbbynamets) ]%%%%=v(@r2cbbynamet)=%%

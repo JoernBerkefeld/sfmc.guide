@@ -1,0 +1,50 @@
+# Next test scripts for /next/ampscript/functions/divide/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Divide. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[5] got=[%%=Divide(10,2)=%%]</p>
+  <p>c2 expect=[3.33] got=[%%=Divide(10,3)=%%]</p>
+  <p>c3 expect=[-2.5] got=[%%=Divide(-10,4)=%%]</p>
+  <p>c4 expect=[25] got=[%%=Divide(100,4)=%%]</p>
+  <p>c5 expect=[25] got=[%%=Divide("100","4")=%%]</p>
+  <p>c6 expect=[7] got=[%%=Divide("3.5","0.5")=%%]</p>
+  <p>c7 expect=[4.5] got=[%%=Divide(9,"2")=%%]</p>
+  <p>c8 expect=[1] got=[%%=Divide("true",1)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(100,0)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(1,0)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(50,0)=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(7.5,0)=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(-100,0)=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(0,0)=%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide(100,"0")=%%
+
+  <!-- email 8: expect that the save is rejected (HTTP 400) -->
+  %%=Divide(10)=%%
+
+  <!-- email 9: expect that the save is rejected (HTTP 400) -->
+  %%=Divide(10,2,1)=%%
+
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Divide("abc",1)=%%

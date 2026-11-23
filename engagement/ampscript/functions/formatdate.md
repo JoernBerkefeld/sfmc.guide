@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatdate/
 platforms:
   - engagement
-  - next
 syntax: "FormatDate(dateString[, dateFormat, timeFormat, localeCode])"
 return_type: string
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 4
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`MM/dd/yyyy`, `yyyy`, `MMMM` and the split form `FormatDate(d,'yyyy-MM-dd','HH:mm:ss')` match. In Next `mm` in the date pattern means minutes (`yyyy-MM-dd HH:mm:ss` gives `13:52:07`, not `13:03:07`), letters are case-sensitive (`DD` gives the day of the year, `63`), and a time-only pattern gets a leading space (` 13:52:07`). An unreadable date is printed back in Next instead of returning an empty string."
 ---
 
 {% include verification-status.html %}
@@ -100,17 +102,11 @@ Minutes are simply not addressable from the date pattern: `mm` and `MM` are the 
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
-
-Marketing Cloud Next uses a different pattern dialect — Java-style format strings rather than the .NET-style ones used on Engagement — so a pattern written for Engagement is not portable as-is.
+{% include platform-compare.html %}
 
 ## See also
 
+- [`FormatDate` in Marketing Cloud Next](/next/ampscript/functions/formatdate/) — how it behaves there
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed into this function
 - [The differs-from-docs card](/engagement/differs-from-docs/#formatdate-date-pattern-tokens-mean-something-else) — what the official reference claims and what the runtime does
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html)

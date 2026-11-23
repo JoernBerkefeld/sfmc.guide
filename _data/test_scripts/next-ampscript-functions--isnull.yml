@@ -1,0 +1,27 @@
+# Next test scripts for /next/ampscript/functions/isnull/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for IsNull. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[false] got=[%%=IsNull("x")=%%]</p>
+  <p>c2 expect=[false] got=[%%=IsNull(0)=%%]</p>
+  <p>c3 expect=[true] got=[%%=IsNull(@r2n_never_declared)=%%]</p>
+  <p>c4 expect=[true] got=[%%[ VAR @r2nu ]%%%%=IsNull(@r2nu)=%%]</p>
+  <p>c5 expect=[true] got=[%%[ SET @r2nes = "" ]%%%%=IsNull(@r2nes)=%%]</p>
+  <p>c6 expect=[false] got=[%%[ SET @r2nsp = "   " ]%%%%=IsNull(@r2nsp)=%%]</p>
+  <p>c7 expect=[false] got=[%%[ SET @r2nz = 0 ]%%%%=IsNull(@r2nz)=%%]</p>
+  <p>c8 expect=[false] got=[%%[ SET @r2nz0 = "0" ]%%%%=IsNull(@r2nz0)=%%]</p>
+  <p>c9 expect=[false] got=[%%[ SET @r2nsf = "false" ]%%%%=IsNull(@r2nsf)=%%]</p>
+  <p>c10 expect=[false] got=[%%[ SET @r2nval = "hello" ]%%%%=IsNull(@r2nval)=%%]</p>
+  <p>c11 expect=[false] got=[%%=IsNull(Now())=%%]</p>
+  <p>c12 expect=[true] got=[%%[ VAR @r2nv ]%%%%=IsNull(v(@r2nv))=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%[ VAR @r2nc ]%%%%=IsNull(Concat(@r2nc))=%%

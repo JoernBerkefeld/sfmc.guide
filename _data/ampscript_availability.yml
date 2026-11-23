@@ -1,0 +1,29 @@
+# Hand-written qualifiers for the availability table that _includes/platform-compare.html
+# renders on every AMPscript function page (Engagement and Next).
+#
+# By default the table is derived from _data/ampscript_functions.yml (generated, do not edit):
+#   Engagement: "Yes"
+#   Next:       "Yes, from API <mcn>.0", or "No" when the catalog has no mcn version
+# Add a row here only when that default needs a qualifier. Keys are function slugs; each cell
+# text replaces the default for that platform (Markdown allowed). One file, so both pages of a
+# pair always show the same table.
+
+contentarea:
+  engagement: "Yes (Classic content, deprecated)"
+contentareabyname:
+  engagement: "Yes (Classic content, deprecated)"
+ischtmlbrowser:
+  engagement: "Yes (non-sendable content only: CloudPages and landing pages, not emails)"
+output:
+  engagement: "Yes (CloudPages and landing pages; not in sendable email content, use `OutputLine` there)"
+  next: "Listed from API 67.0, but it writes nothing in an email (tested 2026-11-23)"
+outputline:
+  next: "Yes, from API 67.0, with a literal or variable argument only"
+claimrow:
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
+claimrowvalue:
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
+lookuprows:
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
+lookuporderedrows:
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"

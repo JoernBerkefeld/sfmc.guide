@@ -20,11 +20,13 @@
     name, slug, category, origin, helperType, syntax, returnType, mcn,
     ampscriptEquivalent (comma-joined, for filters),
     ampscriptEquivalents (list of {name, kind, exact}),
-    subexpressionOnly, description, docUrl
+    subexpressionOnly, description, docUrl,
+    page, mcnResult (only when the helper has a page on this site)
 
-  Unlike the AMPscript index there is no verified state — no Handlebars helper
-  has been through a runtime sweep yet, so every row links out to the official
-  Salesforce reference instead of to a page on this site.
+  A row with `page` links the name to that page and shows a badge for
+  `mcnResult`, the result of rendering the helper in a Marketing Cloud Next
+  email (matches-docs, differs-from-docs, unsupported, untested). A row without
+  a page links out to the official Salesforce reference (`docUrl`).
 
   `description` MUST be escaped, for the same reason as in the AMPscript index:
   a raw HTML tag name in a catalog description opens an element Kramdown never
@@ -103,8 +105,11 @@
 <p class="cat-count" id="hbi-count"></p>
 
 <p class="cat-legend">
-  Every helper links to the official Salesforce reference &mdash; none of them has been through a
-  runtime sweep on this site yet. <strong>API version</strong> is the Marketing Cloud Next Core API
+  Each helper name links to its page on this site, with the result of rendering it in a Marketing
+  Cloud Next email on 2026-11-22: <span class="cat-state cat-state--verified">Works as documented</span>,
+  <span class="cat-flag cat-flag--warning">differs</span> from the documentation,
+  <span class="cat-flag cat-flag--deprecated">unsupported</span> (the email cannot be saved), or
+  <span class="cat-flag">not rendered yet</span>. <strong>API version</strong> is the Marketing Cloud Next Core API
   version the helper became available in.
   {%- if hbi_show_amp %} A row with no <strong>AMPscript</strong> equivalent can only be
   expressed in Handlebars.{% endif %}
@@ -131,7 +136,13 @@
           data-version="{{ h.mcn }}"
           id="hb-{{ h.slug }}">
         <td data-label="Helper">
-          {% if h.docUrl %}<a href="{{ h.docUrl }}" target="_blank" rel="noopener"><code>{{ h.name }}</code></a>{% else %}<code>{{ h.name }}</code>{% endif %}
+          {% if h.page %}<a href="{{ h.page }}"><code>{{ h.name }}</code></a>{% elsif h.docUrl %}<a href="{{ h.docUrl }}" target="_blank" rel="noopener"><code>{{ h.name }}</code></a>{% else %}<code>{{ h.name }}</code>{% endif %}
+          {%- case h.mcnResult %}
+          {%- when "matches-docs" %} <span class="cat-state cat-state--verified" title="Every tested call rendered the documented result in a Marketing Cloud Next email.">Works as documented</span>
+          {%- when "differs-from-docs" %}<span class="cat-flag cat-flag--warning" title="At least one tested call rendered something other than the documented result.">differs</span>
+          {%- when "unsupported" %}<span class="cat-flag cat-flag--deprecated" title="Saving an email that uses this helper is rejected.">unsupported</span>
+          {%- when "untested" %}<span class="cat-flag" title="Accepted when the email is saved, but not rendered yet.">not rendered yet</span>
+          {%- endcase %}
           {%- if h.helperType == "block" %}<span class="cat-flag cat-flag--form" title="Block helper — wraps a body">block</span>{% endif %}
           {%- if h.helperType == "both" %}<span class="cat-flag cat-flag--form" title="Usable inline and as a block helper">inline or block</span>{% endif %}
           {%- if h.subexpressionOnly %}<span class="cat-flag cat-flag--form" title="Only valid inside another helper call">subexpression only</span>{% endif %}
@@ -139,7 +150,7 @@
         </td>
         <td class="cat-ver cat-meta" data-label="API version">{% if h.mcn != "" %}{{ h.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- if hbi_render_amp %}
-        <td class="cat-amp-col cat-meta{% if hbi_mapcol_optional %} cat-mapcol{% endif %}" data-label="AMPscript">{% if h.ampscriptEquivalents.size > 0 %}{% for eq in h.ampscriptEquivalents %}<span class="cat-eq">{% if eq.kind == "function" %}<a href="/next/ampscript/functions/#fn-{{ eq.name | downcase }}"><code>{{ eq.name }}</code></a>{% else %}<code>{{ eq.name }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ eq.kind }}, not a function">{{ eq.kind }}</span>{% endif %}{% if eq.exact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% unless forloop.last %},{% endunless %}</span>{% endfor %}{% else %}&mdash;{% endif %}</td>
+        <td class="cat-amp-col cat-meta{% if hbi_mapcol_optional %} cat-mapcol{% endif %}" data-label="AMPscript">{% if h.ampscriptEquivalents.size > 0 %}{% for eq in h.ampscriptEquivalents %}<span class="cat-eq">{% if eq.kind == "function" %}{% assign hbi_fn = site.data.ampscript_functions | where: "name", eq.name | first %}<a href="{% if hbi_fn.nextUrl %}{{ hbi_fn.nextUrl }}{% elsif hbi_fn.url %}{{ hbi_fn.url }}{% else %}/next/ampscript/functions/#fn-{{ eq.name | downcase }}{% endif %}"><code>{{ eq.name }}</code></a>{% else %}<code>{{ eq.name }}</code><span class="cat-flag cat-flag--form" title="AMPscript {{ eq.kind }}, not a function">{{ eq.kind }}</span>{% endif %}{% if eq.exact == false %}<span class="cat-approx" title="Same job, different call shape — not a drop-in replacement">approximate</span>{% endif %}{% unless forloop.last %},{% endunless %}</span>{% endfor %}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         <td class="cat-ret" data-label="Returns"><code>{{ h.returnType }}</code></td>
         <td class="cat-desc" data-label="Description">{{ h.description | escape }}</td>

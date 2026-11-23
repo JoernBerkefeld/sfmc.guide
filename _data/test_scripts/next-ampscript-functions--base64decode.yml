@@ -1,0 +1,45 @@
+# Next test scripts for /next/ampscript/functions/base64decode/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Base64Decode. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[Hello] got=[%%=Base64Decode("SGVsbG8=")=%%]</p>
+  <p>c2 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==")=%%]</p>
+  <p>c3 expect=[] got=[%%=Base64Decode("")=%%]</p>
+  <p>c4 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode(Base64Encode("SFMC AMPscript 2026"))=%%]</p>
+  <p>c5 expect=[café€|café€] got=[%%=Concat("café€","|",Base64Decode(Base64Encode("café€")))=%%]</p>
+  <p>c6 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8")=%%]</p>
+  <p>c7 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("UwBGAE0AQwAgAEEATQBQAHMAYwByAGkAcAB0ACAAMgAwADIANgA=","UTF-16")=%%]</p>
+  <p>c8 expect=[SU+0000FU+0000MU+0000CU+0000 U+0000AU+0000MU+0000PU+0000sU+0000cU+0000rU+0000iU+0000pU+0000tU+0000 U+00002U+00000U+00002U+00006U+0000] got=[%%=Base64Decode("UwBGAE0AQwAgAEEATQBQAHMAYwByAGkAcAB0ACAAMgAwADIANgA=")=%%]</p>
+  <p>c9 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8",1)=%%]</p>
+  <p>c10 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8",0)=%%]</p>
+  <p>c11 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8",true)=%%]</p>
+  <p>c12 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8",false)=%%]</p>
+  <p>c13 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8","1")=%%]</p>
+  <p>c14 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8","0")=%%]</p>
+  <p>c15 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8","true")=%%]</p>
+  <p>c16 expect=[SFMC AMPscript 2026] got=[%%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8","false")=%%]</p>
+  <p>c17 expect=[] got=[%%=Base64Decode("not!base64###","UTF-8",0)=%%]</p>
+  <p>c18 expect=[Hello] got=[%%=Base64Decode("SGVsbG8")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%=Base64Decode("not!base64###")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Base64Decode("SGVsbG8=====")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Decode()=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Decode("U0ZNQyBBTVBzY3JpcHQgMjAyNg==","UTF-8",1,"extra")=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Base64Decode("not!base64###","UTF-8",1)=%%

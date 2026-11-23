@@ -1,0 +1,32 @@
+# Next test scripts for /next/ampscript/functions/field/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Field. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[true] got=[%%=Field(Row(BuildRowSetFromString("a,b,c",","),1),"Value")=%%]</p>
+  <p>c2 expect=[false] got=[%%=Field(Row(BuildRowSetFromString("a,b,c",","),1),"NoSuchColumn",0)=%%]</p>
+  <p>c3 expect=[true] got=[%%[ SET @f1rs = BuildRowSetFromString("a,b,c",",") SET @f1r = Row(@f1rs,1) SET @f1v = Field(@f1r,"Value") ]%%%%=v(@f1v)=%%]</p>
+  <p>c4 expect=[] got=[%%[ SET @f2rs = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) SET @f2r = Row(@f2rs,1) SET @f2v = Field(@f2r,"dest") ]%%%%=v(@f2v)=%%]</p>
+  <p>c5 expect=[] got=[%%[ SET @f3rs = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) SET @f3r = Row(@f3rs,1) SET @f3v = Field(@f3r,2) ]%%%%=v(@f3v)=%%]</p>
+  <p>c6 expect=[false] got=[%%[ SET @f4rs = BuildRowSetFromString("a,b,c",",") SET @f4r = Row(@f4rs,1) SET @f4v = Field(@f4r,"NoSuchColumn",0) ]%%%%=v(@f4v)=%%]</p>
+  <p>c7 expect=[] got=[%%[ SET @f5rs = BuildRowSetFromString("a,b,",",") SET @f5r = Row(@f5rs,3) SET @f5v = Field(@f5r,"Value","DEF") ]%%%%=v(@f5v)=%%]</p>
+  <p>c8 expect=[truefalsetruefalsetruefalsefalsefalse] got=[%%[ SET @f6rs = BuildRowSetFromString("a,b,c",",") SET @f6r = Row(@f6rs,1) SET @f6v = Concat(Field(@f6r,"Value",true),Field(@f6r,"Value",false),Field(@f6r,"Value",1),Field(@f6r,"Value",0),Field(@f6r,"Value","true"),Field(@f6r,"Value","false"),Field(@f6r,"Value","1"),Field(@f6r,"Value","0")) ]%%%%=v(@f6v)=%%]</p>
+  <p>c9 expect=[false] got=[%%[ SET @f7rs = BuildRowSetFromString("a,b,c",",") SET @f7r = Row(@f7rs,1) SET @f7v = Field(@f7r,"NoSuchColumn",false) ]%%%%=v(@f7v)=%%]</p>
+  <p>c10 expect=[false] got=[%%[ SET @f8rs = BuildRowSetFromString("a,b,c",",") SET @f8r = Row(@f8rs,1) SET @f8v = Field(@f8r,"NoSuchColumn","false") ]%%%%=v(@f8v)=%%]</p>
+  <p>c11 expect=[false] got=[%%[ SET @f9rs = BuildRowSetFromString("a,b,c",",") SET @f9r = Row(@f9rs,1) SET @f9v = Field(@f9r,"NoSuchColumn","0") ]%%%%=v(@f9v)=%%]</p>
+  <p>c12 expect=[false] got=[%%[ SET @f10rs = BuildRowSetFromString("a,b,c",",") SET @f10r = Row(@f10rs,1) SET @f10v = Field(@f10r,"NoSuchColumn","notabool") ]%%%%=v(@f10v)=%%]</p>
+  <p>c13 expect=[true] got=[%%[ SET @fe2rs = BuildRowSetFromString("a,b,c",",") SET @fe2r = Row(@fe2rs,1) SET @fe2v = Field(@fe2r,"NoSuchColumn",true) ]%%%%=v(@fe2v)=%%]</p>
+  <p>c14 expect=[true] got=[%%[ SET @fe3rs = BuildRowSetFromString("a,b,c",",") SET @fe3r = Row(@fe3rs,1) SET @fe3v = Field(@fe3r,"NoSuchColumn",1) ]%%%%=v(@fe3v)=%%]</p>
+  <p>c15 expect=[true] got=[%%[ SET @fe4rs = BuildRowSetFromString("a,b,c",",") SET @fe4r = Row(@fe4rs,1) SET @fe4v = Field(@fe4r,"NoSuchColumn","true") ]%%%%=v(@fe4v)=%%]</p>
+  <p>c16 expect=[false] got=[%%[ SET @fe5rs = BuildRowSetFromString("a,b,c",",") SET @fe5r = Row(@fe5rs,1) SET @fe5v = Field(@fe5r,"NoSuchColumn","1") ]%%%%=v(@fe5v)=%%]</p>
+  <p>c17 expect=[true] got=[%%[ SET @fe6rs = BuildRowSetFromString("a,b,c",",") SET @fe6r = Row(@fe6rs,1) SET @fe6v = Field(@fe6r,0) ]%%%%=v(@fe6v)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @fe1rs = BuildRowSetFromString("a,b,c",",") SET @fe1r = Row(@fe1rs,1) SET @fe1v = Field(@fe1r,"NoSuchColumn") ]%%%%=v(@fe1v)=%%

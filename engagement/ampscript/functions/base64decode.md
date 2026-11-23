@@ -14,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next decodes `Base64Decode(\"SGVsbG8\")`, a value missing its `=` padding, to `Hello`; Engagement aborts the page with HTTP 422. Well-formed input, the `UTF-16` encoding, the abort flag and other malformed values (`not!base64###`, `SGVsbG8=====`) behave alike; in Next the malformed ones make the email render fail."
 ---
 
 {% include verification-status.html %}
@@ -89,15 +92,11 @@ The middle case is the one that bites: that is the correct payload for `Hello` w
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="When a case involves non-ASCII characters, print the input string alongside the decoded value. A mangled test string decodes perfectly into the wrong characters, which is indistinguishable from a function defect unless the input is visible in the same output." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Base64Decode` in Marketing Cloud Next](/next/ampscript/functions/base64decode/) — how it behaves there
 - [Base64Encode](/engagement/ampscript/functions/base64encode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — a reversible encoding whose malformed inputs cannot arise the same way
 - [Malformed input aborts the page](/engagement/differs-from-docs/#base64decode-malformed-input-aborts)

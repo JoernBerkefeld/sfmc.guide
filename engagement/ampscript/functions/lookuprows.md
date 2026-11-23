@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookuprows/
 platforms:
   - engagement
-  - next
 syntax: "LookupRows(dataExt, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
 return_type: rowset
 min_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: untested
+mcn_tested: 2026-11-23
+mcn_note: "An email that calls `LookupRows` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
 ---
 
 {% include verification-status.html %}
@@ -72,15 +74,11 @@ A no-match returns an empty rowset, not a null or an error: `RowCount(LookupRows
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`LookupRows` in Marketing Cloud Next](/next/ampscript/functions/lookuprows/) — how it behaves there
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — returns a single scalar from the first match
 - [`RowCount`](/engagement/ampscript/functions/rowcount/)
 - [`Row`](/engagement/ampscript/functions/row/)

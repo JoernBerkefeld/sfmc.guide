@@ -7,11 +7,25 @@
     "description": "Computes the sum of two numeric values. Covers which argument types are accepted and which abort the page."
   },
   {
+    "name": "AMPscript Add (Next)",
+    "url": "/next/ampscript/functions/add/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Add two numbers with AMPscript Add in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the 32-bit wrap-around and the argument forms that break the preview."
+  },
+  {
     "name": "AMPscript AddObjectArrayItem",
     "url": "/engagement/ampscript/functions/addobjectarrayitem/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Appends an item — scalar or nested handle — to an array-valued property of a CreateObject handle."
+  },
+  {
+    "name": "AMPscript and Handlebars Differs from Official Docs (Next)",
+    "url": "/next/differs-from-docs/",
+    "section": "Next",
+    "type": "page",
+    "description": "Where AMPscript functions and Handlebars helpers in Marketing Cloud Next behave differently from what the official documentation says for Next, proven by rendering them in a Next email: contradictions, unsupported helpers and behaviour the docs do not mention."
   },
   {
     "name": "AMPscript AttributeValue",
@@ -77,6 +91,13 @@
     "description": "Decodes a Base64-encoded string. Malformed input aborts the whole page with HTTP 422 rather than returning an empty value."
   },
   {
+    "name": "AMPscript Base64Decode (Next)",
+    "url": "/next/ampscript/functions/base64decode/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Decode a Base64 string with AMPscript Base64Decode in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the missing-padding case where Next and Engagement part ways."
+  },
+  {
     "name": "AMPscript Base64Encode",
     "url": "/engagement/ampscript/functions/base64encode/",
     "section": "AMPscript Function Reference",
@@ -84,11 +105,25 @@
     "description": "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 form of the input. The encoding argument accepts far more names than any source lists."
   },
   {
+    "name": "AMPscript Base64Encode (Next)",
+    "url": "/next/ampscript/functions/base64encode/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Encode a value as Base64 with AMPscript Base64Encode in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which encoding names Next accepts."
+  },
+  {
     "name": "AMPscript BeginImpressionRegion",
     "url": "/engagement/ampscript/functions/beginimpressionregion/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Marks the start of an impression tracking region. The region name must be a literal, and a variable argument aborts the page."
+  },
+  {
+    "name": "AMPscript BeginImpressionRegion (Next)",
+    "url": "/next/ampscript/functions/beginimpressionregion/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Open an impression tracking region with AMPscript BeginImpressionRegion in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the variable region name that Next accepts."
   },
   {
     "name": "AMPscript BuildOptionList",
@@ -105,11 +140,25 @@
     "description": "Parses a JSON string and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
+    "name": "AMPscript BuildRowsetFromJSON (Next)",
+    "url": "/next/ampscript/functions/buildrowsetfromjson/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Turn a JSON string into a rowset with AMPscript BuildRowsetFromJSON in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including case-sensitive column names, ordinal reads and kept decimals."
+  },
+  {
     "name": "AMPscript BuildRowSetFromString",
     "url": "/engagement/ampscript/functions/buildrowsetfromstring/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Splits a delimited string into a single-column rowset. Covers the unnamed column and the empty separator that splits nothing."
+  },
+  {
+    "name": "AMPscript BuildRowSetFromString (Next)",
+    "url": "/next/ampscript/functions/buildrowsetfromstring/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Split a delimited string into a rowset with AMPscript BuildRowSetFromString in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the column that reads back as true instead of the segment."
   },
   {
     "name": "AMPscript BuildRowSetFromXML",
@@ -119,11 +168,25 @@
     "description": "Parses an XML string using an XPath expression and returns a rowset. Covers the third argument, which works the opposite way round from the documented syntax."
   },
   {
+    "name": "AMPscript BuildRowSetFromXML (Next)",
+    "url": "/next/ampscript/functions/buildrowsetfromxml/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Turn an XML string into a rowset with AMPscript BuildRowSetFromXML in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, where valid XML returned no rows."
+  },
+  {
     "name": "AMPscript Char",
     "url": "/engagement/ampscript/functions/char/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the character for a numeric character code. Notes that the code domain is not capped at 255."
+  },
+  {
+    "name": "AMPscript Char (Next)",
+    "url": "/next/ampscript/functions/char/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Return the character for a character code with AMPscript Char in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the codes above 255 that fail there."
   },
   {
     "name": "AMPscript ClaimRow",
@@ -133,11 +196,25 @@
     "description": "Claims the next unclaimed row of a data extension for a caller and returns the whole row, flipping its claim flag and recording the claimant."
   },
   {
+    "name": "AMPscript ClaimRow (Next)",
+    "url": "/next/ampscript/functions/claimrow/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript ClaimRow in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; claiming a row has not been tested in Next."
+  },
+  {
     "name": "AMPscript ClaimRowValue",
     "url": "/engagement/ampscript/functions/claimrowvalue/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Claims the next unclaimed row of a data extension for a caller and returns a single column value, falling back to a supplied default when no unclaimed rows remain."
+  },
+  {
+    "name": "AMPscript ClaimRowValue (Next)",
+    "url": "/next/ampscript/functions/claimrowvalue/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript ClaimRowValue in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; claiming a value has not been tested in Next."
   },
   {
     "name": "AMPscript CloudPagesURL",
@@ -152,6 +229,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Join values into a string with AMPscript Concat. Includes syntax, examples, and runtime-tested behavior for single arguments and boolean values."
+  },
+  {
+    "name": "AMPscript Concat (Next)",
+    "url": "/next/ampscript/functions/concat/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Join values into a string with AMPscript Concat in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
   },
   {
     "name": "AMPscript ContentArea",
@@ -175,6 +259,13 @@
     "description": "Retrieves and renders a Content Builder content block by its numeric ID. Covers the missing-block default path and that default content is emitted literally."
   },
   {
+    "name": "AMPscript ContentBlockByID (Next)",
+    "url": "/next/ampscript/functions/contentblockbyid/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Load a content block by numeric ID with AMPscript ContentBlockByID in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the missing-block fallback that breaks the render."
+  },
+  {
     "name": "AMPscript ContentBlockByKey",
     "url": "/engagement/ampscript/functions/contentblockbykey/",
     "section": "AMPscript Function Reference",
@@ -182,11 +273,25 @@
     "description": "Retrieves and renders a Content Builder content block by its customer key. Covers the missing-block default path and that default content is emitted literally."
   },
   {
+    "name": "AMPscript ContentBlockByKey (Next)",
+    "url": "/next/ampscript/functions/contentblockbykey/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Load a content block by customer key with AMPscript ContentBlockByKey in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the missing-block fallback that breaks the render."
+  },
+  {
     "name": "AMPscript ContentBlockByName",
     "url": "/engagement/ampscript/functions/contentblockbyname/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Retrieves and renders a Content Builder content block by its full Name/path. Covers the missing-block default path and that default content is emitted literally."
+  },
+  {
+    "name": "AMPscript ContentBlockByName (Next)",
+    "url": "/next/ampscript/functions/contentblockbyname/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Load a content block by folder path and name with AMPscript ContentBlockByName in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the missing-block fallback that breaks the render."
   },
   {
     "name": "AMPscript ContentImageByID",
@@ -231,11 +336,25 @@
     "description": "Adds a whole number of intervals to a date. Notes that any unit outside the documented five destroys the page rather than returning a value."
   },
   {
+    "name": "AMPscript DateAdd (Next)",
+    "url": "/next/ampscript/functions/dateadd/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Add intervals to a date with AMPscript DateAdd in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript DateDiff",
     "url": "/engagement/ampscript/functions/datediff/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the difference between two dates in the requested unit. Notes that it counts unit boundaries rather than elapsed time, so one minute either side of midnight is a whole day apart."
+  },
+  {
+    "name": "AMPscript DateDiff (Next)",
+    "url": "/next/ampscript/functions/datediff/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Measure the gap between two dates with AMPscript DateDiff in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
   },
   {
     "name": "AMPscript DateParse",
@@ -245,11 +364,25 @@
     "description": "Parses a date string into a date value. Notes that a day-first date is silently read month-first while an unreadable one takes the whole page down."
   },
   {
+    "name": "AMPscript DateParse (Next)",
+    "url": "/next/ampscript/functions/dateparse/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Turn a date string into a date value with AMPscript DateParse in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript DatePart",
     "url": "/engagement/ampscript/functions/datepart/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Extracts a specific component from a date value. Notes that the hour comes back on a 12-hour clock with nothing to tell 7 AM from 7 PM."
+  },
+  {
+    "name": "AMPscript DatePart (Next)",
+    "url": "/next/ampscript/functions/datepart/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Read one component of a date with AMPscript DatePart in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
   },
   {
     "name": "AMPscript DecryptSymmetric",
@@ -280,18 +413,18 @@
     "description": "AMPscript functions whose real behaviour on Marketing Cloud Engagement contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour. Every entry reflects how the engine actually behaves on Marketing Cloud Engagement."
   },
   {
-    "name": "AMPscript Differs from Official Docs (Next)",
-    "url": "/next/differs-from-docs/",
-    "section": "Next",
-    "type": "page",
-    "description": "AMPscript functions whose real behaviour on Marketing Cloud Next contradicts the official Salesforce documentation — wrong return types, wrong argument rules, undocumented behaviour, and divergence from the same function on Engagement."
-  },
-  {
     "name": "AMPscript Divide",
     "url": "/engagement/ampscript/functions/divide/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Divides the first number by the second. Covers the undocumented zero-divisor result, which renders an infinity symbol instead of failing."
+  },
+  {
+    "name": "AMPscript Divide (Next)",
+    "url": "/next/ampscript/functions/divide/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Divide one number by another with AMPscript Divide in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the two-decimal result and the failing zero divisor."
   },
   {
     "name": "AMPscript Domain",
@@ -301,11 +434,25 @@
     "description": "Returns everything after the first at sign of an email address. Covers multi-level domains, which come back whole rather than reduced, and the original casing, which is preserved."
   },
   {
+    "name": "AMPscript Domain (Next)",
+    "url": "/next/ampscript/functions/domain/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Return everything after the first at sign of an email address with AMPscript Domain in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email."
+  },
+  {
     "name": "AMPscript Empty",
     "url": "/engagement/ampscript/functions/empty/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Tests whether a value is missing or blank. Covers which inputs count as empty, and the exact literals True and False that the function renders."
+  },
+  {
+    "name": "AMPscript Empty (Next)",
+    "url": "/next/ampscript/functions/empty/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Test whether a variable is missing or blank with AMPscript Empty in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the variable-only argument and the lowercase result."
   },
   {
     "name": "AMPscript EncryptSymmetric",
@@ -320,6 +467,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Marks the end of an impression tracking region. The optional argument accepts boolean, string, and number truthy values to close all open regions."
+  },
+  {
+    "name": "AMPscript EndImpressionRegion (Next)",
+    "url": "/next/ampscript/functions/endimpressionregion/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Close an impression tracking region with AMPscript EndImpressionRegion in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the boolean, string and number forms of the optional argument."
   },
   {
     "name": "AMPscript ExecuteFilter",
@@ -343,11 +497,25 @@
     "description": "Reads a named column from a rowset row. Notes that a missing column aborts the page unless the third argument is passed."
   },
   {
+    "name": "AMPscript Field (Next)",
+    "url": "/next/ampscript/functions/field/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Read a column from a rowset row with AMPscript Field in Marketing Cloud Next. Syntax and the outputs a Marketing Cloud Next email actually rendered, including where they differ from Engagement."
+  },
+  {
     "name": "AMPscript Format",
     "url": "/engagement/ampscript/functions/format/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Formats a number, a date or a string with a .NET pattern. Notes that the documented data-format value Number aborts the page, and that this function and FormatDate disagree on the same date."
+  },
+  {
+    "name": "AMPscript Format (Next)",
+    "url": "/next/ampscript/functions/format/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Format a number or a date with AMPscript Format in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the patterns whose output differs from Engagement."
   },
   {
     "name": "AMPscript FormatCurrency",
@@ -357,6 +525,13 @@
     "description": "Formats a number as a currency amount for a locale. Notes that the locale, not the function, decides the symbol position, the separators and even the number of decimal places."
   },
   {
+    "name": "AMPscript FormatCurrency (Next)",
+    "url": "/next/ampscript/functions/formatcurrency/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Format a number as a currency amount for a locale with AMPscript FormatCurrency in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the ignored decimal and symbol arguments."
+  },
+  {
     "name": "AMPscript FormatDate",
     "url": "/engagement/ampscript/functions/formatdate/",
     "section": "AMPscript Function Reference",
@@ -364,11 +539,25 @@
     "description": "Formats a date according to a date pattern, a time pattern and a locale. Notes that mm in the date pattern renders the month, not the minutes."
   },
   {
+    "name": "AMPscript FormatDate (Next)",
+    "url": "/next/ampscript/functions/formatdate/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Format a date with AMPscript FormatDate in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how its pattern letters differ from Engagement."
+  },
+  {
     "name": "AMPscript FormatNumber",
     "url": "/engagement/ampscript/functions/formatnumber/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Formats a number with a .NET numeric pattern, optionally for a locale. Covers half-up rounding, case-insensitive pattern letters, and the fact that an unrecognised pattern is echoed back instead of failing."
+  },
+  {
+    "name": "AMPscript FormatNumber (Next)",
+    "url": "/next/ampscript/functions/formatnumber/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Format a number with a standard pattern, optionally for a locale, with AMPscript FormatNumber in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including rounding and ignored custom patterns."
   },
   {
     "name": "AMPscript Function Reference",
@@ -420,6 +609,13 @@
     "description": "Generates a new globally unique identifier. The result is 36 lowercase characters, hyphenated, no braces, and a different value on every call within the same render."
   },
   {
+    "name": "AMPscript GUID (Next)",
+    "url": "/next/ampscript/functions/guid/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Generate a new globally unique identifier with AMPscript GUID in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the format of the value."
+  },
+  {
     "name": "AMPscript Guide: Syntax, Examples & Functions",
     "url": "/engagement/ampscript/",
     "section": "Engagement",
@@ -469,11 +665,25 @@
     "description": "Picks one of two values from a boolean expression. Covers the undocumented fact that only the selected branch is evaluated, and that a plain string condition always picks the false branch."
   },
   {
+    "name": "AMPscript IIf (Next)",
+    "url": "/next/ampscript/functions/iif/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Pick one of two values from a condition with AMPscript IIf in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which plain values count as true and the evaluation of both branches."
+  },
+  {
     "name": "AMPscript IndexOf",
     "url": "/engagement/ampscript/functions/indexof/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the 1-based position of a substring, matching case-insensitively. Covers an undocumented third argument that selects which occurrence to locate."
+  },
+  {
+    "name": "AMPscript IndexOf (Next)",
+    "url": "/next/ampscript/functions/indexof/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Find the 1-based position of a substring with AMPscript IndexOf in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the third argument Next rejects."
   },
   {
     "name": "AMPscript InsertData",
@@ -546,6 +756,13 @@
     "description": "Checks a value against email address syntax only. Covers a domain without a top-level domain, which the official reference documents as valid and the engine rejects."
   },
   {
+    "name": "AMPscript IsEmailAddress (Next)",
+    "url": "/next/ampscript/functions/isemailaddress/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Check a value against email address syntax with AMPscript IsEmailAddress in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the lowercase result and the single-label domain it accepts."
+  },
+  {
     "name": "AMPscript IsNull",
     "url": "/engagement/ampscript/functions/isnull/",
     "section": "AMPscript Function Reference",
@@ -553,11 +770,25 @@
     "description": "Tests a value for a genuine null. It returns False for every input a page variable can hold, including the unset variable the official example says returns true."
   },
   {
+    "name": "AMPscript IsNull (Next)",
+    "url": "/next/ampscript/functions/isnull/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Test a value for null with AMPscript IsNull in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, where an unset variable and the empty string count as null."
+  },
+  {
     "name": "AMPscript IsNullDefault",
     "url": "/engagement/ampscript/functions/isnulldefault/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns a value, or a fallback when it is null. The fallback is never reached: every empty-ish input returns the empty string instead."
+  },
+  {
+    "name": "AMPscript IsNullDefault (Next)",
+    "url": "/next/ampscript/functions/isnulldefault/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Return a value or a fallback with AMPscript IsNullDefault in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, where the fallback is returned for unset and empty values."
   },
   {
     "name": "AMPscript IsPhoneNumber",
@@ -572,6 +803,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Measures the size of a string. Covers the counting unit, which is UTF-16 code units rather than user-visible characters."
+  },
+  {
+    "name": "AMPscript Length (Next)",
+    "url": "/next/ampscript/functions/length/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Measure a string with AMPscript Length in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the UTF-16 counting unit and the number argument that fails there."
   },
   {
     "name": "AMPscript LocalDateToSystemDate",
@@ -595,11 +833,25 @@
     "description": "Use AMPscript Lookup to read a field from a matching data extension row. Includes syntax, multiple search criteria, examples, and no-match behavior."
   },
   {
+    "name": "AMPscript Lookup (Next)",
+    "url": "/next/ampscript/functions/lookup/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript Lookup in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+  },
+  {
     "name": "AMPscript LookupOrderedRows",
     "url": "/engagement/ampscript/functions/lookuporderedrows/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns a sorted, row-limited rowset of matching rows from a data extension. Covers the sort direction and the row limit."
+  },
+  {
+    "name": "AMPscript LookupOrderedRows (Next)",
+    "url": "/next/ampscript/functions/lookuporderedrows/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript LookupOrderedRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
   },
   {
     "name": "AMPscript LookupOrderedRowsCS",
@@ -616,6 +868,13 @@
     "description": "Use AMPscript LookupRows to retrieve matching data extension rows as a rowset. Includes syntax, search criteria, examples, and empty-result handling."
   },
   {
+    "name": "AMPscript LookupRows (Next)",
+    "url": "/next/ampscript/functions/lookuprows/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript LookupRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+  },
+  {
     "name": "AMPscript LookupRowsCS",
     "url": "/engagement/ampscript/functions/lookuprowscs/",
     "section": "AMPscript Function Reference",
@@ -630,11 +889,25 @@
     "description": "Converts a value to lower case. Covers the culture-invariant casing that maps the dotted capital I to a plain ASCII i."
   },
   {
+    "name": "AMPscript Lowercase (Next)",
+    "url": "/next/ampscript/functions/lowercase/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Convert a value to lower case with AMPscript Lowercase in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including booleans and the dotted capital I."
+  },
+  {
     "name": "AMPscript MD5",
     "url": "/engagement/ampscript/functions/md5/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the MD5 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that the encoding argument accepts far more names than either reference lists."
+  },
+  {
+    "name": "AMPscript MD5 (Next)",
+    "url": "/next/ampscript/functions/md5/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Hash a value with AMPscript MD5 in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which character sets Next accepts and how dates are hashed."
   },
   {
     "name": "AMPscript MicrositeURL",
@@ -651,11 +924,25 @@
     "description": "Returns the remainder after dividing the first number by the second. Covers the sign rule and the NaN result for a zero divisor."
   },
   {
+    "name": "AMPscript Mod (Next)",
+    "url": "/next/ampscript/functions/mod/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Get the remainder of a division with AMPscript Mod in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the sign rule and the inputs that break the preview."
+  },
+  {
     "name": "AMPscript Multiply",
     "url": "/engagement/ampscript/functions/multiply/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Computes the product of two numeric values. Covers which argument types are accepted and which abort the page."
+  },
+  {
+    "name": "AMPscript Multiply (Next)",
+    "url": "/next/ampscript/functions/multiply/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Multiply two numbers with AMPscript Multiply in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the two-decimal rounding of the result."
   },
   {
     "name": "AMPscript Now",
@@ -665,11 +952,25 @@
     "description": "Returns the current system date and time in Central Standard Time. Covers that every call in one render returns the same frozen instant."
   },
   {
+    "name": "AMPscript Now (Next)",
+    "url": "/next/ampscript/functions/now/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Get the current date and time with AMPscript Now in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript Output",
     "url": "/engagement/ampscript/functions/output/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Writes the result of a nested function call into the rendered content. Covers a string literal argument, which renders nothing at all rather than the error the official reference promises."
+  },
+  {
+    "name": "AMPscript Output (Next)",
+    "url": "/next/ampscript/functions/output/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript Output does not work in Marketing Cloud Next emails. A nested function call is rejected at save and a literal argument renders nothing; use v to write a value."
   },
   {
     "name": "AMPscript OutputLine",
@@ -679,11 +980,25 @@
     "description": "Writes the result of a nested function call into the rendered content, followed by a line break. Covers the exact two bytes it appends, which are a carriage return and line feed rather than an HTML break."
   },
   {
+    "name": "AMPscript OutputLine (Next)",
+    "url": "/next/ampscript/functions/outputline/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "AMPscript OutputLine in Marketing Cloud Next. Behaviour proven in a Marketing Cloud Next email: a literal or variable argument renders only a line break, and a nested function call is rejected at save."
+  },
+  {
     "name": "AMPscript ProperCase",
     "url": "/engagement/ampscript/functions/propercase/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Converts a value to proper (title) case. Covers that every letter after the first of a word is forced to lower case."
+  },
+  {
+    "name": "AMPscript ProperCase (Next)",
+    "url": "/next/ampscript/functions/propercase/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Convert a value to proper (title) case with AMPscript ProperCase in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including spaces, the sharp s and booleans."
   },
   {
     "name": "AMPscript QueryParameter",
@@ -700,11 +1015,25 @@
     "description": "Raises a runtime error, optionally skipping the current subscriber or returning an API error. Covers that outside a send it is not a graceful abort: the message never reaches the caller and the response is indistinguishable from any other failure."
   },
   {
+    "name": "AMPscript RaiseError (Next)",
+    "url": "/next/ampscript/functions/raiseerror/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Stop a render with AMPscript RaiseError in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email preview."
+  },
+  {
     "name": "AMPscript Random",
     "url": "/engagement/ampscript/functions/random/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns a random whole number between two inclusive bounds. Covers the decimal bounds that the official docs allow but the runtime rejects."
+  },
+  {
+    "name": "AMPscript Random (Next)",
+    "url": "/next/ampscript/functions/random/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Pick a random whole number between two bounds with AMPscript Random in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including bound order and decimal bounds."
   },
   {
     "name": "AMPscript Redirect",
@@ -728,6 +1057,13 @@
     "description": "Returns the first occurrence of a regular expression match in a string, selected by capture group. Covers the case-sensitive matching that sets it apart from every other String function."
   },
   {
+    "name": "AMPscript RegExMatch (Next)",
+    "url": "/next/ampscript/functions/regexmatch/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Pull text out of a string with a regular expression using AMPscript RegExMatch in Marketing Cloud Next. Syntax, the one call form proven in a Marketing Cloud Next email, and how it differs from Engagement."
+  },
+  {
     "name": "AMPscript Replace",
     "url": "/engagement/ampscript/functions/replace/",
     "section": "AMPscript Function Reference",
@@ -735,11 +1071,25 @@
     "description": "Replaces all occurrences of a substring with a new value. Covers matching that ignores case and a single-pass scan that never revisits text it just inserted."
   },
   {
+    "name": "AMPscript Replace (Next)",
+    "url": "/next/ampscript/functions/replace/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Swap every occurrence of a substring with AMPscript Replace in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript ReplaceList",
     "url": "/engagement/ampscript/functions/replacelist/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Replaces several search values with one common replacement value. Covers the sequential passes that let a later search value rewrite what an earlier one inserted."
+  },
+  {
+    "name": "AMPscript ReplaceList (Next)",
+    "url": "/next/ampscript/functions/replacelist/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Swap several search values for one replacement with AMPscript ReplaceList in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
   },
   {
     "name": "AMPscript RequestParameter",
@@ -763,6 +1113,13 @@
     "description": "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Covers that an unknown object name aborts the page and an empty match returns a clean empty rowset."
   },
   {
+    "name": "AMPscript RetrieveSalesforceObjects (Next)",
+    "url": "/next/ampscript/functions/retrievesalesforceobjects/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Query Salesforce records into a rowset with AMPscript RetrieveSalesforceObjects in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript Row",
     "url": "/engagement/ampscript/functions/row/",
     "section": "AMPscript Function Reference",
@@ -770,11 +1127,25 @@
     "description": "Returns a single row from a rowset by its 1-based index. Covers that index 0 aborts the page."
   },
   {
+    "name": "AMPscript Row (Next)",
+    "url": "/next/ampscript/functions/row/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Get one row of a rowset by its 1-based index with AMPscript Row in Marketing Cloud Next. Syntax and the outputs a Marketing Cloud Next email rendered, including where they differ from Engagement."
+  },
+  {
     "name": "AMPscript RowCount",
     "url": "/engagement/ampscript/functions/rowcount/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the number of rows in a rowset. Covers that it returns zero for an empty rowset and never aborts."
+  },
+  {
+    "name": "AMPscript RowCount (Next)",
+    "url": "/next/ampscript/functions/rowcount/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Count the rows of a rowset with AMPscript RowCount in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email."
   },
   {
     "name": "AMPscript SetObjectProperty",
@@ -791,11 +1162,25 @@
     "description": "Returns the SHA-1 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
   },
   {
+    "name": "AMPscript SHA1 (Next)",
+    "url": "/next/ampscript/functions/sha1/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Hash a value with AMPscript SHA1 in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which character sets Next accepts."
+  },
+  {
     "name": "AMPscript SHA256",
     "url": "/engagement/ampscript/functions/sha256/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Returns the SHA-256 hash of the input value. Covers that the bytes hashed are the UTF-8 encoding of the input, and that an unrecognised encoding name aborts the page."
+  },
+  {
+    "name": "AMPscript SHA256 (Next)",
+    "url": "/next/ampscript/functions/sha256/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Hash a value with AMPscript SHA256 in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which character sets Next accepts."
   },
   {
     "name": "AMPscript SHA512",
@@ -805,11 +1190,25 @@
     "description": "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input, and an unrecognised encoding name aborts the page."
   },
   {
+    "name": "AMPscript SHA512 (Next)",
+    "url": "/next/ampscript/functions/sha512/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Hash a value with AMPscript SHA512 in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which character sets Next accepts."
+  },
+  {
     "name": "AMPscript StringToDate",
     "url": "/engagement/ampscript/functions/stringtodate/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Converts a date string to a date value. It produces character-for-character identical output to DateParse for every input, while accepting no second argument at all."
+  },
+  {
+    "name": "AMPscript StringToDate (Next)",
+    "url": "/next/ampscript/functions/stringtodate/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Turn a date string into a date value with AMPscript StringToDate in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
   },
   {
     "name": "AMPscript StringToHex",
@@ -819,6 +1218,13 @@
     "description": "Converts a string to its hexadecimal representation. It renders the UTF-8 bytes of the input in lowercase with no separators, and that the charSet argument accepts four names beyond the two documented."
   },
   {
+    "name": "AMPscript StringToHex (Next)",
+    "url": "/next/ampscript/functions/stringtohex/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Convert a string to hexadecimal with AMPscript StringToHex in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including which character sets Next accepts."
+  },
+  {
     "name": "AMPscript Substring",
     "url": "/engagement/ampscript/functions/substring/",
     "section": "AMPscript Function Reference",
@@ -826,11 +1232,25 @@
     "description": "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 that clamps silently while a negative length aborts the page."
   },
   {
+    "name": "AMPscript Substring (Next)",
+    "url": "/next/ampscript/functions/substring/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Take part of a string by position with AMPscript Substring in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript Subtract",
     "url": "/engagement/ampscript/functions/subtract/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Computes the difference between two numeric values. Covers which argument types are accepted and which abort the page."
+  },
+  {
+    "name": "AMPscript Subtract (Next)",
+    "url": "/next/ampscript/functions/subtract/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Subtract one number from another with AMPscript Subtract in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the argument forms that break the preview."
   },
   {
     "name": "AMPscript SystemDateToLocalDate",
@@ -868,6 +1288,13 @@
     "description": "Removes leading and trailing whitespace from a value. Covers that tabs, line breaks and the non-breaking space all count as whitespace."
   },
   {
+    "name": "AMPscript Trim (Next)",
+    "url": "/next/ampscript/functions/trim/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Strip leading and trailing whitespace with AMPscript Trim in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including how it differs from Engagement."
+  },
+  {
     "name": "AMPscript UpdateData",
     "url": "/engagement/ampscript/functions/updatedata/",
     "section": "AMPscript Function Reference",
@@ -894,6 +1321,13 @@
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Converts a value to upper case. Covers the German sharp s, which is returned untouched instead of expanding to a double S."
+  },
+  {
+    "name": "AMPscript Uppercase (Next)",
+    "url": "/next/ampscript/functions/uppercase/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Convert a value to upper case with AMPscript Uppercase in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including the German sharp s and booleans."
   },
   {
     "name": "AMPscript UpsertContact",
@@ -924,11 +1358,25 @@
     "description": "URL-encodes a string for safe inclusion in a URL. Leaves a value which is not a URL completely unchanged."
   },
   {
+    "name": "AMPscript URLEncode (Next)",
+    "url": "/next/ampscript/functions/urlencode/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Make a value safe for a URL with AMPscript URLEncode in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including what each flag changes."
+  },
+  {
     "name": "AMPscript v",
     "url": "/engagement/ampscript/functions/v/",
     "section": "AMPscript Function Reference",
     "type": "page",
     "description": "Outputs a value inline, normally a variable reference. Covers that a string literal, a number and a nested function call are accepted too, which makes one particular typo render silently instead of failing."
+  },
+  {
+    "name": "AMPscript v (Next)",
+    "url": "/next/ampscript/functions/v/",
+    "section": "AMPscript Function Reference (Next)",
+    "type": "page",
+    "description": "Output a value inline with AMPscript v in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including that a quoted name is written as itself."
   },
   {
     "name": "AMPscript WrapLongURL",
@@ -1127,11 +1575,522 @@
     "description": "Development environment, project setup, Data Extensions, and business units for SFMC Engagement."
   },
   {
+    "name": "Handlebars add",
+    "url": "/next/handlebars/helpers/add/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars add: returns the sum of two numbers, rounded to 2 decimal places."
+  },
+  {
+    "name": "Handlebars and",
+    "url": "/next/handlebars/helpers/and/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars and: returns true only when all operands are truthy."
+  },
+  {
+    "name": "Handlebars assignCoupon",
+    "url": "/next/handlebars/helpers/assigncoupon/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars assignCoupon: reserves a coupon for the current recipient from a coupon list stored in a marketing object and returns that row."
+  },
+  {
+    "name": "Handlebars base64Decode",
+    "url": "/next/handlebars/helpers/base64decode/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars base64Decode: turns a Base64 string back into readable text."
+  },
+  {
+    "name": "Handlebars base64Encode",
+    "url": "/next/handlebars/helpers/base64encode/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars base64Encode: turns readable text into a Base64 string."
+  },
+  {
+    "name": "Handlebars buildRowSetFromString",
+    "url": "/next/handlebars/helpers/buildrowsetfromstring/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars buildRowSetFromString: splits a string at a delimiter into a rowset with a single unnamed column, one row per value."
+  },
+  {
+    "name": "Handlebars buildRowSetFromXml",
+    "url": "/next/handlebars/helpers/buildrowsetfromxml/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars buildRowSetFromXml: builds a rowset from the XML nodes an XPath expression selects; each row carries the node value, its XML, and its attributes."
+  },
+  {
+    "name": "Handlebars buildUrl",
+    "url": "/next/handlebars/helpers/buildurl/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars buildUrl: composes a link from a base URL plus UTM and custom query parameters and wraps it for click tracking."
+  },
+  {
+    "name": "Handlebars char",
+    "url": "/next/handlebars/helpers/char/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars char: returns the Unicode character for a character code, optionally repeated."
+  },
+  {
+    "name": "Handlebars claimRow",
+    "url": "/next/handlebars/helpers/claimrow/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars claimRow: takes the first row of a marketing object that nobody has claimed yet, marks it as claimed, and returns it."
+  },
+  {
+    "name": "Handlebars compare",
+    "url": "/next/handlebars/helpers/compare/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars compare: checks two values against each other with the operator you pass."
+  },
+  {
+    "name": "Handlebars concat",
+    "url": "/next/handlebars/helpers/concat/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars concat: joins several values into one string."
+  },
+  {
+    "name": "Handlebars dateAdd",
+    "url": "/next/handlebars/helpers/dateadd/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars dateAdd: moves a date forward or back by a number of time units."
+  },
+  {
+    "name": "Handlebars dateDiff",
+    "url": "/next/handlebars/helpers/datediff/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars dateDiff: calculates the time difference between two dates in a specified unit."
+  },
+  {
+    "name": "Handlebars datePart",
+    "url": "/next/handlebars/helpers/datepart/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars datePart: returns one part of a date or timestamp as a number, for example the year."
+  },
+  {
+    "name": "Handlebars divide",
+    "url": "/next/handlebars/helpers/divide/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars divide: returns the quotient of dividing the first value by the second."
+  },
+  {
+    "name": "Handlebars domain",
+    "url": "/next/handlebars/helpers/domain/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars domain: returns everything behind the first @ of an email address, or null when the input has no @ or is not a string."
+  },
+  {
+    "name": "Handlebars each",
+    "url": "/next/handlebars/helpers/each/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars each: renders its block once for every item in an array, list or object."
+  },
+  {
+    "name": "Handlebars encode",
+    "url": "/next/handlebars/helpers/encode/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars encode: hashes a string with an algorithm chosen by name and returns the digest as lowercase hex."
+  },
+  {
+    "name": "Handlebars encodeURI",
+    "url": "/next/handlebars/helpers/encodeuri/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars encodeURI: URL-encodes a whole string so it can be placed in a link."
+  },
+  {
+    "name": "Handlebars encodeURIComponent",
+    "url": "/next/handlebars/helpers/encodeuricomponent/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars encodeURIComponent: URL-encodes the part of a string that comes after the address, such as a query string."
+  },
+  {
+    "name": "Handlebars equals",
+    "url": "/next/handlebars/helpers/equals/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars equals: compares two values for equality, optionally by a comparison type."
+  },
+  {
+    "name": "Handlebars fallback",
+    "url": "/next/handlebars/helpers/fallback/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars fallback: returns a fallback value when the first argument is null, empty, or throws an exception."
+  },
+  {
+    "name": "Handlebars filter",
+    "url": "/next/handlebars/helpers/filter/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars filter: keeps only the list items that pass a field/operator/value test."
+  },
+  {
+    "name": "Handlebars flatten",
+    "url": "/next/handlebars/helpers/flatten/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars flatten: flattens a nested list of lists into a single list."
+  },
+  {
+    "name": "Handlebars format",
+    "url": "/next/handlebars/helpers/format/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars format: formats a value with a format string and, if given, a type."
+  },
+  {
+    "name": "Handlebars formatCurrency",
+    "url": "/next/handlebars/helpers/formatcurrency/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars formatCurrency: formats a number as a currency value for a locale."
+  },
+  {
+    "name": "Handlebars formatNumber",
+    "url": "/next/handlebars/helpers/formatnumber/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars formatNumber: formats a number as one numeric type, for example decimal or percent."
+  },
+  {
+    "name": "Handlebars get",
+    "url": "/next/handlebars/helpers/get/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars get: reads one value from a list by index or from a map by key."
+  },
+  {
+    "name": "Handlebars getContentBlock",
+    "url": "/next/handlebars/helpers/getcontentblock/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars getContentBlock: inserts a content block into the template and renders it."
+  },
+  {
+    "name": "Handlebars guid",
+    "url": "/next/handlebars/helpers/guid/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars guid: creates a new globally unique identifier (GUID)."
+  },
+  {
+    "name": "Handlebars hash",
+    "url": "/next/handlebars/helpers/hash/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars hash: builds an object from key=value pairs."
+  },
+  {
     "name": "Handlebars Helper Reference",
     "url": "/next/handlebars/helpers/",
     "section": "Next",
     "type": "page",
     "description": "The complete Handlebars helper catalog for Marketing Cloud Next — searchable and filterable, with the Core API version each helper became available in and its AMPscript equivalent where one exists."
+  },
+  {
+    "name": "Handlebars if",
+    "url": "/next/handlebars/helpers/if/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars if: renders its block only when the value counts as true."
+  },
+  {
+    "name": "Handlebars iif",
+    "url": "/next/handlebars/helpers/iif/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars iif: picks one of two values, depending on whether an expression is true or false."
+  },
+  {
+    "name": "Handlebars impressionRegion",
+    "url": "/next/handlebars/helpers/impressionregion/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars impressionRegion: marks the enclosed part of a message as a named impression region for reporting on dynamic content."
+  },
+  {
+    "name": "Handlebars indexOf",
+    "url": "/next/handlebars/helpers/indexof/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars indexOf: returns the 1-based position of a substring within a string (case-insensitive)."
+  },
+  {
+    "name": "Handlebars isEmailAddress",
+    "url": "/next/handlebars/helpers/isemailaddress/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars isEmailAddress: checks whether a value has the shape of an email address."
+  },
+  {
+    "name": "Handlebars isEmpty",
+    "url": "/next/handlebars/helpers/isempty/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars isEmpty: returns true when a value is null, undefined, or an empty string."
+  },
+  {
+    "name": "Handlebars isNullDefault",
+    "url": "/next/handlebars/helpers/isnulldefault/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars isNullDefault: returns the first value, or the second one when the first is null."
+  },
+  {
+    "name": "Handlebars jsonPath",
+    "url": "/next/handlebars/helpers/jsonpath/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars jsonPath: queries and filters JSON objects using a JSONPath expression."
+  },
+  {
+    "name": "Handlebars length",
+    "url": "/next/handlebars/helpers/length/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars length: counts the characters in a string or the items in an array."
+  },
+  {
+    "name": "Handlebars lookup",
+    "url": "/next/handlebars/helpers/lookup/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars lookup: dynamically accesses an object property or array element by a variable key."
+  },
+  {
+    "name": "Handlebars lowercase",
+    "url": "/next/handlebars/helpers/lowercase/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars lowercase: changes every letter in a string to lowercase."
+  },
+  {
+    "name": "Handlebars map",
+    "url": "/next/handlebars/helpers/map/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars map: returns a list with the value of one field from each object in a list."
+  },
+  {
+    "name": "Handlebars md5",
+    "url": "/next/handlebars/helpers/md5/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars md5: returns the MD5 digest (128 bit) of a string as hex."
+  },
+  {
+    "name": "Handlebars modulo",
+    "url": "/next/handlebars/helpers/modulo/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars modulo: returns the remainder after dividing the first value by the second."
+  },
+  {
+    "name": "Handlebars multiply",
+    "url": "/next/handlebars/helpers/multiply/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars multiply: returns the product of two numbers, rounded to 2 decimal places."
+  },
+  {
+    "name": "Handlebars not",
+    "url": "/next/handlebars/helpers/not/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars not: returns true when the operand evaluates to false."
+  },
+  {
+    "name": "Handlebars now",
+    "url": "/next/handlebars/helpers/now/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars now: returns the current server date and time in UTC."
+  },
+  {
+    "name": "Handlebars or",
+    "url": "/next/handlebars/helpers/or/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars or: returns true when at least one operand is truthy."
+  },
+  {
+    "name": "Handlebars personalizationResult",
+    "url": "/next/handlebars/helpers/personalizationresult/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars personalizationResult: retrieves a personalized value by key from the subscriber context."
+  },
+  {
+    "name": "Handlebars properCase",
+    "url": "/next/handlebars/helpers/propercase/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars properCase: capitalizes the first letter of each word and lowercases the rest."
+  },
+  {
+    "name": "Handlebars query",
+    "url": "/next/handlebars/helpers/query/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars query: returns many records from a Sales Cloud object or a marketing object."
+  },
+  {
+    "name": "Handlebars queryFirst",
+    "url": "/next/handlebars/helpers/queryfirst/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars queryFirst: returns the first matching record from a Sales Cloud object, a marketing object or a data graph."
+  },
+  {
+    "name": "Handlebars raiseError",
+    "url": "/next/handlebars/helpers/raiseerror/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars raiseError: throws an exception with a message and optional error code, halting rendering."
+  },
+  {
+    "name": "Handlebars random",
+    "url": "/next/handlebars/helpers/random/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars random: returns a random integer between two values (inclusive)."
+  },
+  {
+    "name": "Handlebars regExMatch",
+    "url": "/next/handlebars/helpers/regexmatch/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars regExMatch: applies a regular expression (Java regex syntax) to a string and returns the matched text or one capture group."
+  },
+  {
+    "name": "Handlebars repeat",
+    "url": "/next/handlebars/helpers/repeat/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars repeat: repeats a block a specified number of times, exposing index, first, and last loop variables."
+  },
+  {
+    "name": "Handlebars replace",
+    "url": "/next/handlebars/helpers/replace/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars replace: replaces every occurrence of a substring with another (case-sensitive)."
+  },
+  {
+    "name": "Handlebars set",
+    "url": "/next/handlebars/helpers/set/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars set: performs local variable assignment within the block scope."
+  },
+  {
+    "name": "Handlebars sha1",
+    "url": "/next/handlebars/helpers/sha1/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars sha1: returns the SHA-1 digest (160 bit) of a string as hex."
+  },
+  {
+    "name": "Handlebars sha256",
+    "url": "/next/handlebars/helpers/sha256/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars sha256: returns the SHA-256 digest of a string as hex."
+  },
+  {
+    "name": "Handlebars sha512",
+    "url": "/next/handlebars/helpers/sha512/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars sha512: returns the SHA-512 digest of a string as hex."
+  },
+  {
+    "name": "Handlebars slice",
+    "url": "/next/handlebars/helpers/slice/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars slice: returns part of a list, from a start index up to but not including an end index."
+  },
+  {
+    "name": "Handlebars sort",
+    "url": "/next/handlebars/helpers/sort/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars sort: sorts a list of objects by a field, order, and type."
+  },
+  {
+    "name": "Handlebars stringToHex",
+    "url": "/next/handlebars/helpers/stringtohex/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars stringToHex: returns the hexadecimal representation of the encoded characters of a string."
+  },
+  {
+    "name": "Handlebars substring",
+    "url": "/next/handlebars/helpers/substring/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars substring: returns part of a string, counting positions from 1."
+  },
+  {
+    "name": "Handlebars subtract",
+    "url": "/next/handlebars/helpers/subtract/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars subtract: returns the difference of subtracting the second value from the first."
+  },
+  {
+    "name": "Handlebars timeZoneConversion",
+    "url": "/next/handlebars/helpers/timezoneconversion/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars timeZoneConversion: converts a date to a different time zone."
+  },
+  {
+    "name": "Handlebars trim",
+    "url": "/next/handlebars/helpers/trim/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars trim: removes leading and trailing whitespace from a string."
+  },
+  {
+    "name": "Handlebars unless",
+    "url": "/next/handlebars/helpers/unless/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars unless: renders its block only when the value counts as false."
+  },
+  {
+    "name": "Handlebars uppercase",
+    "url": "/next/handlebars/helpers/uppercase/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars uppercase: changes every letter in a string to uppercase."
+  },
+  {
+    "name": "Handlebars with",
+    "url": "/next/handlebars/helpers/with/",
+    "section": "Handlebars Helper Reference",
+    "type": "page",
+    "description": "Handlebars with: changes the block context to a specified object so properties can be accessed directly."
   },
   {
     "name": "How personalization strings, AMPscript and SSJS interact",

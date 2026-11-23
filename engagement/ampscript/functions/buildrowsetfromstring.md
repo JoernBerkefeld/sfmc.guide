@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`RowCount` matches Engagement (`4` for `North**South**East**West`, `3` with a trailing delimiter, `0` for an empty string). Reading a segment does not: `Field(Row(@rows, 1), 1)` gives `true` in Next instead of `North`, and the `Value` column gives `false` instead of the text. `Row(@rows, 0)` gives `true` in Next instead of aborting."
 ---
 
 {% include verification-status.html %}
@@ -77,15 +80,11 @@ There is no closed set of sentinel values: an empty source string and an unset v
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`BuildRowSetFromString` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromstring/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromstring-edge-separators) — the separator edge cases in full
 - [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/)
 - [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same rowset shape for structured payloads

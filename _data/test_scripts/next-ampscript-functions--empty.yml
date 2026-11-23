@@ -1,0 +1,35 @@
+# Next test scripts for /next/ampscript/functions/empty/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Empty. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[true] got=[%%=Empty(@zzz_never_declared)=%%]</p>
+  <p>c2 expect=[false] got=[%%[ SET @r2ef0 = "x" ]%%%%=Empty(@r2ef0)=%%]</p>
+  <p>c3 expect=[matches-true] got=[%%[ SET @r2eq1 = "" IF Empty(@r2eq1) == true THEN SET @r2eq1r = "matches-true" ELSE SET @r2eq1r = "no-match" ENDIF ]%%%%=v(@r2eq1r)=%%]</p>
+  <p>c4 expect=[matches-True-string] got=[%%[ SET @r2eq2 = "" IF Empty(@r2eq2) == "True" THEN SET @r2eq2r = "matches-True-string" ELSE SET @r2eq2r = "no-match" ENDIF ]%%%%=v(@r2eq2r)=%%]</p>
+  <p>c5 expect=[true] got=[%%[ VAR @r2eu ]%%%%=Empty(@r2eu)=%%]</p>
+  <p>c6 expect=[true] got=[%%[ SET @r2ees = "" ]%%%%=Empty(@r2ees)=%%]</p>
+  <p>c7 expect=[false] got=[%%[ SET @r2esp = "   " ]%%%%=Empty(@r2esp)=%%]</p>
+  <p>c8 expect=[false] got=[%%[ SET @r2ez = 0 ]%%%%=Empty(@r2ez)=%%]</p>
+  <p>c9 expect=[false] got=[%%[ SET @r2ez0 = "0" ]%%%%=Empty(@r2ez0)=%%]</p>
+  <p>c10 expect=[false] got=[%%[ SET @r2esf = "false" ]%%%%=Empty(@r2esf)=%%]</p>
+  <p>c11 expect=[false] got=[%%[ SET @r2eval = "hello" ]%%%%=Empty(@r2eval)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=Empty("")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=Empty("x")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=Empty(0)=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=Empty(Now())=%%

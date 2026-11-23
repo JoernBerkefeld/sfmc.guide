@@ -76,12 +76,7 @@ Pass the default from a data value to reflect a stored preference back to the su
 
 {% include test-script.html bundle="ampscript-functions--buildoptionlist" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

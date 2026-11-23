@@ -1,0 +1,45 @@
+# Next test scripts for /next/ampscript/functions/buildrowsetfromjson/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for BuildRowsetFromJSON. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[1] got=[%%[ SET @bj1 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) ]%%%%=RowCount(@bj1)=%%]</p>
+  <p>c2 expect=[IND] got=[%%[ SET @bj2 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@bj2, 1), "Origin")=%%]</p>
+  <p>c3 expect=[100.0] got=[%%[ SET @bj3 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@bj3, 1), "Price")=%%]</p>
+  <p>c4 expect=[0] got=[%%[ SET @bj4 = BuildRowsetFromJSON("not json", "$.Flights[*]", 1) ]%%%%=RowCount(@bj4)=%%]</p>
+  <p>c5 expect=[3] got=[%%[ SET @r2bj1 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=RowCount(@r2bj1)=%%]</p>
+  <p>c6 expect=[IND|NYC|100.0] got=[%%[ SET @r2bj2 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@r2bj2,1),"Origin")=%%|%%=Field(Row(@r2bj2,1),"Dest")=%%|%%=Field(Row(@r2bj2,1),"Price")=%%]</p>
+  <p>c7 expect=[SEA|25] got=[%%[ SET @r2bj3 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@r2bj3,3),"Dest")=%%|%%=Field(Row(@r2bj3,3),"PerBagSurcharge",0)=%%]</p>
+  <p>c8 expect=[] got=[%%[ SET @r2bj4 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@r2bj4,3),"dest")=%%]</p>
+  <p>c9 expect=[|] got=[%%[ SET @r2bj5 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@r2bj5,1),1)=%%|%%=Field(Row(@r2bj5,1),2)=%%]</p>
+  <p>c10 expect=[3|false|true] got=[%%[ SET @r2bj6 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*].Price", 1) ]%%%%=RowCount(@r2bj6)=%%|%%=Field(Row(@r2bj6,2),"Value",0)=%%|%%=Field(Row(@r2bj6,2),1)=%%]</p>
+  <p>c11 expect=[2|true|true] got=[%%[ SET @r2bj7 = BuildRowsetFromJSON('{"Id":123,"Shape":"Square"}', "$.*", 1) ]%%%%=RowCount(@r2bj7)=%%|%%=Field(Row(@r2bj7,1),1)=%%|%%=Field(Row(@r2bj7,2),1)=%%]</p>
+  <p>c12 expect=[3|true|false] got=[%%[ SET @r2bj8 = BuildRowsetFromJSON('{"Shapes":["Triangle","Circle","Square"]}', "$.Shapes[*]", 1) ]%%%%=RowCount(@r2bj8)=%%|%%=Field(Row(@r2bj8,2),1)=%%|%%=Field(Row(@r2bj8,2),"Value",0)=%%]</p>
+  <p>c13 expect=[3||2|true] got=[%%[ SET @r2bj9 = BuildRowsetFromJSON('{"a":{"b":1},"c":[1,2],"d":"plain"}', "$.*", 1) ]%%%%=RowCount(@r2bj9)=%%|%%=Field(Row(@r2bj9,1),1)=%%|%%=Field(Row(@r2bj9,2),1)=%%|%%=Field(Row(@r2bj9,3),1)=%%]</p>
+  <p>c14 expect=[0] got=[%%[ SET @r2bj12 = BuildRowsetFromJSON("[]", "$[*]", 1) ]%%%%=RowCount(@r2bj12)=%%]</p>
+  <p>c15 expect=[0] got=[%%[ SET @r2bj14 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.NoSuchKey[*]", 1) ]%%%%=RowCount(@r2bj14)=%%]</p>
+  <p>c16 expect=[3] got=[%%[ SET @r2bj15 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", true) ]%%%%=RowCount(@r2bj15)=%%]</p>
+  <p>c17 expect=[3] got=[%%[ SET @r2bj16 = BuildRowSetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=RowCount(@r2bj16)=%%]</p>
+  <p>c18 expect=[[]] got=[%%[ SET @r2bj18 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%[%%=Field(Row(@r2bj18,1),"NoSuchColumn",0)=%%]]</p>
+  <p>c19 expect=[3|3|3|3|3|3|3|3] got=[%%[ SET @r2bj20 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", true) SET @r2bj21 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", false) SET @r2bj22 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) SET @r2bj23 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 0) SET @r2bj24 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", "true") SET @r2bj25 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", "false") SET @r2bj26 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", "1") SET @r2bj27 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", "0") ]%%%%=RowCount(@r2bj20)=%%|%%=RowCount(@r2bj21)=%%|%%=RowCount(@r2bj22)=%%|%%=RowCount(@r2bj23)=%%|%%=RowCount(@r2bj24)=%%|%%=RowCount(@r2bj25)=%%|%%=RowCount(@r2bj26)=%%|%%=RowCount(@r2bj27)=%%]</p>
+  <p>c20 expect=[X] got=[%%[ SET @r2bj10 = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", 0) ]%%X]</p>
+  <p>c21 expect=[] got=[%%[ SET @r2bj17 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]", 1) ]%%%%=Field(Row(@r2bj17,1),"NoSuchColumn")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%[ SET @r2bj11 = BuildRowsetFromJSON("", "$.Flights[*]", 1) ]%%%%=RowCount(@r2bj11)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2bj13 = BuildRowsetFromJSON(@r2bjunset, "$.Flights[*]", 1) ]%%%%=RowCount(@r2bj13)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2bj28 = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", true) SET @r2bj29 = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", "true") SET @r2bj30 = BuildRowsetFromJSON("{ not json ", "$.Flights[*]", "1") ]%%%%=RowCount(@r2bj28)=%%|%%=RowCount(@r2bj29)=%%|%%=RowCount(@r2bj30)=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2bj19 = BuildRowsetFromJSON('{"Flights":[{"Origin":"IND","Dest":"NYC","Price":100.0},{"Origin":"IND","Dest":"LAX","Price":200.0},{"Origin":"IND","Dest":"SEA","Price":500.0,"PerBagSurcharge":25}]}', "$.Flights[*]") ]%%X

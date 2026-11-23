@@ -166,6 +166,16 @@ sf --version
 
 The plugin is only needed for the plugin examples. Its install steps, supported Node.js versions and command reference are in the plugin's README; after installing, `sf data360 --help` lists its commands.
 
+### In VS Code
+
+The plugin commands are also available in VS Code through the **Data 360 DevTools** extension (pre-release). It adds:
+
+- Retrieve, deploy, delete and publish from a right-click on files and folders, or from the Command Palette.
+- A preview before every deploy or delete, then a confirmation that names the org alias, the org ID and the data space.
+- A **Data Spaces** side panel that groups the project's files by data space and type, without calling the org.
+
+It needs Node.js on your PATH and Salesforce CLI to sign in to an org; it brings its own copy of the plugin, so no `sf plugins install` is required.
+
 ### Log in
 
 An **alias** is a local nickname for an authenticated org. Replace `LOGIN_URL` with the HTTPS login URL for your org:

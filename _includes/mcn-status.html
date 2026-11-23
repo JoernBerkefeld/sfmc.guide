@@ -1,0 +1,49 @@
+{% comment %}
+  Renders the "Marketing Cloud Next" runtime result on an AMPscript function page or a
+  Handlebars helper page.
+
+  Front matter drivers:
+    mcn:        same | differs | unsupported | untested            (AMPscript pages)
+                matches-docs | differs-from-docs | unsupported | untested   (Handlebars pages)
+    mcn_note:   Markdown sentence(s) with the finding (both outputs for a difference)
+    mcn_tested: date of the run, e.g. 2026-11-22
+
+  Absent `mcn` => nothing renders. The results come from rendering each case in an MCN email
+  through the previewEmail API; landing pages do not run AMPscript or Handlebars at all.
+{% endcomment %}
+
+{% if page.mcn %}
+{% assign mcn_date = page.mcn_tested | default: "2026-11-22" %}
+{% case page.mcn %}
+{% when "same" %}
+  {% assign mcn_type = "tip" %}
+  {% assign mcn_title = "Same in Marketing Cloud Next" %}
+  {% assign mcn_default = "Every Engagement example tested for this function renders the same in a Marketing Cloud Next email." %}
+{% when "matches-docs" %}
+  {% assign mcn_type = "tip" %}
+  {% assign mcn_title = "Works as documented" %}
+  {% assign mcn_default = "Every tested call rendered the documented result in a Marketing Cloud Next email." %}
+{% when "differs" %}
+  {% assign mcn_type = "warning" %}
+  {% assign mcn_title = "Differs in Marketing Cloud Next" %}
+  {% assign mcn_default = "At least one Engagement example renders differently in a Marketing Cloud Next email." %}
+{% when "differs-from-docs" %}
+  {% assign mcn_type = "warning" %}
+  {% assign mcn_title = "Differs from the documentation" %}
+  {% assign mcn_default = "At least one tested call rendered something other than the documented result." %}
+{% when "unsupported" %}
+  {% assign mcn_type = "caution" %}
+  {% assign mcn_title = "Not supported in Marketing Cloud Next" %}
+  {% assign mcn_default = "Saving an email that uses it is rejected." %}
+{% else %}
+  {% assign mcn_type = "note" %}
+  {% assign mcn_title = "Not runtime-tested in Marketing Cloud Next yet" %}
+  {% assign mcn_default = "No call has been rendered in a Marketing Cloud Next email yet." %}
+{% endcase %}
+{% assign mcn_body = page.mcn_note | default: mcn_default %}
+{% capture mcn_content %}{{ mcn_body }} *Tested {{ mcn_date }} by rendering in a Marketing Cloud Next email.*{% endcapture %}
+
+<h2 id="marketing-cloud-next">Marketing Cloud Next</h2>
+
+{% include callout.html type=mcn_type title=mcn_title content=mcn_content %}
+{% endif %}

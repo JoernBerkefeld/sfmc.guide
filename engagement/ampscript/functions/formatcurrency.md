@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatcurrency/
 platforms:
   - engagement
-  - next
 syntax: "FormatCurrency(value, locale[, decimalPlaces, symbol])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 4
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next ignores the decimal count and the symbol (`FormatCurrency(1234.555,\"es-MX\",2,\"Mex$\")` gives `$1,234.56`, not `Mex$1,234.56`). Next rounds halves to even (`2.345` gives `$2.34`, not `$2.35`) and writes a US negative as `-$1,234.56`. An empty or unknown locale returns the raw `1234.555` in Next."
 ---
 
 {% include verification-status.html %}
@@ -108,15 +110,11 @@ The US form uses brackets and no minus sign at all. Code that looks for a leadin
 
 {% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`FormatCurrency` in Marketing Cloud Next](/next/ampscript/functions/formatcurrency/) — how it behaves there
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — same locale machinery, but you choose the pattern
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only

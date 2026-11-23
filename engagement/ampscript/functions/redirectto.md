@@ -81,12 +81,7 @@ The value domain is open, so there is no set of sentinel values to test for. An 
 
 What a page cannot show is the function's actual purpose — producing the tracked target inside a send, where clicks are attributed to a subscriber. That needs a real send. The official reference never claims a redirect happens at render time, so the pass-through is a limit of what a page can show rather than a contradiction.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

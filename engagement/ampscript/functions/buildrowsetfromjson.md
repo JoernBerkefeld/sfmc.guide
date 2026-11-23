@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/buildrowsetfromjson/
 platforms:
   - engagement
-  - next
 syntax: "BuildRowsetFromJSON(jsonData, jsonPathExpression, returnEmptyOnError)"
 return_type: rowset
 min_args: 3
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Row counts and exact-case named columns match (`Origin` gives `IND`). Next keeps decimals (`100.0` gives `100.0`, not `100`), matches column names case-sensitively (`dest` gives an empty string, not `SEA`) and returns `true` or an empty string when a column is read by ordinal. On the invalid payload `{ not json ` the flag works the reverse way in Next: a falsy third argument renders on instead of aborting, and a truthy one (`true`, `\"true\"` and `\"1\"`, tested together) fails the render instead of returning `0` rows."
 ---
 
 {% include verification-status.html %}
@@ -94,15 +96,11 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`BuildRowsetFromJSON` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromjson/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromjson-error-flag-inverted) — the inverted third argument in full
 - [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same shape for XML payloads, with the same inverted flag
 - [`BuildRowSetFromString`](/engagement/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset

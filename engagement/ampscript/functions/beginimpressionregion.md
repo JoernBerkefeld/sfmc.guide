@@ -14,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Content wrapped in a region renders unchanged, as in Engagement (`X` stays `X`). A variable as the region name (`BeginImpressionRegion(@name)`) does not fail in Next: the content after it renders, where Engagement aborts the page."
 ---
 
 {% include verification-status.html %}
@@ -59,15 +62,11 @@ Shop the sale
 
 Impression regions are an **email-send** feature: they name a region of a message so opens and clicks inside it can be tracked in aggregate. That tracking only exists in a sent email context and cannot be exercised from a CloudPage, where the call is accepted and simply emits nothing.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`BeginImpressionRegion` in Marketing Cloud Next](/next/ampscript/functions/beginimpressionregion/) — how it behaves there
 - [`EndImpressionRegion`](/engagement/ampscript/functions/endimpressionregion/) — closes the region this opens
 - [`TreatAsContentArea`](/engagement/ampscript/functions/treatascontentarea/) — takes an impression region name as its third argument
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-begin-impression-region.html)

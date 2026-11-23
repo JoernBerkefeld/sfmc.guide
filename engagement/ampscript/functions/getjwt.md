@@ -89,12 +89,7 @@ Passing the plain string `not json at all` produced a valid token whose middle s
 
 {% include callout.html type="note" title="Keeping the secret out of the page" content="To avoid writing the secret into the page source, use [GetJWTByKeyName](/engagement/ampscript/functions/getjwtbykeyname/) and reference a Key Management key by its external key instead. That variant also unlocks the `RS*` RSA algorithms, which `GetJWT` does not support. Its page covers the Key Management provisioning traps — key type versus algorithm, the fussy asymmetric-key uploader (a gpg `.asc` keypair is accepted while an OpenSSL `.pfx` is rejected), and how to reproduce a token off-platform." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/concat/
 platforms:
   - engagement
-  - next
 syntax: "Concat(string1, string2[, stringN, ...])"
 return_type: string
 min_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Strings and numbers join the same (`Concat(12, 3.5)` gives `123.5` on both). Next needs at least two arguments: an email with `Concat(\"only\")` is rejected at save. Booleans are joined as text in Next (`Concat(true, false)` gives `truefalse`), not dropped. A date is written as `2026-11-22T23:21:17` in Next instead of `M/d/yyyy h:mm:ss AM`."
 ---
 
 {% include verification-status.html %}
@@ -79,15 +81,11 @@ The result is arbitrary text, so there is no closed set of sentinel values to te
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Concat` in Marketing Cloud Next](/next/ampscript/functions/concat/) — how it behaves there
 - [`Length`](/engagement/ampscript/functions/length/) — measures the joined result in UTF-16 code units
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/)
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the other verified String functions, which swallow booleans the same way

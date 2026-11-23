@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/row/
 platforms:
   - engagement
-  - next
 syntax: "Row(rowset, rowIndex)"
 return_type: row
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Reading a row of `BuildRowSetFromString(\"North**South**East**West\",\"**\")` with `Field(row, 1)` renders `true` in Next for rows 1 and 4, instead of `North` and `West`. `Row(rowset, 0)` fails in Next too, and row 1 of a `RetrieveSalesforceObjects` rowset reads normally."
 ---
 
 {% include verification-status.html %}
@@ -69,15 +71,11 @@ There is no empty-row sentinel: an out-of-range index aborts rather than returni
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Row` in Marketing Cloud Next](/next/ampscript/functions/row/) — how it behaves there
 - [`Field`](/engagement/ampscript/functions/field/) — reads a named column from the returned row
 - [`RowCount`](/engagement/ampscript/functions/rowcount/) — the guard that keeps `rowIndex` in range
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset

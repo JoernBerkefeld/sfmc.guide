@@ -1,0 +1,39 @@
+# Next test scripts for /next/ampscript/functions/formatcurrency/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for FormatCurrency. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[$1,234.50] got=[%%=FormatCurrency("1234.5","en-US")=%%]</p>
+  <p>c2 expect=[$1,234.56] got=[%%=FormatCurrency(1234.555,"en-US")=%%]</p>
+  <p>c3 expect=[1.234,56 €] got=[%%=FormatCurrency(1234.555,"de-DE")=%%]</p>
+  <p>c4 expect=[$2.34] got=[%%=FormatCurrency(2.345,"en-US")=%%]</p>
+  <p>c5 expect=[£1,234.56] got=[%%=FormatCurrency(1234.555,"en-GB")=%%]</p>
+  <p>c6 expect=[1 234,56 €] got=[%%=FormatCurrency(1234.555,"fr-FR")=%%]</p>
+  <p>c7 expect=[R$ 1.234,56] got=[%%=FormatCurrency(1234.555,"pt-BR")=%%]</p>
+  <p>c8 expect=[₹1,234.56] got=[%%=FormatCurrency(1234.555,"hi-IN")=%%]</p>
+  <p>c9 expect=[CHF 1’234.56] got=[%%=FormatCurrency(1234.555,"de-CH")=%%]</p>
+  <p>c10 expect=[￥1,235] got=[%%=FormatCurrency(1234.555,"ja-JP")=%%]</p>
+  <p>c11 expect=[￥1,235] got=[%%=FormatCurrency(1234.555,"ja-JP",2)=%%]</p>
+  <p>c12 expect=[$1,234.56] got=[%%=FormatCurrency(1234.555,"en_US")=%%]</p>
+  <p>c13 expect=[1.234,56 ¤] got=[%%=FormatCurrency(1234.555,"de")=%%]</p>
+  <p>c14 expect=[1234.555] got=[%%=FormatCurrency(1234.555,"")=%%]</p>
+  <p>c15 expect=[1234.555] got=[%%=FormatCurrency(1234.555,"zz-ZZ")=%%]</p>
+  <p>c16 expect=[1.234,56 €] got=[%%=FormatCurrency(1234.555,"de-DE",3)=%%]</p>
+  <p>c17 expect=[$1,234.56] got=[%%=FormatCurrency(1234.555,"en-US","3")=%%]</p>
+  <p>c18 expect=[CHF 1’234.56] got=[%%=FormatCurrency(1234.555,"de-CH",0)=%%]</p>
+  <p>c19 expect=[$1,234.56] got=[%%=FormatCurrency(1234.555,"es-MX",2,"Mex$")=%%]</p>
+  <p>c20 expect=[1.234,56 €] got=[%%=FormatCurrency(1234.555,"de-DE",2,"CHF")=%%]</p>
+  <p>c21 expect=[$2.36] got=[%%=FormatCurrency(2.355,"en-US")=%%]</p>
+  <p>c22 expect=[-$1,234.56] got=[%%=FormatCurrency(-1234.555,"en-US")=%%]</p>
+  <p>c23 expect=[-1.234,56 €] got=[%%=FormatCurrency(-1234.555,"de-DE")=%%]</p>
+  <p>c24 expect=[$1,234.56] got=[%%=FormatCurrency("1234.555","en-US")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2fce1 = 1234.555 ]%%%%=FormatCurrency(@r2fce1)=%%

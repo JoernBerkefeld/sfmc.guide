@@ -56,7 +56,7 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
   <div class="platform-badges">
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
-  <div class="tool-card-desc">Salesforce CLI plugin (<code>sf cms</code>) to retrieve, preview, deploy, delete, publish and unpublish CMS emails, templates, fragments, images, documents, audio and brands between a workspace and files in Git.</div>
+  <div class="tool-card-desc">Salesforce CLI plugin (<code>sf cms</code>) to retrieve, preview, deploy, delete, publish and unpublish 24 CMS types (emails, templates, landing pages, forms, media, messages, brands and more) between a workspace and files in Git.</div>
 </a>
 <a class="tool-card" href="/tools/sf-plugin-mcnext/">
   <div class="tool-card-title">sf-plugin-mcnext <span class="platform-badge platform-badge--cli">CLI</span></div>

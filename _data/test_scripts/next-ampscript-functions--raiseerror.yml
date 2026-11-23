@@ -1,0 +1,43 @@
+# Next test scripts for /next/ampscript/functions/raiseerror/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for RaiseError. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[gated] got=[%%[IF 1 == 2 THEN RaiseError("probe") ENDIF]%%gated]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-raiseerror-msg") ]%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  r2-before%%[ RaiseError("r2-raiseerror-order") ]%%r2-after
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p2-true", true) ]%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p2-n1", 1) ]%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p2-qtrue", "true") ]%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p5-n1", 1, "R2", 100, 1) ]%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p5-qtrue", 1, "R2", 100, "true") ]%%
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-p5-btrue", 1, "R2", 100, true) ]%%
+
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ RaiseError("r2-re-invalid-arity", 1, "R2", 100, 1, 1) ]%%
+
+  <!-- email 10: expect that the save is rejected (HTTP 400) -->
+  %%[ RaiseError() ]%%

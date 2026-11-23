@@ -1,0 +1,23 @@
+# Next test scripts for /next/ampscript/functions/guid/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for GUID. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[b3699a44-8716-4950-a23a-026a10263c12] got=[%%=GUID()=%%]</p>
+  <p>c2 expect=[36] got=[%%=Length(GUID())=%%]</p>
+  <p>c3 expect=[----] got=[%%[ SET @r2g1 = GUID() ]%%%%=Concat(Substring(@r2g1,9,1),Substring(@r2g1,14,1),Substring(@r2g1,19,1),Substring(@r2g1,24,1))=%%]</p>
+  <p>c4 expect=[8-4-4-4-12] got=[%%[ SET @r2g2 = GUID() ]%%%%=Concat(Length(Substring(@r2g2,1,8)),"-",Length(Substring(@r2g2,10,4)),"-",Length(Substring(@r2g2,15,4)),"-",Length(Substring(@r2g2,20,4)),"-",Length(Substring(@r2g2,25,12)))=%%]</p>
+  <p>c5 expect=[eq-lower] got=[%%[ SET @r2g3 = GUID() IF @r2g3 == Lowercase(@r2g3) THEN SET @r2g3r = "eq-lower" ELSE SET @r2g3r = "ne-lower" ENDIF ]%%%%=v(@r2g3r)=%%]</p>
+  <p>c6 expect=[0|0|9] got=[%%[ SET @r2g5 = GUID() ]%%%%=Concat(IndexOf(@r2g5,"{"),"|",IndexOf(@r2g5,"}"),"|",IndexOf(@r2g5,"-"))=%%]</p>
+  <p>c7 expect=[different] got=[%%[ SET @r2g6a = GUID() SET @r2g6b = GUID() IF @r2g6a == @r2g6b THEN SET @r2g6r = "same" ELSE SET @r2g6r = "different" ENDIF ]%%%%=v(@r2g6r)=%%]</p>
+  <p>c8 expect=[4] got=[%%[ SET @r2g7 = GUID() ]%%%%=Substring(@r2g7,15,1)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=GUID("x")=%%

@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/formatnumber/
 platforms:
   - engagement
-  - next
 syntax: "FormatNumber(number, format[, locale])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next rounds halves to the even digit (`FormatNumber(2.5,\"N0\")` gives `2`, not `3`). Custom patterns and an unknown pattern such as `qqqq` return the number unchanged (`1234.555`) in Next. `P`, `E` and a negative `C2` give `123,455.500%`, `1.234555E03` and `-$1,234.56` in Next."
 ---
 
 {% include verification-status.html %}
@@ -145,15 +147,11 @@ With a currency pattern the locale also supplies the symbol and its position: `C
 
 {% include callout.html type="warning" title="A wrong argument count breaks the whole page" content="A wrong argument count aborts AMPscript at compile time, so it takes down every branch on the page — including branches that are never selected. There is no way to catch the failure, so keep any argument-count check in its own page rather than mixing it with behaviour you need to render." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`FormatNumber` in Marketing Cloud Next](/next/ampscript/functions/formatnumber/) — how it behaves there
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — the same locale machinery, with the symbol and its position chosen for you
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only

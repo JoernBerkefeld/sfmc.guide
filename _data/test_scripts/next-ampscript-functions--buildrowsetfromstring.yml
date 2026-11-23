@@ -1,0 +1,33 @@
+# Next test scripts for /next/ampscript/functions/buildrowsetfromstring/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for BuildRowSetFromString. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[4] got=[%%=RowCount(BuildRowSetFromString("North**South**East**West","**"))=%%]</p>
+  <p>c2 expect=[true] got=[%%=Field(Row(BuildRowSetFromString("North**South**East**West","**"),1),1)=%%]</p>
+  <p>c3 expect=[3] got=[%%=RowCount(BuildRowSetFromString("a,b,",","))=%%]</p>
+  <p>c4 expect=[0] got=[%%=RowCount(BuildRowSetFromString("",","))=%%]</p>
+  <p>c5 expect=[true] got=[%%=Field(Row(BuildRowSetFromString("North**South**East**West","**"),4),1)=%%]</p>
+  <p>c6 expect=[false] got=[%%=Field(Row(BuildRowSetFromString("a,b,c",","),1),"Value",0)=%%]</p>
+  <p>c7 expect=[[]] got=[[%%=Field(Row(BuildRowSetFromString("a,b,",","),3),1)=%%]]</p>
+  <p>c8 expect=[1|true] got=[%%=RowCount(BuildRowSetFromString("NoDelimiterHere",","))=%%|%%=Field(Row(BuildRowSetFromString("NoDelimiterHere",","),1),1)=%%]</p>
+  <p>c9 expect=[0] got=[%%=RowCount(BuildRowSetFromString(@r2bsunset,","))=%%]</p>
+  <p>c10 expect=[1] got=[%%=RowCount(BuildRowSetFromString("a,b,c",""))=%%]</p>
+  <p>c11 expect=[3] got=[%%=RowCount(BuildRowsetFromString("a,b,c",","))=%%]</p>
+  <p>c12 expect=[true] got=[%%=Field(Row(BuildRowSetFromString("a,b,c",","),0),1)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=RowCount(BuildRowSetFromString("a::b::c","::"))=%%|%%=Field(Row(BuildRowSetFromString("a::b::c","::"),2),1)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Field(Row(BuildRowSetFromString("a,b,c",","),1),0)=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=RowCount(BuildRowSetFromString("a,b,c"))=%%

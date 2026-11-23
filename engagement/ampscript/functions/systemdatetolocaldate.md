@@ -76,12 +76,7 @@ Rendered on its own the value prints as a US short date followed by a 12-hour cl
 
 {% include callout.html type="warning" title="The minute counts depend on the account" content="The `420` and `480` figures come from one business unit's configured time zone. Re-running the script on another account gives different numbers; what stays true is the whole-hour shift and the one-hour gap between the winter and the summer measurement." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -13,6 +13,9 @@ min_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next renders only the quoted selector form: `RegExMatch(\"order-4821-eu\", \"[0-9]+\", \"0\")` gives `4821`. With a bare number as selector (`0`, which gives `4821` here), a numeric source, capture groups, named groups and option names, the email saves but its Next preview fails; an unknown option name or a two-argument call is already refused at save."
 ---
 
 {% include verification-status.html %}
@@ -103,19 +106,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#regexm
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
-
-### Marketing Cloud Next caveat
-
-Marketing Cloud Next uses a different regex engine: .NET-only constructs are unsupported. Options must be literal, comma-separated names; only `IgnoreCase`, `Multiline`, `Singleline`, `IgnorePatternWhitespace`, and `ExplicitCapture` are supported.
+{% include platform-compare.html %}
 
 ## See also
 
+- [`RegExMatch` in Marketing Cloud Next](/next/ampscript/functions/regexmatch/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#regexmatch-case-sensitive-and-variadic-options) — the casing and option-count findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — plain substring search, matching case-insensitively
 - [`Replace`](/engagement/ampscript/functions/replace/) — pair with it to rewrite what a pattern found

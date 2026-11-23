@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/isnull/
 platforms:
   - engagement
-  - next
 syntax: "IsNull(value)"
 return_type: boolean
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next treats an undeclared variable, an unset variable and the empty string as null and returns `true` for them, where Engagement returns `False`. For other values Next returns `false`, in lowercase."
 ---
 
 {% include verification-status.html %}
@@ -89,15 +91,11 @@ The `IsNull` column is constant. That is the practical summary: for a missing-va
 
 {% include callout.html type="info" title="One check could not be closed" content="Proving the true literal needs a data extension field holding a genuine database null. Two attempts to build one — inserting a row with unset columns, then a bare lookup against the same data extension — both aborted the page at compile time, including on a plain request with no branch selected. Nothing from those deploys was attributed to the function, and the check remains open rather than guessed at." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`IsNull` in Marketing Cloud Next](/next/ampscript/functions/isnull/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — what to use instead for a missing-value test; it separates the inputs this function cannot
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the same null definition with a fallback value bolted on
 - [IIf](/engagement/ampscript/functions/iif/) — what usually consumes the boolean

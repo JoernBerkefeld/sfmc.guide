@@ -1,0 +1,39 @@
+# Next test scripts for /next/ampscript/functions/format/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Format. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[1,234.50] got=[%%=Format("1234.5","N2")=%%]</p>
+  <p>c2 expect=[$1,234.56] got=[%%=Format(1234.555,"C2")=%%]</p>
+  <p>c3 expect=[2026-03-04 13:52:07] got=[%%=Format("2026-03-04 13:52:07","yyyy-MM-dd HH:mm:ss","Date")=%%]</p>
+  <p>c4 expect=[mercredi, mars 4, 2026] got=[%%=Format("2026-03-04 13:52:07","D","Date","fr-FR")=%%]</p>
+  <p>c5 expect=[Wednesday, March 4, 2026] got=[%%[ SET @r2fdD = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdD,"D","Date")=%%]</p>
+  <p>c6 expect=[Wednesday, March 4, 2026] got=[%%[ SET @r2fdlow = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdlow,"D","date")=%%]</p>
+  <p>c7 expect=[1.234,56 €] got=[%%=Format(1234.555,"C2","","de-DE")=%%]</p>
+  <p>c8 expect=[1,234.56] got=[%%=Format(1234.555,"N2")=%%]</p>
+  <p>c9 expect=[123,455.500%] got=[%%=Format(1234.555,"P")=%%]</p>
+  <p>c10 expect=[1.234555E03] got=[%%=Format(1234.555,"E")=%%]</p>
+  <p>c11 expect=[1234.555] got=[%%=Format(1234.555,"#,##0.00")=%%]</p>
+  <p>c12 expect=[-$1,234.56] got=[%%=Format(-1234.555,"C2")=%%]</p>
+  <p>c13 expect=[$1,234.56] got=[%%=Format("1234.555","C2")=%%]</p>
+  <p>c14 expect=[3/4/2026] got=[%%[ SET @r2fdd = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdd,"d","Date")=%%]</p>
+  <p>c15 expect=[Wednesday] got=[%%[ SET @r2fdddd = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdddd,"dddd","Date")=%%]</p>
+  <p>c16 expect=[2026-03-04 13:52:07] got=[%%[ SET @r2fdpat = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdpat,"yyyy-MM-dd HH:mm:ss","Date")=%%]</p>
+  <p>c17 expect=[2026-03-04 13:52:07] got=[%%[ SET @r2fdnf = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdnf,"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c18 expect=[2026-03-04 13:52:07] got=[%%[ SET @r2fdcmp = "2026-03-04 13:52:07" ]%%%%=FormatDate(@r2fdcmp,"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c19 expect=[mercredi, mars 4, 2026] got=[%%[ SET @r2fdfr = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdfr,"D","Date","fr-FR")=%%]</p>
+  <p>c20 expect=[Mittwoch] got=[%%[ SET @r2fdde = "2026-03-04 13:52:07" ]%%%%=Format(@r2fdde,"dddd","Date","de-DE")=%%]</p>
+  <p>c21 expect=[$1,234.56] got=[%%=Format(1234.555,"C2","Number")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Format(1234.555,"C2","Banana")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2fe1 = 1234.555 ]%%%%=Format(@r2fe1)=%%

@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/outputline/
 platforms:
   - engagement
-  - next
 syntax: "OutputLine(content)"
 return_type: void
 min_args: 0
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next accepts only a literal or variable argument and then writes only the line break, the same as Engagement does for such an argument. An email with a nested call such as `OutputLine(Concat(\"A\"))`, or with `OutputLine()`, is rejected at save in Next, while Engagement writes `A` and a line break."
 ---
 
 {% include verification-status.html %}
@@ -80,15 +82,11 @@ That matches what the official reference says, and it is the reason the lines co
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="Every marker and label in the test script goes through <code>Concat(...)</code>, including single-argument ones. A bare string literal passed to <code>OutputLine</code> renders an empty line while the page still returns HTTP 200, so the marker silently vanishes." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`OutputLine` in Marketing Cloud Next](/next/ampscript/functions/outputline/) — how it behaves there
 - [Output](/engagement/ampscript/functions/output/) — the same, without the line break
 - [Differs from docs: the undocumented argument counts](/engagement/differs-from-docs/#outputline-arity-and-empty-argument)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html)

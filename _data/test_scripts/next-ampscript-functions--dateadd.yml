@@ -1,0 +1,49 @@
+# Next test scripts for /next/ampscript/functions/dateadd/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for DateAdd. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[2026-01-22T00:00:00] got=[%%=DateAdd("2026-01-15",7,"D")=%%]</p>
+  <p>c2 expect=[2026-02-15T00:00:00] got=[%%=DateAdd("2026-01-15",1,"M")=%%]</p>
+  <p>c3 expect=[2026-01-02T00:00:00] got=[%%=DateAdd("2026-01-01", 1, "D")=%%]</p>
+  <p>c4 expect=[2026-03-04T10:52:07] got=[%%=DateAdd("2026-03-04 13:52:07", -3, "H")=%%]</p>
+  <p>c5 expect=[2027-03-04 13:52:07|2026-04-04 13:52:07|2026-03-05 13:52:07|2026-03-04 14:52:07|2026-03-04 13:53:07] got=[%%=Format(DateAdd("2026-03-04 13:52:07",1,"Y"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"M"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"D"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"H"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"MI"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c6 expect=[2027-03-04 13:52:07|2026-04-04 13:52:07|2026-03-05 13:52:07|2026-03-04 14:52:07|2026-03-04 13:53:07|2026-03-04 13:53:07|2026-03-04 13:53:07] got=[%%=Format(DateAdd("2026-03-04 13:52:07",1,"y"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"m"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"d"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"h"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"mi"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"Mi"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",1,"mI"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c7 expect=[2026-03-03 13:52:07|2026-03-04 13:52:07|2027-04-08 13:52:07] got=[%%=Format(DateAdd("2026-03-04 13:52:07",-1,"D"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",0,"D"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07",400,"D"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c8 expect=[2026-03-05 13:52:07|2026-03-03 13:52:07] got=[%%=Format(DateAdd("2026-03-04 13:52:07","1","D"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-04 13:52:07","-1","D"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c9 expect=[2026-01-02 00:00:00|2026-01-02 00:00:00] got=[%%=Format(DateAdd("1/1/2026",1,"D"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("1 January 2026",1,"D"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c10 expect=[2026|2026-03-06 13:52:07] got=[%%=FormatDate(DateAdd(Now(),0,"D"),"yyyy")=%%|%%=Format(DateAdd(DateAdd("2026-03-04 13:52:07",1,"D"),1,"D"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c11 expect=[2026-02-28 13:52:07|2026-01-28 13:52:07|2026-03-31 13:52:07|2026-02-28 09:00:00|2029-02-28 09:00:00] got=[%%=Format(DateAdd("2026-01-31 13:52:07",1,"M"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd(DateAdd("2026-01-31 13:52:07",1,"M"),-1,"M"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-01-31 13:52:07",2,"M"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2026-03-31 09:00:00",-1,"M"),"yyyy-MM-dd HH:mm:ss")=%%|%%=Format(DateAdd("2028-02-29 09:00:00",1,"Y"),"yyyy-MM-dd HH:mm:ss")=%%]</p>
+  <p>c12 expect=[2026-03-04T13:52:37] got=[%%=DateAdd("2026-03-04 13:52:07",30,"S")=%%]</p>
+  <p>c13 expect=[2026-03-05T13:52:07] got=[%%=DateAdd("2026-03-04 13:52:07",1.5,"D")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%=DateAdd("2026-03-04 13:52:07",1,"W")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateAdd("2026-03-04 13:52:07",1,"MS")=%%
+
+  <!-- email 3: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%=DateAdd("2026-03-04 13:52:07",1,"day")=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateAdd("2026-03-04 13:52:07",1,"ZZ")=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateAdd("2026-03-04 13:52:07","two","D")=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateAdd("not a date at all",1,"D")=%%
+
+  <!-- email 7: expect that the save is rejected (HTTP 400) -->
+  %%=DateAdd("2026-03-04 13:52:07",1)=%%
+
+  <!-- email 8: expect that the save is rejected (HTTP 400) -->
+  %%=DateAdd("2026-03-04 13:52:07",1,"D","extra")=%%

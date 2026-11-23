@@ -96,7 +96,23 @@ if (dangling.length > 0) {
   process.exit(1);
 }
 
+/**
+ * The page this site has for a helper, if any, and the Marketing Cloud Next
+ * result recorded in its front matter (`mcn: matches-docs | differs-from-docs |
+ * unsupported | untested`). A helper without a page keeps linking to docUrl.
+ */
+const PAGES = path.join(SITE, 'next/handlebars/helpers');
+function helperPage(slug) {
+  const file = path.join(PAGES, `${slug}.md`);
+  if (!fs.existsSync(file)) return null;
+  const raw = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+  const fm = raw.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  const mcn = fm.match(/^mcn:[ \t]*"?([\w-]+)"?[ \t]*$/m)?.[1] ?? '';
+  return { url: `/next/handlebars/helpers/${slug}/`, mcn };
+}
+
 let mapped = 0;
+let paged = 0;
 let out = `# Handlebars helper catalog for /next/handlebars/helpers/.
 #
 # AUTO-GENERATED — do not edit by hand.
@@ -110,6 +126,10 @@ let out = `# Handlebars helper catalog for /next/handlebars/helpers/.
 # ampscriptEquivalent is a comma-joined list of every AMPscript counterpart (""
 # when none) kept for the filters; ampscriptEquivalents is the structured list
 # ({name, kind, exact}) that drives per-link rendering.
+#
+# page is the helper's own page on this site (only when the file exists), and
+# mcnResult is the \`mcn\` result from that page's front matter: matches-docs,
+# differs-from-docs, unsupported or untested.
 
 `;
 
@@ -141,10 +161,16 @@ for (const h of helpers) {
   out += `  subexpressionOnly: ${Boolean(h.subexpressionOnly)}\n`;
   out += `  description: ${q(h.description)}\n`;
   if (h.docUrl) out += `  docUrl: ${q(h.docUrl)}\n`;
+  const page = helperPage(h.name.toLowerCase());
+  if (page) {
+    paged += 1;
+    out += `  page: ${q(page.url)}\n`;
+    out += `  mcnResult: ${q(page.mcn)}\n`;
+  }
 }
 
 const target = path.join(SITE, '_data/handlebars_helpers.yml');
 fs.writeFileSync(target, out.replace(/\r\n/g, '\n'), 'utf8');
 console.log(
-  `wrote _data/handlebars_helpers.yml (${helpers.length} helpers, ${mapped} with an AMPscript equivalent)`,
+  `wrote _data/handlebars_helpers.yml (${helpers.length} helpers, ${mapped} with an AMPscript equivalent, ${paged} with a page)`,
 );

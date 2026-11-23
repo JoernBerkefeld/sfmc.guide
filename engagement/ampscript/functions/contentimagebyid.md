@@ -57,12 +57,7 @@ The primary ID does not exist, so the tag for the fallback asset (`thid="1201143
 
 {% include test-script.html bundle="ampscript-functions--contentimagebyid" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

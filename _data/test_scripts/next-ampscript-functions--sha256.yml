@@ -1,0 +1,33 @@
+# Next test scripts for /next/ampscript/functions/sha256/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for SHA256. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad] got=[%%=SHA256("abc")=%%]</p>
+  <p>c2 expect=[e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855] got=[%%=SHA256("")=%%]</p>
+  <p>c3 expect=[eacf88b0a0a8cad1b297c2ea16f0f375482481160be05b72372056503824cf02] got=[%%=SHA256("Hash probe 2026")=%%]</p>
+  <p>c4 expect=[64] got=[%%=Length(SHA256("Hash probe 2026"))=%%]</p>
+  <p>c5 expect=[eae41ff0f6fc4b2347b9a39213e5149c2730b90296234396f0ae8b961732bfec] got=[%%=SHA256("Grusß €ä")=%%]</p>
+  <p>c6 expect=[b30cb452193f7d2228a7a89cc5f8f3831fabb63df4e933b1dd985470cf161c89] got=[%%=SHA256("Hash probe 2026","UTF-16")=%%]</p>
+  <p>c7 expect=[d30fcad4e2f349d1f3a341afbd5ef5dd9770eb2cd30607a775edf252807535e6] got=[%%=SHA256("Grusß €ä","UTF-16")=%%]</p>
+  <p>c8 expect=[99d1f7b534824f35dffa18c3b728ecb00c4585ba9d7c9b26205424f8f28eff8e] got=[%%=SHA256("This is a string of text.")=%%]</p>
+  <p>c9 expect=[e532741701758f26f517edcfb7632749359a72fb0246cd1244e7a0f5251fbfcd] got=[%%=SHA256("Hash example 2026")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=SHA256("Grusß €ä","ASCII")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=SHA256("Hash probe 2026","banana")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=SHA256()=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=SHA256("Hash probe 2026","UTF-8","extra")=%%

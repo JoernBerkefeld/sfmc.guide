@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/mod/
 platforms:
   - engagement
-  - next
 syntax: "Mod(dividend, divisor)"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`Mod(10,3)`, `Mod(500,12)` and the sign rule render the same. In Next, numeric strings (`Mod(\"10\",\"3\")`), `Mod(3,10)` and a zero divisor break the email preview (HTTP 500) instead of giving `1`, `3` and `NaN`. Decimal results are written as `3.0` for `Mod(10,3.5)` and `-1.883` for `Mod(-500.123,12.456)` in Next."
 ---
 
 {% include verification-status.html %}
@@ -90,15 +92,11 @@ This is where `Mod` and its sibling [`Divide`](/engagement/ampscript/functions/d
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Mod` in Marketing Cloud Next](/next/ampscript/functions/mod/) — how it behaves there
 - [`Divide`](/engagement/ampscript/functions/divide/) — the sibling function, with a different zero-divisor result
 - [Differs from official docs](/engagement/differs-from-docs/#mod-zero-divisor-nan) — the zero-divisor and sign findings
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html)

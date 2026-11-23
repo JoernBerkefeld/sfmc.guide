@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/empty/
 platforms:
   - engagement
-  - next
 syntax: "Empty(value)"
 return_type: boolean
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next only accepts a variable: an email with `Empty(\"\")`, `Empty(0)` or `Empty(Now())` is rejected at save. Next writes the result in lowercase (`true` / `false` instead of `True` / `False`). Which values count as empty is the same on both."
 ---
 
 {% include verification-status.html %}
@@ -85,15 +87,11 @@ Only `Empty` distinguishes a missing value from a present one. That is the whole
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="A bare string literal passed to `OutputLine` renders an empty line while the page still returns HTTP 200, so a marker silently vanishes and the block looks like a function that produced no output. Always wrap it — `OutputLine(Concat(\"--- safe start ---\"))` — even for a single argument." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes (since 67) |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Empty` in Marketing Cloud Next](/next/ampscript/functions/empty/) — how it behaves there
 - [IsNull](/engagement/ampscript/functions/isnull/) — the narrower test; it returned `False` for every input above, so it is not a substitute
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — looks like a fallback, but outside a Smart Capture form it never returns the default
 - [IIf](/engagement/ampscript/functions/iif/) — what usually consumes the boolean this function produces

@@ -62,12 +62,7 @@ The value domain is open, so there is no set of sentinel values to test for. Wha
 
 What the token resolves to on the target page needs a real send with a real subscriber, so the personalisation the official reference describes is not observable outside a send.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -1,0 +1,32 @@
+# Next test scripts for /next/ampscript/functions/now/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Now. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[2026-11-22T15:28:39] got=[%%=Now()=%%]</p>
+  <p>c2 expect=[10] got=[%%=Length(Format(Now(),"yyyy-MM-dd"))=%%]</p>
+  <p>c3 expect=[3|2026] got=[%%=DateDiff(Now(),DateAdd(Now(),3,"H"),"H")=%%|%%=DatePart(Now(),"Y")=%%]</p>
+  <p>c4 expect=[0] got=[%%[ SET @r2now9 = Now() ]%%%%=DateDiff(@r2now9,Now(),"MI")=%%]</p>
+  <p>c5 expect=[2026-11-22T20:58:04|2026-11-22T20:58:04] got=[%%=FormatDate(Now(),"ffffff")=%%|%%=FormatDate(Now(),"ffffff")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff(Now(),Now(1),"MI")=%%|%%=DateDiff(Now(),Now(0),"MI")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff(Now(),Now(true),"MI")=%%|%%=DateDiff(Now(),Now(false),"MI")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff(Now(),Now("1"),"MI")=%%|%%=DateDiff(Now(),Now("0"),"MI")=%%|%%=DateDiff(Now(),Now("true"),"MI")=%%|%%=DateDiff(Now(),Now("false"),"MI")=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff(Now(),Now("spring"),"MI")=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%=Now(1,1)=%%

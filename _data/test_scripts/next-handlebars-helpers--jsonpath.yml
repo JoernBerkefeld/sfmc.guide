@@ -1,0 +1,15 @@
+# Next test scripts for /next/handlebars/helpers/jsonpath/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  {{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  {{jsonPath '[1,2,3]' "$[-1]"}}
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  {{length (jsonPath '{"items":[{"price":50},{"price":150},{"price":200}]}' "$.items[?(@.price > 100)]")}}

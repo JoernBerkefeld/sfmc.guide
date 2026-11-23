@@ -1,0 +1,39 @@
+# Next test scripts for /next/ampscript/functions/propercase/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for ProperCase. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[Hello World] got=[%%=ProperCase("hello world")=%%]</p>
+  <p>c2 expect=[Mcdonald] got=[%%=ProperCase("McDONALD")=%%]</p>
+  <p>c3 expect=[Html And Css] got=[%%=ProperCase("HTML and CSS")=%%]</p>
+  <p>c4 expect=[Barb Brown] got=[%%=ProperCase("BARB BROWN")=%%]</p>
+  <p>c5 expect=[Iphone] got=[%%=ProperCase("iPhone")=%%]</p>
+  <p>c6 expect=[O'neill Mcdonald-smith] got=[%%=ProperCase("o'neill mcdonald-smith")=%%]</p>
+  <p>c7 expect=[A.b,c] got=[%%=ProperCase("a.b,c")=%%]</p>
+  <p>c8 expect=[Abc3def] got=[%%=ProperCase("abc3def")=%%]</p>
+  <p>c9 expect=[3rd Street] got=[%%=ProperCase("3rd street")=%%]</p>
+  <p>c10 expect=[A1b C2d] got=[%%=ProperCase("a1b c2d")=%%]</p>
+  <p>c11 expect=[ Spaced Out ] got=[%%=ProperCase("  spaced   out  ")=%%]</p>
+  <p>c12 expect=[12] got=[%%=Length(ProperCase("  spaced   out  "))=%%]</p>
+  <p>c13 expect=[X] got=[%%=ProperCase("x")=%%]</p>
+  <p>c14 expect=[] got=[%%=ProperCase("")=%%]</p>
+  <p>c15 expect=[Éàü Éàü] got=[%%=ProperCase(Concat(Char(233), Char(224), Char(252), " ", Char(233), Char(224), Char(252)))=%%]</p>
+  <p>c16 expect=[SStrasse] got=[%%=ProperCase(Concat(Char(223), "trasse"))=%%]</p>
+  <p>c17 expect=[8] got=[%%=Length(ProperCase(Concat(Char(223), "trasse")))=%%]</p>
+  <p>c18 expect=[12345] got=[%%=ProperCase(12345)=%%]</p>
+  <p>c19 expect=[Abc 42def] got=[%%=ProperCase("abc 42def")=%%]</p>
+  <p>c20 expect=[2026-11-23t00:20:52] got=[%%=ProperCase(Now())=%%]</p>
+  <p>c21 expect=[True] got=[%%=ProperCase(true)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=ProperCase()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=ProperCase("a b", "c d")=%%

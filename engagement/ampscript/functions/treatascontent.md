@@ -70,12 +70,7 @@ There is no closed set of sentinel values: the result is whatever the rendered s
 
 Because the embedded content is executed, never pass unreviewed input straight into `TreatAsContent`: a value spliced into the string is evaluated as AMPscript. Sanitise or allow-list any user-supplied content first.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

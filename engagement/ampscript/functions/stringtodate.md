@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/stringtodate/
 platforms:
   - engagement
-  - next
 syntax: "StringToDate(dateString)"
 return_type: date
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`StringToDate('2026-03-04')` renders `3/4/2026 12:00:00 AM` on both. `2026-03-04T09:05:07Z` and the GMT form give `9:05:07 AM` in Next instead of `3:05:07 AM`, and an unreadable string such as `not a date at all` is printed back in Next instead of aborting the page."
 ---
 
 {% include verification-status.html %}
@@ -100,17 +102,11 @@ A `DateDiff` in hours between the two results over the same input is `0`, and `L
 
 {% include callout.html type="warning" title="One rejected argument discards the whole page" content="AMPscript has no try/catch, so an unreadable date string aborts the render and throws away everything already written above it. When testing, put each risky call behind its own `RequestParameter` branch and fetch them one at a time — otherwise a single failure hides every result on the page." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
-
-The official reference states that on Marketing Cloud Next the function returns a locale-formatted string rather than a date value, which would break the chaining shown above.
+{% include platform-compare.html %}
 
 ## See also
 
+- [`StringToDate` in Marketing Cloud Next](/next/ampscript/functions/stringtodate/) — how it behaves there
 - [DateParse](/engagement/ampscript/functions/dateparse/) — same behaviour on one argument, plus an optional UTC flag this function does not have
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the usual next call, and the recommended alternative on Marketing Cloud Next
 - [DateAdd](/engagement/ampscript/functions/dateadd/)

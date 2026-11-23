@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lookup/
 platforms:
   - engagement
-  - next
 syntax: "Lookup(dataObject, returnColumn, searchColumn1, searchValue1[, searchColumnN, searchValueN, ...])"
 return_type: string
 min_args: 4
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: untested
+mcn_tested: 2026-11-23
+mcn_note: "An email that calls `Lookup` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
 ---
 
 {% include verification-status.html %}
@@ -72,15 +74,11 @@ A no-match returns an empty string, not a null or an error: `Lookup("AMP_VERIFY_
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Lookup` in Marketing Cloud Next](/next/ampscript/functions/lookup/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — returns every matching row as a rowset
 - [`Field`](/engagement/ampscript/functions/field/)
 - [`Row`](/engagement/ampscript/functions/row/) — read a column from a rowset row

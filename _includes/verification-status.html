@@ -11,10 +11,16 @@
 {% endcomment %}
 
 {% if page.verification %}
+{% comment %} Pages under /next/ document Marketing Cloud Next, proven in a Next email. {% endcomment %}
+{% if page.url contains "/next/" %}
+  {% assign proof_where = "in a Marketing Cloud Next email" %}
+{% else %}
+  {% assign proof_where = "on a live Marketing Cloud Engagement CloudPage" %}
+{% endif %}
 {% if page.verification == "verified" %}
   {% assign status_class = "status-verified" %}
   {% assign status_label = "Runtime verified" %}
-  {% assign status_title = "Every claim on this page was proven by running the function on a live Marketing Cloud Engagement CloudPage." %}
+  {% assign status_title = "Every claim on this page was proven by running the function " | append: proof_where | append: "." %}
 {% elsif page.verification == "in-progress" %}
   {% assign status_class = "status-in-progress" %}
   {% assign status_label = "Verification in progress" %}
@@ -22,7 +28,7 @@
 {% else %}
   {% assign status_class = "status-pending" %}
   {% assign status_label = "Verification pending" %}
-  {% assign status_title = "This page has not yet been proven against a live CloudPage." %}
+  {% assign status_title = "This page has not yet been proven by running the function " | append: proof_where | append: "." %}
 {% endif %}
 {% if include.title %}{% assign status_title = include.title %}{% endif %}
 
@@ -47,8 +53,9 @@
     {{ status_label }}
   </span>
 
-  {% if page.differs_from_docs %}
-  <span class="verified-badge differs-from-docs" title="Runtime behaviour on this page contradicts the official Salesforce documentation. See the Differs from official docs section below.">
+  {% comment %} Handlebars helper pages carry the docs comparison in `mcn` instead {% endcomment %}
+  {% if page.differs_from_docs or page.mcn == "differs-from-docs" or page.mcn == "unsupported" %}
+  <span class="verified-badge differs-from-docs" title="Runtime behaviour on this page contradicts the official Salesforce documentation or is not covered by it. See the Differs from official docs section below.">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M6 1.5L11 10.5H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
       <path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>

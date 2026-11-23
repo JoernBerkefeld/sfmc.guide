@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/subtract/
 platforms:
   - engagement
-  - next
 syntax: "Subtract(minuend, subtrahend)"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`Subtract(10,3)` and `Subtract(1.5,2.25)` render the same. In Next, numeric strings (`Subtract(\"50\",\"15\")`, `Subtract(\"9\",4)`) and `Subtract(-5,3)` break the email preview (HTTP 500) instead of giving `35`, `5` and `-8`."
 ---
 
 {% include verification-status.html %}
@@ -67,15 +69,11 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Subtract` in Marketing Cloud Next](/next/ampscript/functions/subtract/) — how it behaves there
 - [`Add`](/engagement/ampscript/functions/add/) — the inverse operation
 - [`Multiply`](/engagement/ampscript/functions/multiply/)
 - [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions

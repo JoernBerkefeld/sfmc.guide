@@ -13,6 +13,9 @@ min_args: 6
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: untested
+mcn_tested: 2026-11-23
+mcn_note: "An email that calls `ClaimRowValue` with six arguments saves and publishes in Next, so the syntax is accepted. Claiming a value has not been tested in Next: that needs a claimable data source in the Next org."
 ---
 
 {% include verification-status.html %}
@@ -62,15 +65,11 @@ Each **distinct** `claimantValue` claims the next unclaimed row and returns that
 
 {% include test-script.html bundle="ampscript-functions--claimrowvalue" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`ClaimRowValue` in Marketing Cloud Next](/next/ampscript/functions/claimrowvalue/) — how it behaves there
 - [`ClaimRow`](/engagement/ampscript/functions/claimrow/) — the twin that returns the whole row (and an empty row on exhaustion)
 - [`Field`](/engagement/ampscript/functions/field/)
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/)

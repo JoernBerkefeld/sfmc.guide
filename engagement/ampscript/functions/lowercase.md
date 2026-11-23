@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/lowercase/
 platforms:
   - engagement
-  - next
 syntax: "Lowercase(sourceString)"
 return_type: string
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Plain, accented and mixed text lowercase the same. Next turns the dotted capital `İ` into `i` plus a combining dot above (two code units) instead of a plain `i`, and renders `Lowercase(true)` as `true` instead of an empty string. A date is written as `2026-11-23t00:21:32` in Next."
 ---
 
 {% include verification-status.html %}
@@ -78,15 +80,11 @@ The result is arbitrary transformed text, so there is no closed set of sentinel 
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="A console that is not reading the response as UTF-8 turns non-ASCII input into mojibake and can make a correct conversion look broken. Render the input alongside the result and dump both as codepoints before drawing any conclusion." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Lowercase` in Marketing Cloud Next](/next/ampscript/functions/lowercase/) — how it behaves there
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the inverse conversion, which leaves the German sharp s alone
 - [`Concat`](/engagement/ampscript/functions/concat/)
 - [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions

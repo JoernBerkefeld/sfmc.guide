@@ -1,0 +1,45 @@
+# Next test scripts for /next/ampscript/functions/datediff/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for DateDiff. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[14] got=[%%=DateDiff("2026-01-01","2026-01-15","D")=%%]</p>
+  <p>c2 expect=[2] got=[%%=DateDiff("2026-01-10", "2026-01-12", "D")=%%]</p>
+  <p>c3 expect=[14] got=[%%=DateDiff("2026-03-04 13:52:07", "2027-05-09 09:15:31", "M")=%%]</p>
+  <p>c4 expect=[-23] got=[%%=DateDiff("2026-01-11 07:00:00", "2026-01-10 08:00:00", "H")=%%]</p>
+  <p>c5 expect=[1|14|430|10339|620363] got=[%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","Y")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","M")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","D")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","H")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","MI")=%%]</p>
+  <p>c6 expect=[1|14|430|10339|620363|620363|620363] got=[%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","y")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","m")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","d")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","h")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","mi")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","Mi")=%%|%%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","mI")=%%]</p>
+  <p>c7 expect=[23|0|-1] got=[%%=DateDiff("2026-01-10 08:00:00","2026-01-11 07:00:00","H")=%%|%%=DateDiff("2026-01-11 07:00:00","2026-01-10 08:00:00","D")=%%|%%=DateDiff("2026-01-10 09:30:00","2026-01-10 08:00:00","H")=%%]</p>
+  <p>c8 expect=[0|1|0] got=[%%=DateDiff("2026-01-10 08:00:00","2026-01-11 07:00:00","D")=%%|%%=DateDiff("2026-01-10 08:00:00","2026-01-10 09:30:00","H")=%%|%%=DateDiff("2026-01-10 08:00:00","2026-01-10 08:59:00","H")=%%]</p>
+  <p>c9 expect=[0|0|0|1|0|0|0] got=[%%=DateDiff("2026-12-31 23:59:00","2027-01-01 00:00:00","Y")=%%|%%=DateDiff("2026-12-31 23:59:00","2027-01-01 00:00:00","M")=%%|%%=DateDiff("2026-12-31 23:59:00","2027-01-01 00:00:00","D")=%%|%%=DateDiff("2026-12-31 23:59:00","2027-01-01 00:00:00","MI")=%%|%%=DateDiff("2026-01-01 00:00:00","2026-12-31 23:59:00","Y")=%%|%%=DateDiff("2026-01-01 00:00:00","2026-01-31 23:59:00","M")=%%|%%=DateDiff("2026-01-10 00:00:00","2026-01-10 23:59:00","D")=%%]</p>
+  <p>c10 expect=[0|1|0] got=[%%=DateDiff("2026-01-10 08:00:00","2027-01-09 08:00:00","Y")=%%|%%=DateDiff("2026-01-10 08:00:00","2027-01-11 08:00:00","Y")=%%|%%=DateDiff("2026-01-10 08:00:00","2026-02-08 08:00:00","M")=%%]</p>
+  <p>c11 expect=[0|0] got=[%%=DateDiff("2026-01-10 08:00:00","2026-01-10 08:00:59","MI")=%%|%%=DateDiff("2026-01-10 08:00:59","2026-01-10 08:01:00","MI")=%%]</p>
+  <p>c12 expect=[0|0|24.0] got=[%%=DateDiff("2026-01-10 08:00:00","2026-01-10 08:00:00","D")=%%|%%=DateDiff("2026-01-10 08:00:00","2026-01-10 08:00:00","MI")=%%|%%=Add(DateDiff("2026-01-10 08:00:00","2026-01-11 07:00:00","H"),1)=%%]</p>
+  <p>c13 expect=[2|2] got=[%%=DateDiff("1/10/2026","1/12/2026","D")=%%|%%=DateDiff("10 January 2026","12 January 2026","D")=%%]</p>
+  <p>c14 expect=[2|2|2] got=[%%=DateDiff(Now(),DateAdd(Now(),2,"D"),"D")=%%|%%=DateDiff(DateAdd("2026-01-10",0,"D"),"2026-01-12","D")=%%|%%=DateDiff("2026-01-10",DateAdd("2026-01-10",2,"D"),"D")=%%]</p>
+  <p>c15 expect=[59] got=[%%=DateDiff("2026-01-10 08:00:00","2026-01-10 08:00:59","S")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","W")=%%
+
+  <!-- email 2: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","day")=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateDiff("2026-03-04 13:52:07","2027-05-09 09:15:31","ZZ")=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=DateDiff("not a date at all","2027-05-09 09:15:31","D")=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff("2026-01-10 08:00:00","2026-01-11 07:00:00")=%%
+
+  <!-- email 6: expect that the save is rejected (HTTP 400) -->
+  %%=DateDiff("2026-01-10 08:00:00","2026-01-11 07:00:00","D","extra")=%%

@@ -1,0 +1,86 @@
+# Next test scripts for /next/ampscript/functions/char/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Char. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[A] got=[%%=Char(65)=%%]</p>
+  <p>c2 expect=[@] got=[%%=Char(64)=%%]</p>
+  <p>c3 expect=[AAA] got=[%%=Char(65,3)=%%]</p>
+  <p>c4 expect=[A] got=[%%=Char("65")=%%]</p>
+  <p>c5 expect=["] got=[%%=Char(34)=%%]</p>
+  <p>c6 expect=['] got=[%%=Char(39)=%%]</p>
+  <p>c7 expect=[A] got=[%%=Char(65,1)=%%]</p>
+  <p>c8 expect=[¾] got=[%%=Char(190)=%%]</p>
+  <p>c9 expect=[é] got=[%%=Char(233)=%%]</p>
+  <p>c10 expect=[ÿ] got=[%%=Char(255)=%%]</p>
+  <p>c11 expect=[	] got=[%%=Char(9)=%%]</p>
+  <p>c12 expect=[U+000A] got=[%%=Char(10)=%%]</p>
+  <p>c13 expect=[U+000D] got=[%%=Char(13)=%%]</p>
+  <p>c14 expect=[ ] got=[%%=Char(32)=%%]</p>
+  <p>c15 expect=[U+0000] got=[%%=Char(0)=%%]</p>
+  <p>c16 expect=[1] got=[%%=Length(Char(0))=%%]</p>
+  <p>c17 expect=[AAA] got=[%%=Char(65,"3")=%%]</p>
+  <p>c18 expect=[] got=[%%=Char(65,0)=%%]</p>
+  <p>c19 expect=[0] got=[%%=Length(Char(65,0))=%%]</p>
+  <p>c20 expect=[1] got=[%%=Length(Char(65))=%%]</p>
+  <p>c21 expect=[1] got=[%%=Length(Char(190))=%%]</p>
+  <p>c22 expect=[1] got=[%%=Length(Char(255))=%%]</p>
+  <p>c23 expect=[3] got=[%%=Length(Char(65,3))=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(256)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(8364)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(-1)=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(65601)=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Length(Char(65601))=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(128512)=%%
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Length(Char(128512))=%%
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(9731)=%%
+
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Length(Char(9731))=%%
+
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Length(Char(256))=%%
+
+  <!-- email 11: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(65.7)=%%
+
+  <!-- email 12: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char("A")=%%
+
+  <!-- email 13: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(true)=%%
+
+  <!-- email 14: expect that the email saves, but the preview never shows the new version (no fresh render) -->
+  %%=Char(65, -1)=%%
+
+  <!-- email 15: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=Char(65, 2.6)=%%
+
+  <!-- email 16: expect that the save is rejected (HTTP 400) -->
+  %%=Char()=%%
+
+  <!-- email 17: expect that the save is rejected (HTTP 400) -->
+  %%=Char(65, 2, 1)=%%

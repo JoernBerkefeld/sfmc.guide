@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`DatePart('2026-01-15','Y')` matches (`2026`). Next drops the leading zero on month and day (`3` and `4` instead of `03` and `04`) and uses a 24-hour clock (`19` instead of `7`, and `0` instead of `12` at midnight). The long tokens such as `monthName`, `year` and `day` make the Next email preview fail (HTTP 500)."
 ---
 
 {% include verification-status.html %}
@@ -95,16 +98,11 @@ The last three rows are the ones that surprise: midnight is `12` rather than `0`
 
 {% include callout.html type="warning" title="One rejected argument discards the whole page" content="AMPscript has no try/catch, so a bad token or an unreadable date aborts the render and throws away everything already written above it. When testing, put each risky call behind its own `RequestParameter` branch and fetch them one at a time — otherwise a single failure hides every result on the page." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
-
+{% include platform-compare.html %}
 
 ## See also
 
+- [`DatePart` in Marketing Cloud Next](/next/ampscript/functions/datepart/) — how it behaves there
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the way to get a 24-hour clock, a padded value, or a localised month name
 - [DateAdd](/engagement/ampscript/functions/dateadd/)
 - [DateDiff](/engagement/ampscript/functions/datediff/) — the sibling functions, whose token set is narrower

@@ -11,6 +11,10 @@
 # ampscriptEquivalent is a comma-joined list of every AMPscript counterpart (""
 # when none) kept for the filters; ampscriptEquivalents is the structured list
 # ({name, kind, exact}) that drives per-link rendering.
+#
+# page is the helper's own page on this site (only when the file exists), and
+# mcnResult is the `mcn` result from that page's front matter: matches-docs,
+# differs-from-docs, unsupported or untested.
 
 - name: "add"
   slug: "add"
@@ -28,6 +32,8 @@
   subexpressionOnly: false
   description: "Returns the sum of two numbers, rounded to 2 decimal places."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-add.html"
+  page: "/next/handlebars/helpers/add/"
+  mcnResult: "differs-from-docs"
 - name: "and"
   slug: "and"
   category: "Comparison"
@@ -44,6 +50,8 @@
   subexpressionOnly: false
   description: "Returns true only when all operands are truthy."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-and.html"
+  page: "/next/handlebars/helpers/and/"
+  mcnResult: "matches-docs"
 - name: "assignCoupon"
   slug: "assigncoupon"
   category: "Data"
@@ -57,6 +65,8 @@
   subexpressionOnly: false
   description: "Reserves a coupon for the current recipient from a coupon list stored in a marketing object and returns that row. Errors when no coupon can be assigned."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-assigncoupon.html"
+  page: "/next/handlebars/helpers/assigncoupon/"
+  mcnResult: "untested"
 - name: "base64Decode"
   slug: "base64decode"
   category: "Utility"
@@ -73,6 +83,8 @@
   subexpressionOnly: false
   description: "Turns a Base64 string back into readable text."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-base64decode.html"
+  page: "/next/handlebars/helpers/base64decode/"
+  mcnResult: "matches-docs"
 - name: "base64Encode"
   slug: "base64encode"
   category: "Utility"
@@ -89,6 +101,8 @@
   subexpressionOnly: false
   description: "Turns readable text into a Base64 string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-base64encode.html"
+  page: "/next/handlebars/helpers/base64encode/"
+  mcnResult: "matches-docs"
 - name: "buildRowSetFromString"
   slug: "buildrowsetfromstring"
   category: "Content"
@@ -105,6 +119,8 @@
   subexpressionOnly: false
   description: "Splits a string at a delimiter into a rowset with a single unnamed column, one row per value."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-buildrowsetfromstring.html"
+  page: "/next/handlebars/helpers/buildrowsetfromstring/"
+  mcnResult: "matches-docs"
 - name: "buildRowSetFromXml"
   slug: "buildrowsetfromxml"
   category: "Content"
@@ -121,6 +137,8 @@
   subexpressionOnly: false
   description: "Builds a rowset from the XML nodes an XPath expression selects; each row carries the node value, its XML, and its attributes."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-buildrowsetfromxml.html"
+  page: "/next/handlebars/helpers/buildrowsetfromxml/"
+  mcnResult: "matches-docs"
 - name: "buildUrl"
   slug: "buildurl"
   category: "Content"
@@ -134,6 +152,8 @@
   subexpressionOnly: false
   description: "Composes a link from a base URL plus UTM and custom query parameters and wraps it for click tracking. Errors when the base URL is empty."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-buildurl.html"
+  page: "/next/handlebars/helpers/buildurl/"
+  mcnResult: "matches-docs"
 - name: "char"
   slug: "char"
   category: "String"
@@ -150,6 +170,8 @@
   subexpressionOnly: false
   description: "Returns the Unicode character for a character code, optionally repeated."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-char.html"
+  page: "/next/handlebars/helpers/char/"
+  mcnResult: "differs-from-docs"
 - name: "claimRow"
   slug: "claimrow"
   category: "Data"
@@ -169,6 +191,8 @@
   subexpressionOnly: false
   description: "Takes the first row of a marketing object that nobody has claimed yet, marks it as claimed, and returns it. Errors when every row is already claimed."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-claimrow.html"
+  page: "/next/handlebars/helpers/claimrow/"
+  mcnResult: "unsupported"
 - name: "compare"
   slug: "compare"
   category: "Comparison"
@@ -197,6 +221,8 @@
   subexpressionOnly: false
   description: "Compares two values using a specified operator."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-compare.html"
+  page: "/next/handlebars/helpers/compare/"
+  mcnResult: "matches-docs"
 - name: "concat"
   slug: "concat"
   category: "String"
@@ -213,6 +239,8 @@
   subexpressionOnly: false
   description: "Combines multiple values into a single string. Null values are skipped."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-concat.html"
+  page: "/next/handlebars/helpers/concat/"
+  mcnResult: "matches-docs"
 - name: "dateAdd"
   slug: "dateadd"
   category: "Date & Time"
@@ -229,6 +257,8 @@
   subexpressionOnly: false
   description: "Adds or subtracts an amount of time to a date."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-dateadd.html"
+  page: "/next/handlebars/helpers/dateadd/"
+  mcnResult: "differs-from-docs"
 - name: "dateDiff"
   slug: "datediff"
   category: "Date & Time"
@@ -245,6 +275,8 @@
   subexpressionOnly: false
   description: "Calculates the time difference between two dates in a specified unit."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-datediff.html"
+  page: "/next/handlebars/helpers/datediff/"
+  mcnResult: "matches-docs"
 - name: "datePart"
   slug: "datepart"
   category: "Date & Time"
@@ -261,6 +293,8 @@
   subexpressionOnly: false
   description: "Returns one component of a date or timestamp, such as the year, as a number."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-datepart.html"
+  page: "/next/handlebars/helpers/datepart/"
+  mcnResult: "matches-docs"
 - name: "divide"
   slug: "divide"
   category: "Math"
@@ -277,6 +311,8 @@
   subexpressionOnly: false
   description: "Returns the quotient of dividing the first value by the second."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-divide.html"
+  page: "/next/handlebars/helpers/divide/"
+  mcnResult: "matches-docs"
 - name: "domain"
   slug: "domain"
   category: "Utility"
@@ -293,6 +329,8 @@
   subexpressionOnly: false
   description: "Returns everything behind the first @ of an email address, or null when the input has no @ or is not a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-domain.html"
+  page: "/next/handlebars/helpers/domain/"
+  mcnResult: "matches-docs"
 - name: "each"
   slug: "each"
   category: "Objects"
@@ -309,6 +347,8 @@
   subexpressionOnly: false
   description: "Iterates over arrays, lists, and objects, rendering a block for each element."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-each.html"
+  page: "/next/handlebars/helpers/each/"
+  mcnResult: "matches-docs"
 - name: "encode"
   slug: "encode"
   category: "Encryption"
@@ -322,6 +362,8 @@
   subexpressionOnly: false
   description: "Hashes a string with an algorithm chosen by name and returns the digest as lowercase hex. Errors on a missing argument or an unknown algorithm or charset."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-encode.html"
+  page: "/next/handlebars/helpers/encode/"
+  mcnResult: "matches-docs"
 - name: "encodeURI"
   slug: "encodeuri"
   category: "HTTP"
@@ -335,6 +377,8 @@
   subexpressionOnly: false
   description: "URL-encodes a whole string so it can be placed in a link. For only the part behind the address, such as a query string, use encodeURIComponent."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-http-references/mcn-handlebars-reference-http-encodeuri.html"
+  page: "/next/handlebars/helpers/encodeuri/"
+  mcnResult: "differs-from-docs"
 - name: "encodeURIComponent"
   slug: "encodeuricomponent"
   category: "HTTP"
@@ -351,6 +395,8 @@
   subexpressionOnly: false
   description: "URL-encodes the part of a string that comes after the address, such as a query string. For a whole string, use encodeURI."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-http-references/mcn-handlebars-reference-http-encodeuricomponent.html"
+  page: "/next/handlebars/helpers/encodeuricomponent/"
+  mcnResult: "matches-docs"
 - name: "equals"
   slug: "equals"
   category: "Comparison"
@@ -367,6 +413,8 @@
   subexpressionOnly: false
   description: "Compares two values for equality, optionally by a comparison type."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-equals.html"
+  page: "/next/handlebars/helpers/equals/"
+  mcnResult: "differs-from-docs"
 - name: "fallback"
   slug: "fallback"
   category: "Utility"
@@ -380,6 +428,8 @@
   subexpressionOnly: false
   description: "Returns a fallback value when the first argument is null, empty, or throws an exception."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-fallback.html"
+  page: "/next/handlebars/helpers/fallback/"
+  mcnResult: "matches-docs"
 - name: "filter"
   slug: "filter"
   category: "Objects"
@@ -393,6 +443,8 @@
   subexpressionOnly: false
   description: "Returns a list of items that match a field/operator/value condition."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-filter.html"
+  page: "/next/handlebars/helpers/filter/"
+  mcnResult: "unsupported"
 - name: "flatten"
   slug: "flatten"
   category: "Objects"
@@ -406,6 +458,8 @@
   subexpressionOnly: false
   description: "Flattens a nested list of lists into a single list."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-flatten.html"
+  page: "/next/handlebars/helpers/flatten/"
+  mcnResult: "untested"
 - name: "format"
   slug: "format"
   category: "Utility"
@@ -425,6 +479,8 @@
   subexpressionOnly: false
   description: "Formats output based on a format string and optional type specification."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-format.html"
+  page: "/next/handlebars/helpers/format/"
+  mcnResult: "differs-from-docs"
 - name: "formatCurrency"
   slug: "formatcurrency"
   category: "Utility"
@@ -441,6 +497,8 @@
   subexpressionOnly: false
   description: "Formats a number as a currency value for a locale."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatcurrency.html"
+  page: "/next/handlebars/helpers/formatcurrency/"
+  mcnResult: "differs-from-docs"
 - name: "formatNumber"
   slug: "formatnumber"
   category: "Utility"
@@ -457,6 +515,8 @@
   subexpressionOnly: false
   description: "Formats a number as a specific numeric type, such as decimal or percentage."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatnumber.html"
+  page: "/next/handlebars/helpers/formatnumber/"
+  mcnResult: "matches-docs"
 - name: "get"
   slug: "get"
   category: "Objects"
@@ -476,6 +536,8 @@
   subexpressionOnly: false
   description: "Retrieves a value from a list or map by index or key."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-get.html"
+  page: "/next/handlebars/helpers/get/"
+  mcnResult: "matches-docs"
 - name: "getContentBlock"
   slug: "getcontentblock"
   category: "Content"
@@ -492,6 +554,8 @@
   subexpressionOnly: false
   description: "Retrieves and renders a content block within a template."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-getcontentblock.html"
+  page: "/next/handlebars/helpers/getcontentblock/"
+  mcnResult: "matches-docs"
 - name: "guid"
   slug: "guid"
   category: "Utility"
@@ -508,6 +572,8 @@
   subexpressionOnly: false
   description: "Creates a new globally unique identifier (GUID). Takes no parameters; any that are passed are ignored."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-guid.html"
+  page: "/next/handlebars/helpers/guid/"
+  mcnResult: "matches-docs"
 - name: "hash"
   slug: "hash"
   category: "Data"
@@ -521,6 +587,8 @@
   subexpressionOnly: true
   description: "Constructs an object from key-value pairs. Used only as a subexpression within other helpers."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-hash.html"
+  page: "/next/handlebars/helpers/hash/"
+  mcnResult: "matches-docs"
 - name: "if"
   slug: "if"
   category: "Comparison"
@@ -543,6 +611,8 @@
   subexpressionOnly: false
   description: "Conditionally renders a block based on whether a value evaluates to true."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-if.html"
+  page: "/next/handlebars/helpers/if/"
+  mcnResult: "matches-docs"
 - name: "iif"
   slug: "iif"
   category: "Comparison"
@@ -559,6 +629,8 @@
   subexpressionOnly: false
   description: "Returns one of two values based on whether an expression is true or false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-iif.html"
+  page: "/next/handlebars/helpers/iif/"
+  mcnResult: "matches-docs"
 - name: "impressionRegion"
   slug: "impressionregion"
   category: "Content"
@@ -578,6 +650,8 @@
   subexpressionOnly: false
   description: "Marks the enclosed part of a message as a named impression region for reporting on dynamic content. Adds no output of its own."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-impressionregion.html"
+  page: "/next/handlebars/helpers/impressionregion/"
+  mcnResult: "unsupported"
 - name: "indexOf"
   slug: "indexof"
   category: "String"
@@ -594,6 +668,8 @@
   subexpressionOnly: false
   description: "Returns the 1-based position of a substring within a string (case-insensitive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-indexof.html"
+  page: "/next/handlebars/helpers/indexof/"
+  mcnResult: "matches-docs"
 - name: "isEmailAddress"
   slug: "isemailaddress"
   category: "Utility"
@@ -610,6 +686,8 @@
   subexpressionOnly: false
   description: "Checks whether a value has the shape of an email address. It does not check that the mailbox or domain exists."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-isemailaddress.html"
+  page: "/next/handlebars/helpers/isemailaddress/"
+  mcnResult: "matches-docs"
 - name: "isEmpty"
   slug: "isempty"
   category: "Comparison"
@@ -629,6 +707,8 @@
   subexpressionOnly: false
   description: "Returns true when a value is null, undefined, or an empty string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-isempty.html"
+  page: "/next/handlebars/helpers/isempty/"
+  mcnResult: "matches-docs"
 - name: "isNullDefault"
   slug: "isnulldefault"
   category: "Utility"
@@ -645,6 +725,8 @@
   subexpressionOnly: false
   description: "Returns the first value, or the second one when the first is null."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-isnulldefault.html"
+  page: "/next/handlebars/helpers/isnulldefault/"
+  mcnResult: "matches-docs"
 - name: "jsonPath"
   slug: "jsonpath"
   category: "Objects"
@@ -661,6 +743,8 @@
   subexpressionOnly: false
   description: "Queries and filters JSON objects using a JSONPath expression."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-jsonpath.html"
+  page: "/next/handlebars/helpers/jsonpath/"
+  mcnResult: "unsupported"
 - name: "length"
   slug: "length"
   category: "Utility"
@@ -680,6 +764,8 @@
   subexpressionOnly: false
   description: "Returns the length of a string or the number of elements in an array."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-length.html"
+  page: "/next/handlebars/helpers/length/"
+  mcnResult: "matches-docs"
 - name: "lookup"
   slug: "lookup"
   category: "Objects"
@@ -693,6 +779,8 @@
   subexpressionOnly: false
   description: "Dynamically accesses an object property or array element by a variable key."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-lookup.html"
+  page: "/next/handlebars/helpers/lookup/"
+  mcnResult: "differs-from-docs"
 - name: "lowercase"
   slug: "lowercase"
   category: "String"
@@ -709,6 +797,8 @@
   subexpressionOnly: false
   description: "Converts all letters in a string to lowercase."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-lowercase.html"
+  page: "/next/handlebars/helpers/lowercase/"
+  mcnResult: "matches-docs"
 - name: "map"
   slug: "map"
   category: "Objects"
@@ -722,6 +812,8 @@
   subexpressionOnly: false
   description: "Extracts a specific field from each object in a list."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-map.html"
+  page: "/next/handlebars/helpers/map/"
+  mcnResult: "untested"
 - name: "md5"
   slug: "md5"
   category: "Encryption"
@@ -738,6 +830,8 @@
   subexpressionOnly: false
   description: "Returns the MD5 digest (128 bit) of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-md5.html"
+  page: "/next/handlebars/helpers/md5/"
+  mcnResult: "matches-docs"
 - name: "modulo"
   slug: "modulo"
   category: "Math"
@@ -754,6 +848,8 @@
   subexpressionOnly: false
   description: "Returns the remainder after dividing the first value by the second."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-modulo.html"
+  page: "/next/handlebars/helpers/modulo/"
+  mcnResult: "matches-docs"
 - name: "multiply"
   slug: "multiply"
   category: "Math"
@@ -770,6 +866,8 @@
   subexpressionOnly: false
   description: "Returns the product of two numbers, rounded to 2 decimal places."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-multiply.html"
+  page: "/next/handlebars/helpers/multiply/"
+  mcnResult: "matches-docs"
 - name: "not"
   slug: "not"
   category: "Comparison"
@@ -786,6 +884,8 @@
   subexpressionOnly: false
   description: "Returns true when the operand evaluates to false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-not.html"
+  page: "/next/handlebars/helpers/not/"
+  mcnResult: "matches-docs"
 - name: "now"
   slug: "now"
   category: "Date & Time"
@@ -802,6 +902,8 @@
   subexpressionOnly: false
   description: "Returns the current server date and time in UTC. Takes no parameters."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-now.html"
+  page: "/next/handlebars/helpers/now/"
+  mcnResult: "matches-docs"
 - name: "or"
   slug: "or"
   category: "Comparison"
@@ -818,6 +920,8 @@
   subexpressionOnly: false
   description: "Returns true when at least one operand is truthy."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-or.html"
+  page: "/next/handlebars/helpers/or/"
+  mcnResult: "matches-docs"
 - name: "personalizationResult"
   slug: "personalizationresult"
   category: "Personalization"
@@ -834,6 +938,8 @@
   subexpressionOnly: false
   description: "Retrieves a personalized value by key from the subscriber context."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-personalization-references/mcn-handlebars-reference-personalization-personalizationresult.html"
+  page: "/next/handlebars/helpers/personalizationresult/"
+  mcnResult: "matches-docs"
 - name: "properCase"
   slug: "propercase"
   category: "String"
@@ -850,6 +956,8 @@
   subexpressionOnly: false
   description: "Capitalizes the first letter of each word and lowercases the rest."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-propercase.html"
+  page: "/next/handlebars/helpers/propercase/"
+  mcnResult: "unsupported"
 - name: "query"
   slug: "query"
   category: "Data"
@@ -878,6 +986,8 @@
   subexpressionOnly: false
   description: "Retrieves multiple records from Sales Cloud or marketing object data sources."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  page: "/next/handlebars/helpers/query/"
+  mcnResult: "unsupported"
 - name: "queryFirst"
   slug: "queryfirst"
   category: "Data"
@@ -894,6 +1004,8 @@
   subexpressionOnly: false
   description: "Retrieves the first record from Sales Cloud, marketing objects, or data graphs matching criteria."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
+  page: "/next/handlebars/helpers/queryfirst/"
+  mcnResult: "unsupported"
 - name: "raiseError"
   slug: "raiseerror"
   category: "Utility"
@@ -910,6 +1022,8 @@
   subexpressionOnly: false
   description: "Throws an exception with a message and optional error code, halting rendering."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-raiseerror.html"
+  page: "/next/handlebars/helpers/raiseerror/"
+  mcnResult: "untested"
 - name: "random"
   slug: "random"
   category: "Math"
@@ -926,6 +1040,8 @@
   subexpressionOnly: false
   description: "Returns a random integer between two values (inclusive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-random.html"
+  page: "/next/handlebars/helpers/random/"
+  mcnResult: "matches-docs"
 - name: "regExMatch"
   slug: "regexmatch"
   category: "String"
@@ -942,6 +1058,8 @@
   subexpressionOnly: false
   description: "Applies a regular expression (Java regex syntax) to a string and returns the matched text or one capture group. Returns an empty string when nothing matches."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-regexmatch.html"
+  page: "/next/handlebars/helpers/regexmatch/"
+  mcnResult: "matches-docs"
 - name: "repeat"
   slug: "repeat"
   category: "Utility"
@@ -955,6 +1073,8 @@
   subexpressionOnly: false
   description: "Repeats a block a specified number of times, exposing index, first, and last loop variables."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-repeat.html"
+  page: "/next/handlebars/helpers/repeat/"
+  mcnResult: "matches-docs"
 - name: "replace"
   slug: "replace"
   category: "String"
@@ -971,6 +1091,8 @@
   subexpressionOnly: false
   description: "Replaces every occurrence of a substring with another (case-sensitive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-replace.html"
+  page: "/next/handlebars/helpers/replace/"
+  mcnResult: "differs-from-docs"
 - name: "set"
   slug: "set"
   category: "Utility"
@@ -993,6 +1115,8 @@
   subexpressionOnly: false
   description: "Performs local variable assignment within the block scope. Variables do not persist outside the block."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-set.html"
+  page: "/next/handlebars/helpers/set/"
+  mcnResult: "matches-docs"
 - name: "sha1"
   slug: "sha1"
   category: "Encryption"
@@ -1009,6 +1133,8 @@
   subexpressionOnly: false
   description: "Returns the SHA-1 digest (160 bit) of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha1.html"
+  page: "/next/handlebars/helpers/sha1/"
+  mcnResult: "matches-docs"
 - name: "sha256"
   slug: "sha256"
   category: "Encryption"
@@ -1025,6 +1151,8 @@
   subexpressionOnly: false
   description: "Returns the SHA-256 digest of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha256.html"
+  page: "/next/handlebars/helpers/sha256/"
+  mcnResult: "matches-docs"
 - name: "sha512"
   slug: "sha512"
   category: "Encryption"
@@ -1041,6 +1169,8 @@
   subexpressionOnly: false
   description: "Returns the SHA-512 digest of a string as hex. One-way and not safe for protecting secrets."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-encryption-references/mcn-handlebars-reference-encryption-sha512.html"
+  page: "/next/handlebars/helpers/sha512/"
+  mcnResult: "matches-docs"
 - name: "slice"
   slug: "slice"
   category: "Objects"
@@ -1054,6 +1184,8 @@
   subexpressionOnly: false
   description: "Returns a portion of a list between two indices (end index exclusive)."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-slice.html"
+  page: "/next/handlebars/helpers/slice/"
+  mcnResult: "unsupported"
 - name: "sort"
   slug: "sort"
   category: "Utility"
@@ -1067,6 +1199,8 @@
   subexpressionOnly: false
   description: "Sorts a list of objects by a field, order, and type."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-sort.html"
+  page: "/next/handlebars/helpers/sort/"
+  mcnResult: "unsupported"
 - name: "stringToHex"
   slug: "stringtohex"
   category: "String"
@@ -1083,6 +1217,8 @@
   subexpressionOnly: false
   description: "Returns the hexadecimal representation of the encoded characters of a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-stringtohex.html"
+  page: "/next/handlebars/helpers/stringtohex/"
+  mcnResult: "matches-docs"
 - name: "substring"
   slug: "substring"
   category: "String"
@@ -1099,6 +1235,8 @@
   subexpressionOnly: false
   description: "Extracts a portion of a string starting from a 1-based position."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-substring.html"
+  page: "/next/handlebars/helpers/substring/"
+  mcnResult: "differs-from-docs"
 - name: "subtract"
   slug: "subtract"
   category: "Math"
@@ -1115,6 +1253,8 @@
   subexpressionOnly: false
   description: "Returns the difference of subtracting the second value from the first."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-math-references/mcn-handlebars-reference-math-subtract.html"
+  page: "/next/handlebars/helpers/subtract/"
+  mcnResult: "differs-from-docs"
 - name: "timeZoneConversion"
   slug: "timezoneconversion"
   category: "Date & Time"
@@ -1134,6 +1274,8 @@
   subexpressionOnly: false
   description: "Converts a date from one time zone to another."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-timezoneconversion.html"
+  page: "/next/handlebars/helpers/timezoneconversion/"
+  mcnResult: "unsupported"
 - name: "trim"
   slug: "trim"
   category: "String"
@@ -1150,6 +1292,8 @@
   subexpressionOnly: false
   description: "Removes leading and trailing whitespace from a string."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-trim.html"
+  page: "/next/handlebars/helpers/trim/"
+  mcnResult: "matches-docs"
 - name: "unless"
   slug: "unless"
   category: "Comparison"
@@ -1163,6 +1307,8 @@
   subexpressionOnly: false
   description: "Conditionally renders a block based on whether a value evaluates to false."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-comparison-references/mcn-handlebars-reference-comparison-unless.html"
+  page: "/next/handlebars/helpers/unless/"
+  mcnResult: "matches-docs"
 - name: "uppercase"
   slug: "uppercase"
   category: "String"
@@ -1179,6 +1325,8 @@
   subexpressionOnly: false
   description: "Converts all letters in a string to uppercase."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-uppercase.html"
+  page: "/next/handlebars/helpers/uppercase/"
+  mcnResult: "differs-from-docs"
 - name: "with"
   slug: "with"
   category: "Utility"
@@ -1192,3 +1340,5 @@
   subexpressionOnly: false
   description: "Changes the block context to a specified object so properties can be accessed directly."
   docUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-with.html"
+  page: "/next/handlebars/helpers/with/"
+  mcnResult: "matches-docs"

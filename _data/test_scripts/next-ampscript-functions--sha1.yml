@@ -1,0 +1,33 @@
+# Next test scripts for /next/ampscript/functions/sha1/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for SHA1. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[a9993e364706816aba3e25717850c26c9cd0d89d] got=[%%=SHA1("abc")=%%]</p>
+  <p>c2 expect=[da39a3ee5e6b4b0d3255bfef95601890afd80709] got=[%%=SHA1("")=%%]</p>
+  <p>c3 expect=[20903bc0c930c22be005bfb1ede7db6722452ee7] got=[%%=SHA1("Hash probe 2026")=%%]</p>
+  <p>c4 expect=[40] got=[%%=Length(SHA1("Hash probe 2026"))=%%]</p>
+  <p>c5 expect=[57418a4484a6e50107c9c73d57333982344f4ebd] got=[%%=SHA1("Grusß €ä")=%%]</p>
+  <p>c6 expect=[12ebd4a9b721eda440d263131f1e29fad920fede] got=[%%=SHA1("Hash probe 2026","UTF-16")=%%]</p>
+  <p>c7 expect=[94b0370f99d4327e50edf287eca69e945f3741d7] got=[%%=SHA1("Grusß €ä","UTF-16")=%%]</p>
+  <p>c8 expect=[0af2f4853cc89dc1e1efe397ca334ce7a19d14da] got=[%%=SHA1("This is a string of text.")=%%]</p>
+  <p>c9 expect=[93135d2253cdf62bb977c529a47739baaa649db4] got=[%%=SHA1("Hash example 2026")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=SHA1("Grusß €ä","ASCII")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=SHA1("Hash probe 2026","banana")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=SHA1()=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=SHA1("Hash probe 2026","UTF-8","extra")=%%

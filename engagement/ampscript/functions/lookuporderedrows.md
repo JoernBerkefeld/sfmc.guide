@@ -13,6 +13,9 @@ min_args: 5
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: untested
+mcn_tested: 2026-11-23
+mcn_note: "An email that calls `LookupOrderedRows` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
 ---
 
 {% include verification-status.html %}
@@ -75,15 +78,11 @@ A no-match returns an empty rowset; guard with `RowCount`.
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`LookupOrderedRows` in Marketing Cloud Next](/next/ampscript/functions/lookuporderedrows/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — unordered matching rows
 - [`LookupOrderedRowsCS`](/engagement/ampscript/functions/lookuporderedrowscs/) — the case-sensitive counterpart
 - [`Row`](/engagement/ampscript/functions/row/)

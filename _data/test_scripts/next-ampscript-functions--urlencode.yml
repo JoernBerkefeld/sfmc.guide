@@ -1,0 +1,42 @@
+# Next test scripts for /next/ampscript/functions/urlencode/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for URLEncode. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[a b&amp;c] got=[%%=URLEncode("a b&c")=%%]</p>
+  <p>c2 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a,b] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",0,0)=%%]</p>
+  <p>c3 expect=[spring%20sale] got=[%%=URLEncode("spring sale",0,1)=%%]</p>
+  <p>c4 expect=[spring%20sale] got=[%%=URLEncode("spring sale",1,1)=%%]</p>
+  <p>c5 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",1,0)=%%]</p>
+  <p>c6 expect=[spring sale] got=[%%=URLEncode("spring sale")=%%]</p>
+  <p>c7 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a,b] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b")=%%]</p>
+  <p>c8 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a,b] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",false,false)=%%]</p>
+  <p>c9 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",true,false)=%%]</p>
+  <p>c10 expect=[spring%20sale] got=[%%=URLEncode("spring sale",false,true)=%%]</p>
+  <p>c11 expect=[spring%20sale] got=[%%=URLEncode("spring sale",true,true)=%%]</p>
+  <p>c12 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a,b] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",0)=%%]</p>
+  <p>c13 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",1)=%%]</p>
+  <p>c14 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a,b] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",false)=%%]</p>
+  <p>c15 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",true)=%%]</p>
+  <p>c16 expect=[spring%20sale] got=[%%=URLEncode("spring sale","1","1")=%%]</p>
+  <p>c17 expect=[spring%20sale] got=[%%=URLEncode("spring sale","true","true")=%%]</p>
+  <p>c18 expect=[spring%20sale] got=[%%=URLEncode("spring sale","0","1")=%%]</p>
+  <p>c19 expect=[spring%20sale] got=[%%=URLEncode("spring sale","false","true")=%%]</p>
+  <p>c20 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b","1","0")=%%]</p>
+  <p>c21 expect=[https://example.org/go?promo=spring%20sale&amp;tags=a%2Cb] got=[%%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b","true","false")=%%]</p>
+  <p>c22 expect=[spring%20sale] got=[%%=URLEncode("spring sale",2,2)=%%]</p>
+  <p>c23 expect=[4821] got=[%%=URLEncode(4821)=%%]</p>
+  <p>c24 expect=[] got=[%%=URLEncode("")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=URLEncode()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=URLEncode("https://example.org/go?promo=spring sale&tags=a,b",0,0,0)=%%

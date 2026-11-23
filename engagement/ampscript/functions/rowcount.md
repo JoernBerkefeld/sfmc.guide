@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/rowcount/
 platforms:
   - engagement
-  - next
 syntax: "RowCount(rowset)"
 return_type: number
 min_args: 1
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: same
+mcn_tested: 2026-11-23
+mcn_note: "Next gives the same counts: `3` for a split string, `1` for a string without the delimiter and `0` for an empty rowset."
 ---
 
 {% include verification-status.html %}
@@ -67,15 +69,11 @@ There is no sentinel: the result is a bare non-negative integer.
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`RowCount` in Marketing Cloud Next](/next/ampscript/functions/rowcount/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset to count
 - [`Row`](/engagement/ampscript/functions/row/)
 - [`Field`](/engagement/ampscript/functions/field/) — read a counted rowset

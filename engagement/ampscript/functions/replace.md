@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/replace/
 platforms:
   - engagement
-  - next
 syntax: "Replace(sourceString, searchSubstring[, replacementSubstring])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "String calls give the same results, including case-insensitive matching and the single pass. Next needs all three arguments: an email with `Replace(\"abc\", \"b\")` (here `ac`) is refused at save. A number or boolean argument, such as `Replace(101101, \"0\", \"9\")` (here `191191`), makes the Next preview fail."
 ---
 
 {% include verification-status.html %}
@@ -98,15 +100,11 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 
 {% include callout.html type="info" title="Echo the input, not just the result" content="When a case involves non-ASCII text, print the source alongside the result and check the code points. A terminal that mangles one accented letter will make a correct replacement look broken." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Replace` in Marketing Cloud Next](/next/ampscript/functions/replace/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#replace-case-insensitive-single-pass) — the casing and single-pass findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — finds the text instead of rewriting it, and matches case the same way
 - [`Substring`](/engagement/ampscript/functions/substring/) — takes a portion of a string by position

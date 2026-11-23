@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next accepts only `UTF-8` and `UTF-16` as the character set: an email using `UTF-16BE`, `UTF-32`, `ASCII` or `ISO-8859-1` is rejected at save, where Engagement renders the hex of those bytes (e.g. `6361663f3f` for `café€` in `ASCII`). The default UTF-8 (`636166c3a9e282ac`) and `UTF-16` render the same in Next."
 ---
 
 {% include verification-status.html %}
@@ -88,15 +91,11 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="When a case involves non-ASCII characters, print the input string alongside the hex value. A mangled test string produces a perfectly valid rendering of the wrong bytes, which is indistinguishable from a function defect unless the input is visible in the same output." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`StringToHex` in Marketing Cloud Next](/next/ampscript/functions/stringtohex/) — how it behaves there
 - [Base64Encode](/engagement/ampscript/functions/base64encode/)
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — the same bytes in a denser alphabet, and reversible
 - [SHA256](/engagement/ampscript/functions/sha256/) — the same charSet domain, applied before hashing

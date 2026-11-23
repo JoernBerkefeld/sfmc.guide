@@ -61,12 +61,7 @@ A fuller build, assembling a retrieve request:
 
 {% include test-script.html bundle="ampscript-functions--createobject" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -1,0 +1,22 @@
+# Next test scripts for /next/ampscript/functions/v/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for v. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[zeta] got=[%%[ SET @vz1 = "zeta" ]%%%%=v(@vz1)=%%]</p>
+  <p>c2 expect=[p] got=[%%=v("p")=%%]</p>
+  <p>c3 expect=[5] got=[%%=v(5)=%%]</p>
+  <p>c4 expect=[7] got=[%%[ SET @r2vn = 7 ]%%%%=v(@r2vn)=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=v()=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2ve1 = "a" SET @r2ve2 = "b" ]%%%%=v(@r2ve1,@r2ve2)=%%

@@ -60,14 +60,11 @@ To emit HTML that itself contains AMPscript, wrap the result in [`TreatAsContent
 
 {% include callout.html type="warning" title="OutputLine needs Concat" text="When re-running the test script, keep the `Concat(...)` around every marker and value. `OutputLine(\"literal\")` renders an empty line, so a bare literal marker silently vanishes and the block looks like it failed." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+## Context and requirements
 
 The official reference notes the function was designed for XML and XSL stored as Classic Content, and that supplying the stylesheet from a Content Builder block can throw. Passing literal strings — or Base64-decoded content blocks — works.
+
+{% include platform-compare.html %}
 
 ## See also
 

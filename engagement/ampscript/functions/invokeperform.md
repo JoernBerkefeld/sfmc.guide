@@ -57,12 +57,7 @@ For an invalid action this renders `ret=[Error] st=[notarealaction is not an act
 
 {% include test-script.html bundle="ampscript-functions--invokeperform" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

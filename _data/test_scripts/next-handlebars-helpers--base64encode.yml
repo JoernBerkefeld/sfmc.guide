@@ -1,0 +1,11 @@
+# Next test scripts for /next/handlebars/helpers/base64encode/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for the base64Encode helper. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[YWJj] got=[{{base64Encode "abc"}}]</p>
+  <p>c2 expect=[YQBiAGMA] got=[{{base64Encode "abc" characterEncoding="UTF-16"}}]</p>

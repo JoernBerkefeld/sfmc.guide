@@ -1,0 +1,24 @@
+# Next test scripts for /next/ampscript/functions/contentblockbyid/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @cbi1 = ContentBlockByID(999999999, "", 0, "FB-CBID", @cbis1) ]%%%%=v(@cbi1)=%% %%=v(@cbis1)=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbyidl = ContentBlockByID(999999999, "", 0, "PRE-%%=Add(2,3)=%%-POST", @r2cbbyidls) ]%%%%=v(@r2cbbyidl)=%% %%=v(@r2cbbyidls)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbyidf0 = ContentBlockByID(999999999, "", false, "FB-CBID", @r2cbbyidfs0) SET @r2cbbyidf1 = ContentBlockByID(999999999, "", "false", "FB-CBID", @r2cbbyidfs1) SET @r2cbbyidf2 = ContentBlockByID(999999999, "", "0", "FB-CBID", @r2cbbyidfs2) ]%%%%=v(@r2cbbyidf0)=%% %%=v(@r2cbbyidfs0)=%%|%%=v(@r2cbbyidf1)=%% %%=v(@r2cbbyidfs1)=%%|%%=v(@r2cbbyidf2)=%% %%=v(@r2cbbyidfs2)=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=ContentBlockByID()=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2cbbyid6 = ContentBlockByID(999999999, "", 0, "FB-CBID", @r2cbbyid6s, "extra") ]%%%%=v(@r2cbbyid6)=%%
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r2cbbyidt = ContentBlockByID(999999999, "", 1, "FB-CBID", @r2cbbyidts) ]%%%%=v(@r2cbbyidt)=%%

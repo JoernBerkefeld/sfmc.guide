@@ -11,7 +11,7 @@ platforms:
 
 Handlebars is the templating language of Marketing Cloud Next. This page lists every helper the language catalog knows about, where it came from, which Core API version introduced it, and whether AMPscript can express the same thing.
 
-{% include callout.html type="note" title="Catalogued, not runtime-proven" content="These rows come from the same language catalog that powers the SFMC Language Service and the ESLint rules. Unlike the [Engagement AMPscript reference](/engagement/ampscript/functions/), no helper here has been through a runtime sweep yet &mdash; each name links to the official Salesforce reference instead of to a page on this site." %}
+{% include callout.html type="note" title="Rendered in a Marketing Cloud Next email" content="These rows come from the same language catalog that powers the SFMC Language Service and the ESLint rules. Every helper was tried in a Marketing Cloud Next email on 2026-11-22. Each name links to its page on this site, with the tested calls, what MCN actually rendered (or why the email could not be saved), and how that compares to the official Salesforce reference." %}
 
 **Origin** tells you where a helper comes from: a *Marketing Cloud Next helper* is specific to the platform, a *Handlebars built-in* is part of the Handlebars language itself, and a *Marketing Cloud Next platform* entry is exposed by the runtime rather than by the templating layer.
 

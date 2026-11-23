@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/multiply/
 platforms:
   - engagement
-  - next
 syntax: "Multiply(number1, number2)"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Integers, numeric strings and large products render the same. Next rounds `Multiply(1.5,2.25)` to `3.38` instead of `3.375`, and renders `Multiply(\"true\",1)` as `1` where Engagement aborts."
 ---
 
 {% include verification-status.html %}
@@ -69,15 +71,11 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Multiply` in Marketing Cloud Next](/next/ampscript/functions/multiply/) — how it behaves there
 - [`Divide`](/engagement/ampscript/functions/divide/) — the inverse operation, with an unusual zero-divisor result
 - [`Add`](/engagement/ampscript/functions/add/)
 - [`Subtract`](/engagement/ampscript/functions/subtract/) — the other two arithmetic functions

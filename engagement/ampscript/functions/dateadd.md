@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/dateadd/
 platforms:
   - engagement
-  - next
 syntax: "DateAdd(date, amountToAdd, unitToAdd)"
 return_type: date
 min_args: 3
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next prints the result in ISO form: `DateAdd('2026-01-15',7,'D')` gives `2026-01-22T00:00:00` in Next and `1/22/2026 12:00:00 AM` in Engagement; the computed dates and the month-end clamp match. A seconds unit and a decimal amount abort the Engagement page, while Next renders them (`DateAdd('2026-03-04 13:52:07',30,'S')` gives `2026-03-04T13:52:37`, and `1.5` days adds one day)."
 ---
 
 {% include verification-status.html %}
@@ -90,15 +92,11 @@ The third row is the one that bites. Stepping forward a month and back again lan
 
 {% include callout.html type="warning" title="One rejected argument discards the whole page" content="AMPscript has no try/catch, so a bad unit, a decimal amount or an unreadable date aborts the render and throws away everything already written above it. When testing, put each risky call behind its own `RequestParameter` branch and fetch them one at a time — otherwise a single failure hides every result on the page." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`DateAdd` in Marketing Cloud Next](/next/ampscript/functions/dateadd/) — how it behaves there
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in as the first argument
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — formats the result, and swallows bad input where this function aborts
 - [The differs-from-docs cards](/engagement/differs-from-docs/#dateadd-unlisted-unit-aborts-the-page) — what the official reference leaves unsaid

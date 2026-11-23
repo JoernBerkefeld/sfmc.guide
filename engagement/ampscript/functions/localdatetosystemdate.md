@@ -92,12 +92,7 @@ Nothing aborts and nothing signals it, so code that formats only the date part a
 
 {% include callout.html type="warning" title="The minute counts depend on the account" content="The `-420` and `-480` figures reflect one account's configured time zone. Another account gives different numbers; what stays true is the whole-hour shift and the one-hour gap between the winter and the summer values." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

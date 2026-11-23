@@ -1,0 +1,35 @@
+# Next test scripts for /next/ampscript/functions/iif/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for IIf. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[yes] got=[%%=IIf(1==1,"yes","no")=%%]</p>
+  <p>c2 expect=[F] got=[%%=IIf(1 == 2, "T", "F")=%%]</p>
+  <p>c3 expect=[42] got=[%%=IIf(1 == 1, 42, 7)=%%]</p>
+  <p>c4 expect=[T] got=[%%[ SET @r2ies = "" ]%%%%=IIf(Empty(@r2ies),"T","F")=%%]</p>
+  <p>c5 expect=[F] got=[%%[ SET @r2ines = "" ]%%%%=IIf(NOT Empty(@r2ines),"T","F")=%%]</p>
+  <p>c6 expect=[F] got=[%%=IIf(@r2i_never_declared,"T","F")=%%]</p>
+  <p>c7 expect=[F] got=[%%[ VAR @r2iu ]%%%%=IIf(@r2iu,"T","F")=%%]</p>
+  <p>c8 expect=[F] got=[%%[ SET @r2ie = "" ]%%%%=IIf(@r2ie,"T","F")=%%]</p>
+  <p>c9 expect=[T] got=[%%[ SET @r2isp = "   " ]%%%%=IIf(@r2isp,"T","F")=%%]</p>
+  <p>c10 expect=[F] got=[%%[ SET @r2iz = 0 ]%%%%=IIf(@r2iz,"T","F")=%%]</p>
+  <p>c11 expect=[T] got=[%%[ SET @r2iz0 = "0" ]%%%%=IIf(@r2iz0,"T","F")=%%]</p>
+  <p>c12 expect=[F] got=[%%[ SET @r2isf = "false" ]%%%%=IIf(@r2isf,"T","F")=%%]</p>
+  <p>c13 expect=[T] got=[%%[ SET @r2ival = "hello" ]%%%%=IIf(@r2ival,"T","F")=%%]</p>
+  <p>c14 expect=[2026-11-22T20:27:28] got=[%%=IIf(1 == 2,"no",Now())=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=IIf(Empty(""), "T", "F")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=IIf(1 == 1,"T",RaiseError("r2-iif-false-branch-evaluated"))=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%=IIf(1 == 2,RaiseError("r2-iif-true-branch-evaluated"),"F")=%%

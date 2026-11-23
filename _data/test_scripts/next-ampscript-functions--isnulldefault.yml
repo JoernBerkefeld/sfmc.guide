@@ -1,0 +1,22 @@
+# Next test scripts for /next/ampscript/functions/isnulldefault/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for IsNullDefault. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[fallback] got=[%%=IsNullDefault("","fallback")=%%]</p>
+  <p>c2 expect=[hello] got=[%%=IsNullDefault("hello", "DEF")=%%]</p>
+  <p>c3 expect=[0] got=[%%=IsNullDefault(0, "DEF")=%%]</p>
+  <p>c4 expect=[hello] got=[%%[ SET @r2dval = "hello" ]%%%%=IsNullDefault(@r2dval,"DEF")=%%]</p>
+  <p>c5 expect=[DEF] got=[%%=IsNullDefault(@r2d_never_declared,"DEF")=%%]</p>
+  <p>c6 expect=[DEF] got=[%%[ VAR @r2du ]%%%%=IsNullDefault(@r2du,"DEF")=%%]</p>
+  <p>c7 expect=[DEF] got=[%%[ SET @r2des = "" ]%%%%=IsNullDefault(@r2des,"DEF")=%%]</p>
+  <p>c8 expect=[ ] got=[%%[ SET @r2dsp = "   " ]%%%%=IsNullDefault(@r2dsp,"DEF")=%%]</p>
+  <p>c9 expect=[0] got=[%%[ SET @r2dz = 0 ]%%%%=IsNullDefault(@r2dz,"DEF")=%%]</p>
+  <p>c10 expect=[0] got=[%%[ SET @r2dz0 = "0" ]%%%%=IsNullDefault(@r2dz0,"DEF")=%%]</p>
+  <p>c11 expect=[false] got=[%%[ SET @r2dsf = "false" ]%%%%=IsNullDefault(@r2dsf,"DEF")=%%]</p>
+  <p>c12 expect=[2026-11-22T20:29:14] got=[%%=IsNullDefault(Now(),"DEF")=%%]</p>
+  <p>c13 expect=[42] got=[%%[ VAR @r2ddn ]%%%%=IsNullDefault(@r2ddn,42)=%%]</p>

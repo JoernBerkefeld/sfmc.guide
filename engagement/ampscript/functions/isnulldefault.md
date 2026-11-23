@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next returns the fallback for an undeclared, unset or empty value: `IsNullDefault(\"\", \"fallback\")` gives `fallback` and an unset variable with fallback `42` gives `42`, where Engagement gives an empty string. Values that are set (`hello`, `0`, `false`) pass through the same."
 ---
 
 {% include verification-status.html %}
@@ -82,15 +85,11 @@ The third column is a pass-through with an empty string where the fallback was e
 
 {% include callout.html type="warning" title="It fails quietly" content="Reaching for this as a general fallback returns the empty string instead of the supplied default, at HTTP 200 and with no error. The bug surfaces as a blank on the rendered page, which is easy to mistake for a data problem. Use `IIf(Empty(x), fallback, x)` outside Smart Capture." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`IsNullDefault` in Marketing Cloud Next](/next/ampscript/functions/isnulldefault/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — the test that actually separates missing from present on a page
 - [IsNull](/engagement/ampscript/functions/isnull/) — the same null definition without the fallback argument
 - [IIf](/engagement/ampscript/functions/iif/) — pair it with `Empty` to build the fallback this function does not deliver

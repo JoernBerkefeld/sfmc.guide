@@ -1,0 +1,55 @@
+# Next test scripts for /next/ampscript/functions/formatnumber/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for FormatNumber. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[1,234.50] got=[%%=FormatNumber("1234.5","N2")=%%]</p>
+  <p>c2 expect=[1,235] got=[%%=FormatNumber(1234.555,"N0")=%%]</p>
+  <p>c3 expect=[1.234,56] got=[%%=FormatNumber(1234.555,"N2","de-DE")=%%]</p>
+  <p>c4 expect=[2] got=[%%=FormatNumber(2.5,"N0")=%%]</p>
+  <p>c5 expect=[$1,234.56] got=[%%=FormatNumber(1234.555,"C")=%%]</p>
+  <p>c6 expect=[1.234555E03] got=[%%=FormatNumber(1234.555,"E")=%%]</p>
+  <p>c7 expect=[1234.56] got=[%%=FormatNumber(1234.555,"F")=%%]</p>
+  <p>c8 expect=[1234.555] got=[%%=FormatNumber(1234.555,"G")=%%]</p>
+  <p>c9 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N")=%%]</p>
+  <p>c10 expect=[123,455.500%] got=[%%=FormatNumber(1234.555,"P")=%%]</p>
+  <p>c11 expect=[1234.555] got=[%%=FormatNumber(1234.555,"R")=%%]</p>
+  <p>c12 expect=[1,234.555] got=[%%=FormatNumber(1234.555,"N3")=%%]</p>
+  <p>c13 expect=[$1,235] got=[%%=FormatNumber(1234.555,"C0")=%%]</p>
+  <p>c14 expect=[$1,234.56] got=[%%=FormatNumber(1234.555,"c")=%%]</p>
+  <p>c15 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"n")=%%]</p>
+  <p>c16 expect=[123] got=[%%=FormatNumber(123,"D")=%%]</p>
+  <p>c17 expect=[7B] got=[%%=FormatNumber(123,"X")=%%]</p>
+  <p>c18 expect=[1234.555] got=[%%=FormatNumber(1234.555,"qqqq")=%%]</p>
+  <p>c19 expect=[-1234.555] got=[%%=FormatNumber(-1234.555,"0000")=%%]</p>
+  <p>c20 expect=[-1234.555] got=[%%=FormatNumber(-1234.555,"###0")=%%]</p>
+  <p>c21 expect=[-1234.555] got=[%%=FormatNumber(-1234.555,"#0.00")=%%]</p>
+  <p>c22 expect=[1234.555] got=[%%=FormatNumber(1234.555,"#,##0.00")=%%]</p>
+  <p>c23 expect=[-1234.555] got=[%%=FormatNumber(-1234.555,"#0.00;(#0.00)")=%%]</p>
+  <p>c24 expect=[4] got=[%%=FormatNumber(3.5,"N0")=%%]</p>
+  <p>c25 expect=[1.00] got=[%%=FormatNumber(1.005,"N2")=%%]</p>
+  <p>c26 expect=[1.00] got=[%%=FormatNumber(1.004,"N2")=%%]</p>
+  <p>c27 expect=[-2] got=[%%=FormatNumber(-2.5,"N0")=%%]</p>
+  <p>c28 expect=[-1,234.56] got=[%%=FormatNumber(-1234.555,"N2")=%%]</p>
+  <p>c29 expect=[-$1,234.56] got=[%%=FormatNumber(-1234.555,"C2")=%%]</p>
+  <p>c30 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","en-US")=%%]</p>
+  <p>c31 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","en_US")=%%]</p>
+  <p>c32 expect=[1 234,56] got=[%%=FormatNumber(1234.555,"N2","fr-FR")=%%]</p>
+  <p>c33 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","ja-JP")=%%]</p>
+  <p>c34 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","hi-IN")=%%]</p>
+  <p>c35 expect=[1.234,56] got=[%%=FormatNumber(1234.555,"N2","de")=%%]</p>
+  <p>c36 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","zz-ZZ")=%%]</p>
+  <p>c37 expect=[1,234.56] got=[%%=FormatNumber(1234.555,"N2","")=%%]</p>
+  <p>c38 expect=[1.234,56 €] got=[%%=FormatNumber(1234.555,"C2","de-DE")=%%]</p>
+  <p>c39 expect=[￥1,235] got=[%%=FormatNumber(1234.555,"C","ja-JP")=%%]</p>
+  <p>c40 expect=[1,234.56] got=[%%=FormatNumber("1234.555","N2")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%[ SET @r2fne1 = 1234.555 ]%%%%=FormatNumber(@r2fne1)=%%

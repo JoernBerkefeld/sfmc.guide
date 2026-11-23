@@ -1,0 +1,93 @@
+{% comment %}
+  Renders the "Availability & differences" chapter on every AMPscript function page.
+  Every function that Marketing Cloud Next supports has two hand-written pages:
+    /engagement/ampscript/functions/<slug>/  (Engagement behaviour)
+    /next/ampscript/functions/<slug>/        (Next behaviour)
+  Engagement-only functions have just the Engagement page. tests/ampscript-next-sync.test.cjs
+  keeps the pair consistent.
+
+  The chapter holds:
+    1. An availability table, platforms in alphabetical order (Engagement, then Next). The cells come from
+       site.data.ampscript_functions (matched by slug): Engagement "Yes"; Next
+       "Yes, from API <mcn>.0", or "No" when the function has no mcn version.
+       site.data.ampscript_availability[slug].engagement / .next replace a cell when a
+       qualifier is needed. When the other platform has its own page, its name in the
+       table links to that page.
+    2. The comparison callout, only when the page has a comparison label:
+       Engagement page:  mcn:        same | differs | unsupported | untested
+                         mcn_note:   how Next differs (both outputs); optional for `same`
+       Next page:        engagement: same | differs | untested
+                         engagement_note: how Engagement differs (both outputs)
+       Both:             mcn_tested: date of the Next run, e.g. 2026-11-22
+
+  Heading: "Availability & differences" when a label exists, else "Availability".
+  Handlebars helper pages use mcn-status.html instead.
+{% endcomment %}
+
+{% assign pc_slug = page.url | split: "/" | last %}
+{% assign pc_fn = site.data.ampscript_functions | where: "slug", pc_slug | first %}
+{% assign pc_over = site.data.ampscript_availability[pc_slug] %}
+{% if pc_fn.mcn and pc_fn.mcn != "" %}
+  {% capture pc_next_cell %}Yes, from API {{ pc_fn.mcn }}.0{% endcapture %}
+{% else %}
+  {% assign pc_next_cell = "No" %}
+{% endif %}
+{% assign pc_eng_cell = pc_over.engagement | default: "Yes" %}
+{% assign pc_next_cell = pc_over.next | default: pc_next_cell %}
+{% assign pc_eng_cell = pc_eng_cell | markdownify | remove: "<p>" | remove: "</p>" | strip %}
+{% assign pc_next_cell = pc_next_cell | markdownify | remove: "<p>" | remove: "</p>" | strip %}
+
+{% if page.url contains "/next/" %}
+  {% assign pc_label = page.engagement %}
+  {% assign pc_note = page.engagement_note %}
+  {% assign pc_other = "Marketing Cloud Engagement" %}
+  {% capture pc_twin %}/engagement/ampscript/functions/{{ pc_slug }}/{% endcapture %}
+{% else %}
+  {% assign pc_label = page.mcn %}
+  {% assign pc_note = page.mcn_note %}
+  {% assign pc_other = "Marketing Cloud Next" %}
+  {% capture pc_twin %}/next/ampscript/functions/{{ pc_slug }}/{% endcapture %}
+{% endif %}
+
+{% if pc_label %}
+<h2 id="availability-differences">Availability &amp; differences</h2>
+{% else %}
+<h2 id="availability">Availability</h2>
+{% endif %}
+
+{% capture pc_eng_name %}{% if pc_label and page.url contains "/next/" %}<a href="{{ pc_twin }}">Marketing Cloud Engagement</a>{% else %}Marketing Cloud Engagement{% endif %}{% endcapture %}
+{% capture pc_next_name %}{% if pc_label and page.url contains "/engagement/" %}<a href="{{ pc_twin }}">Marketing Cloud Next</a>{% else %}Marketing Cloud Next{% endif %}{% endcapture %}
+{% capture pc_eng_row %}<tr><td>{{ pc_eng_name }}</td><td>{{ pc_eng_cell }}</td></tr>{% endcapture %}
+{% capture pc_next_row %}<tr><td>{{ pc_next_name }}</td><td>{{ pc_next_cell }}</td></tr>{% endcapture %}
+<table class="availability-table">
+<thead><tr><th>Platform</th><th>Available</th></tr></thead>
+<tbody>
+{{ pc_eng_row }}{{ pc_next_row }}
+</tbody>
+</table>
+
+{% if pc_label %}
+{% assign pc_date = page.mcn_tested | default: "2026-11-22" %}
+{% case pc_label %}
+{% when "same" %}
+  {% assign pc_type = "tip" %}
+  {% assign pc_title = "Same in " | append: pc_other %}
+  {% assign pc_default = "Every call tested on both platforms gives the same result." %}
+{% when "differs" %}
+  {% assign pc_type = "warning" %}
+  {% assign pc_title = "Differs in " | append: pc_other %}
+  {% assign pc_default = "At least one tested call gives a different result." %}
+{% when "unsupported" %}
+  {% assign pc_type = "caution" %}
+  {% assign pc_title = "Not supported in " | append: pc_other %}
+  {% assign pc_default = "Saving an email that uses it is rejected." %}
+{% else %}
+  {% assign pc_type = "note" %}
+  {% assign pc_title = "Not compared with " | append: pc_other | append: " yet" %}
+  {% assign pc_default = "No call has been rendered in a Marketing Cloud Next email yet." %}
+{% endcase %}
+{% assign pc_body = pc_note | default: pc_default %}
+{% capture pc_content %}{{ pc_body }} *Compared {{ pc_date }} by rendering the same calls in a Marketing Cloud Next email.*{% endcapture %}
+
+{% include callout.html type=pc_type title=pc_title content=pc_content %}
+{% endif %}

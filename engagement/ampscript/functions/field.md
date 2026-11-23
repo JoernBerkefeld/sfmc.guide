@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/field/
 platforms:
   - engagement
-  - next
 syntax: "Field(row, fieldName[, exceptionIfNotFound])"
 return_type: string
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next saves the same call forms, but on a `BuildRowSetFromString(\"a,b,c\",\",\")` row `Field(row,\"Value\")` renders `true` instead of `a`. With a missing column Next renders `true` or `false` (following the third argument) instead of an empty string or an abort, and a `BuildRowsetFromJSON` column read by name or ordinal comes back empty instead of `NYC`. On a `RetrieveSalesforceObjects` row it reads the 18-character `Id` as in Engagement."
 ---
 
 {% include verification-status.html %}
@@ -71,15 +73,11 @@ The third argument controls the missing-column path, not a default for an existi
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Field` in Marketing Cloud Next](/next/ampscript/functions/field/) — how it behaves there
 - [`Row`](/engagement/ampscript/functions/row/) — returns the row this reads from
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — a single scalar without a rowset

@@ -58,12 +58,7 @@ For an unknown verb this renders `rowCount=[1] st=[Error] req=[<guid>]`, and row
 
 {% include test-script.html bundle="ampscript-functions--invokeexecute" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

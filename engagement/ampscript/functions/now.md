@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/now/
 platforms:
   - engagement
-  - next
 syntax: "Now([persistFormat])"
 return_type: date
 min_args: 0
@@ -15,6 +14,9 @@ max_args: 1
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "`Now()` prints in ISO form in Next (`2026-11-22T15:28:39`) instead of `8/8/2026 5:31:44 PM`; `Format(Now(),'yyyy-MM-dd')` gives the same 10-character date on both. Next accepts no argument: an email with `Now(1)`, `Now(true)`, `Now('1')` or `Now('spring')` is rejected at save."
 ---
 
 {% include verification-status.html %}
@@ -82,15 +84,11 @@ The `DateDiff` in minutes between `Now()` and `Now(1)` in one render was `0`. Th
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Now` in Marketing Cloud Next](/next/ampscript/functions/now/) — how it behaves there
 - [AMPscript Function Reference](/engagement/ampscript/functions/) — the sibling Date and Time functions that consume this value
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-now.html)
 - [ampscript.guide](https://ampscript.guide/now/)

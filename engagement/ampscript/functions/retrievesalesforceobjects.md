@@ -7,13 +7,15 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/retrievesalesforceobjects/
 platforms:
   - engagement
-  - next
 syntax: "RetrieveSalesforceObjects(objectName, fieldsToRetrieve, queryFieldName1, queryFieldOperator1, queryFieldValue1[, queryFieldNameN, queryFieldOperatorN, queryFieldValueN, ...])"
 return_type: rowset
 min_args: 5
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "For a query that matches nothing, `Empty()` on the result renders `false` in Next instead of `True`. The row count `0`, a live read of an 18-character `Id`, and the failure on an unknown object name match Engagement."
 ---
 
 {% include verification-status.html %}
@@ -24,9 +26,9 @@ differs_from_docs: false
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `objectName` | string | Yes | API name of the Salesforce object to query |
-| `fieldsToRetrieve` | string | Yes | Comma-separated list of field API names to return |
-| `queryFieldName1` | string | Yes | Field to filter on |
+| `objectName` | string | Yes | Object to read records from, written as its API name (for example `Contact`) |
+| `fieldsToRetrieve` | string | Yes | Field API names, separated by commas, that become the rowset columns |
+| `queryFieldName1` | string | Yes | Field the first condition tests |
 | `queryFieldOperator1` | string | Yes | Comparison operator (`=`, `!=`, `<`, `<=`, `>`, `>=`) |
 | `queryFieldValue1` | string \| number | Yes | Value to filter against |
 | `queryFieldNameN` | string | No | Further filter field |
@@ -82,17 +84,15 @@ There is no closed set of sentinel values: the result is a rowset whose size dep
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
+{% include platform-compare.html %}
 
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
+## Context and requirements
 
 Requires an active Marketing Cloud Connect integration to a Sales or Service Cloud org on the business unit.
 
 ## See also
 
+- [`RetrieveSalesforceObjects` in Marketing Cloud Next](/next/ampscript/functions/retrievesalesforceobjects/) — how it behaves there
 - [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/)
 - [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
 - [`LongSFID`](/engagement/ampscript/functions/longsfid/) — convert a 15-character ID for matching

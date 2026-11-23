@@ -29,7 +29,7 @@
   equivalents you filter by are visible.
 
   Row fields come from scripts/generate-ampscript-function-index.mjs:
-    name, slug, category, syntax, returnType, verified, url,
+    name, slug, category, syntax, returnType, verified, url, nextUrl (Next twin page, if any),
     differsFromDocs, deprecated, mcn, handlebarsEquivalent, mcnNotes,
     ssjsEquivalents (list of {name, url}), description, guideUrl
 
@@ -162,17 +162,20 @@
           data-version="{{ f.mcn }}"
           id="fn-{{ f.slug }}">
         <td data-label="Function">
-          {% if f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}()</code></a>{% else %}<code>{{ f.name }}()</code>{% endif %}
-          {%- if f.verified %} <span class="cat-state cat-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
+          {%- comment %} On the Next index, rows link the Next page; its own badge says how it was proven there. {% endcomment %}
+          {%- if include.mcn_only %}{% if f.nextUrl %}<a href="{{ f.nextUrl }}"><code>{{ f.name }}()</code></a>{% else %}<code>{{ f.name }}()</code>{% endif %}
+          {%- elsif f.verified %}<a href="{{ f.url }}"><code>{{ f.name }}()</code></a>{% else %}<code>{{ f.name }}()</code>{% endif %}
+          {%- if f.verified and include.mcn_only != true %} <span class="cat-state cat-state--verified" title="Proven on a live Marketing Cloud Engagement CloudPage.">Verified</span>{% endif %}
           {%- if f.deprecated %}<span class="cat-flag cat-flag--deprecated" title="Deprecated in the AMPscript catalog">deprecated</span>{% endif %}
-          {%- if f.differsFromDocs %}<span class="cat-flag cat-flag--warning" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
+          {%- if include.mcn_only %}{% assign afi_differs = f.nextDiffersFromDocs %}{% else %}{% assign afi_differs = f.differsFromDocs %}{% endif %}
+          {%- if afi_differs %}<span class="cat-flag cat-flag--warning" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
         </td>
         {%- if include.show_mcn %}
         <td class="cat-ver cat-meta" data-label="API version">{% if f.mcn != "" %}{{ f.mcn }}{% else %}&mdash;{% endif %}</td>
         {%- endif %}
         {%- if afi_render_hb %}
         <td class="cat-hb-col cat-meta{% if afi_hb_optional %} cat-mapcol cat-mapcol--hb{% endif %}" data-label="Handlebars">
-          {%- if f.handlebarsEquivalent != "" %}<a href="/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
+          {%- if f.handlebarsEquivalent != "" %}{% assign afi_hb = site.data.handlebars_helpers | where: "name", f.handlebarsEquivalent | first %}<a href="{% if afi_hb.page %}{{ afi_hb.page }}{% else %}/next/handlebars/helpers/#hb-{{ f.handlebarsEquivalent | downcase }}{% endif %}"><code>{{ f.handlebarsEquivalent }}</code></a>{% else %}&mdash;{% endif %}
         </td>
         {%- endif %}
         {%- if afi_render_ssjs %}

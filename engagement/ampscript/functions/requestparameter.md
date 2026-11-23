@@ -87,12 +87,7 @@ On a GET CloudPage, reading the same parameter with this function and with [`Que
 
 The comparison above is stated for GET only; a form post is a different request shape.
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -1,0 +1,42 @@
+# Next test scripts for /next/ampscript/functions/base64encode/.
+# AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
+# Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for Base64Encode. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[SGVsbG8=] got=[%%=Base64Encode("Hello")=%%]</p>
+  <p>c2 expect=[U0ZNQyBBTVBzY3JpcHQgMjAyNg==] got=[%%=Base64Encode("SFMC AMPscript 2026")=%%]</p>
+  <p>c3 expect=[TWE=] got=[%%=Base64Encode("Ma")=%%]</p>
+  <p>c4 expect=[TQ==] got=[%%=Base64Encode("M")=%%]</p>
+  <p>c5 expect=[28] got=[%%=Length(Base64Encode("SFMC AMPscript 2026"))=%%]</p>
+  <p>c6 expect=[TWFu] got=[%%=Base64Encode("Man")=%%]</p>
+  <p>c7 expect=[Y2Fmw6nigqw=] got=[%%=Base64Encode("café€")=%%]</p>
+  <p>c8 expect=[Y2Fmw6nigqw=] got=[%%=Base64Encode("café€","UTF-8")=%%]</p>
+  <p>c9 expect=[YwBhAGYA6QCsIA==] got=[%%=Base64Encode("café€","UTF-16")=%%]</p>
+  <p>c10 expect=[YwAAAGEAAABmAAAA6QAAAKwgAAA=] got=[%%=Base64Encode("café€","UTF-32")=%%]</p>
+  <p>c11 expect=[Y2FmPz8=] got=[%%=Base64Encode("café€","ASCII")=%%]</p>
+  <p>c12 expect=[] got=[%%=Base64Encode("")=%%]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode("café€","UTF-16BE")=%%
+
+  <!-- email 2: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode("café€","ISO-8859-1")=%%
+
+  <!-- email 3: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode("Man","banana")=%%
+
+  <!-- email 4: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode("Man","")=%%
+
+  <!-- email 5: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode()=%%
+
+  <!-- email 6: expect that the save is rejected (HTTP 400) -->
+  %%=Base64Encode("Man","UTF-8","extra")=%%

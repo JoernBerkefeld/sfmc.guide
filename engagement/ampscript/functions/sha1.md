@@ -14,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: false
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Next rejects an email containing `SHA1(\"Grusß €ä\", \"ASCII\")` at save, where Engagement returns `601fc90e786918f662cece34acf5cdb0b1f8fade`, the digest of `Grus? ??`. Digests for UTF-8 and `UTF-16` are the same in Next."
 ---
 
 {% include verification-status.html %}
@@ -64,7 +67,7 @@ There is no closed set of sentinel values to test for: every accepted input prod
 
 **The bytes hashed are the UTF-8 encoding of the input.** Hashing a string containing `ß`, `€` and `ä` gave `57418a4484a6e50107c9c73d57333982344f4ebd`, the digest of its UTF-8 bytes rather than of the UTF-16 form the engine holds internally. An ASCII-only test can never establish this, because ASCII text has only one plausible encoding.
 
-**The second argument genuinely changes the value.** The same input under `UTF-16` gave `12ebd4a9b721eda440d263131f1e29fad920fede`, which is what UTF-16 little-endian bytes produce.
+**The second argument genuinely changes the value.** The same non-ASCII input under `UTF-16` gave `94b0370f99d4327e50edf287eca69e945f3741d7`. Even plain ASCII text changes: `"Hash probe 2026"` gives `20903bc0c930c22be005bfb1ede7db6722452ee7` by default and `12ebd4a9b721eda440d263131f1e29fad920fede` under `UTF-16`, which is what UTF-16 little-endian bytes produce.
 
 **The empty string is hashed, not refused.** `SHA1("")` returned `da39a3ee5e6b4b0d3255bfef95601890afd80709`, the well-known digest of zero bytes.
 
@@ -80,15 +83,11 @@ An unrecognised name is rejected outright — passing `banana` aborted the page 
 
 {% include callout.html type="warning" title="Echo the input, not just the result" content="When a case involves non-ASCII characters, print the input string alongside the digest. A mangled test string produces a perfectly valid digest of the wrong bytes, which is indistinguishable from a function defect unless the input is visible in the same output." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 68.0 |
+{% include platform-compare.html %}
 
 ## See also
 
+- [`SHA1` in Marketing Cloud Next](/next/ampscript/functions/sha1/) — how it behaves there
 - [MD5](/engagement/ampscript/functions/md5/)
 - [SHA256](/engagement/ampscript/functions/sha256/)
 - [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, different digest lengths

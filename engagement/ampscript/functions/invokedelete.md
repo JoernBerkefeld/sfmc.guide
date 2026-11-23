@@ -56,12 +56,7 @@ Renders `ret=[OK] msg=[Data Extension deleted.] err=[0]`.
 
 {% include test-script.html bundle="ampscript-functions--invokedelete" chapter="behaviour" %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | No |
+{% include platform-compare.html %}
 
 ## See also
 

@@ -7,7 +7,6 @@ parent_url: /engagement/ampscript/functions/
 permalink: /engagement/ampscript/functions/random/
 platforms:
   - engagement
-  - next
 syntax: "Random(min, max)"
 return_type: number
 min_args: 2
@@ -15,6 +14,9 @@ max_args: 2
 verification: verified
 test_scripts: complete
 differs_from_docs: true
+mcn: differs
+mcn_tested: 2026-11-23
+mcn_note: "Inclusive bounds, equal bounds and negative ranges behave the same. In Next, reversed bounds (`Random(3,1)`) and whole-number strings (`Random(\"1\",\"2\")`) break the email preview (HTTP 500), while decimal bounds such as `Random(1.2,1.8)` render a whole number (`1`) instead of aborting."
 ---
 
 {% include verification-status.html %}
@@ -97,17 +99,11 @@ Treat the bounds as integers only, and round or truncate before the call. The fi
 
 {% include callout.html type="warning" title="OutputLine needs Concat" content="`OutputLine` given a bare string literal renders an **empty** line. Wrap the argument in `Concat()` or your start and done markers vanish silently — which looks exactly like the function failing." %}
 
-## Availability
-
-| Platform | Available |
-|---|---|
-| Marketing Cloud Engagement | Yes |
-| Marketing Cloud Next | Yes, from API 67.0 |
-
-Unlike the arithmetic functions, `Random` is filed under the utilities section of the official reference rather than the math section — its availability table was read separately and states the same API 67.0 support for Next.
+{% include platform-compare.html %}
 
 ## See also
 
+- [`Random` in Marketing Cloud Next](/next/ampscript/functions/random/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#random-decimal-bounds-rejected) — the decimal-bounds finding in full
 - [`Mod`](/engagement/ampscript/functions/mod/) — useful for bucketing a random value
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html)
