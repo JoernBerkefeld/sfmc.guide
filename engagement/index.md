@@ -24,6 +24,7 @@ The broader Engagement guides include practical material ported from the [SFMC C
 | [FAQ](/engagement/faq/) | Automations, CloudPages, emails, Journey Builder, admin |
 | [Einstein Recommendations](/engagement/einstein/recommendation/) | Recommendation scenarios |
 | [Encryption](/engagement/encryption/) | Crypto patterns in Engagement |
+| [MobilePush setup](/engagement/mobilepush/) | App and Marketing Cloud setup for push, contact key and device registration, consent, troubleshooting |
 
 ## Related
 
