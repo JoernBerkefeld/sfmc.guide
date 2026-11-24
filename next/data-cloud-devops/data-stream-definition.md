@@ -67,7 +67,7 @@ Saves the stream's settings and its source-to-DLO mappings as one JSON file. It 
 Run this from your local project root:
 
 ```sh
-sf data360 retrieve -o SOURCE_ALIAS -m data-stream:CustomerStream -d .
+sf data360 retrieve -o SOURCE_ALIAS -m data-stream:CustomerStream --output-dir .
 ```
 
 Inspect `data360/data-stream/CustomerStream.data-stream-meta.json`. It is a strict JSON file, not XML or a raw API response. Keep the read-only `observed` section unchanged. The command does not export credentials or create connections. The file has this shape (offline-tested; names and labels are examples):
@@ -219,8 +219,8 @@ Start from the file retrieved from the source org. Change only `spec.connectionN
 Preview the change, then allow processing:
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --preview
-sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
+sf data360 deploy -o TARGET_ALIAS --source-dir data360/data-stream/CustomerStream.data-stream-meta.json --preview
+sf data360 deploy -o TARGET_ALIAS --source-dir data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
 ```
 
 Creation also creates the landing DLO. Salesforce ignores the name and the label in the file for a new Ingestion API stream. It names the stream `<connection>_<event>_<8 hex characters>`, for example `CustomerConnection_CustomerEvent_2A5A8AB6`, labels it `<connection>-<event>`, and names the DLO after it. To set your own label, change it in the retrieved file and deploy again (Update chapter). The plugin reports the real name as `targetApiName` and the DLO's name as `targetDloName`, with `outcome: "created"` and `mutation: "confirmed-created"`. A stream already bound to the same connection and event is not created again: the command reports `STREAM_EXISTING_BINDING_REQUIRES_UPDATE`, so retrieve that stream and update it instead.
@@ -299,8 +299,8 @@ Replace `ContactEmail` with the label of an existing field of the source event; 
 Preview the change, then allow processing:
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --preview
-sf data360 deploy -o TARGET_ALIAS -d data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
+sf data360 deploy -o TARGET_ALIAS --source-dir data360/data-stream/CustomerStream.data-stream-meta.json --preview
+sf data360 deploy -o TARGET_ALIAS --source-dir data360/data-stream/CustomerStream.data-stream-meta.json --allow-processing
 ```
 
 An accepted update reports `outcome: "updated"`. An unchanged repeat reports `outcome: "unchanged"` and writes nothing. The file is the desired state of the mappings: a changed entry is sent again, and an entry removed from the file is sent as a removal (an empty formula). Salesforce refuses changing or removing an existing mapping of an Ingestion API stream (HTTP 400, reported as rejected; nothing changes). Prepare the DMO field first, and deploy the DLO-to-DMO mapping last. A stream or DLO that is not `ACTIVE` stops the command with `STREAM_NOT_READY`; wait until both are active and run it again.

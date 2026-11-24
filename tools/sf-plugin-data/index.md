@@ -47,6 +47,7 @@ Every `sf data360` command (retrieve, deploy, delete, publish, segment members e
 - A failure wins over `69`. The command exits `69` only when nothing failed.
 - `--allow-processing` is not `--async`. It only allows a write that starts processing; a run that is still processing at the end exits `69`.
 - With `--json`, the top-level `status` is the exit code. `result.status` gives the plugin's status as text: `success`, `accepted`, `processing`, `partial`, `blocked` or `failed`.
+- `sf data360 delete` lists the components and asks before deleting. Answering no, or no answer within 30 seconds, deletes nothing and exits `0`. Without a terminal, or with `--json`, it needs `--no-prompt` (`-r`), otherwise it exits `1` with `CONFIRMATION_REQUIRED` before reading the org.
 - A deploy with `--changed-since` that finds no changes exits `0`. A deploy where every selected file was skipped exits `1` with `NOTHING_TO_DEPLOY`.
 
 ## Use it in VS Code

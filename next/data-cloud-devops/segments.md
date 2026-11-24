@@ -357,7 +357,7 @@ Deployed: 1 (0 created / 1 updated / 0 failed)
 
 The preview prints `Planned update: segment:OwnedSegment.`. An unclear result ends with `SEGMENT_UPDATE_UNCONFIRMED`; do not replay the update, read the segment first.
 
-Deploy never publishes. To publish the segment, run `sf data360 publish --target-org SOURCE_ALIAS --metadata segment:OwnedSegment` (`--preview` publishes nothing). It sends one POST, never resent, and waits for `SUCCESS` or `FAILED` (`--wait-timeout`, default 1800 seconds; a timeout reports `publishing`, still processing, exit 69; see [exit codes](/tools/sf-plugin-data/#exit-codes)). See [Segment members](/next/data-cloud-devops/segment-members/#update).
+Deploy never publishes. To publish the segment, run `sf data360 publish --target-org SOURCE_ALIAS --metadata segment:OwnedSegment` (`--preview` publishes nothing). It sends one POST, never resent, and waits for `SUCCESS` or `FAILED` (`--wait`, default 30 minutes; a timeout reports `publishing`, still processing, exit 69; see [exit codes](/tools/sf-plugin-data/#exit-codes)). See [Segment members](/next/data-cloud-devops/segment-members/#update).
 {% endcapture %}
 
 {% capture update_connect %}
@@ -438,7 +438,7 @@ On the definition of a live, published segment, a label change also answers `suc
 ## Delete
 
 {% capture delete_plugin %}
-Deletes one owned segment on API68, selected by name. The preview reads only. Check in the preview that it names the segment you intend to delete; the delete takes no confirmation flag.
+Deletes one owned segment on API68, selected by name. The preview reads only. Check in the preview that it names the segment you intend to delete; the delete then lists the segment and asks before deleting (`--no-prompt` skips the question).
 
 ```sh
 sf data360 delete --target-org SOURCE_ALIAS --metadata segment:OwnedSegment --api-version 68.0 --preview

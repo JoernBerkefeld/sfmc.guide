@@ -143,7 +143,7 @@ For how moving a kit differs from installing it, see [Moving a kit is not instal
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-**Verification scope:** Every operation was run live on API 68.0 on new `Cli…` templates copied from an existing Data Graph template, and all of them were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to templates. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** Every operation was run live on API 68.0 on new `Cli…` templates copied from an existing Data Graph template, and all of them were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait`, `--keep-local-files`) applies to templates. This badge does not verify untested writes or general CRUD support.
 
 **Versions and aliases:** The `sf project` commands on this page pass `--api-version 68.0`. `SOURCE_ALIAS` and `TARGET_ALIAS` are placeholders for your own org aliases.
 

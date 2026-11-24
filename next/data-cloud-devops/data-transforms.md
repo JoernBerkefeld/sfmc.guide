@@ -252,7 +252,7 @@ It answers `200`, and a second PUT with other values changes the schedule. `shou
 ## Delete
 
 {% capture delete_plugin %}
-Deletes transforms by name. Preview first; the delete takes no confirmation flag:
+Deletes transforms by name. Preview first; the delete lists the transforms and asks before deleting (`--no-prompt` skips the question):
 
 ```sh
 sf data360 delete -m data-transform:CustomerCopy --preview -o TARGET_ALIAS

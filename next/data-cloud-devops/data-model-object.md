@@ -818,7 +818,7 @@ The object is gone and its local file is removed. Running the command again repo
 <details markdown="1">
 <summary>Delete one field instead of the whole object</summary>
 
-Use `--field` to remove named fields and keep the object. Standard, system and generated fields may be named on any DMO, including the DMOs of an identity resolution or a data graph; this is the only way the plugin removes them, and Salesforce decides (at API 68 it deleted such fields, raw API). A Salesforce refusal is reported as rejected. Mappings change as well, so check the preview first; the delete takes no confirmation flag.
+Use `--field` to remove named fields and keep the object. Standard, system and generated fields may be named on any DMO, including the DMOs of an identity resolution or a data graph; this is the only way the plugin removes them, and Salesforce decides (at API 68 it deleted such fields, raw API). A Salesforce refusal is reported as rejected. Mappings change as well, so check the preview first; the delete lists the fields and asks before deleting (`--no-prompt` skips the question).
 
 ```sh
 sf data360 delete -m dmo:Customer__dlm --field Note__c -o TARGET_ALIAS --preview

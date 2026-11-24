@@ -166,7 +166,7 @@ For the difference between moving a kit and installing it, see [Moving a kit is 
 <details markdown="1">
 <summary>Evidence: tested scope, versions and error codes</summary>
 
-**Verification scope:** Every operation was run live on API 68.0 on new `Cli…` kits, which were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. The joint deletion recipe comes from an earlier API 65.0 run. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to kits. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** Every operation was run live on API 68.0 on new `Cli…` kits, which were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. The joint deletion recipe comes from an earlier API 65.0 run. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait`, `--keep-local-files`) applies to kits. This badge does not verify untested writes or general CRUD support.
 
 **Read:** A retrieve without a name, and `listMetadata` with `readMetadata`, returned both existing kits in the test org, including one with three membership links. A kit definition created through the CLI or `createMetadata` read fine until a membership link was added. After that, the retrieve reported "Load of metadata from db failed for metadata of type:DataPackageKitDefinition", and `readMetadata` returned `UNKNOWN_EXCEPTION`. The Connect kit read and manifest still answered for it.
 

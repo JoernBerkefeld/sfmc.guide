@@ -32,7 +32,7 @@ A template is a saved configuration. The API examples below manage the runtime g
 
 **Plugin qualification:** The plugin handles any graph the API accepts, in any data space (`--dataspace`, `default` when omitted), at API 68.0. One command can name several graphs, each with its own `data-graph:Name` selector; retrieve reads them one after another. The live-tested shapes are listed under Evidence.
 
-**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the command aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` both select API 68.0; anything else is `INVALID_SCOPE`), `--dataspace` (alias `--data-space`; only the `default` data space is supported), `--preview` (read-only), `--allow-processing` (acknowledges that create and update start processing), `--wait-timeout` (seconds, default 1800, deploy only), `--keep-local-files` (delete only), and `-d` / `--source-dir` to name the graph file for `deploy`; `delete` selects the graph by name with `-m`. A retrieve can carry several graphs together with other families in one run. A deploy or delete can carry graphs together with other families: deploy runs graphs last, after the identity resolution they are built on is published, and delete runs them first. Deletion does not cascade. `--changed-since` includes graph files changed in the range with the rest of the range.
+**Plugin flags used on this page** (`sf data360 retrieve`, `deploy` and `delete`; the command aliases `datacloud:`, `d360:` and `dc:` work too): `--api-version` (`auto`, the default, and `68.0` both select API 68.0; anything else is `INVALID_SCOPE`), `--dataspace` (alias `--data-space`; only the `default` data space is supported), `--preview` (read-only), `--allow-processing` (acknowledges that create and update start processing), `--wait` / `-w` (minutes, default 30, deploy only), `--keep-local-files` (delete only), and `--source-dir` to name the graph file for `deploy`; `delete` selects the graph by name with `-m`. A retrieve can carry several graphs together with other families in one run. A deploy or delete can carry graphs together with other families: deploy runs graphs last, after the identity resolution they are built on is published, and delete runs them first. Deletion does not cascade. `--changed-since` includes graph files changed in the range with the rest of the range.
 
 {% include crud-summary.html %}
 
@@ -45,7 +45,7 @@ A template is a saved configuration. The API examples below manage the runtime g
 The optional [sf-plugin-data plugin](https://github.com/JoernBerkefeld/sf-plugin-data) adds API-led operations. It is not a standard Salesforce CLI graph command. The default `auto` and `--api-version 68.0` both use API 68.0. Any other version is refused with `INVALID_SCOPE`.
 
 ```sh
-sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
+sf data360 retrieve -o SOURCE_ALIAS -m data-graph:ExampleGraph --api-version 68.0 --output-dir ./project
 ```
 
 The command saves `./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json`. The file keeps the root, related objects with their join paths, fields of every type, key settings, generated bindings and the refresh schedule. The root can be a standard object such as `ssot__Individual__dlm` or a unified Identity Resolution output such as `UnifiedssotIndividualMkt__dlm`. The file is a JSON document with `kind: native-data-graph` and `apiVersion: 68.0`. Graph settings the plugin does not know stay in the file, and deploy refuses them by key path; a graph the format cannot represent, such as one with an unusual schedule, is saved as-is with a warning and is not deployed. A draft graph (saved but never built) is saved as-is too (`DATA_GRAPH_DRAFT`): Salesforce does not let the API update or build a draft. A delete removes it (see Delete).
@@ -99,7 +99,7 @@ Create sends the file as written: the root, related objects with their joins, fi
 
 Preview checks the root, because no API answer exists before a write. A missing root object reports `DATA_GRAPH_ROOT_NOT_FOUND`. For a unified root, preview reads the Identity Resolution rulesets and names the owner with `DATA_GRAPH_OWNER`. It reports `DATA_GRAPH_OWNER_NOT_FOUND` when no ruleset owns the root, and `DATA_GRAPH_OWNER_NOT_PUBLISHED` when the owner is not published yet. The deploy itself does not check the owner. Salesforce decides.
 
-The command waits while Salesforce builds the graph, up to `--wait-timeout` seconds (default 1800). Progress prints to stderr. A new graph reads `creating` with empty generated names at first. It then reads `processing` for a few seconds and `ready` before the generated day-zero object, mapping and transform names exist. Its metadata stays `Inprogress` for about five minutes after that.
+The command waits while Salesforce builds the graph, up to `--wait` minutes (default 30). Progress prints to stderr. A new graph reads `creating` with empty generated names at first. It then reads `processing` for a few seconds and `ready` before the generated day-zero object, mapping and transform names exist. Its metadata stays `Inprogress` for about five minutes after that.
 
 If the plugin cannot confirm the graph, it reports `failed` / `unknown` with `DATA_GRAPH_CREATE_UNCONFIRMED` and names the check that failed: `request`, `response`, `settlement`, `identity` or `deadline` (the wait timed out). The graph may still exist. Retrieve it, or deploy the same file again. Do not create it again.
 
@@ -171,15 +171,15 @@ Do not send the POST again while the first one is building. If the outcome is un
 Retrieve the graph in the default data space first. Then edit the native file, for example its description, schedule or fields.
 
 ```sh
-sf data360 retrieve -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0 -d ./project
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview --wait-timeout 1800
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing --wait-timeout 1800
+sf data360 retrieve -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0 --output-dir ./project
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --preview --wait 30
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --allow-processing --wait 30
 ```
 
 After the update is confirmed, run the same file without `--allow-processing`:
 
 ```sh
-sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
+sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait 30
 ```
 
 The file is the desired state. The plugin sends it in one PUT, and Salesforce decides what changes. The graph's label, description, refresh schedule, incremental refresh, the fields and related objects as the file lists them, field settings and the root object go as written. A field or related object left out of the file is not sent. Node labels are Salesforce's: every node shows its object's label, and a PUT that sends another one changes nothing, so the plugin does not send them and a different node label alone is no change.
@@ -194,7 +194,7 @@ Settings left out of the file, such as the description, the refresh schedule, a 
 
 Before the PUT, the plugin requires item `ready`, metadata `Ready` and DataGraph record `READY` / `ACTIVE`. Success means a readback confirmed the change, not the PUT response. An identical ready definition reports `unchanged` with zero writes and needs no `--allow-processing`.
 
-`--wait-timeout` is a positive integer in seconds, default `1800`, for the whole run. Polls wait at least 20 seconds, subject to the remaining deadline. The command warns upfront on stderr that processing can take seconds to many minutes, up to 30 minutes. Progress goes to stderr. Add `--json` for clean structured stdout.
+`--wait` (`-w`) is a positive whole number of minutes, default `30`, for the whole run. Polls wait at least 20 seconds, subject to the remaining deadline. The command warns upfront on stderr that processing can take seconds to many minutes, up to 30 minutes. Progress goes to stderr. Add `--json` for clean structured stdout.
 
 HTTP 429 or 503 means Salesforce did not process the PUT. The plugin waits for the `Retry-After` time, or 20 seconds without one, and sends the same PUT again until the wait budget ends. If the budget runs out first, the item is `failed` / `not-attempted`. Timeouts and other uncertain outcomes are not resent. Check the graph before you run again.
 
@@ -268,9 +268,9 @@ sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0 
 sf data360 delete -o TARGET_ALIAS -m data-graph:ExampleGraph --api-version 68.0
 ```
 
-The delete takes no confirmation flag. The graph's current definition is read from the org by its name first, also by the preview; a graph the org does not have reports `unchanged`. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
+The delete lists the graphs and asks before deleting; `--no-prompt` skips the question. The graph's current definition is read from the org by its name first, also by the preview; a graph the org does not have reports `unchanged`. Before the delete, the plugin checks that the graph is ready and matches the org, identity and created date. It also checks the root and configuration. The known dependency and related-segment lists must be empty. Unknown or non-empty lists block the delete.
 
-A draft graph saved as-is (`DATA_GRAPH_DRAFT`) can be deleted too: by name with `-m data-graph:Name`, or from its file, by deleting the as-is file and running `sf data360 delete --changed-since <ref> --confirm-delete`. A draft has no id or created date, so those two checks are skipped. The default data space and the empty dependency and related-segment lists are still required. A live draft deleted this way was `deleted` / `confirmed-deleted` and was then gone from the graph read, the graph list and the metadata list.
+A draft graph saved as-is (`DATA_GRAPH_DRAFT`) can be deleted too: by name with `-m data-graph:Name`, or from its file, by deleting the as-is file and running `sf data360 delete --changed-since <ref>` (it asks before deleting; `--no-prompt` skips the question). A draft has no id or created date, so those two checks are skipped. The default data space and the empty dependency and related-segment lists are still required. A live draft deleted this way was `deleted` / `confirmed-deleted` and was then gone from the graph read, the graph list and the metadata list.
 
 The delete response decides the result. A 2xx response is `deleted` / `confirmed-deleted`. A 4xx response is `failed` / `rejected` with Salesforce's error. A 429 or 503 is resent within the 120-second delete budget; if it never gets through, the item is `failed` / `not-attempted`. Any other 5xx or a transport failure is `failed` / `unknown`. The delete does not cascade. After a confirmed deletion the plugin removes the graph's canonical file, `data360/dataGraphs/ExampleGraph.native-dataGraph.json` in the current project, when it is a regular file; add `--keep-local-files` to keep it. Nothing is removed on `--preview` (the file is listed instead), nor for an unchanged, blocked, failed, rejected or unconfirmed delete. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`. A live delete confirmed in 66 seconds and removed the local file (verification DB: `graph-native-create-delete-settlement`). Preview is read-only.
 

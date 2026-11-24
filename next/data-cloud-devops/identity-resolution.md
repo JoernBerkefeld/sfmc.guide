@@ -231,7 +231,7 @@ The body leaves out the identity settings (`configurationType`, `rulesetId`, `da
 ## Delete
 
 {% capture delete_plugin %}
-Deletes the ruleset after checks. Use one exact selector; the ruleset is read from the org by its name before anything is deleted, also by the preview, and a ruleset the org does not have reports `unchanged`. Get approval for the exact target, and check its consumers first. Preview only reads; the delete takes no confirmation flag.
+Deletes the ruleset after checks. Use one exact selector; the ruleset is read from the org by its name before anything is deleted, also by the preview, and a ruleset the org does not have reports `unchanged`. Get approval for the exact target, and check its consumers first. Preview only reads; the delete lists the ruleset and asks before deleting (`--no-prompt` skips the question).
 
 ```sh
 sf data360 delete --metadata identity-resolution:Individual_cust --target-org TARGET_ALIAS --api-version 68.0 --data-space default --preview

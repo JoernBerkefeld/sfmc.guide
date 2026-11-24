@@ -420,7 +420,7 @@ Salesforce answers HTTP `204` with no body. List the relationships of the source
 {% endcapture %}
 
 {% capture delete_plugin %}
-Deletes one relationship, named with its source DMO and its generated name: `relationship:<SourceDmo__dlm>:<Name>`. A bare `relationship:<Name>` is refused with `INVALID_SELECTION`. The command has no confirmation flag. Preview first.
+Deletes one relationship, named with its source DMO and its generated name: `relationship:<SourceDmo__dlm>:<Name>`. A bare `relationship:<Name>` is refused with `INVALID_SELECTION`. Preview first; the delete lists the relationship and asks before deleting (`--no-prompt` skips the question).
 
 ```sh
 sf data360 delete -m relationship:Order__dlm:Order_CustomerId_map_Customer_Id_1794467679481 -o TARGET_ALIAS --preview

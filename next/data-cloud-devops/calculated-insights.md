@@ -378,8 +378,8 @@ Deploy never publishes. An update of a `DRAFT` insight always sends `"draft": tr
 To publish, pass the JSON or the SQL file of the insight:
 
 ```sh
-sf data360 publish -o TARGET_ALIAS -d data360/calculatedInsights/CustomerActivity__cio.calculatedInsight-meta.json --preview
-sf data360 publish -o TARGET_ALIAS -d data360/calculatedInsights/CustomerActivity__cio.calculatedInsight-meta.json
+sf data360 publish -o TARGET_ALIAS --source-dir data360/calculatedInsights/CustomerActivity__cio.calculatedInsight-meta.json --preview
+sf data360 publish -o TARGET_ALIAS --source-dir data360/calculatedInsights/CustomerActivity__cio.calculatedInsight-meta.json
 ```
 
 An `ACTIVE` insight that holds every key of the file reports `unchanged`. Otherwise one PATCH sends the file with `"draft": false`, and the plugin reads the insight until it is `ACTIVE` and holds the file. An insight the org does not have is `CI_NOT_FOUND`; create it with deploy first.
@@ -479,7 +479,7 @@ sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio --
 sf data360 delete -o TARGET_ALIAS -m calculated-insight:CustomerActivity__cio
 ```
 
-The read must answer with the selected name and data space (`CI_IDENTITY_CHANGED` otherwise). The plugin sends one DELETE, then reads the insight until it answers HTTP 404, waiting through `DELETING`. Deletion does not cascade. One delete can also name other families; they run in reverse dependency order. Preview is read-only. The delete takes no confirmation flag. An insight the org does not have reports `unchanged`, so a repeated delete after confirmed absence changes nothing.
+The read must answer with the selected name and data space (`CI_IDENTITY_CHANGED` otherwise). The plugin sends one DELETE, then reads the insight until it answers HTTP 404, waiting through `DELETING`. Deletion does not cascade. One delete can also name other families; they run in reverse dependency order. Preview is read-only. The delete lists the insights and asks before deleting; `--no-prompt` skips the question. An insight the org does not have reports `unchanged`, so a repeated delete after confirmed absence changes nothing.
 
 After a confirmed deletion the command removes the JSON and the SQL file at their canonical paths under `data360/calculatedInsights/` in the current directory. Pass `--keep-local-files` to keep them. A failed removal keeps the confirmed org result and exits nonzero with `LOCAL_FILE_REMOVAL_FAILED`.
 

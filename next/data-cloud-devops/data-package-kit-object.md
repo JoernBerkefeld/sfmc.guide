@@ -163,7 +163,7 @@ An Identity Resolution template can be stored and still fail when it is instanti
 
 The available tools do not expose canonical kit creation, component-add or template-generation, so no generated-kit workflow is supplied here.
 
-**Verification scope:** Create, update, delete and the Metadata API read were run live on API 68.0 on new `Cli…` kits, which were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. The combined retrieval below comes from an earlier API 65.0 run. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait-timeout`, `--keep-local-files`) applies to kits. This badge does not verify untested writes or general CRUD support.
+**Verification scope:** Create, update, delete and the Metadata API read were run live on API 68.0 on new `Cli…` kits, which were deleted afterwards. The verification database records it as `data360:b1.datakit-pages.sweep-api68`. The combined retrieval below comes from an earlier API 65.0 run. No `sf-plugin-data` command (`--preview`, `--dataspace`, `--async`, `--wait`, `--keep-local-files`) applies to kits. This badge does not verify untested writes or general CRUD support.
 
 **Read (combined transport):** Tested with `--api-version 65.0` and `--wait 10`. The `--json` result listed the three members as `Created`:
 

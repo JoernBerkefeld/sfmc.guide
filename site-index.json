@@ -2265,7 +2265,7 @@
     "url": "/tools/chrome-sfmc-ux-tools/",
     "section": "Tools",
     "type": "page",
-    "description": "Chrome extension that adds AMPscript and SSJS help to Marketing Cloud's own code editors, gives new items readable keys, and lists transactional SMS, push and OTT messages."
+    "description": "Chrome extension that makes Marketing Cloud's own screens easier to work in: code help for AMPscript and SSJS, readable keys, real journey names and a list of transactional messages. For Engagement and for the content editor of Marketing Cloud Next."
   },
   {
     "name": "sfmc-dataloader",
