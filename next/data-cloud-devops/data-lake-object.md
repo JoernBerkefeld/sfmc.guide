@@ -333,7 +333,7 @@ sf data360 retrieve -m dlo:CustomerSource__dll -o SOURCE_ALIAS
 }
 ```
 
-The result reports `outcome: "retrieved"`, or `"unchanged"` when the local file already matches. If the file exists and differs, the command stops unless you add `--overwrite`. A bare `sf data360 retrieve -m dlo -o SOURCE_ALIAS`, alone or beside other families, and a retrieve with no `-m` at all list every DLO the Data 360 API returns in the data space (`--dataspace`, or `default`), connector- and stream-created ones included, and retrieve each one; the plugin does not filter that list. A DLO whose read or file fails gets its own diagnostic with its name; the others are still written and the run ends `failed` (exit 1). An exact `dlo:Name__dll` selector always reads at API 68.0, whatever `--api-version` says.
+The result reports `outcome: "retrieved"`, or `"unchanged"` when the local file already matches. If the file exists and differs, the retrieve replaces it. A bare `sf data360 retrieve -m dlo -o SOURCE_ALIAS`, alone or beside other families, and a retrieve with no `-m` at all list every DLO the Data 360 API returns in the data space (`--dataspace`, or `default`), connector- and stream-created ones included, and retrieve each one; the plugin does not filter that list. A DLO whose read or file fails gets its own diagnostic with its name; the others are still written. When at least one file was written, the run ends `partial` (exit 68); when none was, it ends `failed` (exit 1). See [exit codes](/tools/sf-plugin-data/#exit-codes). An exact `dlo:Name__dll` selector always reads at API 68.0, whatever `--api-version` says.
 
 <details markdown="1">
 <summary>What the saved file leaves out</summary>
@@ -768,7 +768,7 @@ sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0 
 sf data360 delete -m dlo:CustomerSource__dll -o TARGET_ALIAS --api-version 68.0
 ```
 
-Retrieve saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`. The file contains a versioned `dlo` definition with logical `identity` and `spec`; the spec contains the label, category and the authored field definitions; the fields Salesforce generates are left out. It does not save the source DLO record ID, timestamps, runtime state or duplicate response envelopes. Changed existing output needs `--overwrite`; identical output is unchanged.
+Retrieve saves `./project/data360/dlo/CustomerSource__dll.dlo-meta.json`. The file contains a versioned `dlo` definition with logical `identity` and `spec`; the spec contains the label, category and the authored field definitions; the fields Salesforce generates are left out. It does not save the source DLO record ID, timestamps, runtime state or duplicate response envelopes. A differing existing file is replaced; identical output is unchanged.
 
 Deploy resolves the exact API name in the target before selecting POST or PATCH. Only confirmed absence permits POST; permission/authentication errors and ambiguous responses stop. UPDATE preserves existing fields and primary-key configuration, with only qualified label changes and ordinary field additions. It is not a schema-replacement operation or proof of cross-org ingestion portability.
 

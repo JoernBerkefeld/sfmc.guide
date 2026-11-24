@@ -78,7 +78,6 @@ A no-match returns an empty string, not a null or an error: `Lookup("AMP_VERIFY_
 
 ## See also
 
-- [`Lookup` in Marketing Cloud Next](/next/ampscript/functions/lookup/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — returns every matching row as a rowset
 - [`Field`](/engagement/ampscript/functions/field/)
 - [`Row`](/engagement/ampscript/functions/row/) — read a column from a rowset row

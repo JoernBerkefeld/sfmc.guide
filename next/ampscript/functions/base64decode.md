@@ -77,7 +77,6 @@ There is no error token to test for: a value that cannot be decoded either makes
 
 ## See also
 
-- [`Base64Decode` in Marketing Cloud Engagement](/engagement/ampscript/functions/base64decode/) — how it behaves there
 - [Base64Encode](/next/ampscript/functions/base64encode/) — the inverse
 - [StringToHex](/next/ampscript/functions/stringtohex/) — the same bytes as hexadecimal
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-decode.html)

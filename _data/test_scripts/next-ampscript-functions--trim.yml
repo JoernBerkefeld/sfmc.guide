@@ -7,23 +7,30 @@ behaviour: |
        was rendered on its own (expect) next to the result of this run (got).
        Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
-  <p>c1 expect=[hi there] got=[%%=Trim("  hi there  ")=%%]</p>
-  <p>c2 expect=[a b] got=[%%=Trim("  a  b  ")=%%]</p>
-  <p>c3 expect=[] got=[%%=Trim("     ")=%%]</p>
-  <p>c4 expect=[hello] got=[%%=Trim("  hello  ")=%%]</p>
-  <p>c5 expect=[noPad] got=[%%=Trim("noPad")=%%]</p>
-  <p>c6 expect=[3] got=[%%=Length(Trim("  a  b  "))=%%]</p>
-  <p>c7 expect=[] got=[%%=Trim("")=%%]</p>
-  <p>c8 expect=[0] got=[%%=Length(Trim("     "))=%%]</p>
-  <p>c9 expect=[1] got=[%%=Length(Trim(Concat(Char(9), "x", Char(9))))=%%]</p>
-  <p>c10 expect=[1] got=[%%=Length(Trim(Concat(Char(10), "x", Char(10))))=%%]</p>
-  <p>c11 expect=[1] got=[%%=Length(Trim(Concat(Char(13), "x", Char(13))))=%%]</p>
-  <p>c12 expect=[1] got=[%%=Length(Trim(Concat(Char(9), Char(10), " x ", Char(13), Char(9))))=%%]</p>
-  <p>c13 expect=[3] got=[%%=Length(Trim(Concat(Char(160), "x", Char(160))))=%%]</p>
-  <p>c14 expect=[éàü] got=[%%=Trim(Concat("  ", Char(233), Char(224), Char(252), "  "))=%%]</p>
-  <p>c15 expect=[3] got=[%%=Length(Trim(Concat("  ", Char(233), Char(224), Char(252), "  ")))=%%]</p>
-  <p>c16 expect=[42] got=[%%=Trim("  42  ")=%%]</p>
-  <p>c17 expect=[2026-11-22T21:03:22] got=[%%=Trim(Now())=%%]</p>
+  <p>c1 expect=[noPad] got=[%%=Trim("noPad")=%%]</p>
+  <p>c2 expect=[] got=[%%=Trim("")=%%]</p>
+  <p>c3 expect=[1] got=[%%=Length(Trim(Concat(Char(9), "x", Char(9))))=%%]</p>
+  <p>c4 expect=[1] got=[%%=Length(Trim(Concat(Char(10), "x", Char(10))))=%%]</p>
+  <p>c5 expect=[1] got=[%%=Length(Trim(Concat(Char(13), "x", Char(13))))=%%]</p>
+  <p>c6 expect=[1] got=[%%=Length(Trim(Concat(Char(9), Char(10), " x ", Char(13), Char(9))))=%%]</p>
+  <p>c7 expect=[3] got=[%%=Length(Trim(Concat(Char(160), "x", Char(160))))=%%]</p>
+  <p>c8 expect=[2026-11-22T21:03:22] got=[%%=Trim(Now())=%%]</p>
+  <p>c9 expect=[3] got=[%%=Length("a  b")=%%]</p>
+  <p>c10 expect=[a_b] got=[%%=Replace("a  b", " ", "_")=%%]</p>
+  <p>c11 expect=[a_b] got=[%%=Replace("a   b", " ", "_")=%%]</p>
+  <p>c12 expect=[4] got=[%%=Length(Concat("a", Char(32), Char(32), "b"))=%%]</p>
+  <p>c13 expect=[a__b] got=[%%=Replace(Trim(Concat(Char(32), Char(32), "a", Char(32), Char(32), "b", Char(32), Char(32))), " ", "_")=%%]</p>
+  <p>c14 expect=[a_b] got=[%%[ SET @r3s6 = "a  b" ]%%%%=Replace(@r3s6, " ", "_")=%%]</p>
+  <p>c15 expect=[x y] got=[x  y]</p>
+  <p>c16 expect=[hi there] got=[%%=Trim(Concat(Char(32), Char(32), "hi there", Char(32), Char(32)))=%%]</p>
+  <p>c17 expect=[a  b] got=[%%=Trim(Concat(Char(32), Char(32), "a", Char(32), Char(32), "b", Char(32), Char(32)))=%%]</p>
+  <p>c18 expect=[] got=[%%=Trim(Concat(Char(32), Char(32), Char(32), Char(32), Char(32)))=%%]</p>
+  <p>c19 expect=[hello] got=[%%=Trim(Concat(Char(32), Char(32), "hello", Char(32), Char(32)))=%%]</p>
+  <p>c20 expect=[4] got=[%%=Length(Trim(Concat(Char(32), Char(32), "a", Char(32), Char(32), "b", Char(32), Char(32))))=%%]</p>
+  <p>c21 expect=[0] got=[%%=Length(Trim(Concat(Char(32), Char(32), Char(32), Char(32), Char(32))))=%%]</p>
+  <p>c22 expect=[éàü] got=[%%=Trim(Concat(Concat(Char(32), Char(32)), Char(233), Char(224), Char(252), Concat(Char(32), Char(32))))=%%]</p>
+  <p>c23 expect=[3] got=[%%=Length(Trim(Concat(Concat(Char(32), Char(32)), Char(233), Char(224), Char(252), Concat(Char(32), Char(32)))))=%%]</p>
+  <p>c24 expect=[42] got=[%%=Trim(Concat(Char(32), Char(32), "42", Char(32), Char(32)))=%%]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->
@@ -38,4 +45,4 @@ failing: |
   %%=Trim()=%%
 
   <!-- email 4: expect that the save is rejected (HTTP 400) -->
-  %%=Trim("  a  ", "  b  ")=%%
+  %%=Trim(Concat(Char(32), Char(32), "a", Char(32), Char(32)), Concat(Char(32), Char(32), "b", Char(32), Char(32)))=%%

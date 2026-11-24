@@ -151,7 +151,6 @@ With a currency pattern the locale also supplies the symbol and its position: `C
 
 ## See also
 
-- [`FormatNumber` in Marketing Cloud Next](/next/ampscript/functions/formatnumber/) — how it behaves there
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — the same locale machinery, with the symbol and its position chosen for you
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only

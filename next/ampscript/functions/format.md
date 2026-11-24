@@ -107,7 +107,6 @@ In the same Next email, [FormatDate](/next/ampscript/functions/formatdate/) with
 
 ## See also
 
-- [`Format` in Marketing Cloud Engagement](/engagement/ampscript/functions/format/) — how it behaves there
 - [FormatNumber](/next/ampscript/functions/formatnumber/) — numbers only
 - [FormatCurrency](/next/ampscript/functions/formatcurrency/) — currency for a locale
 - [FormatDate](/next/ampscript/functions/formatdate/) — dates only

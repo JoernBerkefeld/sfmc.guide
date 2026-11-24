@@ -76,6 +76,5 @@ The result is arbitrary text, so there is no fixed set of special values to test
 
 ## See also
 
-- [`Concat` in Marketing Cloud Engagement](/engagement/ampscript/functions/concat/) — how it behaves there
 - [Differs from official docs (Next)](/next/differs-from-docs/)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-concat.html)

@@ -102,7 +102,6 @@ Several of these contain characters other than a plain space or apostrophe, so a
 
 ## See also
 
-- [`FormatCurrency` in Marketing Cloud Engagement](/engagement/ampscript/functions/formatcurrency/) — how it behaves there
 - [FormatNumber](/next/ampscript/functions/formatnumber/) — the same locales with a pattern of your choice
 - [Format](/next/ampscript/functions/format/) — numbers and dates
 - [FormatDate](/next/ampscript/functions/formatdate/) — dates only

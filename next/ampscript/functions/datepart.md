@@ -85,7 +85,6 @@ Renders `2027`.
 
 ## See also
 
-- [`DatePart` in Marketing Cloud Engagement](/engagement/ampscript/functions/datepart/) — how it behaves there
 - [FormatDate](/next/ampscript/functions/formatdate/) — padded values and month names
 - [DateAdd](/next/ampscript/functions/dateadd/)
 - [DateDiff](/next/ampscript/functions/datediff/)

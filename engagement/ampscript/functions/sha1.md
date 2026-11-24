@@ -87,7 +87,6 @@ An unrecognised name is rejected outright — passing `banana` aborted the page 
 
 ## See also
 
-- [`SHA1` in Marketing Cloud Next](/next/ampscript/functions/sha1/) — how it behaves there
 - [MD5](/engagement/ampscript/functions/md5/)
 - [SHA256](/engagement/ampscript/functions/sha256/)
 - [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, different digest lengths

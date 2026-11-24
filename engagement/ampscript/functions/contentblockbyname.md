@@ -77,7 +77,6 @@ Renders `Block unavailable` and sets `@sc` to `-1`.
 
 ## See also
 
-- [`ContentBlockByName` in Marketing Cloud Next](/next/ampscript/functions/contentblockbyname/) — how it behaves there
 - [`ContentBlockByID`](/engagement/ampscript/functions/contentblockbyid/) — retrieve the same block by its numeric ID
 - [`ContentBlockByKey`](/engagement/ampscript/functions/contentblockbykey/) — retrieve the same block by its customer key
 - [`ContentArea`](/engagement/ampscript/functions/contentarea/)

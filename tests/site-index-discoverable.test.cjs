@@ -396,6 +396,19 @@ test('CMS tool page is discoverable and lists every type without version history
   assert.match(JSON.stringify(lunr), /\/tools\/sf-plugin-cms\//);
 });
 
+test('MobilePush setup page is discoverable from Engagement overview, nav and search', () => {
+  const page = fs.readFileSync(path.join(SITE, 'engagement', 'mobilepush', 'index.md'), 'utf8');
+  assert.match(page, /^permalink: \/engagement\/mobilepush\/$/m);
+  assert.match(page, /^parent_url: \/engagement\/$/m);
+  assert.doesNotMatch(page, /^discoverable:\s*false\s*$/m);
+  const overview = fs.readFileSync(path.join(SITE, 'engagement', 'index.md'), 'utf8');
+  assert.match(overview, /\]\(\/engagement\/mobilepush\/\)/);
+  const nav = fs.readFileSync(path.join(SITE, '_data', 'navigation.yml'), 'utf8');
+  assert.match(nav, /url: \/engagement\/mobilepush\/$/m);
+  const index = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
+  assert.equal(index.filter((entry) => entry.url === '/engagement/mobilepush/').length, 1);
+});
+
 test('Next Data Cloud CLI guide is discoverable without promising general CRUD', () => {
   const page = dataCloudGuide();
   assert.match(page, /^permalink: \/next\/data-cloud-devops\/\s*$/m);

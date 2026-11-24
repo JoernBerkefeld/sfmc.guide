@@ -93,7 +93,6 @@ Each search value works on the output of the one before it. In the first row `a`
 
 ## See also
 
-- [`ReplaceList` in Marketing Cloud Engagement](/engagement/ampscript/functions/replacelist/) — how it behaves there
 - [`Replace`](/next/ampscript/functions/replace/) — one search value with its own replacement
 - [`Concat`](/next/ampscript/functions/concat/) — the other variadic String function
 - [Differs from official docs (Next)](/next/differs-from-docs/)

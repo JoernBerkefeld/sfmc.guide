@@ -16,7 +16,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "In Next a non-empty string such as `\"hello\"`, `\"0\"` or three spaces as the condition selects the true branch (`T`), where Engagement gives `F`. Next evaluates both branches: a `RaiseError` in the branch that is not selected makes the email fail to render."
+mcn_note: "In Next a non-empty string such as `\"hello\"`, `\"0\"` or whitespace as the condition selects the true branch (`T`), where Engagement gives `F`. Next evaluates both branches: a `RaiseError` in the branch that is not selected makes the email fail to render. Engagement's `==` and `!=` compare strings with regard to case; in Next they ignore case (`IIf(\"abc\" == \"ABC\", \"eq\", \"ne\")` gives `eq`)."
 ---
 
 {% include verification-status.html %}
@@ -102,7 +102,6 @@ The last column is constant, which is the point: feed this function a value and 
 
 ## See also
 
-- [`IIf` in Marketing Cloud Next](/next/ampscript/functions/iif/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — the boolean this function is most often given
 - [IsNull](/engagement/ampscript/functions/isnull/) — returns a boolean too, but `False` for everything a page variable holds
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the fallback it looks like; pair `IIf` with `Empty` instead

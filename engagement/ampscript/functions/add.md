@@ -75,7 +75,6 @@ Every successful call rendered a bare numeric literal. There is no closed set of
 
 ## See also
 
-- [`Add` in Marketing Cloud Next](/next/ampscript/functions/add/) — how it behaves there
 - [`Subtract`](/engagement/ampscript/functions/subtract/) — the inverse operation
 - [`Multiply`](/engagement/ampscript/functions/multiply/)
 - [`Divide`](/engagement/ampscript/functions/divide/) — the other two arithmetic functions

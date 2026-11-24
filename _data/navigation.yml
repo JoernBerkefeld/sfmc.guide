@@ -40,6 +40,8 @@
           url: /engagement/einstein/recommendation/gtm/
     - title: Encryption
       url: /engagement/encryption/
+    - title: MobilePush setup
+      url: /engagement/mobilepush/
     - title: SSJS Function Index
       url: /engagement/ssjs/functions/
     - title: AMPscript
@@ -337,8 +339,322 @@
       url: /next/
     - title: AMPscript Function Index
       url: /next/ampscript/functions/
+      children:
+        - title: '— Math functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: Add
+          url: /next/ampscript/functions/add/
+        - title: Divide
+          url: /next/ampscript/functions/divide/
+        - title: Mod
+          url: /next/ampscript/functions/mod/
+        - title: Multiply
+          url: /next/ampscript/functions/multiply/
+        - title: Random
+          url: /next/ampscript/functions/random/
+        - title: Subtract
+          url: /next/ampscript/functions/subtract/
+        - title: '— String functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: Char
+          url: /next/ampscript/functions/char/
+        - title: Concat
+          url: /next/ampscript/functions/concat/
+        - title: IndexOf
+          url: /next/ampscript/functions/indexof/
+        - title: Length
+          url: /next/ampscript/functions/length/
+        - title: Lowercase
+          url: /next/ampscript/functions/lowercase/
+        - title: ProperCase
+          url: /next/ampscript/functions/propercase/
+        - title: RegExMatch
+          url: /next/ampscript/functions/regexmatch/
+        - title: Replace
+          url: /next/ampscript/functions/replace/
+        - title: ReplaceList
+          url: /next/ampscript/functions/replacelist/
+        - title: Substring
+          url: /next/ampscript/functions/substring/
+        - title: Trim
+          url: /next/ampscript/functions/trim/
+        - title: Uppercase
+          url: /next/ampscript/functions/uppercase/
+        - title: '— Date and Time functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: DateAdd
+          url: /next/ampscript/functions/dateadd/
+        - title: DateDiff
+          url: /next/ampscript/functions/datediff/
+        - title: DateParse
+          url: /next/ampscript/functions/dateparse/
+        - title: DatePart
+          url: /next/ampscript/functions/datepart/
+        - title: FormatDate
+          url: /next/ampscript/functions/formatdate/
+        - title: Now
+          url: /next/ampscript/functions/now/
+        - title: StringToDate
+          url: /next/ampscript/functions/stringtodate/
+        - title: '— Encryption and Encoding functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: Base64Decode
+          url: /next/ampscript/functions/base64decode/
+        - title: Base64Encode
+          url: /next/ampscript/functions/base64encode/
+        - title: MD5
+          url: /next/ampscript/functions/md5/
+        - title: SHA1
+          url: /next/ampscript/functions/sha1/
+        - title: SHA256
+          url: /next/ampscript/functions/sha256/
+        - title: SHA512
+          url: /next/ampscript/functions/sha512/
+        - title: StringToHex
+          url: /next/ampscript/functions/stringtohex/
+        - title: URLEncode
+          url: /next/ampscript/functions/urlencode/
+        - title: '— Content functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: BeginImpressionRegion
+          url: /next/ampscript/functions/beginimpressionregion/
+        - title: BuildRowsetFromJSON
+          url: /next/ampscript/functions/buildrowsetfromjson/
+        - title: BuildRowSetFromString
+          url: /next/ampscript/functions/buildrowsetfromstring/
+        - title: BuildRowSetFromXML
+          url: /next/ampscript/functions/buildrowsetfromxml/
+        - title: ContentBlockByID
+          url: /next/ampscript/functions/contentblockbyid/
+        - title: ContentBlockByKey
+          url: /next/ampscript/functions/contentblockbykey/
+        - title: ContentBlockByName
+          url: /next/ampscript/functions/contentblockbyname/
+        - title: EndImpressionRegion
+          url: /next/ampscript/functions/endimpressionregion/
+        - title: '— Data Extension functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: ClaimRow
+          url: /next/ampscript/functions/claimrow/
+        - title: ClaimRowValue
+          url: /next/ampscript/functions/claimrowvalue/
+        - title: Field
+          url: /next/ampscript/functions/field/
+        - title: Lookup
+          url: /next/ampscript/functions/lookup/
+        - title: LookupOrderedRows
+          url: /next/ampscript/functions/lookuporderedrows/
+        - title: LookupRows
+          url: /next/ampscript/functions/lookuprows/
+        - title: Row
+          url: /next/ampscript/functions/row/
+        - title: RowCount
+          url: /next/ampscript/functions/rowcount/
+        - title: '— Utility functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: Domain
+          url: /next/ampscript/functions/domain/
+        - title: Empty
+          url: /next/ampscript/functions/empty/
+        - title: Format
+          url: /next/ampscript/functions/format/
+        - title: FormatCurrency
+          url: /next/ampscript/functions/formatcurrency/
+        - title: FormatNumber
+          url: /next/ampscript/functions/formatnumber/
+        - title: GUID
+          url: /next/ampscript/functions/guid/
+        - title: IIf
+          url: /next/ampscript/functions/iif/
+        - title: IsEmailAddress
+          url: /next/ampscript/functions/isemailaddress/
+        - title: IsNull
+          url: /next/ampscript/functions/isnull/
+        - title: IsNullDefault
+          url: /next/ampscript/functions/isnulldefault/
+        - title: Output
+          url: /next/ampscript/functions/output/
+        - title: OutputLine
+          url: /next/ampscript/functions/outputline/
+        - title: RaiseError
+          url: /next/ampscript/functions/raiseerror/
+        - title: v
+          url: /next/ampscript/functions/v/
+        - title: '— Sales and Service Cloud functions —'
+          url: /next/ampscript/functions/#supported-functions
+        - title: RetrieveSalesforceObjects
+          url: /next/ampscript/functions/retrievesalesforceobjects/
     - title: Handlebars Helper Index
       url: /next/handlebars/helpers/
+      children:
+        - title: '— Math helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: add
+          url: /next/handlebars/helpers/add/
+        - title: divide
+          url: /next/handlebars/helpers/divide/
+        - title: modulo
+          url: /next/handlebars/helpers/modulo/
+        - title: multiply
+          url: /next/handlebars/helpers/multiply/
+        - title: random
+          url: /next/handlebars/helpers/random/
+        - title: subtract
+          url: /next/handlebars/helpers/subtract/
+        - title: '— String helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: char
+          url: /next/handlebars/helpers/char/
+        - title: concat
+          url: /next/handlebars/helpers/concat/
+        - title: indexOf
+          url: /next/handlebars/helpers/indexof/
+        - title: lowercase
+          url: /next/handlebars/helpers/lowercase/
+        - title: properCase
+          url: /next/handlebars/helpers/propercase/
+        - title: regExMatch
+          url: /next/handlebars/helpers/regexmatch/
+        - title: replace
+          url: /next/handlebars/helpers/replace/
+        - title: stringToHex
+          url: /next/handlebars/helpers/stringtohex/
+        - title: substring
+          url: /next/handlebars/helpers/substring/
+        - title: trim
+          url: /next/handlebars/helpers/trim/
+        - title: uppercase
+          url: /next/handlebars/helpers/uppercase/
+        - title: '— Date & Time helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: dateAdd
+          url: /next/handlebars/helpers/dateadd/
+        - title: dateDiff
+          url: /next/handlebars/helpers/datediff/
+        - title: datePart
+          url: /next/handlebars/helpers/datepart/
+        - title: now
+          url: /next/handlebars/helpers/now/
+        - title: timeZoneConversion
+          url: /next/handlebars/helpers/timezoneconversion/
+        - title: '— Encryption helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: encode
+          url: /next/handlebars/helpers/encode/
+        - title: md5
+          url: /next/handlebars/helpers/md5/
+        - title: sha1
+          url: /next/handlebars/helpers/sha1/
+        - title: sha256
+          url: /next/handlebars/helpers/sha256/
+        - title: sha512
+          url: /next/handlebars/helpers/sha512/
+        - title: '— Content helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: buildRowSetFromString
+          url: /next/handlebars/helpers/buildrowsetfromstring/
+        - title: buildRowSetFromXml
+          url: /next/handlebars/helpers/buildrowsetfromxml/
+        - title: buildUrl
+          url: /next/handlebars/helpers/buildurl/
+        - title: getContentBlock
+          url: /next/handlebars/helpers/getcontentblock/
+        - title: impressionRegion
+          url: /next/handlebars/helpers/impressionregion/
+        - title: '— Data helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: assignCoupon
+          url: /next/handlebars/helpers/assigncoupon/
+        - title: claimRow
+          url: /next/handlebars/helpers/claimrow/
+        - title: hash
+          url: /next/handlebars/helpers/hash/
+        - title: query
+          url: /next/handlebars/helpers/query/
+        - title: queryFirst
+          url: /next/handlebars/helpers/queryfirst/
+        - title: '— Objects helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: each
+          url: /next/handlebars/helpers/each/
+        - title: filter
+          url: /next/handlebars/helpers/filter/
+        - title: flatten
+          url: /next/handlebars/helpers/flatten/
+        - title: get
+          url: /next/handlebars/helpers/get/
+        - title: jsonPath
+          url: /next/handlebars/helpers/jsonpath/
+        - title: lookup
+          url: /next/handlebars/helpers/lookup/
+        - title: map
+          url: /next/handlebars/helpers/map/
+        - title: slice
+          url: /next/handlebars/helpers/slice/
+        - title: '— Comparison helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: and
+          url: /next/handlebars/helpers/and/
+        - title: compare
+          url: /next/handlebars/helpers/compare/
+        - title: equals
+          url: /next/handlebars/helpers/equals/
+        - title: if
+          url: /next/handlebars/helpers/if/
+        - title: iif
+          url: /next/handlebars/helpers/iif/
+        - title: isEmpty
+          url: /next/handlebars/helpers/isempty/
+        - title: not
+          url: /next/handlebars/helpers/not/
+        - title: or
+          url: /next/handlebars/helpers/or/
+        - title: unless
+          url: /next/handlebars/helpers/unless/
+        - title: '— Utility helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: base64Decode
+          url: /next/handlebars/helpers/base64decode/
+        - title: base64Encode
+          url: /next/handlebars/helpers/base64encode/
+        - title: domain
+          url: /next/handlebars/helpers/domain/
+        - title: fallback
+          url: /next/handlebars/helpers/fallback/
+        - title: format
+          url: /next/handlebars/helpers/format/
+        - title: formatCurrency
+          url: /next/handlebars/helpers/formatcurrency/
+        - title: formatNumber
+          url: /next/handlebars/helpers/formatnumber/
+        - title: guid
+          url: /next/handlebars/helpers/guid/
+        - title: isEmailAddress
+          url: /next/handlebars/helpers/isemailaddress/
+        - title: isNullDefault
+          url: /next/handlebars/helpers/isnulldefault/
+        - title: length
+          url: /next/handlebars/helpers/length/
+        - title: raiseError
+          url: /next/handlebars/helpers/raiseerror/
+        - title: repeat
+          url: /next/handlebars/helpers/repeat/
+        - title: set
+          url: /next/handlebars/helpers/set/
+        - title: sort
+          url: /next/handlebars/helpers/sort/
+        - title: with
+          url: /next/handlebars/helpers/with/
+        - title: '— HTTP helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: encodeURI
+          url: /next/handlebars/helpers/encodeuri/
+        - title: encodeURIComponent
+          url: /next/handlebars/helpers/encodeuricomponent/
+        - title: '— Personalization helpers —'
+          url: /next/handlebars/helpers/#all-helpers
+        - title: personalizationResult
+          url: /next/handlebars/helpers/personalizationresult/
     - title: Differs from Official Docs
       url: /next/differs-from-docs/
 
@@ -353,6 +669,8 @@
       url: /tools/#own-tools
     - title: SFMC Language Service
       url: /tools/vscode-sfmc-language/
+    - title: SFMC UX Tools (Chrome)
+      url: /tools/chrome-sfmc-ux-tools/
     - title: SFMC MCP Server for Coding
       url: /tools/mcp-server-sfmc/
     - title: SFMC DevTools
@@ -365,6 +683,8 @@
       url: /tools/#own-tools
     - title: SF-CLI Plugin for CMS
       url: /tools/sf-plugin-cms/
+    - title: SF-CLI Plugin for Data 360
+      url: /tools/sf-plugin-data/
     - title: '— Community —'
       url: /tools/#community-and-ecosystem
     - title: dataviews.io

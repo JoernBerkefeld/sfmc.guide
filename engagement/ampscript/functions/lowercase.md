@@ -84,7 +84,6 @@ The result is arbitrary transformed text, so there is no closed set of sentinel 
 
 ## See also
 
-- [`Lowercase` in Marketing Cloud Next](/next/ampscript/functions/lowercase/) — how it behaves there
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the inverse conversion, which leaves the German sharp s alone
 - [`Concat`](/engagement/ampscript/functions/concat/)
 - [`Length`](/engagement/ampscript/functions/length/) — the other verified String functions

@@ -8,6 +8,7 @@ behaviour: |
        Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[4821] got=[%%=RegExMatch("order-4821-eu", "[0-9]+", "0")=%%]</p>
+  <p>c2 expect=[4821] got=[%%=RegExMatch("order-4821-eu", Concat("order-(?", Char(60), "num", Char(62), "[0-9]+)-"), "num")=%%]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->
@@ -31,43 +32,40 @@ failing: |
   %%=RegExMatch("order-4821-eu", "order-([0-9]+)-", 1)=%%
 
   <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
-  %%=RegExMatch("order-4821-eu", "order-(?<num>[0-9]+)-", "num")=%%
-
-  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("order-4821-eu", "order-([0-9]+)-", 5)=%%
 
-  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("order-4821-eu", "order-([0-9]+)-", "nope")=%%
 
-  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("order-4821-eu", "[0-9]+", 1)=%%
 
-  <!-- email 11: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("order-4821-eu", "[0-9][0-9][0-9][0-9][0-9][0-9]", 0)=%%
 
-  <!-- email 12: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 11: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("ORDER-4821", "order", 0, "ignorecase")=%%
 
-  <!-- email 13: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 12: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("ORDER-4821", "order.4821", 0, "IgnoreCase", "Singleline")=%%
 
-  <!-- email 14: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 13: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("ORDER-4821", "order.4821", 0, "IgnoreCase", "Singleline", "Multiline", "ExplicitCapture", "IgnorePatternWhitespace")=%%
 
-  <!-- email 15: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 14: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("a1 b2 c3", "[a-z][0-9]", 0)=%%
 
-  <!-- email 16: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 15: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("", "[0-9]+", 0)=%%
 
-  <!-- email 17: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 16: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch(4821, "[0-9]+", 0)=%%
 
-  <!-- email 18: expect that the save is rejected (HTTP 400) -->
+  <!-- email 17: expect that the save is rejected (HTTP 400) -->
   %%=RegExMatch("order-4821-eu", "[0-9]+", 0, "NotARealOption")=%%
 
-  <!-- email 19: expect that the email saves, but the preview fails (HTTP 500) -->
+  <!-- email 18: expect that the email saves, but the preview fails (HTTP 500) -->
   %%=RegExMatch("order-4821-eu", "order-([0-9]+", 0)=%%
 
-  <!-- email 20: expect that the save is rejected (HTTP 400) -->
+  <!-- email 19: expect that the save is rejected (HTTP 400) -->
   %%=RegExMatch("order-4821-eu", "[0-9]+")=%%

@@ -85,7 +85,6 @@ A path that matches nothing, an empty array (`"[]"` with `$[*]`) and the text `n
 
 ## See also
 
-- [`BuildRowsetFromJSON` in Marketing Cloud Engagement](/engagement/ampscript/functions/buildrowsetfromjson/) — how it behaves there
 - [`BuildRowSetFromXML`](/next/ampscript/functions/buildrowsetfromxml/) — the XML counterpart
 - [`BuildRowSetFromString`](/next/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset
 - [`Row`](/next/ampscript/functions/row/), [`Field`](/next/ampscript/functions/field/), [`RowCount`](/next/ampscript/functions/rowcount/) — read the rowset

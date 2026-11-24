@@ -121,7 +121,6 @@ With a currency pattern the locale also sets the symbol: `C2` with `de-DE` gives
 
 ## See also
 
-- [`FormatNumber` in Marketing Cloud Engagement](/engagement/ampscript/functions/formatnumber/) — how it behaves there
 - [FormatCurrency](/next/ampscript/functions/formatcurrency/) — currency with the symbol chosen by the locale
 - [Format](/next/ampscript/functions/format/) — numbers and dates
 - [FormatDate](/next/ampscript/functions/formatdate/) — dates only

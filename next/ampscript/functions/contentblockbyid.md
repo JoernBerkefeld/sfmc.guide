@@ -72,7 +72,6 @@ ID `999999999` does not exist. In Next this email saves and publishes, but the p
 
 ## See also
 
-- [`ContentBlockByID` in Marketing Cloud Engagement](/engagement/ampscript/functions/contentblockbyid/) — how it behaves there
 - [`ContentBlockByKey`](/next/ampscript/functions/contentblockbykey/) — retrieve a block by its customer key
 - [`ContentBlockByName`](/next/ampscript/functions/contentblockbyname/) — retrieve a block by its folder path and name
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-id.html)

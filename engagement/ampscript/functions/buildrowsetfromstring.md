@@ -84,7 +84,6 @@ There is no closed set of sentinel values: an empty source string and an unset v
 
 ## See also
 
-- [`BuildRowSetFromString` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromstring/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromstring-edge-separators) — the separator edge cases in full
 - [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/)
 - [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same rowset shape for structured payloads

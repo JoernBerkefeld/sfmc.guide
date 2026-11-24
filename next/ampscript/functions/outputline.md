@@ -73,7 +73,6 @@ Renders `zeta`.
 
 ## See also
 
-- [`OutputLine` in Marketing Cloud Engagement](/engagement/ampscript/functions/outputline/) — how it behaves there
 - [v](/next/ampscript/functions/v/) — writes a value inline in a Next email
 - [Output](/next/ampscript/functions/output/) — the same without the line break
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html)

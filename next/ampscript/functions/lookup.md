@@ -57,7 +57,6 @@ An email containing this call, placed in a branch that never runs, saved and pub
 
 ## See also
 
-- [`Lookup` in Marketing Cloud Engagement](/engagement/ampscript/functions/lookup/) — how it behaves there
 - [`LookupRows`](/next/ampscript/functions/lookuprows/) — every matching row as a rowset
 - [`LookupOrderedRows`](/next/ampscript/functions/lookuporderedrows/)
 - [`Field`](/next/ampscript/functions/field/)

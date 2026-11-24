@@ -103,7 +103,6 @@ Treat the bounds as integers only, and round or truncate before the call. The fi
 
 ## See also
 
-- [`Random` in Marketing Cloud Next](/next/ampscript/functions/random/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#random-decimal-bounds-rejected) — the decimal-bounds finding in full
 - [`Mod`](/engagement/ampscript/functions/mod/) — useful for bucketing a random value
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html)

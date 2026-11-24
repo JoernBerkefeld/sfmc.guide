@@ -89,7 +89,6 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 
 ## See also
 
-- [`Base64Encode` in Marketing Cloud Next](/next/ampscript/functions/base64encode/) — how it behaves there
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — the same bytes in hexadecimal instead
 - [Encoding names are wider than documented](/engagement/differs-from-docs/#base64encode-wider-encoding-domain)

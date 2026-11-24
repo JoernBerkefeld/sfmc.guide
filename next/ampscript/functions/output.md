@@ -65,7 +65,6 @@ Renders `checkpoint reached`.
 
 ## See also
 
-- [`Output` in Marketing Cloud Engagement](/engagement/ampscript/functions/output/) — how it behaves there
 - [v](/next/ampscript/functions/v/) — writes a value inline in a Next email
 - [OutputLine](/next/ampscript/functions/outputline/) — writes only a line break in Next
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html)

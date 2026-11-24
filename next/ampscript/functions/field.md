@@ -16,7 +16,7 @@ differs_from_docs: true
 engagement: differs
 signature_differs: true
 mcn_tested: 2026-11-23
-engagement_note: "On a row from `BuildRowSetFromString(\"a,b,c\",\",\")`, Engagement's `Field(row,\"Value\")` returns `a` where Next returns the flag (third argument, `true` when omitted), not the cell. With a missing column, Engagement returns an empty string for a falsy third argument and aborts for a truthy one; Next renders the flag as `true` or `false` instead of either. Engagement reads a `BuildRowsetFromJSON` column by case-insensitive name or by ordinal (`NYC`); Next returned an empty string for both."
+engagement_note: "On a row from `BuildRowSetFromString(\"a,b,c\",\",\")`, Engagement's `Field(row,\"Value\")` returns `a` where Next returns the flag (third argument, `true` when omitted), not the cell. With a missing column, Engagement returns an empty string for a falsy third argument and aborts for a truthy one; Next renders the flag as `true` or `false` instead of either. Engagement reads a `BuildRowsetFromJSON` column by case-insensitive name or by ordinal (`NYC`); Next returned an empty string for both. On `BuildRowSetFromXML` rows Engagement returns the node content (`200.00`, `IND`); Next returns the flag (`false` for `Value`, `Xml` and attribute columns read with `0`, `true` by position)."
 test_scripts: complete
 ---
 
@@ -48,7 +48,7 @@ Renders `18`: the first Contact's `Id` column was read as an 18-character record
 
 ## Return value
 
-**`string`** — on a rowset from `RetrieveSalesforceObjects`, the value of the named column. On rowsets built from a string, Next returned the flag (third argument, `true` when omitted) instead of the cell; on a `BuildRowsetFromJSON` row it returned an empty string (see Behaviour).
+**`string`** — on a rowset from `RetrieveSalesforceObjects`, the value of the named column. On rowsets built from a string or from XML, Next returned the flag (third argument, `true` when omitted) instead of the cell; on a `BuildRowsetFromJSON` row it returned an empty string (see Behaviour).
 
 ## Behaviour
 
@@ -64,6 +64,8 @@ Renders `18`: the first Contact's `Id` column was read as an 18-character record
 
 **An empty cell stays empty.** On the empty third row of `BuildRowSetFromString("a,b,", ",")`, `Field(@row, "Value", "DEF")` rendered an empty string; the third argument is not used as a default.
 
+**On `BuildRowSetFromXML` rows it returns the flag too.** With XML built from `Char()` (so the email save does not strip the tags), the row count is right, but `Field(Row(@rows, 2), "Value", 0)` gives `false` instead of `200.00`, and so do the `Xml` column and the `origin_att` and `carrier_att` columns read with `0`. Reading by position (`Field(row, 1)` to `Field(row, 5)`) gives `true`. See [`BuildRowSetFromXML`](/next/ampscript/functions/buildrowsetfromxml/).
+
 **`BuildRowsetFromJSON` columns came back empty.** On a row from `BuildRowsetFromJSON` whose `Dest` column holds `NYC`, both `Field(@row, "dest")` and `Field(@row, 2)` rendered an empty string.
 
 {% include test-script.html bundle="next-ampscript-functions--field" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
@@ -71,14 +73,13 @@ Renders `18`: the first Contact's `Id` column was read as an 18-character record
 
 ## Differs from official docs
 
-- **The cell value is not returned on `BuildRowSetFromString` rows.** The reference describes `Field` as handing back the content of the named column. On the first row of `BuildRowSetFromString("a,b,c", ",")`, Next rendered `true` for `Field(@row, "Value")` instead of `a`, and with an explicit third argument it rendered that flag as `true` or `false` instead of the cell. The flag also comes back on the `Value` column of `BuildRowsetFromJSON` rows, while named object columns of `BuildRowsetFromJSON` rows and `RetrieveSalesforceObjects` rows return the value. [Card](/next/differs-from-docs/#field-returns-flag-not-value)
+- **The cell value is not returned on `BuildRowSetFromString` and `BuildRowSetFromXML` rows.** The reference describes `Field` as handing back the content of the named column. On the first row of `BuildRowSetFromString("a,b,c", ",")`, Next rendered `true` for `Field(@row, "Value")` instead of `a`, and with an explicit third argument it rendered that flag as `true` or `false` instead of the cell. The flag also comes back on `BuildRowSetFromXML` rows (`Value`, `Xml` and attribute columns) and on the `Value` column of `BuildRowsetFromJSON` rows, while named object columns of `BuildRowsetFromJSON` rows and `RetrieveSalesforceObjects` rows return the value. [Card](/next/differs-from-docs/#field-returns-flag-not-value)
 - **The third argument does not decide between empty string and error.** The reference says a falsy flag gives an empty string for a missing column and a truthy (default) flag raises an error. In Next, a missing column on a `BuildRowSetFromString` row rendered `false` for `false`, `0`, `"false"`, `"0"` and also `"1"`, and rendered `true` for `true`, `1` and `"true"`, without any error. On a `BuildRowsetFromJSON` row, the two-argument call on a column that is not there rendered an empty string instead of failing. Only the two-argument call on a `BuildRowSetFromString` row failed (HTTP 500). [Card](/next/differs-from-docs/#field-flag-not-honoured)
 
 {% include platform-compare.html %}
 
 ## See also
 
-- [`Field` in Marketing Cloud Engagement](/engagement/ampscript/functions/field/) — how it behaves there
 - [`Row`](/next/ampscript/functions/row/) — returns the row this reads from
 - [`RowCount`](/next/ampscript/functions/rowcount/) — guard before reading a row
 - [`RetrieveSalesforceObjects`](/next/ampscript/functions/retrievesalesforceobjects/) — the rowset source Field read correctly

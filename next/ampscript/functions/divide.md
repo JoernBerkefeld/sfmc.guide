@@ -82,7 +82,6 @@ There is no special value for a zero divisor in Next: the render fails instead (
 
 ## See also
 
-- [`Divide` in Marketing Cloud Engagement](/engagement/ampscript/functions/divide/) — how it behaves there
 - [`Mod`](/next/ampscript/functions/mod/) — the remainder of the same division
 - [`Multiply`](/next/ampscript/functions/multiply/) — the inverse operation
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-divide.html)

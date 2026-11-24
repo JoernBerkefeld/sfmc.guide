@@ -101,7 +101,6 @@ Both zero-divisor behaviours are catalogued as findings on [Differs from officia
 
 ## See also
 
-- [`Divide` in Marketing Cloud Next](/next/ampscript/functions/divide/) — how it behaves there
 - [`Mod`](/engagement/ampscript/functions/mod/) — the sibling remainder function, which handles a zero divisor differently
 - [`Multiply`](/engagement/ampscript/functions/multiply/) — the inverse operation
 - [Differs from official docs](/engagement/differs-from-docs/#divide-zero-divisor-infinity) — the zero-divisor finding

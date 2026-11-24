@@ -69,6 +69,5 @@ What happens during a real send (stopping the job, skipping a subscriber, error 
 
 ## See also
 
-- [`RaiseError` in Marketing Cloud Engagement](/engagement/ampscript/functions/raiseerror/) — how it behaves there
 - [IIf](/next/ampscript/functions/iif/) — choose a value without stopping the render
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-raise-error.html)

@@ -101,7 +101,6 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#urlenc
 
 ## See also
 
-- [`URLEncode` in Marketing Cloud Next](/next/ampscript/functions/urlencode/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#urlencode-flag-spellings-and-default-passthrough) — the flag spellings and the default pass-through in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — build the URL before encoding the part that needs it
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html)

@@ -78,7 +78,6 @@ Every successful call rendered a plain non-negative whole number. There is no fi
 
 ## See also
 
-- [`Length` in Marketing Cloud Engagement](/engagement/ampscript/functions/length/) — how it behaves there
 - [`Concat`](/next/ampscript/functions/concat/) — builds the string you are measuring
 - [`Uppercase`](/next/ampscript/functions/uppercase/) — in Next the sharp s expands when uppercased, so the length grows
 - [`IndexOf`](/next/ampscript/functions/indexof/) — positions use the same counting unit

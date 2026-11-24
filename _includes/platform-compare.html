@@ -12,7 +12,7 @@
        "Yes, from API <mcn>.0", or "No" when the function has no mcn version.
        site.data.ampscript_availability[slug].engagement / .next replace a cell when a
        qualifier is needed. When the other platform has its own page, its name in the
-       table links to that page.
+       table links to that page. This is the only twin link: See also does not repeat it.
     2. The comparison callout, only when the page has a comparison label:
        Engagement page:  mcn:        same | differs | unsupported | untested
                          mcn_note:   how Next differs (both outputs); optional for `same`
@@ -55,8 +55,10 @@
 <h2 id="availability">Availability</h2>
 {% endif %}
 
-{% capture pc_eng_name %}{% if pc_label and page.url contains "/next/" %}<a href="{{ pc_twin }}">Marketing Cloud Engagement</a>{% else %}Marketing Cloud Engagement{% endif %}{% endcapture %}
-{% capture pc_next_name %}{% if pc_label and page.url contains "/engagement/" %}<a href="{{ pc_twin }}">Marketing Cloud Next</a>{% else %}Marketing Cloud Next{% endif %}{% endcapture %}
+{% comment %} The twin link is the only link between the pages (no See-also bullet). It follows the
+  catalog: a Next page exists exactly when the function has an mcn version (enforced by the test). {% endcomment %}
+{% capture pc_eng_name %}{% if page.url contains "/next/" %}<a href="{{ pc_twin }}">Marketing Cloud Engagement</a>{% else %}Marketing Cloud Engagement{% endif %}{% endcapture %}
+{% capture pc_next_name %}{% if page.url contains "/engagement/" and pc_fn.mcn and pc_fn.mcn != "" %}<a href="{{ pc_twin }}">Marketing Cloud Next</a>{% else %}Marketing Cloud Next{% endif %}{% endcapture %}
 {% capture pc_eng_row %}<tr><td>{{ pc_eng_name }}</td><td>{{ pc_eng_cell }}</td></tr>{% endcapture %}
 {% capture pc_next_row %}<tr><td>{{ pc_next_name }}</td><td>{{ pc_next_cell }}</td></tr>{% endcapture %}
 <table class="availability-table">

@@ -89,7 +89,6 @@ The third column is a pass-through with an empty string where the fallback was e
 
 ## See also
 
-- [`IsNullDefault` in Marketing Cloud Next](/next/ampscript/functions/isnulldefault/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — the test that actually separates missing from present on a page
 - [IsNull](/engagement/ampscript/functions/isnull/) — the same null definition without the fallback argument
 - [IIf](/engagement/ampscript/functions/iif/) — pair it with `Empty` to build the fallback this function does not deliver

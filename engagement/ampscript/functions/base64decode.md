@@ -96,7 +96,6 @@ The middle case is the one that bites: that is the correct payload for `Hello` w
 
 ## See also
 
-- [`Base64Decode` in Marketing Cloud Next](/next/ampscript/functions/base64decode/) — how it behaves there
 - [Base64Encode](/engagement/ampscript/functions/base64encode/) — the inverse; the pair round-trips exactly
 - [StringToHex](/engagement/ampscript/functions/stringtohex/) — a reversible encoding whose malformed inputs cannot arise the same way
 - [Malformed input aborts the page](/engagement/differs-from-docs/#base64decode-malformed-input-aborts)

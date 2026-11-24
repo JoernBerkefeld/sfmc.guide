@@ -104,7 +104,6 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 
 ## See also
 
-- [`Replace` in Marketing Cloud Next](/next/ampscript/functions/replace/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#replace-case-insensitive-single-pass) — the casing and single-pass findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — finds the text instead of rewriting it, and matches case the same way
 - [`Substring`](/engagement/ampscript/functions/substring/) — takes a portion of a string by position

@@ -96,7 +96,6 @@ The official reference lists an address whose domain is a single label — no `.
 
 ## See also
 
-- [`IsEmailAddress` in Marketing Cloud Next](/next/ampscript/functions/isemailaddress/) — how it behaves there
 - [Domain](/engagement/ampscript/functions/domain/) — extracts the domain from an address, and performs no validation of its own
 - [IsPhoneNumber](/engagement/ampscript/functions/isphonenumber/) — the sibling format check for telephone numbers
 - [The single-label domain the docs accept](/engagement/differs-from-docs/#isemailaddress-single-label-domain-rejected)

@@ -172,7 +172,7 @@
     "url": "/next/ampscript/functions/buildrowsetfromxml/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "Turn an XML string into a rowset with AMPscript BuildRowSetFromXML in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, where valid XML returned no rows."
+    "description": "Turn an XML string into a rowset with AMPscript BuildRowSetFromXML in Marketing Cloud Next. Syntax, examples, and behaviour proven in a Marketing Cloud Next email, including why the XML has to be built with Char() or come from data."
   },
   {
     "name": "AMPscript Char",
@@ -1061,7 +1061,7 @@
     "url": "/next/ampscript/functions/regexmatch/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "Pull text out of a string with a regular expression using AMPscript RegExMatch in Marketing Cloud Next. Syntax, the one call form proven in a Marketing Cloud Next email, and how it differs from Engagement."
+    "description": "Pull text out of a string with a regular expression using AMPscript RegExMatch in Marketing Cloud Next. Syntax, the call forms proven in a Marketing Cloud Next email, and how it differs from Engagement."
   },
   {
     "name": "AMPscript Replace",
@@ -2128,6 +2128,13 @@
     "description": "Model Context Protocol server that gives AI assistants accurate AMPscript, SSJS, and Handlebars knowledge."
   },
   {
+    "name": "MobilePush setup",
+    "url": "/engagement/mobilepush/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "How the MobilePush SDK creates and updates contacts with your contact key and device ID, a setup checklist for the Marketing Cloud and app teams, push consent, and what to check when devices are missing."
+  },
+  {
     "name": "MSO Conditionals (VS Code)",
     "url": "/tools/vscode-mso-conditionals/",
     "section": "Tools",
@@ -2252,6 +2259,13 @@
     "section": "Tools",
     "type": "page",
     "description": "SSJS polyfill for locale-aware number formatting in Engagement."
+  },
+  {
+    "name": "SFMC UX Tools for Chrome",
+    "url": "/tools/chrome-sfmc-ux-tools/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Chrome extension that adds AMPscript and SSJS help to Marketing Cloud's own code editors, gives new items readable keys, and lists transactional SMS, push and OTT messages."
   },
   {
     "name": "sfmc-dataloader",

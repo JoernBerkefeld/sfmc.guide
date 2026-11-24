@@ -66,7 +66,6 @@ An index past the last row was not tested in Next.
 
 ## See also
 
-- [`Row` in Marketing Cloud Engagement](/engagement/ampscript/functions/row/) — how it behaves there
 - [`Field`](/next/ampscript/functions/field/) — reads a column from the returned row
 - [`RowCount`](/next/ampscript/functions/rowcount/) — the guard that keeps `rowIndex` in range
 - [`RetrieveSalesforceObjects`](/next/ampscript/functions/retrievesalesforceobjects/) — a rowset source proven in Next

@@ -58,7 +58,6 @@ An email containing this call, placed in a branch that never runs, saved and pub
 
 ## See also
 
-- [`LookupRows` in Marketing Cloud Engagement](/engagement/ampscript/functions/lookuprows/) — how it behaves there
 - [`Lookup`](/next/ampscript/functions/lookup/) — a single value from the first match
 - [`LookupOrderedRows`](/next/ampscript/functions/lookuporderedrows/) — sorted and capped
 - [`RowCount`](/next/ampscript/functions/rowcount/)

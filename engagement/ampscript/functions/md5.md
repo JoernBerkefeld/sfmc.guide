@@ -87,7 +87,6 @@ An unrecognised name is not tolerated at all. `banana`, the dashless spelling `U
 
 ## See also
 
-- [`MD5` in Marketing Cloud Next](/next/ampscript/functions/md5/) — how it behaves there
 - [SHA1](/engagement/ampscript/functions/sha1/)
 - [SHA256](/engagement/ampscript/functions/sha256/)
 - [SHA512](/engagement/ampscript/functions/sha512/) — the same signature, longer digests

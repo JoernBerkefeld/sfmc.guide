@@ -69,7 +69,6 @@ Each **distinct** `claimantValue` claims the next unclaimed row and returns that
 
 ## See also
 
-- [`ClaimRowValue` in Marketing Cloud Next](/next/ampscript/functions/claimrowvalue/) — how it behaves there
 - [`ClaimRow`](/engagement/ampscript/functions/claimrow/) — the twin that returns the whole row (and an empty row on exhaustion)
 - [`Field`](/engagement/ampscript/functions/field/)
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/)

@@ -137,17 +137,25 @@ for (const [s, p] of nextPages) {
     }
 }
 
-// Adding a Next page requires its Engagement sibling to link it (and back), whatever the labels say.
+// Adding a Next page requires its Engagement sibling to link it (and back). The link is the platform name in the
+// platform-compare.html table: it appears on the Engagement page when the catalog has an mcn version for the slug,
+// which the catalog test below ties to the Next page existing. See also must not repeat it.
 for (const slug of nextPages.keys()) {
     test(`${slug}: Engagement sibling exists and links the new Next page`, () => {
         const eng = engPages.get(slug);
         assert.ok(eng, `engagement/ampscript/functions/${slug}.md is missing`);
-        assert.ok(
-            section(eng.body, 'See also')?.includes(`](/next/ampscript/functions/${slug}/)`),
-            `add "- [\`Name\` in Marketing Cloud Next](/next/ampscript/functions/${slug}/)" to the See also of engagement/ampscript/functions/${slug}.md`,
-        );
+        assert.ok(eng.fm.mcn, `set the mcn comparison label in engagement/ampscript/functions/${slug}.md`);
+        for (const p of [eng, nextPages.get(slug)]) assert.ok(p.body.includes('{% include platform-compare.html %}'), 'the twin link comes from platform-compare.html');
     });
 }
+
+test('See also never repeats the twin link (the availability table carries it)', () => {
+    const dup = [
+        ...[...engPages].filter(([s, p]) => section(p.body, 'See also')?.includes(`](/next/ampscript/functions/${s}/)`)).map(([s]) => `engagement/${s}`),
+        ...[...nextPages].filter(([s, p]) => section(p.body, 'See also')?.includes(`](/engagement/ampscript/functions/${s}/)`)).map(([s]) => `next/${s}`),
+    ];
+    assert.deepEqual(dup, []);
+});
 
 // The "Availability & differences" chapter (table + comparison) comes only from platform-compare.html,
 // with the table data from _data/ampscript_functions.yml and _data/ampscript_availability.yml.
@@ -185,9 +193,7 @@ for (const slug of paired.filter((s) => nextPages.has(s))) {
         assert.ok(LABEL_PAIR[eng.fm.mcn], `unknown mcn label ${eng.fm.mcn}`);
         assert.equal(nxt.fm.engagement, LABEL_PAIR[eng.fm.mcn], 'comparison labels disagree');
         for (const p of [eng, nxt]) assert.match(p.body, /\{% include platform-compare\.html %\}/);
-        // each page links its twin; the Engagement page no longer carries the Next platform badge
-        assert.ok(section(eng.body, 'See also')?.includes(`](/next/ampscript/functions/${slug}/)`), 'Engagement See also must link the Next page');
-        assert.ok(section(nxt.body, 'See also')?.includes(`](/engagement/ampscript/functions/${slug}/)`), 'Next See also must link the Engagement page');
+        // the Engagement page no longer carries the Next platform badge
         assert.doesNotMatch(eng.text, /^platforms:\n(?: {2}- \w+\n)* {2}- next\n/m, 'Engagement twin must not list `next` in platforms');
         assert.doesNotMatch(nxt.body, /\]\(\/next\/ampscript\/functions\/\)/, 'Next page must not link the function index (navigation covers it)');
         // Next pages use only the generated next-* bundles (the badge flag is checked below)

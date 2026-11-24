@@ -106,7 +106,6 @@ Minutes are simply not addressable from the date pattern: `mm` and `MM` are the 
 
 ## See also
 
-- [`FormatDate` in Marketing Cloud Next](/next/ampscript/functions/formatdate/) — how it behaves there
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed into this function
 - [The differs-from-docs card](/engagement/differs-from-docs/#formatdate-date-pattern-tokens-mean-something-else) — what the official reference claims and what the runtime does
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-format-date.html)

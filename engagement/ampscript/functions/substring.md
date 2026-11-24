@@ -100,7 +100,6 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#substr
 
 ## See also
 
-- [`Substring` in Marketing Cloud Next](/next/ampscript/functions/substring/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#substring-negative-arguments-disagree) — the negative-argument asymmetry in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — locates the position to start at
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit positions and lengths use

@@ -92,7 +92,6 @@ A month added to the 31st lands on the last day of a shorter month. Going forwar
 
 ## See also
 
-- [`DateAdd` in Marketing Cloud Engagement](/engagement/ampscript/functions/dateadd/) — how it behaves there
 - [DateDiff](/next/ampscript/functions/datediff/) — the difference between two dates
 - [FormatDate](/next/ampscript/functions/formatdate/) — shapes the result
 - [Now](/next/ampscript/functions/now/) — a common first argument

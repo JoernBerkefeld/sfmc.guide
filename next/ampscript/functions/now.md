@@ -69,7 +69,6 @@ The time zone of the value and the send-time behaviour were not tested in Next.
 
 ## See also
 
-- [`Now` in Marketing Cloud Engagement](/engagement/ampscript/functions/now/) — how it behaves there
 - [DateAdd](/next/ampscript/functions/dateadd/)
 - [DateDiff](/next/ampscript/functions/datediff/)
 - [FormatDate](/next/ampscript/functions/formatdate/) — gives the value a fixed shape

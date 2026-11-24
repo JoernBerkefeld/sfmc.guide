@@ -76,7 +76,6 @@ There is no error token to test for: every accepted call returns an encoded stri
 
 ## See also
 
-- [`Base64Encode` in Marketing Cloud Engagement](/engagement/ampscript/functions/base64encode/) — how it behaves there
 - [Base64Decode](/next/ampscript/functions/base64decode/) — the inverse
 - [StringToHex](/next/ampscript/functions/stringtohex/) — the same bytes as hexadecimal
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-base64-encode.html)

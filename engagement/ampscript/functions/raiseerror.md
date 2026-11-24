@@ -106,7 +106,6 @@ Email Preview proved that the second and fifth arguments accept the forms descri
 
 ## See also
 
-- [`RaiseError` in Marketing Cloud Next](/next/ampscript/functions/raiseerror/) — how it behaves there
 - [Redirect](/engagement/ampscript/functions/redirect/) — the other page-terminating Utility function, which ends the request with a 302 instead
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-raise-error.html)
 - [ampscript.guide](https://ampscript.guide/raiseerror/)

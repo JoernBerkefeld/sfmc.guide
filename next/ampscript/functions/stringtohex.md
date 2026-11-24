@@ -70,7 +70,6 @@ There is no error token to test for: every accepted call returns a hex string.
 
 ## See also
 
-- [`StringToHex` in Marketing Cloud Engagement](/engagement/ampscript/functions/stringtohex/) — how it behaves there
 - [Base64Encode](/next/ampscript/functions/base64encode/) — the same bytes in Base64
 - [Base64Decode](/next/ampscript/functions/base64decode/)
 - [SHA256](/next/ampscript/functions/sha256/) — hashes bytes chosen by a similar character-set argument

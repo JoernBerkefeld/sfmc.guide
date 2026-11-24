@@ -100,7 +100,6 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 
 ## See also
 
-- [`BuildRowsetFromJSON` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromjson/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromjson-error-flag-inverted) — the inverted third argument in full
 - [`BuildRowSetFromXML`](/engagement/ampscript/functions/buildrowsetfromxml/) — the same shape for XML payloads, with the same inverted flag
 - [`BuildRowSetFromString`](/engagement/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset

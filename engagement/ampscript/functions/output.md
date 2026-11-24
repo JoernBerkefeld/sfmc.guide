@@ -99,7 +99,6 @@ differs-from-docs card](/engagement/differs-from-docs/#output-not-available-in-s
 
 ## See also
 
-- [`Output` in Marketing Cloud Next](/next/ampscript/functions/output/) — how it behaves there
 - [OutputLine](/engagement/ampscript/functions/outputline/) — the same, plus a carriage return and line feed
 - [Differs from docs: the literal argument](/engagement/differs-from-docs/#output-literal-renders-nothing)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output.html)

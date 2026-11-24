@@ -114,7 +114,6 @@ The fourth parameter changes month and day names, not just the separators: `D` w
 
 ## See also
 
-- [`Format` in Marketing Cloud Next](/next/ampscript/functions/format/) — how it behaves there
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — numbers only, without the third-parameter trap
 - [FormatCurrency](/engagement/ampscript/functions/formatcurrency/) — currency, with the symbol chosen for you
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only; compare the minutes before choosing it

@@ -15,7 +15,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "Next renders only the quoted selector form: `RegExMatch(\"order-4821-eu\", \"[0-9]+\", \"0\")` gives `4821`. With a bare number as selector (`0`, which gives `4821` here), a numeric source, capture groups, named groups and option names, the email saves but its Next preview fails; an unknown option name or a two-argument call is already refused at save."
+mcn_note: "Next renders the quoted selector form: `RegExMatch(\"order-4821-eu\", \"[0-9]+\", \"0\")` gives `4821`, and a named group chosen by name gives `4821` when the pattern's `<` and `>` are built with `Char()` (the Next email save strips `<num>` from a literal pattern). With a bare number as selector (`0`, which gives `4821` here), a numeric source, numbered capture groups and option names, the email saves but its Next preview fails; an unknown option name or a two-argument call is already refused at save."
 ---
 
 {% include verification-status.html %}
@@ -110,7 +110,6 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#regexm
 
 ## See also
 
-- [`RegExMatch` in Marketing Cloud Next](/next/ampscript/functions/regexmatch/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#regexmatch-case-sensitive-and-variadic-options) — the casing and option-count findings in full
 - [`IndexOf`](/engagement/ampscript/functions/indexof/) — plain substring search, matching case-insensitively
 - [`Replace`](/engagement/ampscript/functions/replace/) — pair with it to rewrite what a pattern found

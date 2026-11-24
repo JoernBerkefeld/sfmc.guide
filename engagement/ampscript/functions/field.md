@@ -16,7 +16,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "Next saves the same call forms, but on a `BuildRowSetFromString(\"a,b,c\",\",\")` row `Field(row,\"Value\")` renders `true` instead of `a`. With a missing column Next renders `true` or `false` (following the third argument) instead of an empty string or an abort, and a `BuildRowsetFromJSON` column read by name or ordinal comes back empty instead of `NYC`. On a `RetrieveSalesforceObjects` row it reads the 18-character `Id` as in Engagement."
+mcn_note: "Next saves the same call forms, but on a `BuildRowSetFromString(\"a,b,c\",\",\")` row `Field(row,\"Value\")` renders `true` instead of `a`. With a missing column Next renders `true` or `false` (following the third argument) instead of an empty string or an abort, and a `BuildRowsetFromJSON` column read by name or ordinal comes back empty instead of `NYC`. On a `BuildRowSetFromXML` row it returns the flag too (`false` for `Value`, `Xml` and attribute columns read with `0`) instead of `200.00` and `IND`. On a `RetrieveSalesforceObjects` row it reads the 18-character `Id` as in Engagement."
 ---
 
 {% include verification-status.html %}
@@ -77,7 +77,6 @@ The third argument controls the missing-column path, not a default for an existi
 
 ## See also
 
-- [`Field` in Marketing Cloud Next](/next/ampscript/functions/field/) — how it behaves there
 - [`Row`](/engagement/ampscript/functions/row/) — returns the row this reads from
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — a single scalar without a rowset

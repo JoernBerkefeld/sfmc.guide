@@ -63,7 +63,7 @@ The result is whatever the caller passes in, so there is no fixed set of values 
 
 **A date passes through in ISO form.** `IsNullDefault(Now(), "DEF")` gives a value like `2026-11-22T20:29:14`.
 
-**Whitespace is not null.** A variable holding three spaces does not return the fallback. The preview showed a single space rather than three.
+**Whitespace is not null.** A variable holding spaces does not return the fallback. (The probe wrote three spaces as a literal, which the render collapses to one before AMPscript runs; build runs of spaces with `Char(32)`.)
 
 Request parameters, subscriber attributes and Smart Capture forms were not tested in Next.
 
@@ -77,7 +77,6 @@ Request parameters, subscriber attributes and Smart Capture forms were not teste
 
 ## See also
 
-- [`IsNullDefault` in Marketing Cloud Engagement](/engagement/ampscript/functions/isnulldefault/) — how it behaves there
 - [IsNull](/next/ampscript/functions/isnull/) — the same null test without the fallback
 - [Empty](/next/ampscript/functions/empty/) — the other missing-value test
 - [IIf](/next/ampscript/functions/iif/) — build a fallback from any condition

@@ -197,14 +197,18 @@
   body: |
     The availability table of the reference marks the function as not available in Marketing Cloud Next.
 
-    In Next emails (2026-11-22/23), calls such as `BuildRowSetFromXML("<root></root>", "//Flight", 1)` saved, published and rendered, giving `0` rows. Whether the function returns real rows in Next is still open: with the XML written as a literal in the email's HTML component, well-formed XML also gave `0` rows, and the save step may have altered that markup (see the card on zero rows).
+    In Next emails (2026-11-23) it saved, published and rendered, and returned the same number of rows as Engagement once the XML was built with `Char()`: `<root><row>1</row><row>2</row></root>` with `//row` gave `2` rows, a document with three `Flight` elements gave `3` with `//Flight`, and `<root></root>` gave `0`. Two limits apply in Next: XML typed as a string literal loses its tags when the email is saved, and `Field` returns its flag instead of the node content (see the companion cards).
   testScript: |
-    %%[ SET @rows = BuildRowSetFromXML("<root></root>", "//Flight", 1) ]%%%%=RowCount(@rows)=%%
+    %%[
+      SET @xml = Concat(Char(60), "root", Char(62), Char(60), "row", Char(62), "1", Char(60), "/row", Char(62), Char(60), "row", Char(62), "2", Char(60), "/row", Char(62), Char(60), "/root", Char(62))
+      SET @rows = BuildRowSetFromXML(@xml, "//row", 1)
+    ]%%
+    %%=RowCount(@rows)=%%
 
 - name: "BuildRowSetFromXML"
   url: "/next/ampscript/functions/buildrowsetfromxml/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
-  tagline: "A falsy error flag breaks the render on malformed XML instead of giving an empty rowset"
+  tagline: "On malformed XML a falsy flag breaks the render and a truthy flag gives an empty rowset"
   category: "Content"
   object: "Content"
   severity: "low"
@@ -213,44 +217,52 @@
   body: |
     The reference describes the third argument as giving an empty rowset on a syntax error when it is `false`, and an exception when it is `true`.
 
-    In a Next email (2026-11-23), `BuildRowSetFromXML("<root><a>1</a>", "//a", 0)` made the preview fail (HTTP 500), while the same malformed XML with `1` gave `0` rows: the opposite of the documented direction. The same caveat as for the zero-row result applies: the XML was a literal in the email's HTML component, which the save step may have altered.
+    In a Next email (2026-11-23), with the malformed document `<root><a>1</a>` built from `Char()`, the flag `0` made the preview fail (HTTP 500), while `1`, `true` and `"true"` each gave `0` rows: the opposite of the documented direction. The string `"1"`, tested alone, made the preview fail (HTTP 500) as well.
   testScript: |
-    %%[ SET @rows = BuildRowSetFromXML("<root><a>1</a>", "//a", 0) ]%%X
+    %%[ SET @rows = BuildRowSetFromXML(Concat(Char(60), "root", Char(62), Char(60), "a", Char(62), "1", Char(60), "/a", Char(62)), "//a", 0) ]%%X
 
 - name: "BuildRowSetFromXML"
   url: "/next/ampscript/functions/buildrowsetfromxml/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
-  tagline: "The spelling BuildRowsetFromXML (lower-case s), used in the reference's own example, breaks the render"
+  tagline: "Field returns its true/false flag instead of the node content on these rows"
   category: "Content"
   object: "Content"
   severity: "high"
-  discrepancy: "A4"
-  anchor: "buildrowsetfromxml-lowercase-s-fails"
+  discrepancy: "A1"
+  anchor: "buildrowsetfromxml-field-returns-flag"
   body: |
-    The reference's usage example calls the function as `BuildRowsetFromXml`, with a lower-case `s` in "Rowset".
+    The reference shows the rowset holding the node text in `Value`, the inner markup in `Xml` and one `<name>_att` column per attribute.
 
-    In a Next email (2026-11-23), `BuildRowsetFromXML(..., "//Flight", 1)` on its own made the preview fail (HTTP 500), while the identical call spelled `BuildRowSetFromXML` (capital `S`) rendered. Write the name with a capital `S` in Next.
+    In a Next email (2026-11-23), with the XML built from `Char()`, the row count was right (`3` for three `Flight` elements), but `Field(Row(@rows, 2), "Value", 0)` rendered `false` instead of `200.00`, and so did the `Xml` column and the `origin_att` and `carrier_att` columns read with `0`. Reading by position (`Field(row, 1)` to `Field(row, 5)`) rendered `true`. The node content never came back.
+
+    `Field` does the same on other built rowsets; see [Field returns the flag, not the value](/next/differs-from-docs/#field-returns-flag-not-value).
   testScript: |
-    %%[ SET @rows = BuildRowsetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1) ]%%
-    %%=RowCount(@rows)=%%
+    %%[
+      SET @xml = Concat(Char(60), "root", Char(62), Char(60), "Flight origin=", Char(34), "IND", Char(34), Char(62), "100.00", Char(60), "/Flight", Char(62), Char(60), "/root", Char(62))
+      SET @rows = BuildRowSetFromXML(@xml, "//Flight", 1)
+    ]%%
+    %%=Concat(RowCount(@rows), "|", Field(Row(@rows, 1), "Value", 0))=%%
 
 - name: "BuildRowSetFromXML"
   url: "/next/ampscript/functions/buildrowsetfromxml/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-build-rowset-from-xml.html"
-  tagline: "Well-formed XML gave zero rows in the test emails (not yet confirmed)"
+  tagline: "XML written as a string literal loses its tags when the Next email is saved"
   category: "Content"
   object: "Content"
-  severity: "medium"
-  discrepancy: "A2"
-  anchor: "buildrowsetfromxml-zero-rows-unconfirmed"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "buildrowsetfromxml-literal-tags-stripped"
   body: |
-    The reference shows an XML document with three `Flight` elements parsed with `//Flight` into three rows with `Value`, `Xml` and attribute columns.
+    The reference's examples write the XML document as a string literal inside the AMPscript block.
 
-    In Next test emails (2026-11-22/23), `BuildRowSetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1)` gave `0` rows, and so did a three-flight document and the attribute path `/root/Flight[1]/@origin`. Reads from those rows returned the `Field` flag (`false` or `true`), not node content.
+    In a Next email (2026-11-23) the save strips the tags out of such a literal: `BuildRowSetFromXML('<root><row>1</row><row>2</row></root>', "//row", 1)` was stored as `BuildRowSetFromXML('12', "//row", 1)`, so the function receives plain text instead of XML. The same document built with `Char(60)` for `<` and `Char(62)` for `>` (and `Char(34)` for quotes around attribute values) gives `2` rows.
 
-    **Not yet confirmed:** in every case the XML was a literal inside the email's HTML component, and the save step may have changed that markup (for example the tag case, so `//Flight` would no longer match). Treat this as unverified until it is re-tested with the XML kept out of the HTML markup.
+    Build the markup with `Char()`, or take the XML from data so it is not part of the saved email.
   testScript: |
-    %%[ SET @rows = BuildRowSetFromXML('<root><Flight origin="IND">100.00</Flight></root>', "//Flight", 1) ]%%
+    %%[
+      SET @xml = Concat(Char(60), "root", Char(62), Char(60), "row", Char(62), "1", Char(60), "/row", Char(62), Char(60), "row", Char(62), "2", Char(60), "/row", Char(62), Char(60), "/root", Char(62))
+      SET @rows = BuildRowSetFromXML(@xml, "//row", 1)
+    ]%%
     %%=RowCount(@rows)=%%
 
 - name: "Char"
@@ -498,7 +510,7 @@
 - name: "Field"
   url: "/next/ampscript/functions/field/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-field.html"
-  tagline: "On BuildRowSetFromString rows, Field returns its true/false flag instead of the column value"
+  tagline: "On BuildRowSetFromString and BuildRowSetFromXML rows, Field returns its true/false flag instead of the column value"
   category: "Data Extension"
   object: "Data Extension"
   severity: "high"
@@ -512,7 +524,9 @@
     - `Field(@row, "Value")` rendered `true`, in the variable form and in the nested inline form.
     - With an explicit third argument, the same call rendered the flag itself: `true` for `true`, `1` and `"true"`; `false` for `false`, `0`, `"false"` and `"0"` (and also for `"1"`). The cell value `a` never came back.
 
-    The flag comes back on `BuildRowSetFromString` rows and on the `Value` column of `BuildRowsetFromJSON` rows, while named object columns of `BuildRowsetFromJSON` rows and `RetrieveSalesforceObjects` rows return the value.
+    On `BuildRowSetFromXML` rows (XML built from `Char()`, so the email save keeps the tags) the same happens: `Field(Row(@rows, 2), "Value", 0)` rendered `false` instead of `200.00`, the `Xml` and `<name>_att` columns read with `0` gave `false`, and reading by position gave `true`.
+
+    The flag comes back on `BuildRowSetFromString` rows, on `BuildRowSetFromXML` rows and on the `Value` column of `BuildRowsetFromJSON` rows, while named object columns of `BuildRowsetFromJSON` rows and `RetrieveSalesforceObjects` rows return the value.
   testScript: |
     %%[
       SET @rs = BuildRowSetFromString("a,b,c", ",")
@@ -793,7 +807,7 @@
 
     In a Marketing Cloud Next email, with a variable as the whole condition (`IIf(@x, "T", "F")`):
 
-    - `"hello"`, `"0"` and three spaces selected the true branch.
+    - `"hello"`, `"0"` and whitespace selected the true branch (written as a literal, the run of spaces reaches AMPscript as a single space, because the render collapses runs of spaces).
     - the empty string, the number `0`, the string `"false"`, a declared but unset variable and an undeclared variable selected the false branch.
 
     So the string `"0"` is true while the number `0` is false, and whitespace counts as a value. Use `Empty(@x)` or an explicit comparison as the condition instead of the bare value.
@@ -877,7 +891,7 @@
   body: |
     The reference sets `IsNull` apart from `Empty` exactly on this point: `Empty` treats the empty string as empty, `IsNull` is said not to.
 
-    In a Marketing Cloud Next email, a variable set to `""` made `IsNull` render `true`, the same as a declared but unset variable and an undeclared one. `IsNull(v(@unset))` also rendered `true`. Three spaces, `0`, `"0"`, `"false"` and `"hello"` rendered `false`.
+    In a Marketing Cloud Next email, a variable set to `""` made `IsNull` render `true`, the same as a declared but unset variable and an undeclared one. `IsNull(v(@unset))` also rendered `true`. Whitespace, `0`, `"0"`, `"false"` and `"hello"` rendered `false`.
 
     Code that relies on `IsNull` to tell an empty string from a missing value cannot do so in Next.
   testScript: |
@@ -1160,7 +1174,7 @@
   body: |
     The availability table on the official RegExMatch page says the function is not available in Marketing Cloud Next. In a Next email, `RegExMatch("order-4821-eu", "[0-9]+", "0")`, with the group selector in quotes, rendered `4821`.
 
-    That is the only form proven so far: most other tested calls saved but made the preview fail (see the companion card on the group selector), so treat support in Next as partial.
+    A named group chosen by name renders too: `RegExMatch("order-4821-eu", Concat("order-(?", Char(60), "num", Char(62), "[0-9]+)-"), "num")` gave `4821` (the `<` and `>` are built with `Char()` because the email save strips `<num>` from a literal pattern). Most other tested calls saved but made the preview fail (see the companion card on the group selector), so treat support in Next as partial.
   testScript: |
     %%=RegExMatch("order-4821-eu", "[0-9]+", "0")=%%
 
@@ -1176,7 +1190,7 @@
   body: |
     The official page lets the third argument be a group name or ordinal, and its examples pass a bare `0`. In Next every tested call with an unquoted number there saved, then the preview failed (HTTP 500, or no new rendered version): `RegExMatch("SAVE23", "^[A-Z0-9]{5,7}$", 0)`, `RegExMatch("order-4821-eu", "[0-9]+", 0)`, `RegExMatch("order-4821-eu", "order-([0-9]+)-", 1)` and `RegExMatch("order-4821-eu", "order-([0-9]+)-([a-z]+)", 2)`.
 
-    Only the quoted `"0"` rendered. A named group (`"num"`) failed too, so it is open whether quoted group numbers above 0 work.
+    Only quoted selectors rendered: `"0"`, and a named group chosen by its name (`"num"`, with the pattern's `<` and `>` built from `Char()`). It is open whether quoted group numbers above 0 work.
   testScript: |
     %%=RegExMatch("order-4821-eu", "[0-9]+", 0)=%%
 
@@ -1410,7 +1424,7 @@
   discrepancy: "A5"
   anchor: "trim-number-breaks-preview"
   body: |
-    The official page asks for a string and does not say what happens to other values. In Next, `Trim(12345)` and `Trim(true)` let the email save, but the preview fails (no new rendered version, or HTTP 500). A quoted number works: `Trim("  42  ")` gives `42`.
+    The official page asks for a string and does not say what happens to other values. In Next, `Trim(12345)` and `Trim(true)` let the email save, but the preview fails (no new rendered version, or HTTP 500). A number passed as text works: `Trim(Concat(Char(32), Char(32), "42", Char(32), Char(32)))` gives `42`.
   testScript: |
     %%=Trim(12345)=%%
 

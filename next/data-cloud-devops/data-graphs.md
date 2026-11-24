@@ -182,7 +182,7 @@ After the update is confirmed, run the same file without `--allow-processing`:
 sf data360 deploy -o TARGET_ALIAS --source-dir ./project/data360/dataGraphs/ExampleGraph.native-dataGraph.json --api-version 68.0 --wait-timeout 1800
 ```
 
-The file is the desired state. The plugin sends it in one PUT, and Salesforce decides what changes. Label, description, refresh schedule, incremental refresh, the fields and related objects as the file lists them, field settings and the root object go as written. A field or related object left out of the file is not sent.
+The file is the desired state. The plugin sends it in one PUT, and Salesforce decides what changes. The graph's label, description, refresh schedule, incremental refresh, the fields and related objects as the file lists them, field settings and the root object go as written. A field or related object left out of the file is not sent. Node labels are Salesforce's: every node shows its object's label, and a PUT that sends another one changes nothing, so the plugin does not send them and a different node label alone is no change.
 
 Salesforce only adds to a graph. At API 68 it refuses with 400 a removed field (also `isProjected: false`), a removed related object, another related object in place of an existing one, and a root change. The plugin reports that answer as `rejected`, with Salesforce's message on the item (`REQUEST_FAILED`), and nothing is written. The key-qualifier fields Salesforce added stay when the file leaves them out.
 
@@ -190,7 +190,7 @@ The plugin refuses a join change of an existing related object before any write 
 
 The name and the data space identify the graph. A PUT cannot rename a graph. A file with another name creates or addresses another graph, and the old graph is not renamed. A node's type, reference and projected name are set by Salesforce: a file may leave them out, and a stated one must match the org. A related object added by an update without `type` is sent without one; that is not verified live.
 
-Settings left out of the file, such as the description, the refresh schedule, a node's label or criteria and field settings, keep their org values: the plugin fills them in from the graph it read. To clear a setting, give it an explicit value. Schedules are limited as described in the Create chapter. For the objects and fields the org already holds, the org supplies both join endpoints, generated bindings and other retained properties.
+Settings left out of the file, such as the description, the refresh schedule, a node's criteria and field settings, keep their org values: the plugin fills them in from the graph it read. To clear a setting, give it an explicit value. Schedules are limited as described in the Create chapter. For the objects and fields the org already holds, the org supplies both join endpoints, generated bindings and other retained properties.
 
 Before the PUT, the plugin requires item `ready`, metadata `Ready` and DataGraph record `READY` / `ACTIVE`. Success means a readback confirmed the change, not the PUT response. An identical ready definition reports `unchanged` with zero writes and needs no `--allow-processing`.
 

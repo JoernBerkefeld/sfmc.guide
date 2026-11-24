@@ -76,7 +76,6 @@ The Marketing Cloud Next availability below is taken from the official reference
 
 ## See also
 
-- [`v` in Marketing Cloud Next](/next/ampscript/functions/v/) — how it behaves there
 - [RequestParameter](/engagement/ampscript/functions/requestparameter/) — reads a request parameter
 - [QueryParameter](/engagement/ampscript/functions/queryparameter/) — reads a query-string parameter
 - [Differs from docs: it accepts more than a variable](/engagement/differs-from-docs/#v-accepts-more-than-a-variable)

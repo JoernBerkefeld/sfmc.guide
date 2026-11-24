@@ -67,7 +67,6 @@ Each **distinct** `claimantValue` claims the next unclaimed row: the first calle
 
 ## See also
 
-- [`ClaimRow` in Marketing Cloud Next](/next/ampscript/functions/claimrow/) — how it behaves there
 - [`ClaimRowValue`](/engagement/ampscript/functions/claimrowvalue/) — the scalar twin; returns one column value plus a fallback when exhausted
 - [`Empty`](/engagement/ampscript/functions/empty/) — guard the exhausted-DE empty row
 - [`Field`](/engagement/ampscript/functions/field/)

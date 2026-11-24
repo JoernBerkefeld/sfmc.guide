@@ -67,6 +67,5 @@ Nested function calls, request parameters and subscriber attributes were not tes
 
 ## See also
 
-- [`v` in Marketing Cloud Engagement](/engagement/ampscript/functions/v/) — how it behaves there
 - [Concat](/next/ampscript/functions/concat/) — join values before writing them
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-v.html)

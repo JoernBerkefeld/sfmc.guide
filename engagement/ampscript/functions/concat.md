@@ -85,7 +85,6 @@ The result is arbitrary text, so there is no closed set of sentinel values to te
 
 ## See also
 
-- [`Concat` in Marketing Cloud Next](/next/ampscript/functions/concat/) — how it behaves there
 - [`Length`](/engagement/ampscript/functions/length/) — measures the joined result in UTF-16 code units
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/)
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the other verified String functions, which swallow booleans the same way

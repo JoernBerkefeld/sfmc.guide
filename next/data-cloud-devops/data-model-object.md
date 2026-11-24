@@ -260,11 +260,11 @@ Downloaded dmo:Customer__dlm (retrieved).
 Downloaded dmo: 1
 ```
 
-If that file already exists and differs, the command stops unless you add `--overwrite` (`-x`). `--output-dir` (`-d`) sets the project root, which defaults to the current directory.
+If that file already exists and differs, the retrieve replaces it; an identical file is left unchanged. `--output-dir` (`-d`) sets the project root, which defaults to the current directory.
 
 `sf data360 retrieve -m dmo -o SOURCE_ALIAS` saves every DMO of the data space. A retrieve without `-m` includes every DMO as well. The `-m dmo` form ran live at API 68.0 over every DMO of an org. An empty inventory succeeds with no files. Standard, namespaced and platform-generated DMOs can be retrieved.
 
-The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`. A file saved for one data space is never replaced by another space's file, even with `--overwrite`. Non-default data spaces are offline-tested only.
+The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`. A file saved for one data space is never replaced by another space's file. Non-default data spaces are offline-tested only.
 
 <details markdown="1">
 <summary>What the saved file leaves out</summary>
@@ -671,7 +671,7 @@ The category is ignored. Standard, system and generated fields may be left out o
 When Salesforce removes a field through the Metadata API, it drops that field's mapping pairs itself. The deploy must therefore also name every mapping that holds a pair for that field. Otherwise the command is refused before any write, with `DMO_FIELD_REMOVAL_MAPPED`.
 
 ```sh
-sf data360 retrieve -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm --overwrite
+sf data360 retrieve -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm
 sf data360 deploy -o TARGET_ALIAS -m mapping:Customer_Mapping -m dmo:Customer__dlm --allow-field-removal
 ```
 

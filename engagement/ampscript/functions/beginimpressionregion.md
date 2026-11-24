@@ -66,7 +66,6 @@ Impression regions are an **email-send** feature: they name a region of a messag
 
 ## See also
 
-- [`BeginImpressionRegion` in Marketing Cloud Next](/next/ampscript/functions/beginimpressionregion/) — how it behaves there
 - [`EndImpressionRegion`](/engagement/ampscript/functions/endimpressionregion/) — closes the region this opens
 - [`TreatAsContentArea`](/engagement/ampscript/functions/treatascontentarea/) — takes an impression region name as its third argument
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-begin-impression-region.html)

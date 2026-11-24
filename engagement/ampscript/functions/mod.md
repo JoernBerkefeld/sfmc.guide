@@ -96,7 +96,6 @@ This is where `Mod` and its sibling [`Divide`](/engagement/ampscript/functions/d
 
 ## See also
 
-- [`Mod` in Marketing Cloud Next](/next/ampscript/functions/mod/) — how it behaves there
 - [`Divide`](/engagement/ampscript/functions/divide/) — the sibling function, with a different zero-divisor result
 - [Differs from official docs](/engagement/differs-from-docs/#mod-zero-divisor-nan) — the zero-divisor and sign findings
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html)

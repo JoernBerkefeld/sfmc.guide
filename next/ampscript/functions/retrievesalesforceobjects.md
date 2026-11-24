@@ -81,7 +81,6 @@ Renders `0`.
 
 ## See also
 
-- [`RetrieveSalesforceObjects` in Marketing Cloud Engagement](/engagement/ampscript/functions/retrievesalesforceobjects/) — how it behaves there
 - [`RowCount`](/next/ampscript/functions/rowcount/) — the reliable no-match check
 - [`Row`](/next/ampscript/functions/row/)
 - [`Field`](/next/ampscript/functions/field/) — read the returned rowset

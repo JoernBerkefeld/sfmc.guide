@@ -83,6 +83,5 @@ An empty input gives an empty string. There is no special value to test for.
 
 ## See also
 
-- [`URLEncode` in Marketing Cloud Engagement](/engagement/ampscript/functions/urlencode/) — how it behaves there
 - [`Concat`](/next/ampscript/functions/concat/) — build the URL around the encoded part
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-http/mc-ampscript-reference-http-url-encode.html)

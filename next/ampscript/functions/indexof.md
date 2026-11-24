@@ -88,7 +88,6 @@ Also renders `7`.
 
 ## See also
 
-- [`IndexOf` in Marketing Cloud Engagement](/engagement/ampscript/functions/indexof/) — how it behaves there
 - [`Length`](/next/ampscript/functions/length/) — the counting unit the returned positions use
 - [`Substring`](/next/ampscript/functions/substring/) — cut the text at the position you found
 - [`Concat`](/next/ampscript/functions/concat/) — builds the strings you search

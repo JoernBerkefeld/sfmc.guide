@@ -90,7 +90,6 @@ An empty string comes back for a length of `0` and for an empty source. Otherwis
 
 ## See also
 
-- [`Substring` in Marketing Cloud Engagement](/engagement/ampscript/functions/substring/) — how it behaves there
 - [`IndexOf`](/next/ampscript/functions/indexof/) — finds the position to start at
 - [`Length`](/next/ampscript/functions/length/) — measures the source before you cut it
 - [Differs from official docs (Next)](/next/differs-from-docs/)

@@ -16,7 +16,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "Word casing matches (`McDONALD` gives `Mcdonald`, `iPhone` gives `Iphone`). In the Next email, runs of spaces came back single (`\"  spaced   out  \"` gave ` Spaced Out `), a leading `ß` became `SS` (`SStrasse`), and `ProperCase(true)` gives `True` instead of an empty string."
+mcn_note: "Word casing and spacing match (`McDONALD` gives `Mcdonald`, `iPhone` gives `Iphone`, `  spaced   out  ` gives `  Spaced   Out  `; in a Next email write runs of spaces with `Char(32)`, because the render collapses runs typed into the email). In Next a leading `ß` becomes `SS` (`SStrasse`), and `ProperCase(true)` gives `True` instead of an empty string."
 ---
 
 {% include verification-status.html %}
@@ -98,7 +98,6 @@ The behaviour is catalogued on [Differs from official docs](/engagement/differs-
 
 ## See also
 
-- [`ProperCase` in Marketing Cloud Next](/next/ampscript/functions/propercase/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#propercase-lowercases-the-rest) — the destructive lower-casing in full
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/)
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the non-destructive whole-string conversions

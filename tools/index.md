@@ -51,6 +51,13 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
 ## Marketing Cloud Next
 
 <div class="tool-grid">
+<a class="tool-card" href="/tools/sf-plugin-data/">
+  <div class="tool-card-title">sf-plugin-data <span class="platform-badge platform-badge--cli">CLI</span></div>
+  <div class="platform-badges">
+    <span class="platform-badge platform-badge--next">Next</span>
+  </div>
+  <div class="tool-card-desc">Salesforce CLI plugin (<code>sf data360</code>) to retrieve, preview, deploy and delete Data 360 configuration per data space, publish segments and calculated insights, and export segment members.</div>
+</a>
 <a class="tool-card" href="/tools/sf-plugin-cms/">
   <div class="tool-card-title">sf-plugin-cms <span class="platform-badge platform-badge--cli">CLI</span></div>
   <div class="platform-badges">
@@ -104,6 +111,14 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
     <span class="platform-badge platform-badge--next">Next</span>
   </div>
   <div class="tool-card-desc">VS Code / Cursor extension for AMPscript, SSJS, Handlebars, and SFMC HTML — completions, hover, diagnostics, formatting, snippets.</div>
+</a>
+<a class="tool-card" href="/tools/chrome-sfmc-ux-tools/">
+  <div class="tool-card-title">SFMC UX Tools (Chrome)</div>
+  <div class="platform-badges">
+    <span class="platform-badge platform-badge--engagement">Engagement</span>
+    <span class="platform-badge platform-badge--next">Next</span>
+  </div>
+  <div class="tool-card-desc">Chrome extension for Marketing Cloud itself — AMPscript and SSJS help in its code editors, readable keys, and a list of transactional SMS, push and OTT messages.</div>
 </a>
 <a class="tool-card" href="/tools/mcp-server-sfmc/">
   <div class="tool-card-title">MCP Server for SFMC</div>

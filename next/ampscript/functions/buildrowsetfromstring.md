@@ -74,7 +74,6 @@ An empty string and an unset variable both give a rowset of zero rows.
 
 ## See also
 
-- [`BuildRowSetFromString` in Marketing Cloud Engagement](/engagement/ampscript/functions/buildrowsetfromstring/) — how it behaves there
 - [`BuildRowsetFromJSON`](/next/ampscript/functions/buildrowsetfromjson/) — builds a rowset from JSON
 - [`BuildRowSetFromXML`](/next/ampscript/functions/buildrowsetfromxml/) — builds a rowset from XML
 - [`Row`](/next/ampscript/functions/row/), [`Field`](/next/ampscript/functions/field/), [`RowCount`](/next/ampscript/functions/rowcount/) — read the rowset

@@ -80,6 +80,8 @@ sf cms publish -o target --workspace Default_Content_Workspace -m email:Welcome_
 - **Publish:** only the named components are published. Name a page together with the content blocks it embeds: in one run, embedded components are published first and unpublished last. Publishing a landing page or template makes a public URL live, and the plugin says so. For a landing page in another org, publish its content blocks (web fragments) first; the plugin does that when they are in the same run, and the template can stay Draft. Forms and form handlers publish only with an input field and a Flow added in the CMS editor.
 - **Per-type details:** a custom font without `fallbackFont` gets `"arial"` from Salesforce; a contact card's `vcfData` is filled from the `.vcf` file; a tracked link's short link and expiry are added by Salesforce on publish and not kept in the file.
 - **Errors:** every problem has a plugin error code and a hint; Salesforce's HTTP status, error code and message are shown as they came.
+- **Exit codes:** as in the Salesforce CLI, with and without `--json`: `0` success, `1` failed, `2` wrong flags, `68` partial (some components written, another failed), `69` still open (no answer within the timeout, or the readback after a deploy or publish not confirmed yet).
+- **As a library:** other tools can import `sf-plugin-cms/api` and call deploy, publish, unpublish, delete (`remove`) and retrieve on their own org connection, with the same result as `--json`. `getItems` tells whether components exist and are published, and two helpers build and read the content reference a flow stores (`marketing--<workspace>.sfdc_cms__email--<ApiName>`). Once publish reports `published`, a flow can use the content at once.
 
 ## Links
 

@@ -81,7 +81,6 @@ Every call that rendered gave a bare number. There is no set of special values t
 
 ## See also
 
-- [`Multiply` in Marketing Cloud Engagement](/engagement/ampscript/functions/multiply/) — how it behaves there
 - [`Divide`](/next/ampscript/functions/divide/) — the inverse operation
 - [`Add`](/next/ampscript/functions/add/)
 - [`Subtract`](/next/ampscript/functions/subtract/) — the other two arithmetic functions

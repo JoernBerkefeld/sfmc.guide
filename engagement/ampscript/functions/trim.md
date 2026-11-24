@@ -16,7 +16,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "In a Next test email `Trim(\"  a  b  \")` gave `a b` (length 3) instead of `a  b` (length 4), but the spaces in the literal may have been collapsed before AMPscript ran; the cause was not isolated. Next does not strip the non-breaking space (`Char(160)`), and `Trim(12345)` or `Trim(true)` make the Next preview fail instead of giving `12345` or an empty string."
+mcn_note: "Next keeps runs of inner spaces (`a  b`, length 4) and strips leading and trailing runs, as Engagement does, but in a Next email runs of spaces have to be written with `Char(32)`, because the render collapses runs typed into the email before AMPscript runs. Next does not strip the non-breaking space (`Char(160)`), and `Trim(12345)` or `Trim(true)` make the Next preview fail instead of giving `12345` or an empty string."
 ---
 
 {% include verification-status.html %}
@@ -92,7 +92,6 @@ The non-breaking space matters most in practice: it survives most copy-paste cle
 
 ## See also
 
-- [`Trim` in Marketing Cloud Next](/next/ampscript/functions/trim/) — how it behaves there
 - [`ProperCase`](/engagement/ampscript/functions/propercase/) — cases a value without trimming it
 - [`Length`](/engagement/ampscript/functions/length/) — how to measure whether a trim actually removed anything
 - [`Concat`](/engagement/ampscript/functions/concat/) — joins values without touching their padding

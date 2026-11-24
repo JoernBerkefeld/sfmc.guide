@@ -81,7 +81,6 @@ A count of `0` gives an empty string. Beyond that there is no fixed set of speci
 
 ## See also
 
-- [`Char` in Marketing Cloud Engagement](/engagement/ampscript/functions/char/) — how it behaves there
 - [`Concat`](/next/ampscript/functions/concat/) — joins the characters you build with `Char`
 - [`Length`](/next/ampscript/functions/length/) — how the resulting characters are counted
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-char.html)

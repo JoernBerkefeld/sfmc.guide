@@ -17,17 +17,17 @@ behaviour: |
   <p>c8 expect=[Abc3def] got=[%%=ProperCase("abc3def")=%%]</p>
   <p>c9 expect=[3rd Street] got=[%%=ProperCase("3rd street")=%%]</p>
   <p>c10 expect=[A1b C2d] got=[%%=ProperCase("a1b c2d")=%%]</p>
-  <p>c11 expect=[ Spaced Out ] got=[%%=ProperCase("  spaced   out  ")=%%]</p>
-  <p>c12 expect=[12] got=[%%=Length(ProperCase("  spaced   out  "))=%%]</p>
-  <p>c13 expect=[X] got=[%%=ProperCase("x")=%%]</p>
-  <p>c14 expect=[] got=[%%=ProperCase("")=%%]</p>
-  <p>c15 expect=[Éàü Éàü] got=[%%=ProperCase(Concat(Char(233), Char(224), Char(252), " ", Char(233), Char(224), Char(252)))=%%]</p>
-  <p>c16 expect=[SStrasse] got=[%%=ProperCase(Concat(Char(223), "trasse"))=%%]</p>
-  <p>c17 expect=[8] got=[%%=Length(ProperCase(Concat(Char(223), "trasse")))=%%]</p>
-  <p>c18 expect=[12345] got=[%%=ProperCase(12345)=%%]</p>
-  <p>c19 expect=[Abc 42def] got=[%%=ProperCase("abc 42def")=%%]</p>
-  <p>c20 expect=[2026-11-23t00:20:52] got=[%%=ProperCase(Now())=%%]</p>
-  <p>c21 expect=[True] got=[%%=ProperCase(true)=%%]</p>
+  <p>c11 expect=[X] got=[%%=ProperCase("x")=%%]</p>
+  <p>c12 expect=[] got=[%%=ProperCase("")=%%]</p>
+  <p>c13 expect=[Éàü Éàü] got=[%%=ProperCase(Concat(Char(233), Char(224), Char(252), " ", Char(233), Char(224), Char(252)))=%%]</p>
+  <p>c14 expect=[SStrasse] got=[%%=ProperCase(Concat(Char(223), "trasse"))=%%]</p>
+  <p>c15 expect=[8] got=[%%=Length(ProperCase(Concat(Char(223), "trasse")))=%%]</p>
+  <p>c16 expect=[12345] got=[%%=ProperCase(12345)=%%]</p>
+  <p>c17 expect=[Abc 42def] got=[%%=ProperCase("abc 42def")=%%]</p>
+  <p>c18 expect=[2026-11-23t00:20:52] got=[%%=ProperCase(Now())=%%]</p>
+  <p>c19 expect=[True] got=[%%=ProperCase(true)=%%]</p>
+  <p>c20 expect=[  Spaced   Out  ] got=[%%=ProperCase(Concat(Char(32), Char(32), "spaced", Char(32), Char(32), Char(32), "out", Char(32), Char(32)))=%%]</p>
+  <p>c21 expect=[16] got=[%%=Length(ProperCase(Concat(Char(32), Char(32), "spaced", Char(32), Char(32), Char(32), "out", Char(32), Char(32))))=%%]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->

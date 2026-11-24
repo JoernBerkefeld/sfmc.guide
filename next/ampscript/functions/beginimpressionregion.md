@@ -60,6 +60,5 @@ Renders `X`. The two calls add nothing to the email.
 
 ## See also
 
-- [`BeginImpressionRegion` in Marketing Cloud Engagement](/engagement/ampscript/functions/beginimpressionregion/) — how it behaves there
 - [`EndImpressionRegion`](/next/ampscript/functions/endimpressionregion/) — closes the region this opens
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-begin-impression-region.html)

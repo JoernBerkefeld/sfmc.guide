@@ -67,7 +67,6 @@ Impression regions are an **email-send** feature. The distinction between ending
 
 ## See also
 
-- [`EndImpressionRegion` in Marketing Cloud Next](/next/ampscript/functions/endimpressionregion/) — how it behaves there
 - [`BeginImpressionRegion`](/engagement/ampscript/functions/beginimpressionregion/) — opens the region this closes
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-end-impression-region.html)
 - [ampscript.guide](https://ampscript.guide/endimpressionregion/)

@@ -106,7 +106,6 @@ A `DateDiff` in hours between the two results over the same input is `0`, and `L
 
 ## See also
 
-- [`StringToDate` in Marketing Cloud Next](/next/ampscript/functions/stringtodate/) — how it behaves there
 - [DateParse](/engagement/ampscript/functions/dateparse/) — same behaviour on one argument, plus an optional UTC flag this function does not have
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the usual next call, and the recommended alternative on Marketing Cloud Next
 - [DateAdd](/engagement/ampscript/functions/dateadd/)

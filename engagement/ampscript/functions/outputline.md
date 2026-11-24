@@ -86,7 +86,6 @@ That matches what the official reference says, and it is the reason the lines co
 
 ## See also
 
-- [`OutputLine` in Marketing Cloud Next](/next/ampscript/functions/outputline/) — how it behaves there
 - [Output](/engagement/ampscript/functions/output/) — the same, without the line break
 - [Differs from docs: the undocumented argument counts](/engagement/differs-from-docs/#outputline-arity-and-empty-argument)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-output-line.html)

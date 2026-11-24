@@ -88,7 +88,6 @@ Renders `2026-03-04`.
 
 ## See also
 
-- [`StringToDate` in Marketing Cloud Engagement](/engagement/ampscript/functions/stringtodate/) — how it behaves there
 - [DateParse](/next/ampscript/functions/dateparse/) — the same parsing, with an optional second argument
 - [FormatDate](/next/ampscript/functions/formatdate/) — the usual next call
 - [DateAdd](/next/ampscript/functions/dateadd/)

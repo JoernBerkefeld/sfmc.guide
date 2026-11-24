@@ -16,7 +16,7 @@ differs_from_docs: true
 engagement: differs
 signature_differs: true
 mcn_tested: 2026-11-23
-engagement_note: "In Engagement every plain value selects the false branch; in Next a non-empty string such as `\"hello\"`, `\"0\"` or three spaces selects the true branch (`T`). Engagement evaluates only the selected branch, so a `RaiseError` in the other branch is harmless; in Next the same email fails to render."
+engagement_note: "In Engagement every plain value selects the false branch; in Next a non-empty string such as `\"hello\"`, `\"0\"` or whitespace selects the true branch (`T`). Engagement evaluates only the selected branch, so a `RaiseError` in the other branch is harmless; in Next the same email fails to render. Engagement's `==` and `!=` compare strings with regard to case; in Next they ignore case (`IIf(\"abc\" == \"ABC\", \"eq\", \"ne\")` gives `eq`)."
 test_scripts: complete
 ---
 
@@ -28,7 +28,7 @@ test_scripts: complete
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `expression` | boolean | Yes | Condition to evaluate — in Next some non-boolean values select the true branch (`"hello"`, `"0"`, three spaces) and others the false one (`""`, `0`, `"false"`) |
+| `expression` | boolean | Yes | Condition to evaluate — in Next some non-boolean values select the true branch (`"hello"`, `"0"`, whitespace) and others the false one (`""`, `0`, `"false"`) |
 | `trueValue` | string \| number \| boolean \| date | Yes | Value returned when true; evaluated in Next even when false is selected |
 | `falseValue` | string \| number \| boolean \| date | Yes | Value returned when false; evaluated in Next even when true is selected |
 
@@ -59,7 +59,9 @@ The result is whatever the branches hold, so there is no fixed set of values. Ca
 
 **Comparisons and boolean functions work as conditions.** `1 == 1` picks the true branch and `1 == 2` the false one. `Empty(@var)` works too, also negated as `NOT Empty(@var)`.
 
-**Some non-empty strings count as true.** Used directly as the condition, a variable holding `"hello"`, `"0"` or three spaces selects the true branch.
+**`==` and `!=` ignore case on strings.** `IIf("abc" == "ABC", "eq", "ne")` gives `eq`, two variables holding `Hello` and `hello` compare as equal, and `"abc" != "ABC"` is false; `"abc" == "abd"` is still false. Engagement compares with regard to case, so a condition that tells `ABC` from `abc` there does not in Next.
+
+**Some non-empty strings count as true.** Used directly as the condition, a variable holding `"hello"`, `"0"` or whitespace selects the true branch (written as a literal, the run of spaces reaches AMPscript as a single space, because the render collapses runs of spaces).
 
 **These count as false:** an undeclared variable, a variable declared but never set, the empty string, the number `0` and the string `"false"`.
 
@@ -68,7 +70,7 @@ The result is whatever the branches hold, so there is no fixed set of values. Ca
 | undeclared | `F` |
 | declared, never set | `F` |
 | `""` | `F` |
-| `"   "` | `T` |
+| `" "` (whitespace) | `T` |
 | `0` | `F` |
 | `"0"` | `T` |
 | `"false"` | `F` |
@@ -92,7 +94,6 @@ Testing a value directly is therefore not a reliable presence check. Use `Empty(
 
 ## See also
 
-- [`IIf` in Marketing Cloud Engagement](/engagement/ampscript/functions/iif/) — how it behaves there
 - [Empty](/next/ampscript/functions/empty/) — the condition to use for a presence check
 - [IsNull](/next/ampscript/functions/isnull/) — another boolean test
 - [RaiseError](/next/ampscript/functions/raiseerror/) — runs even in the branch that is not selected

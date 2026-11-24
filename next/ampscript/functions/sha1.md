@@ -70,7 +70,6 @@ There is no error token to test for: every accepted call returns a digest.
 
 ## See also
 
-- [`SHA1` in Marketing Cloud Engagement](/engagement/ampscript/functions/sha1/) — how it behaves there
 - [MD5](/next/ampscript/functions/md5/)
 - [SHA256](/next/ampscript/functions/sha256/)
 - [SHA512](/next/ampscript/functions/sha512/) — the same signature, different digest lengths

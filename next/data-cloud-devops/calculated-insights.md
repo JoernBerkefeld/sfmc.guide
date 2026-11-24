@@ -96,13 +96,13 @@ These are API-led plugin operations, not out-of-the-box Salesforce CLI commands.
 
 <a id="optional-sf-plugin-data-native-lifecycle"></a>
 
-Saves one insight, whatever its status, schedule or SQL, as a JSON file and an SQL file. A Visual Builder draft has no SQL in the API, so it is saved as-is with a warning (`CI_VISUAL_DRAFT_WITHOUT_SQL`) and no SQL file, and deploy does not send it. Run it from the project root. `-x` (`--overwrite`) replaces differing existing files; an identical repeat reports `unchanged`.
+Saves one insight, whatever its status, schedule or SQL, as a JSON file and an SQL file. A Visual Builder draft has no SQL in the API, so it is saved as-is with a warning (`CI_VISUAL_DRAFT_WITHOUT_SQL`) and no SQL file, and deploy does not send it. Run it from the project root. A retrieve replaces differing existing files; an identical repeat reports `unchanged`.
 
 ```sh
 sf data360 retrieve -o SOURCE_ALIAS -m calculated-insight:CustomerActivity__cio
 ```
 
-Bare `-m calculated-insight` saves every insight the API lists in the data space.
+Bare `-m calculated-insight` saves every insight the API lists in the data space. A retrieve without `-m` includes every insight as well.
 
 The command writes two files under the project root (not under the package directory):
 

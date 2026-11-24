@@ -91,6 +91,5 @@ The possible values depend only on the bounds you pass, so there is no fixed set
 
 ## See also
 
-- [`Random` in Marketing Cloud Engagement](/engagement/ampscript/functions/random/) — how it behaves there
 - [`Mod`](/next/ampscript/functions/mod/) — useful for bucketing a value into groups
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-random.html)

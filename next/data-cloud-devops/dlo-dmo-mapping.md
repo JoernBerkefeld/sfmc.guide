@@ -125,7 +125,7 @@ Downloaded mapping:CustomerMapping (retrieved).
 Downloaded mapping: 1
 ```
 
-If the file already exists and differs, the command stops unless you add `--overwrite` (`-x`). `--output-dir` (`-d`) sets the project root, which defaults to the current directory. The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`; non-default spaces are offline-tested only. The default and `auto` select API `68.0`; numeric pins from `61.0` are kept as given.
+If the file already exists and differs, the retrieve replaces it; an identical file is left unchanged. `--output-dir` (`-d`) sets the project root, which defaults to the current directory. The optional `--dataspace NAME` (alias `--data-space`) selects a data space other than `default`; non-default spaces are offline-tested only. The default and `auto` select API `68.0`; numeric pins from `61.0` are kept as given.
 
 `sf data360 retrieve -m mapping -o SOURCE_ALIAS` saves every mapping of the org. A retrieve without `-m` includes every mapping as well. One retrieve takes any mix of families: bare `-m mapping` or `mapping:Name` selectors can stand beside segments, calculated insights, streams, transforms, graphs or identity resolution, and each family is read in turn.
 

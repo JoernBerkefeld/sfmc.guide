@@ -88,7 +88,6 @@ The `DateDiff` in minutes between `Now()` and `Now(1)` in one render was `0`. Th
 
 ## See also
 
-- [`Now` in Marketing Cloud Next](/next/ampscript/functions/now/) — how it behaves there
 - [AMPscript Function Reference](/engagement/ampscript/functions/) — the sibling Date and Time functions that consume this value
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-date-time/mc-ampscript-reference-date-time-now.html)
 - [ampscript.guide](https://ampscript.guide/now/)

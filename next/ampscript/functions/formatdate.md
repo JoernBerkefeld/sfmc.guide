@@ -124,7 +124,6 @@ All rows below format `2026-03-04 13:52:07`, a Wednesday, written as `@d` in the
 
 ## See also
 
-- [`FormatDate` in Marketing Cloud Engagement](/engagement/ampscript/functions/formatdate/) — how it behaves there
 - [Now](/next/ampscript/functions/now/) — a common value to format
 - [DateAdd](/next/ampscript/functions/dateadd/)
 - [DateParse](/next/ampscript/functions/dateparse/)

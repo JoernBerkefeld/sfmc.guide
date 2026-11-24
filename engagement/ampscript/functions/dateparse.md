@@ -107,7 +107,6 @@ An ordinal-suffixed day, a non-English month name, free text, an empty string, a
 
 ## See also
 
-- [`DateParse` in Marketing Cloud Next](/next/ampscript/functions/dateparse/) — how it behaves there
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the usual next call, and the recommended alternative on Marketing Cloud Next
 - [DateAdd](/engagement/ampscript/functions/dateadd/)
 - [DateDiff](/engagement/ampscript/functions/datediff/)

@@ -114,7 +114,6 @@ The US form uses brackets and no minus sign at all. Code that looks for a leadin
 
 ## See also
 
-- [`FormatCurrency` in Marketing Cloud Next](/next/ampscript/functions/formatcurrency/) — how it behaves there
 - [FormatNumber](/engagement/ampscript/functions/formatnumber/) — same locale machinery, but you choose the pattern
 - [Format](/engagement/ampscript/functions/format/) — the general form, which handles dates as well
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — dates only

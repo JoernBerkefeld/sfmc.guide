@@ -91,7 +91,6 @@ Only `Empty` distinguishes a missing value from a present one. That is the whole
 
 ## See also
 
-- [`Empty` in Marketing Cloud Next](/next/ampscript/functions/empty/) — how it behaves there
 - [IsNull](/engagement/ampscript/functions/isnull/) — the narrower test; it returned `False` for every input above, so it is not a substitute
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — looks like a fallback, but outside a Smart Capture form it never returns the default
 - [IIf](/engagement/ampscript/functions/iif/) — what usually consumes the boolean this function produces

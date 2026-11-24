@@ -72,7 +72,6 @@ The key `nosuch-key` does not exist. In Next this email saves and publishes, but
 
 ## See also
 
-- [`ContentBlockByKey` in Marketing Cloud Engagement](/engagement/ampscript/functions/contentblockbykey/) — how it behaves there
 - [`ContentBlockByID`](/next/ampscript/functions/contentblockbyid/) — retrieve a block by its numeric ID
 - [`ContentBlockByName`](/next/ampscript/functions/contentblockbyname/) — retrieve a block by its folder path and name
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-key.html)

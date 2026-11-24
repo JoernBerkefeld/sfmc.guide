@@ -35,7 +35,7 @@ A **data transform** reads one or more objects, changes the rows and writes them
 ## Read
 
 {% capture read_plugin %}
-Saves transforms as files in your project. A bare `-m data-transform` retrieves every transform the API lists (20 per page); `-m data-transform:Name` retrieves one:
+Saves transforms as files in your project. A bare `-m data-transform` retrieves every transform the API lists (20 per page); `-m data-transform:Name` retrieves one. A retrieve without `-m` includes every transform as well:
 
 ```sh
 sf data360 retrieve -m data-transform:CustomerCopy -o SOURCE_ALIAS
@@ -109,7 +109,7 @@ Deploy reads the complete transform list and looks for the name in the file, ign
 
 The plugin only checks that the file is plain JSON with a valid name, exactly one of `definition` and `definitions`, only keys the transform input takes, and, when the file names a data space, that it is the run's space. Everything else is sent as written and Salesforce decides. Salesforce refuses, for example, an STL output DLO that does not exist, an output that is also the source DLO, and a streaming transform with an STL definition. A DCSQL definition creates the output DLOs it declares; that DLO stays when the transform is deleted.
 
-A `schedule` in the file is set with the schedule route once the new transform is no longer `PROCESSING`, then read back. Salesforce refuses a schedule on a transform that is not active, so the plugin reads the new transform every 5 seconds for up to 5 minutes first. The result carries `TRANSFORM_SCHEDULE_CHANGE`: the new transform runs on that schedule in the target org. If the transform is still processing after the wait, the schedule is not sent (`TRANSFORM_SCHEDULE_NOT_SENT`); if Salesforce refuses it, the result says so with Salesforce's message (`TRANSFORM_SCHEDULE_REJECTED`). In both cases the transform was created and only the schedule is missing; rerun the deploy to send it.
+A `schedule` in the file is set with the schedule route once the new transform is no longer `PROCESSING`, then read back. Salesforce refuses a schedule on a transform that is not active, so the plugin reads the new transform every 5 seconds for up to 5 minutes first. The result carries `TRANSFORM_SCHEDULE_CHANGE`: the new transform runs on that schedule in the target org. If the transform is still processing after the wait, the schedule is not sent (`TRANSFORM_SCHEDULE_NOT_SENT`); if Salesforce refuses it, the result says so with Salesforce's message (`TRANSFORM_SCHEDULE_REJECTED`). In both cases the transform was created and only the schedule is missing; rerun the deploy to send it. `TRANSFORM_SCHEDULE_NOT_SENT` exits `69` (still processing) when nothing else failed; `TRANSFORM_SCHEDULE_REJECTED` exits `68` (partial). See [exit codes](/tools/sf-plugin-data/#exit-codes).
 
 Transforms run in their own phase, one after another, after streams and the native DLO, DMO, mapping and relationship items, and before identity resolution, calculated insights, segments and graphs. The first transform that does not succeed stops the run.
 

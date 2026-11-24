@@ -60,7 +60,6 @@ An email containing this call, placed in a branch that never runs, saved and pub
 
 ## See also
 
-- [`LookupOrderedRows` in Marketing Cloud Engagement](/engagement/ampscript/functions/lookuporderedrows/) — how it behaves there
 - [`LookupRows`](/next/ampscript/functions/lookuprows/) — unordered matching rows
 - [`Lookup`](/next/ampscript/functions/lookup/)
 - [`RowCount`](/next/ampscript/functions/rowcount/)

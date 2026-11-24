@@ -97,7 +97,6 @@ The capability is catalogued on [Differs from official docs](/engagement/differs
 
 ## See also
 
-- [`Char` in Marketing Cloud Next](/next/ampscript/functions/char/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#char-codes-above-255-work) — the uncapped code domain in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — joins the characters you build with `Char`
 - [`Length`](/engagement/ampscript/functions/length/) — how the resulting characters are counted

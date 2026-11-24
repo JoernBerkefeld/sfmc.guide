@@ -215,11 +215,11 @@ sf project retrieve start --metadata CustomObject:Customer__dlm --target-org SOU
 sf data360 retrieve -m dmo:Customer__dlm -o SOURCE_ALIAS
 ```
 
-Append `--json` to either command for structured output. Salesforce decides what a write is allowed to do; read the limits on the resource page before create, update or delete.
+Append `--json` to either command for structured output. The plugin's [exit codes](/tools/sf-plugin-data/#exit-codes) tell success, failure, partial and still-processing runs apart. Salesforce decides what a write is allowed to do; read the limits on the resource page before create, update or delete.
 
 ### What retrieve saves
 
-The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others. A retrieve without `-m` saves all DLOs, DMOs and mappings; every other type is retrieved only when `-m` names it.
+The plugin's retrieve never refuses an object because the org returns something the plugin does not model, and one failing object does not stop the others. A retrieve without `-m` saves every type in the run's data space; `-m` narrows it. With an explicit `--api-version` other than `68.0`, pass `-m`: without it the retrieve is refused with `INVALID_SCOPE`.
 
 - A key the plugin does not know stays in the saved file. Deploy checks files strictly and refuses that file, naming the key path. Unknown keys in a data stream's read-only `observed` section do not block deploy.
 - An object the file format cannot represent is saved as-is, with a warning, at its normal path: `{schemaVersion, kind, identity, verbatim: {reason, native}}`, where `native` is the org's answer and `reason` the code of the check it did not pass (or `UNMODELLED_RESPONSE`). Examples: streams whose read names no connector type (or the Ingestion API connector with another stream type), segments with parameters, mappings that are not DLO to DMO, Visual Builder calculated-insight drafts, data transforms with both `definition` and `definitions`, and data graph schedules the format does not hold.

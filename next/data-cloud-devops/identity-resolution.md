@@ -103,7 +103,7 @@ The result is `creation-processing` with mutation `acknowledged-processing`, and
 - **What it does not save:** the checks before the write run either way and take most of the time. In a live test an `--async` create still took about 9.5 minutes.
 - **How it can hurt:** nothing confirms that publishing succeeded, that the settings stuck, or that the generated DMOs exist. Steps that need the published ruleset fail if you run them right away: a Data Graph on the unified DMO needs a `PUBLISHED` owner, and its preview reports `DATA_GRAPH_OWNER_NOT_PUBLISHED`. Deploying the same file again is refused with `IDENTITY_RESOLUTION_NOT_SETTLED` while the ruleset is still publishing. A failed publish looks like a slow one until you run the deploy again.
 
-To check the result, run the same deploy again. `IDENTITY_RESOLUTION_NOT_SETTLED` means it is still publishing; `unchanged` means it settled as written.
+To check the result, run the same deploy again. `IDENTITY_RESOLUTION_NOT_SETTLED` means it is still publishing (exit `69`); `unchanged` means it settled as written. See [exit codes](/tools/sf-plugin-data/#exit-codes).
 
 **Known failures:**
 

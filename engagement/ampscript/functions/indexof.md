@@ -115,7 +115,6 @@ Both findings are catalogued on [Differs from official docs](/engagement/differs
 
 ## See also
 
-- [`IndexOf` in Marketing Cloud Next](/next/ampscript/functions/indexof/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#indexof-is-case-insensitive) — the case-insensitivity and the occurrence argument in full
 - [`Length`](/engagement/ampscript/functions/length/) — the counting unit the returned positions use
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the strings you search

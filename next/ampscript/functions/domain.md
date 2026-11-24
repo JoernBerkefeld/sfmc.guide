@@ -91,7 +91,6 @@ A call with the wrong number of arguments was not tried in Next.
 
 ## See also
 
-- [`Domain` in Marketing Cloud Engagement](/engagement/ampscript/functions/domain/) — how it behaves there
 - [IsEmailAddress](/next/ampscript/functions/isemailaddress/) — validate the address before splitting it
 - [Empty](/next/ampscript/functions/empty/) — test a variable holding the result for emptiness
 - [Lowercase](/next/ampscript/functions/lowercase/) — fold the case before comparing

@@ -95,7 +95,6 @@ An unrecognised name is rejected outright — `banana` aborted the page with HTT
 
 ## See also
 
-- [`StringToHex` in Marketing Cloud Next](/next/ampscript/functions/stringtohex/) — how it behaves there
 - [Base64Encode](/engagement/ampscript/functions/base64encode/)
 - [Base64Decode](/engagement/ampscript/functions/base64decode/) — the same bytes in a denser alphabet, and reversible
 - [SHA256](/engagement/ampscript/functions/sha256/) — the same charSet domain, applied before hashing

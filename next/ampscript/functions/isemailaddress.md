@@ -100,6 +100,5 @@ Calls with no argument or two arguments were not tested in Next.
 
 ## See also
 
-- [`IsEmailAddress` in Marketing Cloud Engagement](/engagement/ampscript/functions/isemailaddress/) — how it behaves there
 - [Domain](/next/ampscript/functions/domain/) — extracts the domain from an address
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-is-email-address.html)

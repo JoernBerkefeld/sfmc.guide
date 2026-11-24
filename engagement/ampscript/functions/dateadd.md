@@ -96,7 +96,6 @@ The third row is the one that bites. Stepping forward a month and back again lan
 
 ## See also
 
-- [`DateAdd` in Marketing Cloud Next](/next/ampscript/functions/dateadd/) — how it behaves there
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in as the first argument
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — formats the result, and swallows bad input where this function aborts
 - [The differs-from-docs cards](/engagement/differs-from-docs/#dateadd-unlisted-unit-aborts-the-page) — what the official reference leaves unsaid

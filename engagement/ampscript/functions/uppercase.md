@@ -88,7 +88,6 @@ This is a specific gap rather than non-ASCII input being ignored wholesale: the 
 
 ## See also
 
-- [`Uppercase` in Marketing Cloud Next](/next/ampscript/functions/uppercase/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#uppercase-sharp-s-not-expanded) — the sharp-s finding in full
 - [`Lowercase`](/engagement/ampscript/functions/lowercase/) — the inverse conversion
 - [`Concat`](/engagement/ampscript/functions/concat/)

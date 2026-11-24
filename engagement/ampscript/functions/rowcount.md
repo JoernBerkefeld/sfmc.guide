@@ -73,7 +73,6 @@ There is no sentinel: the result is a bare non-negative integer.
 
 ## See also
 
-- [`RowCount` in Marketing Cloud Next](/next/ampscript/functions/rowcount/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset to count
 - [`Row`](/engagement/ampscript/functions/row/)
 - [`Field`](/engagement/ampscript/functions/field/) — read a counted rowset

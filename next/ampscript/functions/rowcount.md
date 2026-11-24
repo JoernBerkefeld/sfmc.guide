@@ -69,7 +69,6 @@ Renders `18`.
 
 ## See also
 
-- [`RowCount` in Marketing Cloud Engagement](/engagement/ampscript/functions/rowcount/) — how it behaves there
 - [`Row`](/next/ampscript/functions/row/)
 - [`Field`](/next/ampscript/functions/field/) — read a counted rowset
 - [`RetrieveSalesforceObjects`](/next/ampscript/functions/retrievesalesforceobjects/) — produces a rowset to count

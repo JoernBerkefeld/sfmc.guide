@@ -57,7 +57,7 @@ Written into the email, the result is the lowercase word `true` or `false`.
 
 **Unset and empty count as null.** An undeclared variable, a variable declared with `VAR` but never set, and a variable set to `""` each give `true`.
 
-**Whitespace and zero do not.** Three spaces, `0`, `"0"`, `"false"`, an ordinary string like `"hello"` and `Now()` each give `false`. So do the literals `"x"` and `0` passed directly.
+**Whitespace and zero do not.** Whitespace, `0`, `"0"`, `"false"`, an ordinary string like `"hello"` and `Now()` each give `false`. So do the literals `"x"` and `0` passed directly.
 
 **`v()` passes the empty value through.** `IsNull(v(@unset))` gives `true`.
 
@@ -76,7 +76,6 @@ Data extension fields, subscriber attributes and request parameters were not tes
 
 ## See also
 
-- [`IsNull` in Marketing Cloud Engagement](/engagement/ampscript/functions/isnull/) — how it behaves there
 - [Empty](/next/ampscript/functions/empty/) — the other missing-value test
 - [IsNullDefault](/next/ampscript/functions/isnulldefault/) — returns a fallback for a null value
 - [IIf](/next/ampscript/functions/iif/) — what usually consumes the boolean

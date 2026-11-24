@@ -78,7 +78,6 @@ A no-match returns an empty rowset, not a null or an error: `RowCount(LookupRows
 
 ## See also
 
-- [`LookupRows` in Marketing Cloud Next](/next/ampscript/functions/lookuprows/) — how it behaves there
 - [`Lookup`](/engagement/ampscript/functions/lookup/) — returns a single scalar from the first match
 - [`RowCount`](/engagement/ampscript/functions/rowcount/)
 - [`Row`](/engagement/ampscript/functions/row/)

@@ -92,7 +92,6 @@ Requires an active Marketing Cloud Connect integration to a Sales or Service Clo
 
 ## See also
 
-- [`RetrieveSalesforceObjects` in Marketing Cloud Next](/next/ampscript/functions/retrievesalesforceobjects/) — how it behaves there
 - [`CreateSalesforceObject`](/engagement/ampscript/functions/createsalesforceobject/)
 - [`UpdateSingleSalesforceObject`](/engagement/ampscript/functions/updatesinglesalesforceobject/) — write to the same connected org
 - [`LongSFID`](/engagement/ampscript/functions/longsfid/) — convert a 15-character ID for matching

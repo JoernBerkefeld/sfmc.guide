@@ -59,7 +59,6 @@ An email containing this call, placed in a branch that never runs, saved and pub
 
 ## See also
 
-- [`ClaimRow` in Marketing Cloud Engagement](/engagement/ampscript/functions/claimrow/) — how it behaves there
 - [`ClaimRowValue`](/next/ampscript/functions/claimrowvalue/) — the twin that returns one column value
 - [`Field`](/next/ampscript/functions/field/)
 - [`LookupRows`](/next/ampscript/functions/lookuprows/)

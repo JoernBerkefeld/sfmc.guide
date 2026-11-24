@@ -61,7 +61,6 @@ An email containing this six-argument call, placed in a branch that never runs, 
 
 ## See also
 
-- [`ClaimRowValue` in Marketing Cloud Engagement](/engagement/ampscript/functions/claimrowvalue/) — how it behaves there
 - [`ClaimRow`](/next/ampscript/functions/claimrow/) — the twin that returns the whole row
 - [`Field`](/next/ampscript/functions/field/)
 - [`LookupRows`](/next/ampscript/functions/lookuprows/)

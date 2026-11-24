@@ -95,7 +95,6 @@ The `IsNull` column is constant. That is the practical summary: for a missing-va
 
 ## See also
 
-- [`IsNull` in Marketing Cloud Next](/next/ampscript/functions/isnull/) — how it behaves there
 - [Empty](/engagement/ampscript/functions/empty/) — what to use instead for a missing-value test; it separates the inputs this function cannot
 - [IsNullDefault](/engagement/ampscript/functions/isnulldefault/) — the same null definition with a fallback value bolted on
 - [IIf](/engagement/ampscript/functions/iif/) — what usually consumes the boolean

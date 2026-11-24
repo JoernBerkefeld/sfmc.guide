@@ -82,7 +82,6 @@ A no-match returns an empty rowset; guard with `RowCount`.
 
 ## See also
 
-- [`LookupOrderedRows` in Marketing Cloud Next](/next/ampscript/functions/lookuporderedrows/) — how it behaves there
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — unordered matching rows
 - [`LookupOrderedRowsCS`](/engagement/ampscript/functions/lookuporderedrowscs/) — the case-sensitive counterpart
 - [`Row`](/engagement/ampscript/functions/row/)

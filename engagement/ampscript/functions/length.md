@@ -98,7 +98,6 @@ The practical consequence is truncation and validation. A limit enforced with `L
 
 ## See also
 
-- [`Length` in Marketing Cloud Next](/next/ampscript/functions/length/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#length-counts-utf16-code-units) — the counting-unit finding in full
 - [`Concat`](/engagement/ampscript/functions/concat/) — builds the string you are measuring
 - [`Uppercase`](/engagement/ampscript/functions/uppercase/) — the sharp s survives uppercasing, so the measured length does not change

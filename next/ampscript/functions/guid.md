@@ -14,7 +14,7 @@ verification: in-progress
 differs_from_docs: true
 engagement: same
 mcn_tested: 2026-11-23
-engagement_note: "GUID behaves the same on both: 36 characters, hyphens at 9, 14, 19 and 24, no braces, a new value per call. One comparison test showed `==` ignoring case in Next."
+engagement_note: "GUID behaves the same on both: 36 characters, hyphens at 9, 14, 19 and 24, no braces, a new value per call. Comparing a GUID with `==` differs, because `==` ignores case in Next and respects it in Engagement (see IIf)."
 test_scripts: complete
 ---
 
@@ -57,7 +57,7 @@ Keep the value in a variable when you need it twice, because every call returns 
 
 **Each call gives a new value.** Two calls stored in two variables compare as different.
 
-**A sample value printed in lowercase hex.** `@g == Uppercase(@g)` was true in Next because `==` ignored case in that comparison.
+**A sample value printed in lowercase hex.** Do not test the case with `==`: in Next `==` compares strings without regard to case, so `@g == Uppercase(@g)` is true, where Engagement gives false. See [`IIf`](/next/ampscript/functions/iif/).
 
 {% include test-script.html bundle="next-ampscript-functions--guid" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
 {% include test-script.html bundle="next-ampscript-functions--guid" chapter="failing" lang="ampscript" label="Show calls that fail in Next (one email each)" %}
@@ -70,7 +70,6 @@ Keep the value in a variable when you need it twice, because every call returns 
 
 ## See also
 
-- [`GUID` in Marketing Cloud Engagement](/engagement/ampscript/functions/guid/) — how it behaves there
 - [Length](/next/ampscript/functions/length/) — check the 36 characters
 - [Substring](/next/ampscript/functions/substring/) — cut the value into groups
 - [Lowercase](/next/ampscript/functions/lowercase/) — normalise the case

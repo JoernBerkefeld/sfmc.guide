@@ -62,7 +62,7 @@ Both values are written in lowercase. In a condition the result compares equal t
 
 **Three states count as empty:** a variable set to the empty string, a variable declared with `VAR` but never set, and a name that was never declared. All three render `true`.
 
-**Whitespace is a value.** A variable holding three spaces renders `false`.
+**Whitespace is a value.** A variable holding whitespace renders `false` (written as a literal, the run of spaces reaches AMPscript as a single space, because the render collapses runs of spaces).
 
 **`0`, `"0"` and `"false"` are values too.** Each of them, held in a variable, renders `false`, as does `"hello"`.
 
@@ -75,7 +75,6 @@ Attributes, request parameters and subscriber fields were not tested in Next, so
 
 ## See also
 
-- [`Empty` in Marketing Cloud Engagement](/engagement/ampscript/functions/empty/) — how it behaves there
 - [IIf](/next/ampscript/functions/iif/) — what usually consumes the result
 - [IsNull](/next/ampscript/functions/isnull/) — a different null test
 - [IsNullDefault](/next/ampscript/functions/isnulldefault/) — fallback value for a null

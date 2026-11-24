@@ -16,7 +16,7 @@ differs_from_docs: true
 signature_differs: true
 engagement: differs
 mcn_tested: 2026-11-23
-engagement_note: "Engagement keeps runs of spaces (`ProperCase(\"  spaced   out  \")` gives `  Spaced   Out  `), leaves a leading sharp s alone (`ßtrasse`) and returns an empty string for a boolean. In the Next email the same call gave ` Spaced Out ` (length 12), a leading `ß` became `SS` (`SStrasse`), and `ProperCase(true)` gives `True`."
+engagement_note: "Engagement leaves a leading sharp s alone (`ßtrasse`) and returns an empty string for a boolean. In Next a leading `ß` becomes `SS` (`SStrasse`), and `ProperCase(true)` gives `True`. Spaces are kept on both: `  spaced   out  ` gives `  Spaced   Out  ` (length 16). In a Next email, write runs of spaces with `Char(32)`, because the render collapses runs typed into the email before AMPscript runs."
 test_scripts: complete
 ---
 
@@ -58,9 +58,9 @@ The result is arbitrary text, so there is no fixed set of special values to test
 
 **Only a space starts a new word.** A letter after an apostrophe, hyphen, full stop or comma stays lower case: `ProperCase("o'neill mcdonald-smith")` gives `O'neill Mcdonald-smith` and `ProperCase("a.b,c")` gives `A.b,c`. Letters after a digit are not raised either: `ProperCase("abc3def")` gives `Abc3def`, `ProperCase("3rd street")` gives `3rd Street`.
 
-**Runs of spaces came back as single spaces.** In the test email, `ProperCase("  spaced   out  ")` rendered ` Spaced Out ` and `Length` of the result was `12`, not `16`. The test did not show whether the function or the saved email content collapsed the spaces; do not rely on the original spacing surviving.
+**Spaces are kept as they are.** `  spaced   out  ` (two spaces, `spaced`, three spaces, `out`, two spaces, built with `Char(32)`) gives `  Spaced   Out  `, `Length` `16`, as on Engagement. Write runs of spaces with `Char(32)`: the Next render collapses a run typed into the email to one space before AMPscript runs, so `ProperCase("  spaced   out  ")` typed as a literal comes out as ` Spaced Out `.
 
-**Accented letters are cased like any other.** `é`, `à` and `ü` at the start of a word become `É`, `À` and `Ü`.
+**Accented letters are cased like any other.** `é` at the start of a word becomes `É`; `à` and `ü` inside the word stay lower case (`éàü éàü` gives `Éàü Éàü`).
 
 **A leading sharp s expands.** `ProperCase(Concat(Char(223), "trasse"))` gives `SStrasse`, so the result (`Length` `8`) is one character longer than the input.
 
@@ -86,7 +86,6 @@ The result is arbitrary text, so there is no fixed set of special values to test
 
 ## See also
 
-- [`ProperCase` in Marketing Cloud Engagement](/engagement/ampscript/functions/propercase/) — how it behaves there
 - [`Uppercase`](/next/ampscript/functions/uppercase/)
 - [`Lowercase`](/next/ampscript/functions/lowercase/) — the whole-string conversions
 - [`Trim`](/next/ampscript/functions/trim/) — remove padding before casing a field

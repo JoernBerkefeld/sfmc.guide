@@ -75,7 +75,6 @@ There is no empty-row sentinel: an out-of-range index aborts rather than returni
 
 ## See also
 
-- [`Row` in Marketing Cloud Next](/next/ampscript/functions/row/) — how it behaves there
 - [`Field`](/engagement/ampscript/functions/field/) — reads a named column from the returned row
 - [`RowCount`](/engagement/ampscript/functions/rowcount/) — the guard that keeps `rowIndex` in range
 - [`LookupRows`](/engagement/ampscript/functions/lookuprows/) — produces the rowset

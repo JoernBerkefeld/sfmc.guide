@@ -16,7 +16,7 @@ test_scripts: complete
 differs_from_docs: true
 mcn: differs
 mcn_tested: 2026-11-23
-mcn_note: "In Next test emails, with the XML written as a literal in the email's HTML component, valid XML gave `0` rows: `//Flight` over three `Flight` elements gave `0` instead of `3`, and `Field` on those rows returned its flag (`false` for `Value`, `Xml`, `origin_att` read with `0`; `true` for ordinals) instead of `200.00` and `IND`. Saving the email may have changed the markup (e.g. tag case, so `//Flight` would not match), which is not yet ruled out; do not rely on the function in Next until re-tested. Empty, unset and malformed input give `0` rows on both."
+mcn_note: "Row counts match in Next: `//Flight` over three `Flight` elements gives `3` rows, and empty, malformed and non-matching input give `0`. `Field` on those rows returns its flag (`false` for `Value`, `Xml`, `origin_att` read with `0`; `true` by position) instead of `200.00` and `IND`. On malformed XML the flag `\"1\"` makes the Next preview fail where Engagement gives `0` rows. A Next email save strips tags from XML written as a string literal, so there the XML must be built with `Char()` or come from data."
 ---
 
 {% include verification-status.html %}
@@ -100,7 +100,6 @@ The boolean literal `true` behaves exactly like the number `1`. Read the argumen
 
 ## See also
 
-- [`BuildRowSetFromXML` in Marketing Cloud Next](/next/ampscript/functions/buildrowsetfromxml/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#buildrowsetfromxml-error-flag-inverted) — the inverted third argument in full
 - [`BuildRowsetFromJSON`](/engagement/ampscript/functions/buildrowsetfromjson/) — the same shape for JSON payloads, with the same inverted flag
 - [`BuildRowSetFromString`](/engagement/ampscript/functions/buildrowsetfromstring/) — splits a delimited string into a rowset

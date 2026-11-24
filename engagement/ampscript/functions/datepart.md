@@ -102,7 +102,6 @@ The last three rows are the ones that surprise: midnight is `12` rather than `0`
 
 ## See also
 
-- [`DatePart` in Marketing Cloud Next](/next/ampscript/functions/datepart/) — how it behaves there
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — the way to get a 24-hour clock, a padded value, or a localised month name
 - [DateAdd](/engagement/ampscript/functions/dateadd/)
 - [DateDiff](/engagement/ampscript/functions/datediff/) — the sibling functions, whose token set is narrower

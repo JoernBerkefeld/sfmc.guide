@@ -90,7 +90,6 @@ There is no closed set of sentinel values to test for. An input with no at sign,
 
 ## See also
 
-- [`Domain` in Marketing Cloud Next](/next/ampscript/functions/domain/) — how it behaves there
 - [IsEmailAddress](/engagement/ampscript/functions/isemailaddress/) — validate the address before splitting it, since this function will not
 - [Empty](/engagement/ampscript/functions/empty/) — how to detect the empty result
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-domain.html)

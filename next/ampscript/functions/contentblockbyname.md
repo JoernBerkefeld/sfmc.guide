@@ -72,7 +72,6 @@ The path does not exist. In Next this email saves and publishes, but the preview
 
 ## See also
 
-- [`ContentBlockByName` in Marketing Cloud Engagement](/engagement/ampscript/functions/contentblockbyname/) — how it behaves there
 - [`ContentBlockByID`](/next/ampscript/functions/contentblockbyid/) — retrieve a block by its numeric ID
 - [`ContentBlockByKey`](/next/ampscript/functions/contentblockbykey/) — retrieve a block by its customer key
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-content/mc-ampscript-reference-content-block-by-name.html)

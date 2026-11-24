@@ -89,7 +89,6 @@ There is no special value for a zero divisor in Next: the render fails instead (
 
 ## See also
 
-- [`Mod` in Marketing Cloud Engagement](/engagement/ampscript/functions/mod/) — how it behaves there
 - [`Divide`](/next/ampscript/functions/divide/) — the quotient of the same division
 - [`Random`](/next/ampscript/functions/random/) — pairs with `Mod` for bucketing
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-math/mc-ampscript-reference-math-mod.html)

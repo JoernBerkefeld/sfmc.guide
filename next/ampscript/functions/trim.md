@@ -16,7 +16,7 @@ differs_from_docs: true
 signature_differs: true
 engagement: differs
 mcn_tested: 2026-11-23
-engagement_note: "Engagement strips the non-breaking space; Next leaves `Char(160)` in place. For `Trim(\"  a  b  \")` Engagement gives `a  b` (length 4) and the Next test email gave `a b` (length 3), but the double spaces in the literal may have been collapsed before AMPscript ran, so this is not proven to be Trim's doing. Engagement also accepts numbers (`Trim(12345)` gives `12345`) and returns an empty string for a boolean, while in Next both make the email preview fail."
+engagement_note: "Engagement strips the non-breaking space; Next leaves `Char(160)` in place. Engagement also accepts numbers (`Trim(12345)` gives `12345`) and returns an empty string for a boolean, while in Next both make the email preview fail. Spaces are handled the same: both keep runs of inner spaces (`a  b`, length 4) and strip leading and trailing runs. In a Next email, write runs of spaces with `Char(32)`, because the render collapses runs typed into the email before AMPscript runs."
 test_scripts: complete
 ---
 
@@ -35,15 +35,15 @@ Exactly one argument. A number or boolean literal breaks the render; quote numer
 ## Example
 
 ```ampscript
-%%=Trim("  hello  ")=%%
+%%=Trim(Concat(Char(32), Char(32), "hello", Char(32), Char(32)))=%%
 ```
 
 Renders `hello`.
 
-A numeric value trims fine when it is quoted:
+A number written as text trims fine:
 
 ```ampscript
-%%=Trim("  42  ")=%%
+%%=Trim(Concat(Char(32), Char(32), "42", Char(32), Char(32)))=%%
 ```
 
 Renders `42`.
@@ -56,23 +56,25 @@ The result is free text, so there is no fixed set of special values to test for.
 
 ## Behaviour
 
-**Leading and trailing spaces go.** `Trim("  hi there  ")` gives `hi there`, and `Trim("noPad")` comes back unchanged.
+**Write runs of spaces with `Char(32)`.** The Next render collapses a run of spaces typed into the email to one space before AMPscript runs: `Length("a  b")` gives `3`, while `Length(Concat("a", Char(32), Char(32), "b"))` gives `4`. Build padding or inner runs with `Char(32)` when the exact spacing matters.
 
-**Runs of inner spaces came back as one.** In the test email, `Trim("  a  b  ")` gave `a b`, and `Length` of that result was `3`, so the result held a single inner space. Runs of spaces in a literal may be collapsed before AMPscript runs: in other Next test emails `ProperCase` lost a leading space and `IsNullDefault` on three spaces gave one. The cause was not isolated, so do not rely on inner spacing surviving.
+**Leading and trailing spaces go.** `Trim(Concat(Char(32), Char(32), "hi there", Char(32), Char(32)))` gives `hi there`, and `Trim("noPad")` comes back unchanged.
 
-**Empty and all-space values give an empty string.** `Trim("")` and `Trim("     ")` render nothing, and `Length(Trim("     "))` is `0`.
+**Runs of inner spaces are kept.** Two spaces, `a`, two spaces, `b`, two spaces, all built with `Char(32)`, trim to `a  b` with `Length` `4`, as on Engagement.
+
+**Empty and all-space values give an empty string.** `Trim("")` renders nothing, and so does five `Char(32)` in a row; `Length` of that trimmed value is `0`.
 
 **Tab, line feed and carriage return count as whitespace.** A single letter padded with `Char(9)`, `Char(10)`, `Char(13)`, or a mix of them and spaces, measures `Length` `1` after trimming.
 
 **The non-breaking space is not stripped.** `Length(Trim(Concat(Char(160), "x", Char(160))))` is `3`: both `Char(160)` characters survive. Remove them first with [`Replace`](/next/ampscript/functions/replace/) if your data contains them.
 
-**Non-ASCII text inside the value is kept.** Trimming `Concat("  ", Char(233), Char(224), Char(252), "  ")` gives `éàü` with `Length` `3`.
+**Non-ASCII text inside the value is kept.** Trimming `éàü` padded with two `Char(32)` on each side gives `éàü` with `Length` `3`.
 
 **Dates are written in ISO form.** `Trim(Now())` gives a value like `2026-11-22T21:03:22`.
 
 **Numbers and booleans break the render.** The email saves, but the preview fails for `Trim(12345)` and `Trim(true)`.
 
-**One argument only.** `Trim()` and `Trim("  a  ", "  b  ")` cannot be saved: the content API answers HTTP 400 with "The AMPscript syntax isn't valid".
+**One argument only.** `Trim()` and a call with two arguments cannot be saved: the content API answers HTTP 400 with "The AMPscript syntax isn't valid".
 
 {% include test-script.html bundle="next-ampscript-functions--trim" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
 {% include test-script.html bundle="next-ampscript-functions--trim" chapter="failing" lang="ampscript" label="Show calls that fail in Next (one email each)" %}
@@ -86,7 +88,6 @@ The result is free text, so there is no fixed set of special values to test for.
 
 ## See also
 
-- [`Trim` in Marketing Cloud Engagement](/engagement/ampscript/functions/trim/) — how it behaves there
 - [`Length`](/next/ampscript/functions/length/) — check whether a trim removed anything
 - [`Replace`](/next/ampscript/functions/replace/) — remove characters Trim keeps, such as the non-breaking space
 - [Differs from official docs (Next)](/next/differs-from-docs/)

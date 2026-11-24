@@ -15,7 +15,7 @@ test_scripts: complete
 differs_from_docs: false
 mcn: same
 mcn_tested: 2026-11-23
-mcn_note: "GUID behaves the same in Next: 36 characters, hyphens at 9, 14, 19 and 24, no braces, a new value per call. One comparison test showed `==` ignoring case in Next."
+mcn_note: "GUID behaves the same in Next: 36 characters, hyphens at 9, 14, 19 and 24, no braces, a new value per call. Only comparing it with `==` differs, because `==` ignores case in Next (`@g == Uppercase(@g)` is true there) and respects it in Engagement."
 ---
 
 {% include verification-status.html %}
@@ -74,7 +74,6 @@ The value is an open domain, so there is no set of tokens to test against. What 
 
 ## See also
 
-- [`GUID` in Marketing Cloud Next](/next/ampscript/functions/guid/) — how it behaves there
 - [Output](/engagement/ampscript/functions/output/) — writing a generated value into the content
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-utilities/mc-ampscript-reference-utilities-guid.html)
 - [ampscript.guide](https://ampscript.guide/guid/)

@@ -104,7 +104,6 @@ Catalogued on [Differs from official docs](/engagement/differs-from-docs/#replac
 
 ## See also
 
-- [`ReplaceList` in Marketing Cloud Next](/next/ampscript/functions/replacelist/) — how it behaves there
 - [Differs from official docs](/engagement/differs-from-docs/#replacelist-sequential-cascade) — the sequencing and casing findings in full
 - [`Replace`](/engagement/ampscript/functions/replace/) — one search value at a time, matching case the same way
 - [`Concat`](/engagement/ampscript/functions/concat/) — the other variadic String function

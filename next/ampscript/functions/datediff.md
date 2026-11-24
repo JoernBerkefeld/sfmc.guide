@@ -93,7 +93,6 @@ One minute across New Year gives `0` for `Y`, `M` and `D` and `1` for `MI`. 364 
 
 ## See also
 
-- [`DateDiff` in Marketing Cloud Engagement](/engagement/ampscript/functions/datediff/) — how it behaves there
 - [DateAdd](/next/ampscript/functions/dateadd/) — moves a date by an interval
 - [Now](/next/ampscript/functions/now/) — a common start or end date
 - [FormatDate](/next/ampscript/functions/formatdate/)

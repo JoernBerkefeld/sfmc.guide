@@ -83,7 +83,6 @@ The result is arbitrary text, so there is no fixed set of special values to test
 
 ## See also
 
-- [`Uppercase` in Marketing Cloud Engagement](/engagement/ampscript/functions/uppercase/) — how it behaves there
 - [`Lowercase`](/next/ampscript/functions/lowercase/) — the inverse conversion
 - [`ProperCase`](/next/ampscript/functions/propercase/) — capitalises the first letter of each word
 - [`Length`](/next/ampscript/functions/length/) — the sharp s makes the uppercased result longer

@@ -95,7 +95,6 @@ The search value matches regardless of case. The scan runs once from left to rig
 
 ## See also
 
-- [`Replace` in Marketing Cloud Engagement](/engagement/ampscript/functions/replace/) — how it behaves there
 - [`ReplaceList`](/next/ampscript/functions/replacelist/) — several search values with one replacement
 - [`Substring`](/next/ampscript/functions/substring/) — takes a portion of a string by position
 - [Differs from official docs (Next)](/next/differs-from-docs/)

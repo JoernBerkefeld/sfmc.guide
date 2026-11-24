@@ -105,7 +105,6 @@ Anything finer than the requested unit is discarded rather than contributing a f
 
 ## See also
 
-- [`DateDiff` in Marketing Cloud Next](/next/ampscript/functions/datediff/) — how it behaves there
 - [DateAdd](/engagement/ampscript/functions/dateadd/) — the inverse operation, sharing the same five-unit token set
 - [Now](/engagement/ampscript/functions/now/) — the value most often passed in as one of the two dates
 - [FormatDate](/engagement/ampscript/functions/formatdate/) — formats a date, and swallows bad input where this function aborts
