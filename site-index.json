@@ -851,7 +851,7 @@
     "url": "/next/ampscript/functions/lookuporderedrows/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "AMPscript LookupOrderedRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+    "description": "AMPscript LookupOrderedRows in Marketing Cloud Next: an email containing the call saves, but every rendered call on a marketing object failed. Use LookupRows instead."
   },
   {
     "name": "AMPscript LookupOrderedRowsCS",
@@ -872,7 +872,7 @@
     "url": "/next/ampscript/functions/lookuprows/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "AMPscript LookupRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+    "description": "AMPscript LookupRows in Marketing Cloud Next: read matching marketing object records into a rowset. Syntax and behaviour proven in a Marketing Cloud Next email, although the official reference lists the function as unavailable in Next."
   },
   {
     "name": "AMPscript LookupRowsCS",
@@ -2301,6 +2301,13 @@
     "section": "Data Cloud DevOps",
     "type": "page",
     "description": "Salesforce CLI workflows and verified operation limits for Source object configuration: DataSourceObject."
+  },
+  {
+    "name": "SQL Converter",
+    "url": "/tools/sql-converter/",
+    "section": "Tools",
+    "type": "page",
+    "description": "Turn a SQL query into SSJS, AMPscript or Handlebars lookup code for Marketing Cloud Engagement and Next, and lookup code back into SQL, in your browser."
   },
   {
     "name": "SSJS Function Reference",

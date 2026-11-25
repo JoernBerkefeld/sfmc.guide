@@ -1,0 +1,662 @@
+@use "variables" as *;
+
+// ════════════════════════════════════════════════════════════════════════════
+// SQL Converter tool (/tools/sql-converter/).
+// The page adds `sqlc-page` to <html> (inline script at the top of the page), which gives it the
+// Pipeline Builder's full-screen layout permanently: nav off-canvas behind the burger, page
+// header visually hidden, full width, tool bar pinned under the site header.
+// Colors are CSS custom properties on `.sqlc` so the dark theme only swaps tokens.
+// ════════════════════════════════════════════════════════════════════════════
+
+html.sqlc-page {
+  .sidebar {
+    transform: translateX(-100%);
+
+    &.is-open {
+      transform: translateX(0);
+      z-index: $z-overlay;
+      box-shadow: $shadow-lg;
+    }
+  }
+  .sidebar-overlay { display: none; }
+  .mobile-menu-toggle { display: flex; }
+
+  // Keep the title and description for screen readers and search engines, but out of sight.
+  .page-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .page-nav { display: none; }
+
+  .layout-content {
+    max-width: none;
+    padding: 0 $space-4 $space-8;
+
+    @media (min-width: 1024px) {
+      margin-left: 0;
+      padding: 0 $space-6 $space-8;
+    }
+  }
+  .page-content {
+    max-width: none;
+    margin: 0;
+  }
+  .page-body { margin-top: 0; }
+  .site-footer {
+    @media (min-width: 1024px) {
+      padding-left: 0;
+    }
+  }
+}
+
+.sqlc {
+  --sqlc-bg-base: #{$bg-base};
+  --sqlc-bg-surface: #{$bg-surface};
+  --sqlc-bg-elevated: #{$bg-elevated};
+  --sqlc-bg-overlay: #{$bg-overlay};
+  --sqlc-bg-hover: #{$bg-hover};
+  --sqlc-border: #{$border-default};
+  --sqlc-border-muted: #{$border-muted};
+  --sqlc-text: #{$text-primary};
+  --sqlc-text-2: #{$text-secondary};
+  --sqlc-text-3: #{$text-muted};
+  --sqlc-accent: #{$accent-primary};
+  --sqlc-accent-light: #{$accent-light};
+  --sqlc-accent-dim: #{$accent-dim};
+  --sqlc-ok: #{$color-success};
+  --sqlc-warn: #{$color-warning};
+  --sqlc-danger: #{$color-danger};
+  --sqlc-info: #{$color-info};
+  --sqlc-on-accent: #ffffff;
+  --sqlc-kw: #{$syntax-keyword};
+  --sqlc-str: #{$syntax-string};
+  --sqlc-num: #{$syntax-number};
+  --sqlc-fn: #{$syntax-function};
+  --sqlc-var: #{$syntax-variable};
+  --sqlc-cmt: #{$syntax-comment};
+  --sqlc-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+
+  color: var(--sqlc-text);
+  font-size: $text-base;
+  line-height: $leading-normal;
+
+  :focus-visible {
+    outline: 2px solid var(--sqlc-accent-light);
+    outline-offset: 2px;
+  }
+}
+
+[data-theme='dark'] .sqlc {
+  --sqlc-bg-base: #0d1117;
+  --sqlc-bg-surface: #161b22;
+  --sqlc-bg-elevated: #1c2433;
+  --sqlc-bg-overlay: #21262d;
+  --sqlc-bg-hover: #30363d;
+  --sqlc-border: #30363d;
+  --sqlc-border-muted: #21262d;
+  --sqlc-text: #e6edf3;
+  --sqlc-text-2: #8b949e;
+  --sqlc-text-3: #7d8590;
+  --sqlc-accent: #0ea5e9;
+  --sqlc-accent-light: #7dd3fc;
+  --sqlc-accent-dim: rgba(14, 165, 233, 0.15);
+  --sqlc-ok: #3fb950;
+  --sqlc-warn: #d29922;
+  --sqlc-danger: #f85149;
+  --sqlc-info: #58a6ff;
+  --sqlc-on-accent: #0d1117;
+  --sqlc-kw: #ff7b72;
+  --sqlc-str: #a5d6ff;
+  --sqlc-num: #79c0ff;
+  --sqlc-fn: #d2a8ff;
+  --sqlc-var: #ffa657;
+  --sqlc-cmt: #7d8590;
+  --sqlc-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+// ── Tool bar (sticky, flush under the fixed site header, full-bleed) ─────────
+.sqlc-toolbar {
+  position: sticky;
+  top: $header-height;
+  z-index: $z-builder-header;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2 $space-3;
+  min-height: $builder-header-height;
+  margin: 0 (-$space-4);
+  padding: $space-2 $space-4;
+  background: var(--sqlc-bg-elevated);
+  border-bottom: 1px solid var(--sqlc-border);
+
+  @media (min-width: 1024px) {
+    margin: 0 (-$space-6);
+    padding: $space-2 $space-6;
+  }
+}
+
+.sqlc-title {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-weight: 700;
+  font-size: $text-base;
+  white-space: nowrap;
+
+  svg { color: var(--sqlc-accent-light); }
+}
+
+.sqlc-spacer { flex: 1; }
+
+.sqlc-btn,
+.sqlc-select {
+  font: 600 0.8rem $font-sans;
+  color: var(--sqlc-text);
+  background: var(--sqlc-bg-overlay);
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-sm + 0.125rem;
+  padding: 0.35rem 0.75rem;
+  min-height: 2rem;
+}
+
+.sqlc-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &:hover:not(:disabled) { background: var(--sqlc-bg-hover); }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.sqlc-select { font-weight: 500; max-width: 100%; }
+
+.sqlc-seg {
+  display: inline-flex;
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-sm + 0.1875rem;
+  overflow: hidden;
+
+  button {
+    font: 600 0.8rem $font-sans;
+    color: var(--sqlc-text-2);
+    background: var(--sqlc-bg-overlay);
+    border: 0;
+    padding: 0.35rem 0.75rem;
+    min-height: 2rem;
+    cursor: pointer;
+
+    &:hover { color: var(--sqlc-text); }
+    &[aria-pressed='true'] {
+      background: var(--sqlc-accent);
+      color: var(--sqlc-on-accent);
+    }
+    &:focus-visible { outline-offset: -3px; }
+  }
+}
+
+// ── Settings popover ──────────────────────────────────────────────────────────
+.sqlc-pop-wrap { position: relative; }
+
+.sqlc-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.375rem);
+  z-index: $z-builder-header + 1;
+  width: 18rem;
+  display: grid;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-md;
+  background: var(--sqlc-bg-surface);
+  box-shadow: var(--sqlc-shadow);
+
+  &[hidden],
+  [hidden] { display: none; }
+}
+
+.sqlc-field {
+  display: grid;
+  gap: 0.3rem;
+
+  label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sqlc-text-2);
+    font-weight: 600;
+  }
+
+  input[type='text'] {
+    font: 0.8rem $font-mono;
+    color: var(--sqlc-text);
+    background: var(--sqlc-bg-base);
+    border: 1px solid var(--sqlc-border);
+    border-radius: $radius-sm + 0.125rem;
+    padding: 0.375rem 0.5rem;
+    width: 100%;
+  }
+}
+
+.sqlc-hint { font-size: 0.72rem; color: var(--sqlc-text-3); }
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+.sqlc-body {
+  display: grid;
+  gap: $space-3;
+  padding-top: $space-4;
+}
+
+// Messages
+.sqlc-msgs {
+  display: grid;
+  gap: 0.375rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &[hidden] { display: none; }
+}
+
+.sqlc-msg {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.625rem;
+  align-items: start;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: $radius-sm + 0.125rem;
+  border: 1px solid;
+  font-size: $text-sm;
+  line-height: 1.5;
+
+  &--error {
+    background: color-mix(in srgb, var(--sqlc-danger) 8%, transparent);
+    border-color: color-mix(in srgb, var(--sqlc-danger) 40%, transparent);
+    .sqlc-msg-sev { color: var(--sqlc-danger); background: color-mix(in srgb, var(--sqlc-danger) 16%, transparent); }
+  }
+  &--warning {
+    background: color-mix(in srgb, var(--sqlc-warn) 8%, transparent);
+    border-color: color-mix(in srgb, var(--sqlc-warn) 40%, transparent);
+    .sqlc-msg-sev { color: var(--sqlc-warn); background: color-mix(in srgb, var(--sqlc-warn) 16%, transparent); }
+  }
+  &--info {
+    background: color-mix(in srgb, var(--sqlc-info) 7%, transparent);
+    border-color: color-mix(in srgb, var(--sqlc-info) 35%, transparent);
+    .sqlc-msg-sev { color: var(--sqlc-info); background: color-mix(in srgb, var(--sqlc-info) 14%, transparent); }
+  }
+}
+
+.sqlc-msg-sev {
+  font: 700 0.68rem $font-sans;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+  margin-top: 0.0625rem;
+}
+
+.sqlc-msg-text { min-width: 0; overflow-wrap: anywhere; }
+
+.sqlc-msg-where {
+  font: 0.78rem $font-mono;
+  color: var(--sqlc-text-3);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline dotted;
+  cursor: pointer;
+
+  &:hover { color: var(--sqlc-accent); }
+}
+
+// Panes
+.sqlc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: $space-3;
+  align-items: stretch;
+}
+
+.sqlc-pane {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-md;
+  background: var(--sqlc-bg-surface);
+  overflow: hidden;
+}
+
+.sqlc-pane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--sqlc-border-muted);
+}
+
+.sqlc-pane-title { font-weight: 700; font-size: 0.92rem; }
+.sqlc-pane-sub { font-size: 0.76rem; color: var(--sqlc-text-3); }
+
+// Shared code box metrics: the textarea and its backdrop must match to the pixel.
+.sqlc .sqlc-code {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  font: 0.8rem/1.6 $font-mono;
+  letter-spacing: normal;
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  color: var(--sqlc-text);
+  background: var(--sqlc-bg-base);
+  border: 0;
+  border-radius: 0;
+}
+
+.sqlc-editor {
+  position: relative;
+  display: grid;
+  min-height: max(14rem, calc(100vh - 22rem));
+}
+
+.sqlc .sqlc-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.sqlc .sqlc-input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100%;
+  resize: vertical;
+  overflow: auto;
+  background: transparent;
+  caret-color: var(--sqlc-accent-light);
+
+  &::placeholder { color: var(--sqlc-text-3); }
+  &:focus-visible { outline-offset: -2px; }
+}
+
+.sqlc-mark {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+
+  &--error { text-decoration-color: var(--sqlc-danger); }
+  &--warning { text-decoration-color: var(--sqlc-warn); }
+  &--info {
+    text-decoration-color: var(--sqlc-info);
+    text-decoration-style: dotted;
+  }
+}
+
+.sqlc-mark--hl,
+.sqlc-output .is-hl {
+  background: var(--sqlc-accent-dim);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sqlc-accent-light) 35%, transparent);
+}
+
+.sqlc .sqlc-output {
+  min-height: max(14rem, calc(100vh - 22rem));
+  overflow: auto;
+
+  &:focus-visible { outline-offset: -2px; }
+
+  .tok-k { color: var(--sqlc-kw); }
+  .tok-s { color: var(--sqlc-str); }
+  .tok-n { color: var(--sqlc-num); }
+  .tok-f { color: var(--sqlc-fn); }
+  .tok-v { color: var(--sqlc-var); }
+  .tok-c { color: var(--sqlc-cmt); font-style: italic; }
+}
+
+.sqlc-placeholder {
+  color: var(--sqlc-text-3);
+  font-family: $font-sans;
+  white-space: normal;
+}
+
+// Swap button
+.sqlc-swap-col {
+  display: flex;
+  align-items: center;
+}
+
+.sqlc-swap {
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 50%;
+  border: 1px solid var(--sqlc-border);
+  background: var(--sqlc-bg-elevated);
+  color: var(--sqlc-accent-light);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform $transition-normal;
+
+  &:hover:not(:disabled) { background: var(--sqlc-bg-hover); }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &.is-flipped { transform: rotate(180deg); }
+}
+
+// Output tabs, grouped by language
+.sqlc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem $space-3;
+  min-width: 0;
+}
+
+.sqlc-tab-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+// Language prefix inside each tab ("SSJS · LookupRows")
+.sqlc-tab-lang {
+  font-weight: 500;
+  color: var(--sqlc-text-3);
+}
+
+.sqlc-tab {
+  font: 600 0.76rem $font-sans;
+  color: var(--sqlc-text-2);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+
+  &:hover { color: var(--sqlc-text); }
+  &[aria-selected='true'] {
+    color: var(--sqlc-text);
+    border-bottom-color: var(--sqlc-accent-light);
+  }
+  &[aria-disabled='true'] {
+    color: var(--sqlc-text-3);
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+}
+
+.sqlc-copy-status {
+  font-size: 0.76rem;
+  color: var(--sqlc-text-3);
+}
+
+// Clause map
+.sqlc-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--sqlc-border);
+  border-radius: $radius-md;
+  background: var(--sqlc-bg-surface);
+
+  &[hidden] { display: none; }
+}
+
+.sqlc-map-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sqlc-text-3);
+  font-weight: 600;
+}
+
+.sqlc .sqlc-map-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sqlc .sqlc-pair {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font: 0.74rem/1.5 $font-mono;
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-sm + 0.125rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--sqlc-bg-base);
+  cursor: default;
+  overflow-wrap: anywhere;
+
+  &:hover,
+  &.is-hl {
+    border-color: var(--sqlc-accent-light);
+    background: var(--sqlc-accent-dim);
+  }
+
+  &.is-dropped {
+    border-color: color-mix(in srgb, var(--sqlc-warn) 50%, transparent);
+    .sqlc-pair-code { color: var(--sqlc-warn); }
+  }
+}
+
+.sqlc-pair-sql { color: var(--sqlc-str); }
+.sqlc-pair-code { color: var(--sqlc-fn); }
+.sqlc-pair-arrow { color: var(--sqlc-text-3); }
+
+// Status line
+.sqlc-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--sqlc-text-3);
+}
+
+.sqlc-chip {
+  font: 600 0.72rem $font-sans;
+  padding: 0.1875rem 0.5rem;
+  border-radius: $radius-full;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--sqlc-text-2);
+  background: var(--sqlc-bg-overlay);
+
+  &[hidden] { display: none; }
+  &.is-ok {
+    color: var(--sqlc-ok);
+    background: color-mix(in srgb, var(--sqlc-ok) 12%, transparent);
+  }
+  &.is-bad {
+    color: var(--sqlc-danger);
+    background: color-mix(in srgb, var(--sqlc-danger) 12%, transparent);
+  }
+}
+
+.sqlc-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--sqlc-text-2);
+}
+
+.sqlc-toggle {
+  width: 2.125rem;
+  height: 1.125rem;
+  border-radius: 0.5625rem;
+  background: var(--sqlc-bg-hover);
+  position: relative;
+  border: 0;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: left $transition-fast;
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--sqlc-accent);
+
+    &::after { left: calc(100% - 0.875rem - 2px); }
+  }
+}
+
+.sqlc-noscript {
+  margin: $space-4 0;
+  padding: $space-3 $space-4;
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-md;
+  background: var(--sqlc-bg-surface);
+}
+
+// ── Narrow screens: stack the panes, swap button turns to point down ───────
+@media (max-width: 900px) {
+  .sqlc-grid { grid-template-columns: minmax(0, 1fr); }
+  .sqlc-swap-col { justify-content: center; }
+  .sqlc-swap { transform: rotate(90deg); }
+  .sqlc-swap.is-flipped { transform: rotate(270deg); }
+  .sqlc-popover { width: min(18rem, calc(100vw - #{$space-8})); }
+  .sqlc-editor,
+  .sqlc .sqlc-output { min-height: 12rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sqlc-swap,
+  .sqlc-toggle::after { transition: none; }
+}

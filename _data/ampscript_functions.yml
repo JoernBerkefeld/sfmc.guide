@@ -1572,7 +1572,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.LookupOrderedRows"
       url: "https://ssjs.guide/platform-functions/lookuporderedrows/"
-  mcnNotes: ""
+  mcnNotes: "In a Next email every tested call on a marketing object made the preview fail with HTTP 500: row counts 0, 1 and 5, sorting with ASC, DESC, lowercase desc or no direction, and filters on key and non-key fields. LookupRows with the same filters works."
   description: "Returns a sorted rowset of matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuporderedrows/"
 - name: "LookupOrderedRowsCS"
@@ -1599,7 +1599,7 @@
   verified: true
   url: "/engagement/ampscript/functions/lookuprows/"
   nextUrl: "/next/ampscript/functions/lookuprows/"
-  nextDiffersFromDocs: false
+  nextDiffersFromDocs: true
   differsFromDocs: false
   deprecated: false
   mcn: "68"
@@ -1608,7 +1608,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.LookupRows"
       url: "https://ssjs.guide/platform-functions/lookuprows/"
-  mcnNotes: ""
+  mcnNotes: "Tested in a Next email on a marketing object: filters on the key field and on a non-key field return the matching rows, and no match gives RowCount 0."
   description: "Returns a rowset of all matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuprows/"
 - name: "LookupRowsCS"
@@ -2069,7 +2069,7 @@
   handlebarsEquivalent: "query"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: "On Next, Empty() over a rowset with no matching records returns false (Engagement True); test RowCount(@rows) == 0 instead."
+  mcnNotes: "On Next, Empty() over a rowset with no matching records returns false (Engagement True); test RowCount(@rows) == 0 instead. The operators =, !=, >, >=, < and <= passed as literal strings work, several field/operator/value triplets are combined with AND, and a date compared with = accepts \"yyyy-MM-dd\". LIKE matches the value anywhere in the field and ignores % wildcards. An operator built with Char() fails: Char(60) made the preview fail with HTTP 500, and Concat(Char(60),\"=\") was rejected at publish with HTTP 400."
   description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Requires an active Marketing Cloud Connect integration; a call against an unknown object name aborts the page."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
 - name: "Row"

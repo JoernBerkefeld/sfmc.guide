@@ -19,8 +19,11 @@ import js from '@eslint/js';
  */
 
 const BUILDER_FILES = ['assets/js/mcdev-pipeline-*.js', 'assets/js/operation-tabs.js'];
+// Browser ES modules loaded via <script type="module">.
+const MODULE_FILES = ['assets/js/sql-converter-ui.js'];
 const TEST_FILES = [
   'tests/seo.test.cjs',
+  'tests/sql-converter-ui.test.cjs',
   'tests/operation-tabs.test.cjs',
   'tests/mcdev-pipeline-builders.test.cjs',
   'tests/mcdev-pipeline-builder-css.test.cjs',
@@ -28,7 +31,7 @@ const TEST_FILES = [
   'tests/mcdev-pipeline-regex-demo.test.cjs',
   'tests/mcdev-pipeline-market-variable-editor.test.cjs',
 ];
-const ALL_FILES = [...BUILDER_FILES, ...TEST_FILES];
+const ALL_FILES = [...BUILDER_FILES, ...MODULE_FILES, ...TEST_FILES];
 
 export default [
   {
@@ -92,6 +95,17 @@ export default [
       },
       ecmaVersion: 2021,
       sourceType: 'script',
+    },
+  },
+  {
+    // The SQL Converter UI imports the vendored sfmc-sql-converter ES module.
+    files: MODULE_FILES,
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      ecmaVersion: 2024,
+      sourceType: 'module',
     },
   },
   {

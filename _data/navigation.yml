@@ -673,6 +673,8 @@
       url: /tools/chrome-sfmc-ux-tools/
     - title: SFMC MCP Server for Coding
       url: /tools/mcp-server-sfmc/
+    - title: SQL Converter
+      url: /tools/sql-converter/
     - title: SFMC DevTools
       url: /tools/mcdev/
     - title: SFMC DevTools Pipeline Builder

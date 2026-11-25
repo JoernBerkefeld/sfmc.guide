@@ -128,6 +128,14 @@ Architect-oriented catalog of tooling. Every entry shows whether it targets **En
   </div>
   <div class="tool-card-desc">Model Context Protocol server that gives AI assistants accurate AMPscript, SSJS, and Handlebars knowledge.</div>
 </a>
+<a class="tool-card" href="/tools/sql-converter/">
+  <div class="tool-card-title">SQL Converter</div>
+  <div class="platform-badges">
+    <span class="platform-badge platform-badge--engagement">Engagement</span>
+    <span class="platform-badge platform-badge--next">Next</span>
+  </div>
+  <div class="tool-card-desc">Turns a SQL query into SSJS, AMPscript or Handlebars lookup code, and lookup code back into SQL, in your browser.</div>
+</a>
 <a class="tool-card" href="/tools/vscode-mso-conditionals/">
   <div class="tool-card-title">MSO Conditionals (VS Code)</div>
   <div class="platform-badges">
