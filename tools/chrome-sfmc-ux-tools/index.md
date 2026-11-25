@@ -12,7 +12,9 @@ platforms:
 
 Install it and Marketing Cloud gets easier to work in. Nothing to set up, nothing to log in to.
 
-**[Add to Chrome](https://chromewebstore.google.com/detail/icngdchkbniamebbmhebciohjimfmjej)** — free, from the Chrome Web Store.
+<a href="https://chromewebstore.google.com/detail/icngdchkbniamebbmhebciohjimfmjej" target="_blank" rel="noopener"><img src="/assets/images/chrome-sfmc-ux-tools/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="206" height="58"></a>
+
+Free, from the Chrome Web Store.
 
 ![Animation: while "SET @lastName = Look" is typed, a list offers Lookup, LookupOrderedRows, LookupRows and more, each with a short description](/assets/images/chrome-sfmc-ux-tools/completion.gif)
 
