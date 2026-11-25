@@ -8,8 +8,8 @@ permalink: /next/handlebars/helpers/lookup/
 platforms:
   - next
 mcn: differs-from-docs
-mcn_tested: 2026-11-22
-mcn_note: "`{{lookup (hash k=\"v\") \"k\"}}` gives `v`. A key that does not exist renders the whole object, `{k=v}`, instead of the documented empty string. Looking up a list index was not tried, because building the list needs `jsonPath`, which cannot be saved."
+mcn_tested: 2026-11-25
+mcn_note: "`{{lookup (hash k=\"v\") \"k\"}}` gives `v`, and looking up a list index works. A key that does not exist renders the whole object, `{k=v}`, instead of the documented empty string."
 test_scripts: complete
 verification: verified
 ---
@@ -36,11 +36,11 @@ Returns `any`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-22 and 2026-11-25:
 
 - `{{lookup (hash k="v") "k"}}` renders `v`, as documented.
 - `{{lookup (hash k="v") "missing"}}` renders `{k=v}`. The documented result is an empty string.
-- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
+- With a list of two rows built in AMPscript (`%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%`), `{{lookup (lookup rows 0) "name"}}` renders `Bob`.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--lookup" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

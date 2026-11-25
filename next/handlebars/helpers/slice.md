@@ -7,10 +7,10 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/slice/
 platforms:
   - next
-mcn: untested
+mcn: matches-docs
 mcn_tested: 2026-11-25
-mcn_note: "Accepted when the email is saved. Not rendered yet: the documented examples build their list with `jsonPath`, which Next rejects."
-verification: in-progress
+mcn_note: "Every tested call rendered the documented result."
+verification: verified
 test_scripts: complete
 ---
 
@@ -39,8 +39,8 @@ Returns `array`.
 
 Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{#if false}}{{slice myList 1 3}}{{/if}}` is accepted when the email is saved. The branch never runs, so the helper itself is not rendered.
-- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
+- `{{#each (slice (buildRowSetFromString "a|b|c|d|e" "|") 1 3)}}[{{this}}]{{/each}}` renders `[b][c]`, as documented: the start index is included, the end index is not.
+- The items of a `buildRowSetFromString` list are plain strings: `{{this}}` renders the value, `{{Value}}` renders nothing.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--slice" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

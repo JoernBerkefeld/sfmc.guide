@@ -1,15 +1,15 @@
 ---
 layout: page
-title: "Handlebars properCase"
-description: "Handlebars properCase: capitalizes the first letter of each word and lowercases the rest."
+title: "Handlebars propercase"
+description: "Handlebars propercase: capitalizes the first letter of each word and lowercases the rest."
 parent: Handlebars Helper Reference
 parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/propercase/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper."
+mcn: differs-from-docs
+mcn_tested: 2026-11-25
+mcn_note: "`{{propercase \"hELLO wORLD\"}}` renders `HelloWorld`: the words are capitalized, but the space between them is dropped. Write the name in lowercase; `properCase` is rejected at save."
 test_scripts: complete
 verification: verified
 ---
@@ -22,7 +22,7 @@ Capitalizes the first letter of each word and lowercases the rest.
 ## Syntax
 
 ```sfmc
-{{properCase subject [culture]}}
+{{propercase subject [culture]}}
 ```
 
 Returns `string`.
@@ -36,17 +36,19 @@ Returns `string`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{properCase "hELLO wORLD"}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{propercase "hELLO wORLD"}}` renders `HelloWorld`. The documented result is `Hello World`: the space between the words is lost.
+- Helper names are case-sensitive. `{{properCase …}}` (camelCase) is rejected when the email is saved as an unsupported helper; only the documented spelling `propercase` works.
 {% endraw %}
 
+{% include test-script.html bundle="next-handlebars-helpers--propercase" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 {% include test-script.html bundle="next-handlebars-helpers--propercase" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
 
 ## Differs from official docs
 
 {% raw %}
-- The reference documents `properCase` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{properCase "hELLO wORLD"}}` could not be saved: the CMS answered HTTP 400 and named `properCase` as an unsupported handlebars helper. [Details](/next/differs-from-docs/#hb-propercase-rejected-on-save)
+- The reference says the helper capitalizes the first letter of each word and lowercases the rest; it does not mention removing spaces. In Marketing Cloud Next (tested 2026-11-25): `{{propercase "hELLO wORLD"}}` rendered `HelloWorld`, with the space between the words dropped. [Details](/next/differs-from-docs/#hb-propercase-drops-spaces)
 {% endraw %}
 
 {% include mcn-status.html %}

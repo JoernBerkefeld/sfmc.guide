@@ -8,3 +8,4 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[yellow] got=[{{get (hash color="yellow") "color"}}]</p>
+  <p>c2 expect=[Ann] got=[%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%{{get (get rows 1) "name"}}]</p>

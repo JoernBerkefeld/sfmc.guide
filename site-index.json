@@ -1862,11 +1862,11 @@
     "description": "Handlebars isNullDefault: returns the first value, or the second one when the first is null."
   },
   {
-    "name": "Handlebars jsonPath",
+    "name": "Handlebars jsonpath",
     "url": "/next/handlebars/helpers/jsonpath/",
     "section": "Handlebars Helper Reference",
     "type": "page",
-    "description": "Handlebars jsonPath: queries and filters JSON objects using a JSONPath expression."
+    "description": "Handlebars jsonpath: queries and filters JSON objects using a JSONPath expression."
   },
   {
     "name": "Handlebars length",
@@ -1946,11 +1946,11 @@
     "description": "Handlebars personalizationResult: retrieves a personalized value by key from the subscriber context."
   },
   {
-    "name": "Handlebars properCase",
+    "name": "Handlebars propercase",
     "url": "/next/handlebars/helpers/propercase/",
     "section": "Handlebars Helper Reference",
     "type": "page",
-    "description": "Handlebars properCase: capitalizes the first letter of each word and lowercases the rest."
+    "description": "Handlebars propercase: capitalizes the first letter of each word and lowercases the rest."
   },
   {
     "name": "Handlebars query",
@@ -2065,11 +2065,11 @@
     "description": "Handlebars subtract: returns the difference of subtracting the second value from the first."
   },
   {
-    "name": "Handlebars timeZoneConversion",
+    "name": "Handlebars timezoneConversion",
     "url": "/next/handlebars/helpers/timezoneconversion/",
     "section": "Handlebars Helper Reference",
     "type": "page",
-    "description": "Handlebars timeZoneConversion: converts a date to a different time zone."
+    "description": "Handlebars timezoneConversion: converts a date to a different time zone."
   },
   {
     "name": "Handlebars trim",

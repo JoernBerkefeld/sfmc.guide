@@ -7,10 +7,10 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/sort/
 platforms:
   - next
-mcn: untested
+mcn: matches-docs
 mcn_tested: 2026-11-25
-mcn_note: "Accepted when the email is saved. Not rendered yet: the documented examples build their list with `jsonPath`, which Next rejects."
-verification: in-progress
+mcn_note: "Sorting a list of objects renders the documented result."
+verification: verified
 test_scripts: complete
 ---
 
@@ -38,13 +38,14 @@ Returns `array`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email, with a list of objects built in AMPscript (Handlebars reads it as variable `rows`):
 
-- `{{#if false}}{{sort myList "age" "asc" "number"}}{{/if}}` is accepted when the email is saved. The branch never runs, so the helper itself is not rendered.
-- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
+- `%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (sort rows "age" "asc" "number")}}[{{name}}]{{/each}}` renders `[Ann][Cid][Bob]`, as documented.
+- A list of plain strings with an empty field name, `{{sort (buildRowSetFromString "b|a|c" "|") "" "asc" "string"}}`, fails the email preview with HTTP 500. The docs describe lists of objects only.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--sort" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
+{% include test-script.html bundle="next-handlebars-helpers--sort" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
 
 {% include mcn-status.html %}
 

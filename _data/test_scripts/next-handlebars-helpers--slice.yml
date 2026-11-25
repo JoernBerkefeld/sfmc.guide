@@ -8,3 +8,4 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[{{#if false}}{{slice probeList 1 3}}{{/if}}gated]</p>
+  <p>c2 expect=[[b][c]] got=[{{#each (slice (buildRowSetFromString "a|b|c|d|e" "|") 1 3)}}[{{this}}]{{/each}}]</p>

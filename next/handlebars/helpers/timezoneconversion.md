@@ -1,15 +1,15 @@
 ---
 layout: page
-title: "Handlebars timeZoneConversion"
-description: "Handlebars timeZoneConversion: converts a date to a different time zone."
+title: "Handlebars timezoneConversion"
+description: "Handlebars timezoneConversion: converts a date to a different time zone."
 parent: Handlebars Helper Reference
 parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/timezoneconversion/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper."
+mcn: matches-docs
+mcn_tested: 2026-11-25
+mcn_note: "Every tested call rendered the documented result. Write the name as the docs do: `timezoneConversion`; `timeZoneConversion` is rejected at save."
 test_scripts: complete
 verification: verified
 ---
@@ -22,7 +22,7 @@ Converts a date to a different time zone.
 ## Syntax
 
 ```sfmc
-{{timeZoneConversion date sourceTZ targetTZ}}
+{{timezoneConversion date sourceTZ targetTZ}}
 ```
 
 Returns `string`.
@@ -37,19 +37,14 @@ Returns `string`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
-- `{{timeZoneConversion "2025-07-15 12:00:00" "UTC" "America/Los_Angeles"}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{timezoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}` renders `2025-01-15T07:00:00`, the ISO-8601 format the docs name as return value.
+- Helper names are case-sensitive. `{{timeZoneConversion …}}` (capital Z) is rejected when the email is saved as an unsupported helper; only the documented spelling `timezoneConversion` works.
 {% endraw %}
 
+{% include test-script.html bundle="next-handlebars-helpers--timezoneconversion" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 {% include test-script.html bundle="next-handlebars-helpers--timezoneconversion" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
-
-## Differs from official docs
-
-{% raw %}
-- The reference documents `timeZoneConversion` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}` could not be saved: the CMS answered HTTP 400 and named `timeZoneConversion` as an unsupported handlebars helper. [Details](/next/differs-from-docs/#hb-timezoneconversion-rejected-on-save)
-{% endraw %}
 
 {% include mcn-status.html %}
 

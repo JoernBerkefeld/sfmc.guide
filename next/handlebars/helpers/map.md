@@ -7,9 +7,9 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/map/
 platforms:
   - next
-mcn: untested
-mcn_tested: 2026-11-22
-mcn_note: "Accepted when the email is saved, but not rendered yet: the example needs a list built with `jsonPath`, and an email with `jsonPath` cannot be saved."
+mcn: matches-docs
+mcn_tested: 2026-11-25
+mcn_note: "Rendered as documented on a list of rows built in AMPscript."
 test_scripts: complete
 verification: verified
 ---
@@ -36,10 +36,11 @@ Returns `array`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-22 and 2026-11-25:
 
 - `{{#if false}}{{map myList "name"}}{{/if}}` is accepted when the email is saved. The branch never runs, so the helper itself is not rendered.
-- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
+- With a list of two rows built in AMPscript (`%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%`), `{{#each (map rows "age")}}[{{this}}]{{/each}}` renders `[27][21]`.
+- `{{map rows "name"}}` on the same rows renders `[Bob, Ann]`.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--map" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

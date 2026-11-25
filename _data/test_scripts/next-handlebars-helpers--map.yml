@@ -8,3 +8,5 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[{{#if false}}{{map probeList "name"}}{{/if}}gated]</p>
+  <p>c2 expect=[[27][21]] got=[%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%{{#each (map rows "age")}}[{{this}}]{{/each}}]</p>
+  <p>c3 expect=[[Bob, Ann]] got=[%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%{{map rows "name"}}]</p>

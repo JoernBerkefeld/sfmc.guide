@@ -292,7 +292,7 @@
   differsFromDocs: true
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: "jsonPath"
+  handlebarsEquivalent: "jsonpath"
   handlebarsExact: false
   ssjsEquivalents: []
   mcnNotes: "Malformed JSON with flag 0 renders instead of aborting the page. An empty-string or unset payload with flag 1 made the Next preview fail (HTTP 500) where Engagement returns zero rows; a batch of \"{ not json \" with the flags true, \"true\" and \"1\" made the Next preview fail (HTTP 500)."
@@ -1512,7 +1512,7 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: "timeZoneConversion"
+  handlebarsEquivalent: "timezoneConversion"
   handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.LocalDateToSystemDate"
@@ -1838,7 +1838,7 @@
   differsFromDocs: false
   deprecated: false
   mcn: "67"
-  handlebarsEquivalent: "properCase"
+  handlebarsEquivalent: "propercase"
   handlebarsExact: true
   ssjsEquivalents: []
   mcnNotes: "A boolean renders as its text on Next: ProperCase(true) gives \"True\" where Engagement gives an empty string. A word starting with the German sharp s is capitalised to \"SS\" (ProperCase of \"ßtrasse\" gives \"SStrasse\", 8 characters) where Engagement keeps \"ß\"."
@@ -2288,7 +2288,7 @@
   differsFromDocs: false
   deprecated: false
   mcn: ""
-  handlebarsEquivalent: "timeZoneConversion"
+  handlebarsEquivalent: "timezoneConversion"
   handlebarsExact: false
   ssjsEquivalents:
     - name: "Platform.Function.SystemDateToLocalDate"

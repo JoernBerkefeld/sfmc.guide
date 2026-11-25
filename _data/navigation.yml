@@ -511,7 +511,7 @@
           url: /next/handlebars/helpers/indexof/
         - title: lowercase
           url: /next/handlebars/helpers/lowercase/
-        - title: properCase
+        - title: propercase
           url: /next/handlebars/helpers/propercase/
         - title: regExMatch
           url: /next/handlebars/helpers/regexmatch/
@@ -535,7 +535,7 @@
           url: /next/handlebars/helpers/datepart/
         - title: now
           url: /next/handlebars/helpers/now/
-        - title: timeZoneConversion
+        - title: timezoneConversion
           url: /next/handlebars/helpers/timezoneconversion/
         - title: '— Encryption helpers —'
           url: /next/handlebars/helpers/#all-helpers
@@ -583,7 +583,7 @@
           url: /next/handlebars/helpers/flatten/
         - title: get
           url: /next/handlebars/helpers/get/
-        - title: jsonPath
+        - title: jsonpath
           url: /next/handlebars/helpers/jsonpath/
         - title: lookup
           url: /next/handlebars/helpers/lookup/

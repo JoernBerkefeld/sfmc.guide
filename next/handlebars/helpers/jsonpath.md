@@ -1,16 +1,16 @@
 ---
 layout: page
-title: "Handlebars jsonPath"
-description: "Handlebars jsonPath: queries and filters JSON objects using a JSONPath expression."
+title: "Handlebars jsonpath"
+description: "Handlebars jsonpath: queries and filters JSON objects using a JSONPath expression."
 parent: Handlebars Helper Reference
 parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/jsonpath/
 platforms:
   - next
-mcn: unsupported
+mcn: matches-docs
 mcn_tested: 2026-11-25
-mcn_note: "The email cannot be saved, even with `jsonPath` as the only helper in it: Salesforce reports it as an unsupported helper."
-verification: in-progress
+mcn_note: "Write the name in lowercase, as the docs do: `jsonpath`. The camelCase spelling `jsonPath` is rejected when the email is saved."
+verification: verified
 test_scripts: complete
 ---
 
@@ -22,7 +22,7 @@ Queries and filters JSON objects using a JSONPath expression.
 ## Syntax
 
 ```sfmc
-{{jsonPath object expression}}
+{{jsonpath object expression}}
 ```
 
 Returns `any`.
@@ -38,16 +38,12 @@ Returns `any`.
 
 Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}`: the email cannot be saved; Salesforce answers with `unauthorized_helper` and asks to remove the unsupported helper.
+- `{{jsonpath (buildRowSetFromString "a|b|c" "|") "$[1]"}}` renders `b`, as documented (zero-based index).
+- Helper names are case-sensitive. `{{jsonPath …}}` (camelCase) is rejected when the email is saved as an unsupported helper; only the documented spelling `jsonpath` works.
 {% endraw %}
 
+{% include test-script.html bundle="next-handlebars-helpers--jsonpath" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 {% include test-script.html bundle="next-handlebars-helpers--jsonpath" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
-
-## Differs from official docs
-
-{% raw %}
-- The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-25, `jsonPath` alone in the email): `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}` could not be saved; the CMS rejected it as an unsupported helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either. [Details](/next/differs-from-docs/#hb-jsonpath-rejected-on-save)
-{% endraw %}
 
 {% include mcn-status.html %}
 

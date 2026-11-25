@@ -55,10 +55,10 @@ module SfmcGuide
       buildUrl char claimRow compare concat dateAdd dateDiff datePart divide domain each encode
       encodeURI encodeURIComponent equals fallback filter flatten format formatCurrency
       formatNumber get getContentBlock guid hash if iif impressionRegion indexOf isEmailAddress
-      isEmpty isNullDefault jsonPath length lookup lowercase map md5 modulo multiply not now or
-      personalizationResult properCase query queryFirst raiseError random regExMatch repeat
+      isEmpty isNullDefault jsonpath length lookup lowercase map md5 modulo multiply not now or
+      personalizationResult propercase query queryFirst raiseError random regExMatch repeat
       replace set sha1 sha256 sha512 slice sort stringToHex substring subtract
-      timeZoneConversion trim unless uppercase with
+      timezoneConversion trim unless uppercase with
     ]).freeze
 
     # Namespaces and full paths used by {!$binding} tokens.

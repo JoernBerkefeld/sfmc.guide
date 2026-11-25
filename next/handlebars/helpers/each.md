@@ -8,8 +8,8 @@ permalink: /next/handlebars/helpers/each/
 platforms:
   - next
 mcn: matches-docs
-mcn_tested: 2026-11-22
-mcn_note: "Looping over an object rendered as documented. Looping over a list was not tried: building the list needs `jsonPath`, and an email with `jsonPath` cannot be saved."
+mcn_tested: 2026-11-25
+mcn_note: "Looping over an object or a list rendered as documented. Rows built in AMPscript and arrays from `jsonpath` both work as lists."
 test_scripts: complete
 verification: verified
 ---
@@ -37,10 +37,11 @@ Returns `string`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-22 and 2026-11-25:
 
 - `{{#each (hash a="1" b="2")}}{{@key}}={{this}};{{/each}}` renders `a=1;b=2;`, as documented.
-- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
+- With a list of two rows built in AMPscript (`%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%`), `{{#each rows}}{{@index}}={{name}};{{/each}}` renders `0=Bob;1=Ann;`.
+- `{{#each (jsonpath '[1,2,3]' "$")}}[{{this}}]{{/each}}` renders `[1][2][3]`.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--each" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

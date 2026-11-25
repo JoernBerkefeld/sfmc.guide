@@ -1620,6 +1620,22 @@
   testScript: |
     {{format 123 "000000"}}
 
+- name: "{{filter}}"
+  url: "/next/handlebars/helpers/filter/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-filter.html"
+  tagline: "The documented call form breaks the email preview (HTTP 500)"
+  category: "Handlebars Objects"
+  object: "Handlebars Objects"
+  severity: "high"
+  discrepancy: "A5"
+  anchor: "hb-filter-preview-http-500"
+  body: |
+    The reference shows `{{filter myList "age" ">" 25 "number"}}` returning the objects whose `age` is greater than 25.
+
+    In a Marketing Cloud Next email tested on 2026-11-25: on a list of objects built with AMPscript `BuildRowsetFromJSON` (read in Handlebars as `rows`), `{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}` let the email save, but the preview failed with HTTP 500 instead of rendering `[Bob][Cid]`. The same list renders with `each` and sorts correctly with `sort`. Lists from other sources were not tried.
+  testScript: |
+    %%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}
+
 - name: "{{formatCurrency}}"
   url: "/next/handlebars/helpers/formatcurrency/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-formatcurrency.html"
@@ -1635,22 +1651,6 @@
     In a Marketing Cloud Next email tested on 2026-11-22: `{{formatCurrency 1234.56 "de-DE"}}` rendered `1.234,56 €` with a non-breaking space (U+00A0) before `€`. It looks identical, but a plain text comparison against the documented value fails. `en-US` and `ja-JP` matched the docs.
   testScript: |
     {{formatCurrency 1234.56 "de-DE"}}
-
-- name: "{{jsonPath}}"
-  url: "/next/handlebars/helpers/jsonpath/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-jsonpath.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Objects"
-  object: "Handlebars Objects"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-jsonpath-rejected-on-save"
-  body: |
-    The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-25, with `jsonPath` as the only helper: `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}` could not be saved; the CMS answered with `unauthorized_helper` and named `jsonPath` as an unsupported helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either.
-  testScript: |
-    {{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}
 
 - name: "{{lookup}}"
   url: "/next/handlebars/helpers/lookup/"
@@ -1668,21 +1668,21 @@
   testScript: |
     {{lookup (hash k="v") "missing"}}
 
-- name: "{{properCase}}"
+- name: "{{propercase}}"
   url: "/next/handlebars/helpers/propercase/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-propercase.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
+  tagline: "The spaces between the words disappear"
   category: "Handlebars String"
   object: "Handlebars String"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-propercase-rejected-on-save"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-propercase-drops-spaces"
   body: |
-    The reference documents `properCase` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
+    The reference says the helper capitalizes the first letter of each word and lowercases the rest. It says nothing about removing spaces.
 
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{properCase "hELLO wORLD"}}` could not be saved: the CMS answered HTTP 400 and named `properCase` as an unsupported handlebars helper.
+    In a Marketing Cloud Next email tested on 2026-11-25: `{{propercase "hELLO wORLD"}}` rendered `HelloWorld` instead of `Hello World`; the space between the words was dropped.
   testScript: |
-    {{properCase "hELLO wORLD"}}
+    {{propercase "hELLO wORLD"}}
 
 - name: "{{replace}}"
   url: "/next/handlebars/helpers/replace/"
@@ -1731,22 +1731,6 @@
     In a Marketing Cloud Next email tested on 2026-11-22: `{{subtract 1.5 2.25}}` let the email save and publish, but the preview then failed with HTTP 500 and no message instead of rendering `-0.75`. Whole numbers work: `{{subtract 5 3}}` rendered `2`.
   testScript: |
     {{subtract 1.5 2.25}}
-
-- name: "{{timeZoneConversion}}"
-  url: "/next/handlebars/helpers/timezoneconversion/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-timezoneconversion.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Date & Time"
-  object: "Handlebars Date & Time"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-timezoneconversion-rejected-on-save"
-  body: |
-    The reference documents `timeZoneConversion` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}` could not be saved: the CMS answered HTTP 400 and named `timeZoneConversion` as an unsupported handlebars helper.
-  testScript: |
-    {{timeZoneConversion "2025-01-15 12:00:00" "UTC" "America/New_York"}}
 
 - name: "{{uppercase}}"
   url: "/next/handlebars/helpers/uppercase/"
