@@ -7,10 +7,11 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/queryfirst/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper. This happens even when the call sits in a branch that never runs."
+mcn: differs-from-docs
+mcn_tested: 2026-11-25
+mcn_note: "Works on a marketing object when an inline filter on its key field is given; without that filter the preview fails with HTTP 500."
 verification: in-progress
+test_scripts: complete
 ---
 
 {% include verification-status.html %}
@@ -36,15 +37,24 @@ Returns `object`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-25, one call per email, against a test marketing object `zzprobecoupons__mo` with the key field `CouponCode__c`:
 
-- `{{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}` renders `false`, the stored value.
+- Without the key filter (the call on its own, inside `#with`, or inside `get`): the preview fails with HTTP 500 and no message.
+- A CRM call inside `{{#if false}}…{{/if}}` is accepted when the email is saved; the CRM form was not rendered.
+
+This is the Handlebars counterpart of AMPscript `Lookup`: `Lookup("zzprobecoupons__mo","IsClaimed__c","CouponCode__c","PROBE0001")` rendered the same `false`.
 {% endraw %}
+
+Thanks to Nobuyuki Watanabe's [SFMC Tips #327](https://medium.com/@marketingcloudtips/salesforce-certified-marketing-cloud-next-consultant-certification-officially-announced-17e72cf40b6f) for the `get (queryFirst type="MO" …) "Field"` pattern as the replacement for AMPscript `Lookup`, and [SFMC Tips #313](https://medium.com/@marketingcloudtips/marketing-cloud-next-how-to-configure-marketing-objects-ec7213fda266) for the hint that every key field of a marketing object belongs in the filter.
+
+{% include test-script.html bundle="next-handlebars-helpers--queryfirst" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
+{% include test-script.html bundle="next-handlebars-helpers--queryfirst" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
 
 ## Differs from official docs
 
 {% raw %}
-- The reference documents `queryFirst` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `queryFirst` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs. [Details](/next/differs-from-docs/#hb-queryfirst-rejected-on-save)
+- On a marketing object (`type="MO"`), the call needs an inline filter on the object's key field, such as `KeyField__c="value"`. Without one, the preview fails with HTTP 500 and no message, although the reference lists only `object` and `type` as required. [Details](/next/differs-from-docs/#hb-queryfirst-mo-needs-key-filter)
 {% endraw %}
 
 {% include mcn-status.html %}

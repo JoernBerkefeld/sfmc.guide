@@ -5,7 +5,7 @@ behaviour: |
   <!-- Marketing Cloud Next test script for SHA1. Paste it into the HTML component of a
        Next email and open the preview. Each line prints the result Next gave when the call
        was rendered on its own (expect) next to the result of this run (got).
-       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[a9993e364706816aba3e25717850c26c9cd0d89d] got=[%%=SHA1("abc")=%%]</p>
   <p>c2 expect=[da39a3ee5e6b4b0d3255bfef95601890afd80709] got=[%%=SHA1("")=%%]</p>

@@ -1,6 +1,13 @@
 # Next test scripts for /next/handlebars/helpers/impressionregion/.
 # AUTO-GENERATED from the verification DB by .claude/skills/verify-mcn-language/generate-next-test-scripts.mjs (root repo).
 # Rendered by _includes/test-script.html. Do not edit by hand.
+behaviour: |
+  <!-- Marketing Cloud Next test script for the impressionRegion helper. Paste it into the HTML component of a
+       Next email and open the preview. Each line prints the result Next gave when the call
+       was rendered on its own (expect) next to the result of this run (got).
+       Assembled from single-call test emails (dates on the page); it has not been
+       run as one email. Calls that make Next fail are listed separately. -->
+  <p>c1 expect=[in] got=[{{#impressionRegion "Probe"}}in{{/impressionRegion}}]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->

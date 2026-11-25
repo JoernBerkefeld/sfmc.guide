@@ -8,10 +8,10 @@ permalink: /next/handlebars/helpers/jsonpath/
 platforms:
   - next
 mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper."
+mcn_tested: 2026-11-25
+mcn_note: "The email cannot be saved, even with `jsonPath` as the only helper in it: Salesforce reports it as an unsupported helper."
+verification: in-progress
 test_scripts: complete
-verification: verified
 ---
 
 {% include verification-status.html %}
@@ -36,11 +36,9 @@ Returns `any`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
-- `{{jsonPath '[1,2,3]' "$[-1]"}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
-- `{{length (jsonPath '{"items":[{"price":50},{"price":150},{"price":200}]}' "$.items[?(@.price > 100)]")}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}`: the email cannot be saved; Salesforce answers with `unauthorized_helper` and asks to remove the unsupported helper.
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--jsonpath" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
@@ -48,7 +46,7 @@ Tested in a Marketing Cloud Next email on 2026-11-22:
 ## Differs from official docs
 
 {% raw %}
-- The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}` could not be saved: the CMS answered HTTP 400 and named `jsonPath` as an unsupported handlebars helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either. [Details](/next/differs-from-docs/#hb-jsonpath-rejected-on-save)
+- The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-25, `jsonPath` alone in the email): `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}` could not be saved; the CMS rejected it as an unsupported helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either. [Details](/next/differs-from-docs/#hb-jsonpath-rejected-on-save)
 {% endraw %}
 
 {% include mcn-status.html %}

@@ -7,10 +7,11 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/claimrow/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper. This happens even when the call sits in a branch that never runs."
+mcn: untested
+mcn_tested: 2026-11-25
+mcn_note: "Accepted when the email is saved. In a preview the call failed with HTTP 500 and claimed no row; a real send was not tested."
 verification: in-progress
+test_scripts: complete
 ---
 
 {% include verification-status.html %}
@@ -34,16 +35,18 @@ Returns `object`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-25, one call per email:
 
-- `{{#if false}}{{claimRow "MyObject"}}{{/if}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{#if false}}{{claimRow object="ProbeCoupons" claimCol="IsClaimed" EmailAddress="probe@example.com"}}{{/if}}` is accepted when the email is saved (named parameters only).
+- `{{get (claimRow object="zzprobecoupons__mo" claimCol="IsClaimed__c" EmailAddress__c="probe@example.com") "CouponCode__c"}}`, and the same call inside `{{#with}}`: the preview fails with HTTP 500 and no message, and the row stays unclaimed afterwards.
+
+Whether a real send claims a row was not tested, because the test org allows no sends. An earlier result from 2026-11-22 that called this helper unsupported came from an email that mixed several helpers with invalid call syntax; it is withdrawn.
 {% endraw %}
 
-## Differs from official docs
+Thanks to Nobuyuki Watanabe's [SFMC Tips #378](https://medium.com/@marketingcloudtips/marketing-cloud-next-personalized-coupon-distribution-with-coupon-management-24b41548bcf4) for showing how `claimRow` and `assignCoupon` split the coupon work.
 
-{% raw %}
-- The reference documents `claimRow` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{#if false}}{{claimRow "MyObject"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `claimRow` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs. [Details](/next/differs-from-docs/#hb-claimrow-rejected-on-save)
-{% endraw %}
+{% include test-script.html bundle="next-handlebars-helpers--claimrow" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
+{% include test-script.html bundle="next-handlebars-helpers--claimrow" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
 
 {% include mcn-status.html %}
 

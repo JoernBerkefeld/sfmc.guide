@@ -7,11 +7,11 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/impressionregion/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper."
+mcn: differs-from-docs
+mcn_tested: 2026-11-25
+mcn_note: "Works with the region name as a positional argument. The documented `name=\"…\"` form is rejected when the email is saved."
 test_scripts: complete
-verification: verified
+verification: in-progress
 ---
 
 {% include verification-status.html %}
@@ -22,7 +22,7 @@ Marks the enclosed part of a message as a named impression region for reporting 
 ## Syntax
 
 ```sfmc
-{{#impressionRegion name}}
+{{#impressionRegion "name"}}
   …
 {{/impressionRegion}}
 ```
@@ -37,17 +37,21 @@ Returns `string`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in Marketing Cloud Next emails on 2026-11-25, one call per email:
 
-- `{{#impressionRegion name="Banner"}}in{{/impressionRegion}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{#impressionRegion "Banner"}}in{{/impressionRegion}}` renders `in`.
+- `{{#impressionRegion name="Banner"}}in{{/impressionRegion}}`: the email cannot be saved; Salesforce answers that the helper needs a positional argument instead of hash syntax.
 {% endraw %}
 
+Thanks to Nobuyuki Watanabe's [SFMC Tips #344](https://medium.com/@marketingcloudtips/marketing-cloud-next-impression-region-tracking-bd27e34bc541) for the positional syntax.
+
+{% include test-script.html bundle="next-handlebars-helpers--impressionregion" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 {% include test-script.html bundle="next-handlebars-helpers--impressionregion" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
 
 ## Differs from official docs
 
 {% raw %}
-- The reference documents `impressionRegion` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{#impressionRegion name="Banner"}}in{{/impressionRegion}}` could not be saved: the CMS answered HTTP 400 and named `impressionRegion` as an unsupported handlebars helper. [Details](/next/differs-from-docs/#hb-impressionregion-rejected-on-save)
+- The reference passes the region name as a hash argument, `name="…"`. Marketing Cloud Next rejects that form when the email is saved and asks for a positional argument; `{{#impressionRegion "Banner"}}…{{/impressionRegion}}` works. [Details](/next/differs-from-docs/#hb-impressionregion-positional-name)
 {% endraw %}
 
 {% include mcn-status.html %}

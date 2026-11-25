@@ -6,10 +6,4 @@ failing: |
        would stop the whole preview or block the save. -->
 
   <!-- email 1: expect that the save is rejected (HTTP 400) -->
-  {{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}
-
-  <!-- email 2: expect that the save is rejected (HTTP 400) -->
-  {{jsonPath '[1,2,3]' "$[-1]"}}
-
-  <!-- email 3: expect that the save is rejected (HTTP 400) -->
-  {{length (jsonPath '{"items":[{"price":50},{"price":150},{"price":200}]}' "$.items[?(@.price > 100)]")}}
+  {{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}

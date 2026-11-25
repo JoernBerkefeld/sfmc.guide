@@ -1524,22 +1524,6 @@
   testScript: |
     {{char 65602 1}}
 
-- name: "{{claimRow}}"
-  url: "/next/handlebars/helpers/claimrow/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-claimrow.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Data"
-  object: "Handlebars Data"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-claimrow-rejected-on-save"
-  body: |
-    The reference documents `claimRow` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{claimRow "MyObject"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `claimRow` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
-  testScript: |
-    {{#if false}}{{claimRow "MyObject"}}{{/if}}
-
 - name: "{{dateAdd}}"
   url: "/next/handlebars/helpers/dateadd/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-date-time-references/mcn-handlebars-reference-date-time-dateadd.html"
@@ -1604,22 +1588,6 @@
   testScript: |
     {{equals "5.0" 5 "number"}}
 
-- name: "{{filter}}"
-  url: "/next/handlebars/helpers/filter/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-filter.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Objects"
-  object: "Handlebars Objects"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-filter-rejected-on-save"
-  body: |
-    The reference documents `filter` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{filter myList "name" "x"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `filter` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
-  testScript: |
-    {{#if false}}{{filter myList "name" "x"}}{{/if}}
-
 - name: "{{format}}"
   url: "/next/handlebars/helpers/format/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-format.html"
@@ -1668,22 +1636,6 @@
   testScript: |
     {{formatCurrency 1234.56 "de-DE"}}
 
-- name: "{{impressionRegion}}"
-  url: "/next/handlebars/helpers/impressionregion/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-impressionregion.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Content"
-  object: "Handlebars Content"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-impressionregion-rejected-on-save"
-  body: |
-    The reference documents `impressionRegion` as a Marketing Cloud Next helper, available since the Winter '27 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#impressionRegion name="Banner"}}in{{/impressionRegion}}` could not be saved: the CMS answered HTTP 400 and named `impressionRegion` as an unsupported handlebars helper.
-  testScript: |
-    {{#impressionRegion name="Banner"}}in{{/impressionRegion}}
-
 - name: "{{jsonPath}}"
   url: "/next/handlebars/helpers/jsonpath/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-jsonpath.html"
@@ -1696,9 +1648,9 @@
   body: |
     The reference documents `jsonPath` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
 
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}` could not be saved: the CMS answered HTTP 400 and named `jsonPath` as an unsupported handlebars helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either.
+    In a Marketing Cloud Next email tested on 2026-11-25, with `jsonPath` as the only helper: `{{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}` could not be saved; the CMS answered with `unauthorized_helper` and named `jsonPath` as an unsupported helper. Documented examples of other helpers that build their input list with `jsonPath` cannot be used either.
   testScript: |
-    {{jsonPath '{"a":{"b":"x"} }' "$.a.b"}}
+    {{jsonPath '{"a":{"b":"x"}}' "$.a.b"}}
 
 - name: "{{lookup}}"
   url: "/next/handlebars/helpers/lookup/"
@@ -1732,38 +1684,6 @@
   testScript: |
     {{properCase "hELLO wORLD"}}
 
-- name: "{{query}}"
-  url: "/next/handlebars/helpers/query/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Data"
-  object: "Handlebars Data"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-query-rejected-on-save"
-  body: |
-    The reference documents `query` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{#query "MyObject"}}x{{/query}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `query` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
-  testScript: |
-    {{#if false}}{{#query "MyObject"}}x{{/query}}{{/if}}
-
-- name: "{{queryFirst}}"
-  url: "/next/handlebars/helpers/queryfirst/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Data"
-  object: "Handlebars Data"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-queryfirst-rejected-on-save"
-  body: |
-    The reference documents `queryFirst` as a Marketing Cloud Next helper, available since the Summer '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `queryFirst` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
-  testScript: |
-    {{#if false}}{{#queryFirst "MyObject"}}x{{/queryFirst}}{{/if}}
-
 - name: "{{replace}}"
   url: "/next/handlebars/helpers/replace/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-string-references/mcn-handlebars-reference-string-replace.html"
@@ -1779,38 +1699,6 @@
     In a Marketing Cloud Next email tested on 2026-11-22: `{{replace "Aa" "a" "x"}}` rendered `xx`: the uppercase `A` was replaced too. A case-sensitive match would give `Ax`.
   testScript: |
     {{replace "Aa" "a" "x"}}
-
-- name: "{{slice}}"
-  url: "/next/handlebars/helpers/slice/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-objects-references/mcn-handlebars-reference-objects-slice.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Objects"
-  object: "Handlebars Objects"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-slice-rejected-on-save"
-  body: |
-    The reference documents `slice` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}` could not be saved: the CMS answered HTTP 400 and named `slice` as an unsupported handlebars helper. (These examples also use `jsonPath`, which is rejected too; `slice` is named in the same error.)
-  testScript: |
-    {{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}
-
-- name: "{{sort}}"
-  url: "/next/handlebars/helpers/sort/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-utility-references/mcn-handlebars-reference-utility-sort.html"
-  tagline: "Documented for Marketing Cloud Next, but an email using it cannot be saved"
-  category: "Handlebars Utility"
-  object: "Handlebars Utility"
-  severity: "high"
-  discrepancy: "A6"
-  anchor: "hb-sort-rejected-on-save"
-  body: |
-    The reference documents `sort` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples.
-
-    In a Marketing Cloud Next email tested on 2026-11-22: an email containing `{{#if false}}{{sort myList}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `sort` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs.
-  testScript: |
-    {{#if false}}{{sort myList}}{{/if}}
 
 - name: "{{substring}}"
   url: "/next/handlebars/helpers/substring/"
@@ -1875,3 +1763,55 @@
     In a Marketing Cloud Next email tested on 2026-11-22: `{{{uppercase "<i>a</i>"}}}` rendered `com.salesforce.e360.messaging.rendering.helper.HandlebarResultWrapper@451c8ea0` instead of the text. With double braces the helper works: `{{uppercase "mcn"}}` rendered `MCN`.
   testScript: |
     {{{uppercase "<i>a</i>"}}}
+
+- name: "{{impressionRegion}}"
+  url: "/next/handlebars/helpers/impressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-content-references/mcn-handlebars-reference-content-impressionregion.html"
+  tagline: "The documented name= form is rejected; the region name must be positional"
+  category: "Handlebars Content"
+  object: "Handlebars Content"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "hb-impressionregion-positional-name"
+  body: |
+    The reference passes the region name as a hash argument: `{{#impressionRegion name="…"}}`.
+
+    In Marketing Cloud Next emails tested on 2026-11-25: that form could not be saved; the CMS answered that the helper requires a positional argument, not hash syntax. `{{#impressionRegion "Banner"}}in{{/impressionRegion}}` rendered `in`.
+  testScript: |
+    {{#impressionRegion name="Banner"}}in{{/impressionRegion}}
+
+- name: "{{query}}"
+  url: "/next/handlebars/helpers/query/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  tagline: "On a marketing object it needs a key-field filter, or the preview fails with HTTP 500"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "hb-query-mo-needs-key-filter"
+  body: |
+    The reference lists only `object` and `type` as required for `query`; filtering by `where`/`params`, `id` or inline field conditions is described as optional.
+
+    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter on the object's key field was given. Without that filter the preview failed with HTTP 500 and no message.
+
+    `{{#each (query type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001")}}{{CouponCode__c}};{{/each}}` rendered `PROBE0001;`.
+  testScript: |
+    {{#each (query object="zzprobecoupons__mo" type="MO" fields="CouponCode__c")}}{{CouponCode__c}};{{/each}}
+
+- name: "{{queryFirst}}"
+  url: "/next/handlebars/helpers/queryfirst/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
+  tagline: "On a marketing object it needs a key-field filter, or the preview fails with HTTP 500"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "hb-queryfirst-mo-needs-key-filter"
+  body: |
+    The reference lists only `object` and `type` as required for `queryFirst`; filtering by `where`/`params`, `id` or inline field conditions is described as optional.
+
+    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter on the object's key field was given. Without that filter the preview failed with HTTP 500 and no message.
+
+    `{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}` rendered `false`.
+  testScript: |
+    {{get (queryFirst object="zzprobecoupons__mo" type="MO") "CouponCode__c"}}

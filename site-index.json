@@ -837,7 +837,7 @@
     "url": "/next/ampscript/functions/lookup/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "AMPscript Lookup in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+    "description": "AMPscript Lookup in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves, and a lookup against a marketing object renders the stored value."
   },
   {
     "name": "AMPscript LookupOrderedRows",

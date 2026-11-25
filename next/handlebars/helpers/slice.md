@@ -7,11 +7,11 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/slice/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper."
+mcn: untested
+mcn_tested: 2026-11-25
+mcn_note: "Accepted when the email is saved. Not rendered yet: the documented examples build their list with `jsonPath`, which Next rejects."
+verification: in-progress
 test_scripts: complete
-verification: verified
 ---
 
 {% include verification-status.html %}
@@ -37,20 +37,13 @@ Returns `array`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
-- `{{length (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 2)}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
-- `{{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") -2 -1) 0}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{#if false}}{{slice myList 1 3}}{{/if}}` is accepted when the email is saved. The branch never runs, so the helper itself is not rendered.
+- Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
 {% endraw %}
 
-{% include test-script.html bundle="next-handlebars-helpers--slice" chapter="failing" lang="handlebars" label="Show calls that fail in Next (one email each)" %}
-
-## Differs from official docs
-
-{% raw %}
-- The reference documents `slice` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{get (slice (jsonPath '["apple","banana","cherry","date","elderberry"]' "$") 1 3) 0}}` could not be saved: the CMS answered HTTP 400 and named `slice` as an unsupported handlebars helper. (These examples also use `jsonPath`, which is rejected too; `slice` is named in the same error.) [Details](/next/differs-from-docs/#hb-slice-rejected-on-save)
-{% endraw %}
+{% include test-script.html bundle="next-handlebars-helpers--slice" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 
 {% include mcn-status.html %}
 

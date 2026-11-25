@@ -7,10 +7,11 @@ parent_url: /next/handlebars/helpers/
 permalink: /next/handlebars/helpers/filter/
 platforms:
   - next
-mcn: unsupported
-mcn_tested: 2026-11-22
-mcn_note: "The email cannot be saved: Salesforce reports it as an unsupported helper. This happens even when the call sits in a branch that never runs."
-verification: verified
+mcn: untested
+mcn_tested: 2026-11-25
+mcn_note: "Accepted when the email is saved. Not rendered yet: the documented examples build their list with `jsonPath`, which Next rejects."
+verification: in-progress
+test_scripts: complete
 ---
 
 {% include verification-status.html %}
@@ -38,17 +39,13 @@ Returns `array`.
 
 ## Example
 
-Tested in a Marketing Cloud Next email on 2026-11-22:
+Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
-- `{{#if false}}{{filter myList "name" "x"}}{{/if}}`: the email cannot be saved; Salesforce reports it as an unsupported helper.
+- `{{#if false}}{{filter myList "age" ">" 25 "number"}}{{/if}}` is accepted when the email is saved. The branch never runs, so the helper itself is not rendered.
 - Examples that build a list with `jsonPath` were not tried: an email that uses `jsonPath` cannot be saved.
 {% endraw %}
 
-## Differs from official docs
-
-{% raw %}
-- The reference documents `filter` as a Marketing Cloud Next helper, available since the Winter '26 release, with parameters and examples. In Marketing Cloud Next (tested 2026-11-22): an email containing `{{#if false}}{{filter myList "name" "x"}}{{/if}}` could not be saved: the CMS answered HTTP 400 and named `filter` as an unsupported handlebars helper. The check runs at save time, so the call is rejected even inside a branch that never runs. [Details](/next/differs-from-docs/#hb-filter-rejected-on-save)
-{% endraw %}
+{% include test-script.html bundle="next-handlebars-helpers--filter" chapter="behaviour" lang="handlebars" label="Show Next test script" %}
 
 {% include mcn-status.html %}
 

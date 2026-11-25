@@ -5,6 +5,6 @@ behaviour: |
   <!-- Marketing Cloud Next test script for the sha512 helper. Paste it into the HTML component of a
        Next email and open the preview. Each line prints the result Next gave when the call
        was rendered on its own (expect) next to the result of this run (got).
-       Assembled from single-call test emails (2026-11-22 and 2026-11-23); it has not been
+       Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f] got=[{{sha512 "abc"}}]</p>
