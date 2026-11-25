@@ -36,7 +36,7 @@
   handlebarsEquivalent: "add"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next a quoted numeric argument such as Add(\"15\", \"27\") or a negative literal such as Add(-5, 3) makes the email fail to render, while unquoted non-negative numbers work. Integer sums wrap at 32 bits: Add(2147483647, 1) renders -2147483648."
   description: "Computes the sum of two numeric values."
   guideUrl: "https://ampscript.guide/add/"
 - name: "AddMscrmListMember"
@@ -222,7 +222,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.Base64Decode"
       url: "https://ssjs.guide/platform-functions/base64decode/"
-  mcnNotes: ""
+  mcnNotes: "Next accepts a value whose trailing = padding is missing: Base64Decode(\"SGVsbG8\") returns \"Hello\" where Engagement stops the email."
   description: "Decodes a Base64-encoded string. The decoded bytes are read as UTF-8 unless encoding names another character encoding, and any value that is not well-formed Base64 aborts the page instead of returning an empty or partial result."
   guideUrl: "https://ampscript.guide/base64decode/"
 - name: "Base64Encode"
@@ -242,7 +242,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.Base64Encode"
       url: "https://ssjs.guide/platform-functions/base64encode/"
-  mcnNotes: ""
+  mcnNotes: "Next rejects the encoding names UTF-16BE and ISO-8859-1 when the email is saved; UTF-8, UTF-16, UTF-32 and ASCII give the same Base64 as Engagement."
   description: "Encodes a value as a Base64 string. The bytes encoded are the UTF-8 representation of the input unless encoding names another character encoding."
   guideUrl: "https://ampscript.guide/base64encode/"
 - name: "BeginImpressionRegion"
@@ -262,7 +262,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.BeginImpressionRegion"
       url: "https://ssjs.guide/platform-functions/beginimpressionregion/"
-  mcnNotes: "In Handlebars, the block helper impressionRegion replaces this function together with EndImpressionRegion: the region name goes on the opening tag and the closing tag ends the region."
+  mcnNotes: "In Handlebars, the block helper impressionRegion replaces this function together with EndImpressionRegion: the region name goes on the opening tag and the closing tag ends the region. A variable as the region name does not abort on Next: SET @r = \"dyn-region\" BeginImpressionRegion(@r) followed by X rendered \"X\", where Engagement fails the page."
   description: "Marks the start of an impression tracking region. The region name must be a literal — a variable argument aborts the page."
   guideUrl: "https://ampscript.guide/beginimpressionregion/"
 - name: "BuildOptionList"
@@ -295,7 +295,7 @@
   handlebarsEquivalent: "jsonPath"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Malformed JSON with flag 0 renders instead of aborting the page. An empty-string or unset payload with flag 1 made the Next preview fail (HTTP 500) where Engagement returns zero rows; a batch of \"{ not json \" with the flags true, \"true\" and \"1\" made the Next preview fail (HTTP 500)."
   description: "Parses a JSON string and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromjson/"
 - name: "BuildRowSetFromString"
@@ -313,7 +313,7 @@
   handlebarsEquivalent: "buildRowSetFromString"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "With the separator \"::\", RowCount alone still returned 3, but also reading a field made the Next preview fail (HTTP 500). Field(Row(@rows, 0), 1) written inline renders \"true\" on Next instead of aborting."
   description: "Splits a delimited string into a single-column rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromstring/"
 - name: "BuildRowSetFromXML"
@@ -331,7 +331,7 @@
   handlebarsEquivalent: "buildRowSetFromXml"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Saving the CMS email strips the tags from XML written as an AMPscript string literal, so the function receives only the text and returns 0 rows; build the markup at runtime (for example with Char(60) and Char(62)) or read it from data. Malformed XML with the flag \"1\" made the Next preview fail (HTTP 500) where Engagement returns zero rows."
   description: "Parses an XML string using an XPath expression and returns a rowset."
   guideUrl: "https://ampscript.guide/buildrowsetfromxml/"
 - name: "Char"
@@ -349,7 +349,7 @@
   handlebarsEquivalent: "char"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next only codes 0 to 255 render. The codes above 255 tested so far (256, 8364, 9731, 65601, 128512) and a negative code stopped the email with an error, where Engagement returns the matching Unicode character or wraps the code."
   description: "Returns the character for the given numeric character code. Codes above 255 are not rejected — they resolve to the matching Unicode character."
   guideUrl: "https://ampscript.guide/char/"
 - name: "ClaimRow"
@@ -418,7 +418,7 @@
   handlebarsEquivalent: "concat"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects a call with only one argument when the email is saved, so pass at least two values. A boolean renders as its text on Next: Concat(true, false) gives \"truefalse\" where Engagement gives an empty string."
   description: "Concatenates two or more string values."
   guideUrl: "https://ampscript.guide/concat/"
 - name: "ContentArea"
@@ -471,7 +471,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.ContentBlockByID"
       url: "https://ssjs.guide/platform-functions/contentblockbyid/"
-  mcnNotes: ""
+  mcnNotes: "A missing block with errorOnMissingContentBlock 0 does not fall back on Next: the preview failed with HTTP 500 instead of rendering the default content and setting the status variable to -1; a batch with false, \"false\" and \"0\" also failed. Rendering a found block was not tested on Next."
   description: "Retrieves and renders a Content Builder content block by its numeric ID."
   guideUrl: "https://ampscript.guide/contentblockbyid/"
 - name: "ContentBlockByKey"
@@ -491,7 +491,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.ContentBlockByKey"
       url: "https://ssjs.guide/platform-functions/contentblockbykey/"
-  mcnNotes: ""
+  mcnNotes: "A missing block with errorOnMissingContentBlock 0 does not fall back on Next: the preview failed with HTTP 500 instead of rendering the default content and setting the status variable to -1; a batch with false, \"false\" and \"0\" also failed. Rendering a found block was not tested on Next."
   description: "Retrieves and renders a Content Builder content block by its customer key."
   guideUrl: "https://ampscript.guide/contentblockbykey/"
 - name: "ContentBlockByName"
@@ -510,7 +510,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.ContentBlockByName"
       url: "https://ssjs.guide/platform-functions/contentblockbyname/"
-  mcnNotes: ""
+  mcnNotes: "A missing block with errorOnMissingContentBlock 0 does not fall back on Next: the preview failed with HTTP 500 instead of rendering the default content and setting the status variable to -1; a batch with false, \"false\" and \"0\" also failed. Rendering a found block was not tested on Next."
   description: "Retrieves and renders a Content Builder content block by its folder path and name."
   guideUrl: "https://ampscript.guide/contentblockbyname/"
 - name: "ContentImageByID"
@@ -637,7 +637,7 @@
   handlebarsEquivalent: "dateAdd"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next renders two cases that abort on Engagement: the S (seconds) unit, where adding 30 to 2026-03-04 13:52:07 gives 2026-03-04T13:52:37, and a decimal amount, where 1.5 with D adds one whole day."
   description: "Adds a whole number of intervals to a date value. Only the five documented units are accepted and every other unit, including seconds and weeks, aborts the page — as does a non-integer amount or a date the engine cannot parse."
   guideUrl: "https://ampscript.guide/dateadd/"
 - name: "DateDiff"
@@ -655,7 +655,7 @@
   handlebarsEquivalent: "dateDiff"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next counts complete elapsed units instead of crossed boundaries, so 2026-12-31 23:59 to 2027-01-01 00:00 gives 0 years, months and days where Engagement gives 1 each. The S unit renders seconds (59) where Engagement aborts, and the result fed into Add() prints with a decimal (24.0)."
   description: "Counts how many boundaries of the requested unit lie between two dates, by truncating both to that unit and subtracting — so a 23-hour gap that crosses midnight counts as 1 day, while 23 hours within one day counts as 0. Finer units than the one requested are ignored rather than rounded."
   guideUrl: "https://ampscript.guide/datediff/"
 - name: "DateParse"
@@ -672,7 +672,7 @@
   mcn: "67"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next an offset or GMT marker is converted to UTC rather than the account time zone (2026-03-04T09:05:07Z renders 3/4/2026 9:05:07 AM, Engagement 3:05:07 AM), and useUtc has no effect in any spelling. An unreadable string or a Unix timestamp is returned unchanged where Engagement aborts."
   description: "Parses a date string into a date value. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected. An offset or GMT marker in the input is honoured and converted to the account time zone."
   guideUrl: "https://ampscript.guide/dateparse/"
 - name: "DatePart"
@@ -690,7 +690,7 @@
   handlebarsEquivalent: "datePart"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Only the upper-case codes Y, M, D, H and MI were confirmed to render on Next. monthName made the email fail to render, so the month name is not available. The other long names and lower-case spellings were only tested in batches that also contained monthName, so their status is open. Wrapping the result in Length() also failed."
   description: "Extracts one component from a date. The hour is reported on a 12-hour clock with no AM/PM indicator, so 19:35 yields 7 and any time at midnight — including a date with no time part at all — yields 12. Month and day come back zero-padded to two digits while hour and minute do not."
   guideUrl: "https://ampscript.guide/datepart/"
 - name: "DecryptSymmetric"
@@ -785,7 +785,7 @@
   handlebarsEquivalent: "divide"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Only the string \"true\" is read as 1 on Next, so Divide(\"true\", 1) renders 1 where Engagement aborts; other text such as \"abc\" still fails."
   description: "Divides the first number by the second."
   guideUrl: "https://ampscript.guide/divide/"
 - name: "Domain"
@@ -821,7 +821,7 @@
   handlebarsEquivalent: "isEmpty"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects at save a call whose argument is a literal or a function call, such as Empty(\"\"), Empty(0) or Empty(Now()), with an AMPscript syntax error; hold the value in a variable first."
   description: "Returns true when the value is an empty string, an unset variable, or an undeclared variable. Whitespace, the number 0, the string \"0\" and the string \"false\" are all treated as present."
   guideUrl: "https://ampscript.guide/empty/"
 - name: "EncryptSymmetric"
@@ -918,7 +918,7 @@
   handlebarsEquivalent: "get"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "For a missing column, true, 1 or \"true\" as third argument render \"true\" and \"1\" renders \"false\" instead of aborting, while falsy flags render \"false\" instead of \"\". Field(row, 0) renders \"true\" instead of aborting. The two-argument form on a missing column renders \"\" for a JSON-built row but still aborts for a BuildRowSetFromString row."
   description: "Retrieves the value of a named field from a rowset row. The two-argument form aborts the page when the column is absent; pass the optional third argument as 0 (or false) to get an empty string for a possibly-missing column instead."
   guideUrl: "https://ampscript.guide/field/"
 - name: "Format"
@@ -936,7 +936,7 @@
   handlebarsEquivalent: "format"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "The documented third-parameter value Number renders on Next (Format(1234.555, \"C2\", \"Number\") gives $1,234.56) where Engagement aborts; an invented value such as Banana still fails. A single-argument call is rejected at save."
   description: "Formats a number, a date or a string with a .NET format pattern. The third parameter only accepts Date or the empty string; the documented value Number aborts the page."
   guideUrl: "https://ampscript.guide/format/"
 - name: "FormatCurrency"
@@ -954,7 +954,7 @@
   handlebarsEquivalent: "formatCurrency"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "An empty or unknown locale (\"\" or zz-ZZ) renders the raw number 1234.555 without currency formatting, and the language-only locale de shows the generic sign ¤ instead of €. A single-argument call is rejected at save."
   description: "Formats a number as a currency amount for a locale, choosing the symbol, the separators and the symbol position from that locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatcurrency/"
 - name: "FormatDate"
@@ -972,7 +972,7 @@
   handlebarsEquivalent: "format"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: "In MCN, uses Java SimpleDateFormat format strings instead of .NET. Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\")."
+  mcnNotes: "Next uses a different date formatter. The .NET standard single-letter formats (such as d, M, D, f, F, g, G, o, r and Y) render as on .NET, but some custom tokens follow Java rules: mm is minutes and MM the month even in dateFormat, zz gives GMT, and a locale code turns D into the day of the year (63 for 4 March). ddd and dddd give the short and full day name (Wed, Wednesday). Omitting dateFormat returns the G standard format (e.g. \"5/15/2026 1:23:45 PM\"). An empty dateFormat puts a leading space before the time output, and h alone in timeFormat renders where Engagement aborts."
   description: "Formats a date according to a date pattern, a time pattern and a locale. The two pattern arguments use separate, case-insensitive token sets: in the date pattern mm means month, and minutes are only reachable from the time pattern."
   guideUrl: "https://ampscript.guide/formatdate/"
 - name: "FormatNumber"
@@ -990,7 +990,7 @@
   handlebarsEquivalent: "formatNumber"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "An unrecognised pattern such as qqqq returns the unformatted number on Next, where Engagement echoes the pattern itself. A single-argument call is rejected at save."
   description: "Formats a number with a standard or custom .NET numeric pattern, optionally for a locale. Rounding is half-up."
   guideUrl: "https://ampscript.guide/formatnumber/"
 - name: "GetJWT"
@@ -1209,7 +1209,7 @@
   handlebarsEquivalent: "iif"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next a plain non-empty string condition such as \"0\", \"hello\" or three spaces selects the true branch, where Engagement selects the false branch. Both branches are evaluated: a RaiseError in the branch not taken still makes the render fail (HTTP 500), so an aborting call is safe in neither branch."
   description: "Returns one of two values based on a boolean expression (inline if). Only a real comparison or a boolean-returning function selects the true branch; a plain string or number always selects the false branch. Only the selected branch is evaluated, so a call that would abort the page is safe in the branch that is not taken."
   guideUrl: "https://ampscript.guide/iif/"
 - name: "Image"
@@ -1241,7 +1241,7 @@
   handlebarsEquivalent: "indexOf"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects the undocumented third occurrence argument when the email is saved, whatever its value. An empty search string returns 1 instead of 0, and a number or boolean literal as either argument (IndexOf(9876543, \"65\")) stops the email with an error."
   description: "Returns the 1-based position of a substring, matching case-insensitively. An undocumented third argument selects which occurrence to locate."
   guideUrl: "https://ampscript.guide/indexof/"
 - name: "InsertData"
@@ -1414,7 +1414,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.IsEmailAddress"
       url: "https://ssjs.guide/platform-functions/isemailaddress/"
-  mcnNotes: ""
+  mcnNotes: "An address whose domain has no dot, such as tomas.q@example, returns true on Next, where Engagement returns False. Surrounding whitespace is still rejected."
   description: "Checks a value against email address syntax only; it never tests whether the mailbox or domain exists. Surrounding whitespace and a domain without a top-level domain are both rejected."
   guideUrl: "https://ampscript.guide/isemailaddress/"
 - name: "IsNull"
@@ -1432,7 +1432,7 @@
   handlebarsEquivalent: "isEmpty"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "IsNull(Concat(@value)) is rejected at save with an AMPscript syntax error, while IsNull(Now()) saves and renders false."
   description: "Returns true only for a genuine null, which in practice means a data extension field with no value. An unset or undeclared variable, an empty string, whitespace and every ordinary value all return false, so this is not a general emptiness test."
   guideUrl: "https://ampscript.guide/isnull/"
 - name: "IsNullDefault"
@@ -1485,7 +1485,7 @@
   handlebarsEquivalent: "length"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "A number or boolean literal stops the email with an error on Next: Length(12345) and Length(true) fail where Engagement returns 5 and 0. Pass numbers as quoted text."
   description: "Returns the number of characters in a string."
   guideUrl: "https://ampscript.guide/length/"
 - name: "LiveContentMicrositeURL"
@@ -1642,7 +1642,7 @@
   handlebarsEquivalent: "lowercase"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "A boolean renders as its text on Next: Lowercase(true) gives \"true\" where Engagement gives an empty string. The Turkish capital I with dot (U+0130) becomes i plus a combining dot (2 characters) instead of a plain i."
   description: "Converts a string to all lowercase characters."
   guideUrl: "https://ampscript.guide/lowercase/"
 - name: "MD5"
@@ -1662,7 +1662,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.MD5"
       url: "https://ssjs.guide/platform-functions/md5/"
-  mcnNotes: ""
+  mcnNotes: "Next rejects the charSet names UTF-16BE, UTF-32, ASCII and ISO-8859-1 when the email is saved; only UTF-8 and UTF-16 (any letter case) are accepted, with the same digests as Engagement."
   description: "Returns the MD5 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/md5/"
 - name: "MicrositeURL"
@@ -1709,7 +1709,7 @@
   handlebarsEquivalent: "modulo"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next a zero divisor, a quoted argument such as Mod(\"10\", \"3\"), and Mod(3, 10) all make the email fail to render. A decimal result is printed without Engagement's rounding noise (Mod(-500.123, 12.456) gives -1.883) but a whole result from a decimal divisor keeps a trailing .0 (Mod(10, 3.5) gives 3.0)."
   description: "Returns the remainder after dividing the first number by the second (modulo)."
   guideUrl: "https://ampscript.guide/mod/"
 - name: "Msg"
@@ -1741,7 +1741,7 @@
   handlebarsEquivalent: "multiply"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Only the string \"true\" is read as 1 on Next, so Multiply(\"true\", 1) renders 1 where Engagement aborts; other text such as \"abc\" still fails."
   description: "Computes the product of two numeric values."
   guideUrl: "https://ampscript.guide/multiply/"
 - name: "Noun"
@@ -1789,7 +1789,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.Now"
       url: "https://ssjs.guide/platform-functions/now/"
-  mcnNotes: ""
+  mcnNotes: "Next rejects Now() with any argument when the email is saved (AMPscript syntax error), whatever the spelling of the flag, so persistFormat cannot be used there."
   description: "Returns the current system date and time in Central Standard Time, with no daylight-saving adjustment. Every call within one render returns the same instant."
   guideUrl: "https://ampscript.guide/now/"
 - name: "Output"
@@ -1806,7 +1806,7 @@
   mcn: "67"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects at save any Output call with a nested function argument, such as Output(Concat(\"x\")), even inside a branch that never runs, and also the zero-argument form; multi-argument calls were only tested with nested functions. A string literal, a variable or a number saves and renders nothing, where an Engagement email rejects Output by name."
   description: "Writes the result of a nested function call into the rendered content. A string literal, a bare variable or a number renders nothing at all, without raising an error."
   guideUrl: "https://ampscript.guide/output/"
 - name: "OutputLine"
@@ -1823,7 +1823,7 @@
   mcn: "67"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects at save any OutputLine call with a nested function argument, such as OutputLine(Concat(\"A\")), as well as the zero-argument form; multi-argument calls were only tested with nested functions. A string literal, a variable or a number saves and writes only a bare line feed, not the carriage return plus line feed Engagement writes."
   description: "Writes the result of a nested function call into the rendered content, followed by a carriage return and line feed. A string literal, a bare variable or a number renders only the line break. The break is not an HTML line break, so an HTML view keeps everything on one line unless the content sits inside a preformatted element."
   guideUrl: "https://ampscript.guide/outputline/"
 - name: "ProperCase"
@@ -1841,7 +1841,7 @@
   handlebarsEquivalent: "properCase"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "A boolean renders as its text on Next: ProperCase(true) gives \"True\" where Engagement gives an empty string. A word starting with the German sharp s is capitalised to \"SS\" (ProperCase of \"ßtrasse\" gives \"SStrasse\", 8 characters) where Engagement keeps \"ß\"."
   description: "Converts a value to proper (title) case. Every letter after the first of a word is forced to lower case, so existing internal capitals are lost."
   guideUrl: "https://ampscript.guide/propercase/"
 - name: "QueryParameter"
@@ -1894,7 +1894,7 @@
   handlebarsEquivalent: "random"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next decimal bounds render instead of aborting (Random(1, 2.5) gave 2, Random(1.2, 1.8) gave 1), while bounds in reverse order such as Random(3, 1) or quoted bounds such as Random(\"1\", \"2\") make the email fail to render."
   description: "Returns a random integer between the two specified values (inclusive). Both bounds must be whole numbers; a decimal bound aborts the page. The bounds may be supplied in either order."
   guideUrl: "https://ampscript.guide/random/"
 - name: "RatingStars"
@@ -1958,7 +1958,7 @@
   handlebarsEquivalent: "regExMatch"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: "MC Next uses a different regex engine that excludes .NET-only constructs. Options must be literal comma-separated text and can only be IgnoreCase, Multiline, Singleline, IgnorePatternWhitespace, or ExplicitCapture."
+  mcnNotes: "MC Next uses a different regex engine that excludes .NET-only constructs. Options must be literal comma-separated text and can only be IgnoreCase, Multiline, Singleline, IgnorePatternWhitespace, or ExplicitCapture. In Next emails a group index written as a number literal stops the email with an error; pass the index as quoted text (\"0\"), which renders the same result as Engagement. A named group written literally failed because saving strips <name>; write the < and > of the group with Char(60) and Char(62), then the group name works as on Engagement."
   description: "Returns the first occurrence of a regular expression match in a string, selected by capture group. Matching is case-sensitive unless the IgnoreCase option is passed."
   guideUrl: "https://ampscript.guide/regexmatch/"
 - name: "Replace"
@@ -1976,7 +1976,7 @@
   handlebarsEquivalent: "replace"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects the two-argument form when the email is saved, so always pass the replacement. A number or boolean literal in any argument, such as Replace(\"a-b\", \"-\", 7), stops the email with an error; pass such values as quoted text."
   description: "Replaces all occurrences of a substring with a new value, matching case-insensitively. The source is scanned once, so text formed by a replacement is not replaced again."
   guideUrl: "https://ampscript.guide/replace/"
 - name: "ReplaceList"
@@ -1993,7 +1993,7 @@
   mcn: "67"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "A number or boolean literal in any argument, such as ReplaceList(101101, \"9\", \"0\"), stops the email with an error on Next where Engagement treats it as text. Pass such values as quoted text."
   description: "Replaces every occurrence of each supplied search value with one common replacement value, matching case-insensitively. The search values are applied one after another in the order given, so text produced by an earlier replacement can still be matched by a later one."
   guideUrl: "https://ampscript.guide/replacelist/"
 - name: "RequestParameter"
@@ -2069,7 +2069,7 @@
   handlebarsEquivalent: "query"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next, Empty() over a rowset with no matching records returns false (Engagement True); test RowCount(@rows) == 0 instead."
   description: "Retrieves records from a connected Salesforce Sales or Service Cloud object via Marketing Cloud Connect and returns them as a rowset. Requires an active Marketing Cloud Connect integration; a call against an unknown object name aborts the page."
   guideUrl: "https://ampscript.guide/retrievesalesforceobjects/"
 - name: "Row"
@@ -2087,7 +2087,7 @@
   handlebarsEquivalent: "get"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "The difference shows when reading the row: Field(Row(@rows, 1), 1) on BuildRowSetFromString(\"North**South**East**West\", \"**\") renders \"true\" on Next instead of \"North\". Row(@rows, 0) still aborts when assigned to a variable first, but written inline inside Field it rendered \"true\"."
   description: "Returns a specific row from a rowset by its 1-based index. Index 0 (or any out-of-range index) aborts the page rather than returning an empty row."
   guideUrl: "https://ampscript.guide/row/"
 - name: "RowCount"
@@ -2168,7 +2168,7 @@
   handlebarsEquivalent: "sha1"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects charSet \"ASCII\" when the email is saved; UTF-8 and UTF-16 give the same digests as Engagement."
   description: "Returns the SHA-1 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha1/"
 - name: "SHA256"
@@ -2186,7 +2186,7 @@
   handlebarsEquivalent: "sha256"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects charSet \"ASCII\" when the email is saved; UTF-8 and UTF-16 give the same digests as Engagement."
   description: "Returns the SHA-256 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha256/"
 - name: "SHA512"
@@ -2204,7 +2204,7 @@
   handlebarsEquivalent: "sha512"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects charSet \"ASCII\" when the email is saved; UTF-8 and UTF-16 give the same digests as Engagement."
   description: "Returns the SHA-512 hash of the input value. The bytes hashed are the UTF-8 encoding of the input unless charSet names another encoding, and a number or date argument is hashed as the text it renders as."
   guideUrl: "https://ampscript.guide/sha512/"
 - name: "StringToDate"
@@ -2221,7 +2221,7 @@
   mcn: "67"
   handlebarsEquivalent: ""
   ssjsEquivalents: []
-  mcnNotes: "In MCN, returns a locale-formatted string (G standard format, e.g. \"5/15/2026 1:23:45 PM\") instead of a dateTime object. Cannot be reliably passed to FormatDate() or other date functions in MCN - use FormatDate() directly instead."
+  mcnNotes: "On Next the value renders in the same US short-date form as on Engagement, and DatePart(), FormatDate() and DateDiff() accept it directly. An offset or GMT marker is converted to UTC rather than the account time zone (2026-03-04T09:05:07Z gives 3/4/2026 9:05:07 AM, Engagement 3:05:07 AM), and an unreadable string is returned unchanged where Engagement aborts."
   description: "Converts a date string to a date value. Behaves identically to DateParse for every input format, but takes no second argument, so DateParse is the only one of the two that can return the instant in UTC. A string the parser cannot read aborts the page instead of returning a sentinel, and an ambiguous day-first string such as 5/8/2026 is silently read month-first rather than rejected."
   guideUrl: "https://ampscript.guide/stringtodate/"
 - name: "StringToHex"
@@ -2239,7 +2239,7 @@
   handlebarsEquivalent: "stringToHex"
   handlebarsExact: false
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next rejects the charSet names UTF-16BE, UTF-32, ASCII and ISO-8859-1 when the email is saved; UTF-8 and UTF-16 give the same hex as Engagement."
   description: "Converts a string to its hexadecimal representation. The bytes rendered are the UTF-8 encoding of the input unless charSet names another encoding."
   guideUrl: "https://ampscript.guide/stringtohex/"
 - name: "Substring"
@@ -2257,7 +2257,7 @@
   handlebarsEquivalent: "substring"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Where Engagement is lenient, Next stops the email with an error: a start of 0 or below, a start past the end, a start or length written as quoted text (\"7\"), and a number or boolean source. A decimal start or length is truncated (Substring(\"Hello World\", 2.5, 3) gives \"ell\") where Engagement aborts."
   description: "Extracts a portion of a string starting at the given index for the specified length. A start position below 1 is treated as the first character."
   guideUrl: "https://ampscript.guide/substring/"
 - name: "Subtract"
@@ -2275,7 +2275,7 @@
   handlebarsEquivalent: "subtract"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next a quoted numeric argument such as Subtract(\"50\", \"15\") or a negative literal such as Subtract(-5, 3) makes the email fail to render, while unquoted non-negative numbers work."
   description: "Computes the difference between two numeric values."
   guideUrl: "https://ampscript.guide/subtract/"
 - name: "SystemDateToLocalDate"
@@ -2358,7 +2358,7 @@
   handlebarsEquivalent: "trim"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "Next does not strip the non-breaking space (Char(160)), and Trim(12345) or Trim(true) stops the email with an error. Runs of spaces typed in a string literal are collapsed to one before AMPscript runs, so build them with Char(32) when the count matters."
   description: "Removes leading and trailing whitespace from a value. Tabs, line breaks and the non-breaking space count as whitespace."
   guideUrl: "https://ampscript.guide/trim/"
 - name: "UpdateData"
@@ -2439,7 +2439,7 @@
   handlebarsEquivalent: "uppercase"
   handlebarsExact: true
   ssjsEquivalents: []
-  mcnNotes: ""
+  mcnNotes: "On Next the German sharp s expands to \"SS\": Uppercase(\"Straße\") gives \"STRASSE\" (7 characters) where Engagement keeps \"STRAßE\". A boolean renders as its text: Uppercase(false) gives \"FALSE\" where Engagement gives an empty string."
   description: "Converts a string to all uppercase characters. The German sharp s remains unchanged rather than expanding to SS."
   guideUrl: "https://ampscript.guide/uppercase/"
 - name: "UpsertContact"
@@ -2522,7 +2522,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.UrlEncode"
       url: "https://ssjs.guide/platform-functions/urlencode/"
-  mcnNotes: "In Handlebars, encodeURIComponent encodes only what follows the address, such as a query string, which is what this function does by default; use encodeURI to encode a whole string. Neither helper takes the two switches of this function."
+  mcnNotes: "In Handlebars, encodeURIComponent encodes only what follows the address, such as a query string, which is what this function does by default; use encodeURI to encode a whole string. Neither helper takes the two switches of this function. With both switches off, Next gives the same result as Engagement. A switch value of 2 counts as on in Next, so URLEncode(\"spring sale\", 2, 2) gives \"spring%20sale\" where Engagement leaves the text unchanged."
   description: "URL-encodes a string for safe inclusion in a URL. By default only the part after a question mark is touched, so a value that is not a URL passes through unchanged unless the third argument is switched on."
   guideUrl: "https://ampscript.guide/urlencode/"
 - name: "v"

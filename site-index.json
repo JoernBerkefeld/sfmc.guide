@@ -1393,6 +1393,13 @@
     "description": "Salesforce CLI workflows and verified operation limits for calculated insight definitions and runtime state."
   },
   {
+    "name": "CMS DevOps",
+    "url": "/next/cms-devops/",
+    "section": "Next",
+    "type": "page",
+    "description": "Which tool copies which Marketing Cloud Next CMS content type between workspaces and orgs, the verified API behaviour behind it, and the open gaps."
+  },
+  {
     "name": "Collect Code",
     "url": "/engagement/einstein/recommendation/collect-code/",
     "section": "Engagement",

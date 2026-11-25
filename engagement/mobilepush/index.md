@@ -24,21 +24,38 @@ This page is for Marketing Cloud architects who set up push notifications togeth
 
 1. The app starts the SDK with the details of a **MobilePush app** that lives in one Marketing Cloud business unit.
 2. The app sets the **contact key** (your ID, for example a global customer ID) in the SDK.
-3. The SDK sends a **registration** to Marketing Cloud: contact key, a device ID the SDK generates per install, the push token from Apple or Google, the opt-in status, app ID, tags and attributes.
+3. The SDK sends a **registration** to Marketing Cloud: contact key, a device ID the SDK generates per install (neither the push token nor the advertising ID), the push token from Apple or Google, the opt-in status, app ID, tags and attributes.
 4. Marketing Cloud attaches this device to the contact with that key, or creates the contact if it does not exist yet.
-5. After that, the SDK sends an update whenever this data changes. The SDK is the source of truth; data only flows from the device to Marketing Cloud.
+5. After that, the SDK sends changes at most about once a minute, and retries failed sends with growing delays. The SDK is the source of truth; data only flows from the device to Marketing Cloud.
 
-Nothing else creates the MobilePush part of a contact. Not a list, not an automation, not your backend. Only the SDK registration does.
+Plan on the SDK registration being the only thing that creates the MobilePush part of a contact (device, push token, opt-in). Adding a contact to a list, an automation or an email send does not create a device.
 
 ## Getting started
 
 ### Marketing Cloud team
 
-1. **Create the MobilePush app** in Setup → Apps → MobilePush, in the business unit that will send the pushes.
-2. **Add the push credentials**: an Apple key or certificate for iOS, and the Firebase (FCM) credentials for Android. Expired Apple certificates stop iOS sends.
-3. **Hand over to the app team**: App ID, Access Token, App Endpoint (tenant-specific URL) and the business unit MID.
+1. **Create the MobilePush app** in [MobilePush Administration](https://mc.exacttarget.com/cloud/#app/MobilePush/mobilepush/%23!/administration), in the business unit that will send the pushes. The link works on every stack; if it lands on the start page after login, open it again.
+2. **Add the push credentials** under *Sending Services*:
+   - **iOS:** an APNs `.p8` auth key with its Key ID, Team ID and Bundle ID (recommended), or a `.p12` certificate. Choose *Production* or *Development* to match the app build. Expired certificates stop iOS sends.
+   - **Android:** the Firebase config file (service account JSON) from the Firebase console.
+   - Click **Test Configuration** before handing over.
+3. **Hand over to the app team**: App ID, Access Token and App Endpoint from *App Details and SDK Configuration*, plus the business unit MID.
 4. **Agree on the contact key**: which ID, in which exact format. It must match the subscriber key you use in email and elsewhere, character for character.
 5. **Create attributes** in MobilePush Demographics (Contact Builder) before the app sends them.
+
+The app settings page, so you know what to prepare (credentials replaced with placeholders). The optional settings at the bottom (custom keys, interactive notifications, OpenDirect, in-app limits, event tracking) can be switched on later.
+
+![MobilePush app settings: App details with Access Token, App ID and App Endpoint; iOS sending with APNs .p8 key or .p12 certificate; Android sending with Firebase config file; Test Configuration; optional settings](img/mobilepush-app-settings.png)
+
+Enabling an optional setting expands the form with its own fields:
+
+- **Custom Keys:** key names, each with an optional note for the message wizard.
+- **Interactive Notifications:** a category code, optional description, and button names for iOS and Android. At least one category is required. The app must register the same categories.
+- **OpenDirect** and **Custom Sound:** no extra fields here; the screen or sound is chosen per message. The app must handle them.
+- **In-App Display Limit:** maximum displays per session and minimum time between them (SDK 8.0 or later).
+- **Inactive Devices:** number of days without app use before a device counts as inactive (default 180).
+
+![MobilePush optional settings with all features enabled, showing the extra fields for custom keys, interactive notifications, in-app display limit and inactive devices](img/mobilepush-optional-settings-enabled.png)
 
 ### App team
 
@@ -61,7 +78,7 @@ Nothing else creates the MobilePush part of a contact. Not a list, not an automa
 |---|---|
 | Contact key set, contact **does not exist** | New contact with your key, device attached |
 | Contact key set, contact **already exists** (from email, API, import) | Device attached to the existing contact. No duplicate. Email data, data extensions and other attributes stay as they are |
-| **No** contact key set | Contact with a key Marketing Cloud generates. It never merges with your contact |
+| **No** contact key set | Marketing Cloud first tries to match the device's push token to an existing contact. Without a match, it creates a contact with a generated key, which does not merge with your contact later |
 | Key set **after** the first registration | Device moves to your contact; the generated contact stays behind without a device ("orphaned") |
 | Second phone, same user | Second device under the same contact |
 | Another user logs in on the same phone | Device moves to the other user's contact |
@@ -71,7 +88,7 @@ Nothing else creates the MobilePush part of a contact. Not a list, not an automa
 
 There are two kinds of consent, and they reach Marketing Cloud in different ways.
 
-**Technical opt-in comes only from the SDK.** It reflects the OS notification permission and the SDK's own push switch, which the app can turn on and off. Apple and Google also report invalid tokens and opt-outs back to Marketing Cloud. You cannot set this status from Marketing Cloud, an automation or the API.
+**Technical opt-in comes only from the SDK.** It reflects the OS notification permission and the SDK's own push switch, which the app can turn on and off (`setPushEnabled` on iOS, enable/disable push on the push message manager on Android; check the names for your SDK version). Apple and Google also report invalid tokens and opt-outs back to Marketing Cloud; this is best effort and can lag by a few sends. You cannot set this status from Marketing Cloud, an automation or the API. A MobilePush contact import can update attributes of contacts that already have a device, but it cannot create a device or grant opt-in.
 
 **Marketing or legal consent** (from a consent tool, CRM or web form) is your own data:
 
@@ -87,7 +104,7 @@ The contact and the device registration reach Marketing Cloud by different route
 | Symptom in the SDK log | Likely cause | What to check |
 |---|---|---|
 | SDK not started, init errors | Wrong configuration, Firebase missing (Android) | App ID, Access Token, App Endpoint, MID, Firebase setup |
-| Nothing sent | Delayed registration and the key is never set, or set through the wrong call | `setProfileId` / `setContactKey` call and when it runs |
+| Nothing sent | Delayed registration and the key is never set, set through the wrong call, or set for one SDK module only instead of for push | `setProfileId` / `setContactKey` call and when it runs |
 | Sent, but with another contact key | Key not set, set too late, different format (case, prefix, email instead of ID), shared test phone | Search Contact Builder for the key or device ID from the log |
 | Sent with your exact key and accepted | You are looking in the wrong place | The contact's MobilePush section, the right business unit, waited 15 minutes |
 | Sent and rejected, or retrying | Network blocked, wrong endpoint | Server response in the log; firewall or proxy on the test network |
