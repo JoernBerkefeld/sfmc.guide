@@ -114,18 +114,27 @@ SSJS and a client-side `<script>` are saved unchanged. The check parses the scri
 
 ### Running AMPscript from a script activity
 
-AMPscript can still run inside a script activity when SSJS hands it over at run time. In test runs of one automation, these were the results:
+AMPscript can still run inside a script activity when SSJS hands it over at run time. Because the save check looks for the AMPscript delimiters, the test script built them at run time:
 
-| Call in the script activity | Result |
-|---|---|
-| `Platform.Function.TreatAsContent()` with a `%%[ SET … ]%%` block followed by `%%=v(@var)=%%` | ran, returned the value |
-| `Platform.Function.TreatAsContent()` with `%%=Concat("A2", "-RAN")=%%` | ran, returned the value |
-| `Platform.Function.TreatAsContent()` with `%%="text"=%%` (a bare string, no function) | error: an inline expression needs a function call |
-| `Platform.Function.TreatAsContent()` with `<script runat="server" language="ampscript">` | ran |
-| `Platform.Function.ContentBlockByKey()` on an HTML block holding AMPscript | ran, returned the block's output |
-| `Variable.GetValue("@var")` after either call | returned the value AMPscript set |
+```js
+var P = "%" + "%";
+var open = "<scr" + "ipt runat=\"server\" language=\"amp" + "script\">";
+var close = "</scr" + "ipt>";
+```
 
-Because the save check looks for the delimiters, build them at run time, for example `var P = "%" + "%";` and then `TreatAsContent(P + "[ SET @x = 1 ]" + P)`. Or keep the AMPscript in a content block and load it with `ContentBlockByKey`, which needs no workaround.
+Each statement below ran in that script activity, in one automation run, and its return value was written to a data extension:
+
+| Statement in the script activity | AMPscript it hands over | Result |
+|---|---|---|
+| `Platform.Function.TreatAsContent(P + '[ SET @a1 = "A1-RAN" ]' + P + P + '=v(@a1)=' + P)` | `%%[ SET @a1 = "A1-RAN" ]%%%%=v(@a1)=%%` | ran, returned `A1-RAN` |
+| `Variable.GetValue("@a1")` (after the call above) | — | returned `A1-RAN` |
+| `Platform.Function.TreatAsContent(P + '=Concat("A2", "-RAN")=' + P)` | `%%=Concat("A2", "-RAN")=%%` | ran, returned `A2-RAN` |
+| `Platform.Function.TreatAsContent(P + '="A2-RAN"=' + P)` | `%%="A2-RAN"=%%` | error: "The function call does not include the required open parenthesis" — an inline expression needs a function call |
+| `Platform.Function.TreatAsContent(open + 'SET @a3 = "A3-RAN"' + close + P + '=v(@a3)=' + P)` | `<script runat="server" language="ampscript">SET @a3 = "A3-RAN"</script>%%=v(@a3)=%%` | ran, returned `A3-RAN` |
+| `Platform.Function.ContentBlockByKey("cpp-exec-block")` | the HTML block's content: `%%[ SET @cb = "CB-RAN" ]%%%%=v(@cb)=%%` | ran, returned `CB-RAN` |
+| `Variable.GetValue("@cb")` (after the call above) | — | returned `CB-RAN` |
+
+Writing the AMPscript out literally, for example `Platform.Function.TreatAsContent('%%[ SET @a1 = "A1-RAN" ]%%')`, is refused when the script activity is saved. Keeping the AMPscript in a content block and loading it with `ContentBlockByKey` needs no workaround.
 
 ## AMPscript in send contexts
 
