@@ -38,16 +38,17 @@ export const EXAMPLES = {
   ],
   mcn: [
     {
-      label: 'IN, LIKE and ORDER BY',
-      sql: "SELECT FirstName, Email\nFROM [Contact]\nWHERE MailingCountry IN ('DE', 'ES')\n  AND (Lead_Score__c >= 50 OR Title LIKE '%Manager%')\nORDER BY LastName DESC",
+      label: 'OR, LIKE, TOP and ORDER BY',
+      sql: "SELECT TOP 5 FirstName, Email\nFROM [Contact]\nWHERE (MailingCountry = 'DE' OR MailingCountry = 'ES')\n  AND Title LIKE '%Manager%'\nORDER BY LastName DESC",
     },
     {
       label: 'Key lookup on a marketing object',
-      sql: "SELECT CouponCode__c, Discount__c\nFROM [Coupon__c]\nWHERE CouponCode__c = 'WELCOME10'",
+      sql: "SELECT CouponCode__c, Discount__c\nFROM [Coupon__mo]\nWHERE CouponCode__c = 'WELCOME10'",
+      dataSource: 'MO',
     },
     {
       label: 'AND only on a CRM object',
-      sql: "SELECT FirstName, LastName\nFROM [Contact]\nWHERE MailingCountry = 'DE'\n  AND LastName LIKE 'Mü%'",
+      sql: "SELECT FirstName, LastName\nFROM [Contact]\nWHERE MailingCountry = 'DE'\n  AND LastName LIKE '%Mü%'",
     },
     {
       label: '= NULL instead of IS NULL (error)',
@@ -184,7 +185,7 @@ export function describeRoundTrip(roundTrip, dropped = []) {
   return { ok: true, text: `✓ Converts back to the same SQL${suffix}`, title: roundTrip.sql ?? '' };
 }
 
-const CODE_KINDS = {
+export const CODE_KINDS = {
   'ssjs-wsproxy': 'WSProxy retrieve (SSJS)',
   'ssjs-rows-retrieve': 'Rows.Retrieve (SSJS)',
   'ssjs-lookuprows': 'LookupRows (SSJS)',
@@ -193,9 +194,16 @@ const CODE_KINDS = {
   'ampscript-lookuprows': 'LookupRows (AMPscript)',
   'ampscript-lookuporderedrows': 'LookupOrderedRows (AMPscript)',
   'ampscript-lookup': 'Lookup (AMPscript)',
+  'handlebars-query': 'Handlebars query',
+  'handlebars-queryfirst': 'Handlebars queryFirst',
+  'handlebars-query-mo': 'Handlebars query (marketing object)',
+  'ampscript-rso': 'RetrieveSalesforceObjects (AMPscript)',
+  'ampscript-lookuprows-mo': 'LookupRows (AMPscript, marketing object)',
 };
 
 export const UNKNOWN_CODE_KIND = 'SSJS, AMPscript or Handlebars code';
+
+const parseNextAmpscript = (code) => parseAmpscript(code, { platform: 'mcn' });
 
 function safeParse(parse, text) {
   try {
@@ -210,22 +218,31 @@ function safeParse(parse, text) {
  * Uses the same parser order as the converter core.
  *
  * @param {string} text code
+ * @param {string} [platform] mce | mcn; Next reads AMPscript as Next lookup code and no SSJS
  * @returns {string} e.g. "LookupRows (AMPscript)"
  */
-export function describeCode(text) {
+export function describeCode(text, platform = 'mce') {
   const value = String(text ?? '');
-  if (/\{\{#?\s*queryFirst\b/u.test(value)) {
-    return 'Handlebars queryFirst';
+  // Direct calls ({{#query …}}) and subexpressions ({{#each (query …)}}, {{get (queryFirst …)}}).
+  if (/(?:\{\{#?|\()\s*queryFirst\b/u.test(value)) {
+    return CODE_KINDS['handlebars-queryfirst'];
   }
-  if (/\{\{#?\s*query\b/u.test(value)) {
-    return 'Handlebars query';
+  if (/(?:\{\{#?|\()\s*query\b/u.test(value)) {
+    return CODE_KINDS[
+      /\btype\s*=\s*["']MO["']/u.test(value) ? 'handlebars-query-mo' : 'handlebars-query'
+    ];
   }
   if (/\bRetrieveSalesforceObjects\s*\(/iu.test(value)) {
-    return 'RetrieveSalesforceObjects (AMPscript)';
+    return CODE_KINDS['ampscript-rso'];
   }
-  const parsers = /%%\[|%%=|\bSET\s+@/iu.test(value)
-    ? [parseAmpscript, parseSsjs]
-    : [parseSsjs, parseAmpscript];
+  let parsers;
+  if (platform === 'mcn') {
+    parsers = [parseNextAmpscript];
+  } else if (/%%\[|%%=|\bSET\s+@/iu.test(value)) {
+    parsers = [parseAmpscript, parseSsjs];
+  } else {
+    parsers = [parseSsjs, parseAmpscript];
+  }
   const results = parsers.map((parse) => safeParse(parse, value));
   const chosen =
     results.find((result) => result.ast) ?? results.find((result) => result.meta?.target);
@@ -516,18 +533,24 @@ function init(root) {
     elements.input.placeholder = toCode
       ? 'Type a SELECT query, or load an example'
       : 'Paste the code to turn back into SQL';
-    for (const field of elements.settings.querySelectorAll('[data-only]')) {
-      field.hidden = field.dataset.only !== state.platform;
-    }
+    renderSettingsFields();
     elements.example.replaceChildren(
       new Option('Load example…', ''),
       ...EXAMPLES[state.platform].map((example, index) => new Option(example.label, String(index))),
     );
   }
 
+  function renderSettingsFields() {
+    for (const field of elements.settings.querySelectorAll('[data-only]')) {
+      field.hidden = field.dataset.only !== state.platform;
+    }
+  }
+
   function renderInputTitle() {
     elements.inputTitle.textContent =
-      state.direction === 'toCode' ? 'SQL query' : describeCode(elements.input.value);
+      state.direction === 'toCode'
+        ? 'SQL query'
+        : describeCode(elements.input.value, state.platform);
   }
 
   function renderTabs() {
@@ -807,6 +830,11 @@ function init(root) {
     }
     state.direction = 'toCode';
     elements.input.value = example.sql;
+    if (state.platform === 'mcn') {
+      // Next examples bring their data source.
+      state.settings.dataSource = example.dataSource ?? 'CRM';
+      elements.dataSource.value = state.settings.dataSource;
+    }
     renderChrome();
     convertNow();
     elements.input.focus();

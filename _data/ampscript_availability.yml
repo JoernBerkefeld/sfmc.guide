@@ -24,6 +24,6 @@ claimrow:
 claimrowvalue:
   next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
 lookuprows:
-  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; it reads marketing objects in a Next email (tested 2026-11-25)"
 lookuporderedrows:
-  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, rendering was not tested"
+  next: "Not listed for Next in the official AMPscript reference. The language catalog lists it from API 68.0; an email containing it saves, but every rendered call failed (tested 2026-11-25)"

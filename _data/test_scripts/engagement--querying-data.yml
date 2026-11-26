@@ -1,0 +1,453 @@
+# Test scripts for /engagement/querying-data/
+#
+# Every script is a full HTML document for the shared verification CloudPage.
+#
+# Order of a run:
+#   1. fixture-create  creates and seeds the Customers Data Extension
+#                      (Name = external key) with WSProxy.
+#   2. one chapter script after the other. Each runs the page example
+#      VERBATIM in its own AMPscript block, then reads the AMPscript
+#      variables from SSJS (Variable.GetValue) and prints PASS / FAIL.
+#   3. fixture-delete  deletes the Data Extension again.
+#
+# Why the fixture is not created inside each chapter script: a Lookup call on a
+# Data Extension that does not exist fails the whole page with HTTP 422 before
+# any SSJS on it runs, even inside an IF branch that never executes. The Data
+# Extension must therefore exist before a page with the example is fetched.
+#
+# All scripts were last run green (every line PASS) on a live CloudPage in
+# MCDEV Training QA on 2026-11-26. Re-run them before changing a claim on the page.
+#
+# SSJS notes: Array sort() needs a compare function in this engine (byText).
+
+fixture-create: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre><script runat="server">
+  /*
+   * Fixture: creates and seeds the Customers Data Extension.
+   * Refuses to touch a Customers Data Extension that already exists.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  var fxProxy = new Script.Util.WSProxy();
+  var fxPre = fxProxy.retrieve("DataExtension", ["CustomerKey"], { Property: "CustomerKey", SimpleOperator: "equals", Value: "Customers" });
+  assert("no Customers Data Extension exists yet", "" + fxPre.Results.length, "0");
+  if (fxPre.Results.length === 0) {
+      var fxCreate = fxProxy.createItem("DataExtension", {
+          Name: "Customers", CustomerKey: "Customers",
+          Fields: [
+              { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Email", FieldType: "EmailAddress" },
+              { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+              { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+              { Name: "Country", FieldType: "Text", MaxLength: 2 },
+              { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+              { Name: "Points", FieldType: "Number" },
+              { Name: "SignupDate", FieldType: "Date" },
+              { Name: "IsActive", FieldType: "Boolean" }
+          ]
+      });
+      assert("fixture created", "" + fxCreate.Status, "OK");
+      var fxDE = DataExtension.Init("Customers");
+      var fxRows = [
+          ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+          ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+          ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+          ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+          ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+          ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+          ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false],
+          ["C008", "hana@example.com", "Hana", "Ito", "DE", "gold", 500, "2026-03-01", true]
+      ];
+      var fxAdded = 0;
+      for (var fxI = 0; fxI < fxRows.length; fxI++) {
+          var fx = fxRows[fxI];
+          var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+          if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+          fxAdded += fxDE.Rows.Add(fxRow);
+      }
+      assert("eight rows seeded", "" + fxAdded, "8");
+  }
+  </script></pre>
+  </body>
+  </html>
+
+fixture-delete: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre><script runat="server">
+  /*
+   * Fixture: deletes the Customers Data Extension and proves it is gone.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var fxProxy = new Script.Util.WSProxy();
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  var fxPost = fxProxy.retrieve("DataExtension", ["CustomerKey"], { Property: "CustomerKey", SimpleOperator: "equals", Value: "Customers" });
+  assert("no Customers Data Extension left", "" + fxPost.Results.length, "0");
+  </script></pre>
+  </body>
+  </html>
+
+which-function: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: Which function should I use?
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  /* XX matches no row */
+  SET @name = Lookup("Customers", "FirstName", "Country", "XX")
+  SET @rows = LookupRows("Customers", "Country", "XX")
+  SET @exactRows = LookupRowsCS("Customers", "Country", "XX")
+  SET @ordered = LookupOrderedRows("Customers", 0, "Points DESC", "Country", "XX")
+  SET @exactOrdered = LookupOrderedRowsCS("Customers", 0, "Points DESC", "Country", "XX")
+  /* @name is empty, every RowCount() is 0 */
+
+  /* An empty column looks exactly like a miss */
+  SET @tier = Lookup("Customers", "Tier", "SubscriberKey", "C007")
+  IF RowCount(LookupRows("Customers", "SubscriberKey", "C007")) > 0 THEN
+    SET @exists = "yes"
+  ENDIF
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  IF Empty(@name) THEN
+    SET @nameEmpty = "yes"
+  ENDIF
+  SET @c1 = RowCount(@rows)
+  SET @c2 = RowCount(@exactRows)
+  SET @c3 = RowCount(@ordered)
+  SET @c4 = RowCount(@exactOrdered)
+  IF Empty(@tier) THEN
+    SET @tierEmpty = "yes"
+  ENDIF
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("Lookup miss is null when read from SSJS", Variable.GetValue("@name") === null ? "null" : "not null", "null");
+  assert("Empty() is true for the Lookup miss", "" + Variable.GetValue("@nameEmpty"), "yes");
+  assert("LookupRows miss RowCount", "" + Variable.GetValue("@c1"), "0");
+  assert("LookupRowsCS miss RowCount", "" + Variable.GetValue("@c2"), "0");
+  assert("LookupOrderedRows miss RowCount", "" + Variable.GetValue("@c3"), "0");
+  assert("LookupOrderedRowsCS miss RowCount", "" + Variable.GetValue("@c4"), "0");
+  var tier = Variable.GetValue("@tier");
+  assert("Lookup of an empty column is an empty string, not null", (tier !== null && ("" + tier) === "") ? "empty string" : "other", "empty string");
+  assert("Empty() is true for the empty column", "" + Variable.GetValue("@tierEmpty"), "yes");
+  assert("RowCount tells the existing row apart", "" + Variable.GetValue("@exists"), "yes");
+  </script></pre>
+  </body>
+  </html>
+
+sql-to-ampscript: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: From SQL to AMPscript
+   * Needs the Customers fixture (run fixture-create first).
+   * The page example is the unchanged LookupOrderedRows output of the
+   * SQL Converter for:
+   *   SELECT TOP 2 FirstName, Points FROM Customers
+   *   WHERE Country = 'DE' AND IsActive = 1 ORDER BY Points DESC
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  /* SQL: SELECT FirstName, Points */
+  SET @rows = LookupOrderedRows("Customers", 2, "Points DESC", "Country", "DE", "IsActive", "1")
+  SET @rowCount = RowCount(@rows)
+  FOR @i = 1 TO @rowCount DO
+      SET @row = Row(@rows, @i)
+      SET @FirstName = Field(@row, "FirstName")
+      SET @Points = Field(@row, "Points")
+  NEXT @i
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @order = ""
+  FOR @j = 1 TO @rowCount DO
+    SET @order = Concat(@order, Field(Row(@rows, @j), "SubscriberKey"), " ")
+  NEXT @j
+  SET @numberAsText = RowCount(LookupRows("Customers", "Points", "300"))
+  SET @numberAsNumber = RowCount(LookupRows("Customers", "Points", 300))
+  SET @boolAsTrue = RowCount(LookupRows("Customers", "IsActive", "true"))
+  SET @boolAsOne = RowCount(LookupRows("Customers", "IsActive", "1"))
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("TOP 2 gives two rows", "" + Variable.GetValue("@rowCount"), "2");
+  assert("ORDER BY Points DESC order", "" + Variable.GetValue("@order"), "C005 C001 ");
+  assert("last loop pass FirstName", "" + Variable.GetValue("@FirstName"), "Anna");
+  assert("last loop pass Points", "" + Variable.GetValue("@Points"), "1200");
+  assert("Number column matched with the text 300", "" + Variable.GetValue("@numberAsText"), "1");
+  assert("Number column matched with the number 300", "" + Variable.GetValue("@numberAsNumber"), "1");
+  assert("Boolean column matched with true", "" + Variable.GetValue("@boolAsTrue"), "5");
+  assert("Boolean column matched with 1", "" + Variable.GetValue("@boolAsOne"), "5");
+  </script></pre>
+  </body>
+  </html>
+
+lookup: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: One value: Lookup
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  SET @firstName = Lookup("Customers", "FirstName", "Email", "eva@example.com")
+  SET @points = Lookup("Customers", "Points", "Country", "US", "Tier", "Silver")
+  SET @missing = Lookup("Customers", "FirstName", "Email", "nobody@example.com")
+
+  IF Empty(@missing) THEN
+    SET @greeting = "Hello"
+  ELSE
+    SET @greeting = Concat("Hello ", @missing)
+  ENDIF
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @upper = Lookup("Customers", "FirstName", "Email", "EVA@EXAMPLE.COM")
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("one column filter", "" + Variable.GetValue("@firstName"), "Eva");
+  assert("two name/value pairs joined with AND", "" + Variable.GetValue("@points"), "300");
+  assert("miss is empty (null when read from SSJS)", Variable.GetValue("@missing") === null ? "null" : "not null", "null");
+  assert("Empty() branch taken", "" + Variable.GetValue("@greeting"), "Hello");
+  assert("matching ignores case", "" + Variable.GetValue("@upper"), "Eva");
+  </script></pre>
+  </body>
+  </html>
+
+lookuprows: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: All matching rows: LookupRows
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  SET @rows = LookupRows("Customers", "Country", "DE", "Tier", "Gold")
+  SET @count = RowCount(@rows)
+  SET @names = ""
+
+  FOR @i = 1 TO @count DO
+    SET @row = Row(@rows, @i)
+    SET @names = Concat(@names, Field(@row, "FirstName"), " ")
+  NEXT @i
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @keys = ""
+  FOR @j = 1 TO @count DO
+    SET @keys = Concat(@keys, Field(Row(@rows, @j), "SubscriberKey"), ",")
+  NEXT @j
+  SET @miss = LookupRows("Customers", "Country", "XX")
+  SET @missCount = RowCount(@miss)
+  SET @passes = 0
+  FOR @j = 1 TO @missCount DO
+    SET @passes = Add(@passes, 1)
+  NEXT @j
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedList(text, sep) {
+      var parts = ("" + text).split(sep);
+      var k = [];
+      for (var x = 0; x < parts.length; x++) { if (parts[x] !== "") { k.push(parts[x]); } }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("three matching rows (gold counts as Gold)", "" + Variable.GetValue("@count"), "3");
+  assert("the DE + Gold rows", sortedList(Variable.GetValue("@keys"), ","), "C001,C005,C008");
+  assert("first names collected", sortedList(Variable.GetValue("@names"), " "), "Anna,Eva,Hana");
+  assert("no match gives RowCount 0", "" + Variable.GetValue("@missCount"), "0");
+  assert("a loop over the empty rowset does not run", "" + Variable.GetValue("@passes"), "0");
+  </script></pre>
+  </body>
+  </html>
+
+lookuprowscs: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: Case matters: LookupRowsCS
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  SET @exact = LookupRowsCS("Customers", "Country", "DE", "Tier", "Gold")
+  SET @any = LookupRows("Customers", "Country", "DE", "Tier", "Gold")
+  /* RowCount(@exact) is 2, RowCount(@any) is 3: Hana's tier is gold in lower case */
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @exactCount = RowCount(@exact)
+  SET @anyCount = RowCount(@any)
+  SET @keys = ""
+  FOR @j = 1 TO @exactCount DO
+    SET @keys = Concat(@keys, Field(Row(@exact, @j), "SubscriberKey"), ",")
+  NEXT @j
+  SET @lowerCountry = RowCount(LookupRowsCS("Customers", "Country", "de", "Tier", "Gold"))
+  SET @lowerTier = RowCount(LookupRowsCS("Customers", "Tier", "gold"))
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedList(text, sep) {
+      var parts = ("" + text).split(sep);
+      var k = [];
+      for (var x = 0; x < parts.length; x++) { if (parts[x] !== "") { k.push(parts[x]); } }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("LookupRowsCS RowCount", "" + Variable.GetValue("@exactCount"), "2");
+  assert("LookupRows RowCount", "" + Variable.GetValue("@anyCount"), "3");
+  assert("only the exact-case rows", sortedList(Variable.GetValue("@keys"), ","), "C001,C005");
+  assert("case counts in every pair (de finds nothing)", "" + Variable.GetValue("@lowerCountry"), "0");
+  assert("lower-case gold finds only Hana", "" + Variable.GetValue("@lowerTier"), "1");
+  </script></pre>
+  </body>
+  </html>
+
+lookuporderedrows: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: Sorted and limited: LookupOrderedRows
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  /* The three German customers with the most points */
+  SET @top3 = LookupOrderedRows("Customers", 3, "Points DESC", "Country", "DE")
+
+  /* All active customers by tier, then by points; 0 returns every match */
+  SET @active = LookupOrderedRows("Customers", 0, "Tier ASC, Points DESC", "IsActive", "true")
+
+  SET @best = Field(Row(@top3, 1), "FirstName")
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @k1 = ""
+  FOR @j = 1 TO RowCount(@top3) DO
+    SET @k1 = Concat(@k1, Field(Row(@top3, @j), "SubscriberKey"), " ")
+  NEXT @j
+  SET @k2 = ""
+  FOR @j = 1 TO RowCount(@active) DO
+    SET @k2 = Concat(@k2, Field(Row(@active, @j), "SubscriberKey"), " ")
+  NEXT @j
+  SET @noDirection = LookupOrderedRows("Customers", 0, "Points", "Country", "DE")
+  SET @k3 = ""
+  FOR @j = 1 TO RowCount(@noDirection) DO
+    SET @k3 = Concat(@k3, Field(Row(@noDirection, @j), "SubscriberKey"), " ")
+  NEXT @j
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("top 3 by Points DESC", "" + Variable.GetValue("@k1"), "C005 C001 C008 ");
+  assert("best German customer", "" + Variable.GetValue("@best"), "Eva");
+  assert("count 0, Tier ASC then Points DESC", "" + Variable.GetValue("@k2"), "C004 C005 C001 C008 C002 ");
+  assert("no direction sorts ascending", "" + Variable.GetValue("@k3"), "C004 C008 C001 C005 ");
+  </script></pre>
+  </body>
+  </html>
+
+lookuporderedrowscs: |
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <pre>%%[
+  /*
+   * Chapter: Sorted and case-sensitive: LookupOrderedRowsCS
+   * Needs the Customers fixture (run fixture-create first).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  ]%%
+  %%[
+  /* --- page example (verbatim) --- */
+  /* Gold customers by points, without the lower-case gold row */
+  SET @gold = LookupOrderedRowsCS("Customers", 0, "Points DESC", "Tier", "Gold")
+
+  /* The one customer whose tier is gold in lower case */
+  SET @lower = LookupOrderedRowsCS("Customers", 1, "Points DESC", "Tier", "gold")
+  SET @name = Field(Row(@lower, 1), "FirstName")
+  ]%%
+  %%[
+  /* --- values for the checks --- */
+  SET @k1 = ""
+  FOR @j = 1 TO RowCount(@gold) DO
+    SET @k1 = Concat(@k1, Field(Row(@gold, @j), "SubscriberKey"), " ")
+  NEXT @j
+  SET @upperExact = RowCount(LookupOrderedRowsCS("Customers", 0, "Points DESC", "Tier", "GOLD"))
+  SET @upperAny = RowCount(LookupOrderedRows("Customers", 0, "Points DESC", "Tier", "GOLD"))
+  ]%%
+  <script runat="server">
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  Platform.Load("core", "1.1.5");
+  assert("exact Gold rows by Points DESC", "" + Variable.GetValue("@k1"), "C005 C001 C003 ");
+  assert("lower-case gold row", "" + Variable.GetValue("@name"), "Hana");
+  assert("GOLD matches nothing case-sensitively", "" + Variable.GetValue("@upperExact"), "0");
+  assert("GOLD matches all four without CS", "" + Variable.GetValue("@upperAny"), "4");
+  </script></pre>
+  </body>
+  </html>

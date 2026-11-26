@@ -13,7 +13,7 @@ min_args: 5
 verification: in-progress
 differs_from_docs: false
 engagement: differs
-mcn_tested: 2026-11-23
+mcn_tested: 2026-11-25
 engagement_note: "For a query that matches nothing, Engagement's `Empty()` on the result renders `True`; Next renders `false`. The row count (`0`), a live read of an 18-character `Id`, and the failure on an unknown object name are the same on both."
 test_scripts: complete
 ---
@@ -73,6 +73,18 @@ Renders `0`.
 **Check for no match with `RowCount`, not `Empty`.** `Empty()` on that unmatched result rendered `false`. Test `RowCount(@rows) > 0` instead.
 
 **An unknown object name fails.** An email querying `NotARealObject__x` saved and published, but rendering it failed with HTTP 500.
+
+The following was tested on 2026-11-25 on the `Contact` object, one call per email, with the expected counts taken from a SOQL query of the same org:
+
+**Comparison operators work as literal strings.** `"="`, `">"`, `">="`, `"<"` and `"<="` on a number field returned the same records as SOQL; for example `RetrieveSalesforceObjects("Contact", "LastName,pi__score__c", "pi__score__c", "=", "82")` returned the one matching contact, and `Field` read its last name.
+
+**Several conditions combine with AND.** `"pi__score__c", ">", "290", "LastName", "!=", "Adelson"` returned the one record that meets both, and two `=` conditions no record meets at once returned `RowCount` `0`.
+
+**Dates compare as `yyyy-MM-dd` strings.** `"Birthdate", "=", "1965-07-26"` returned the one contact born that day.
+
+**`LIKE` matches anywhere in the field.** The value is found anywhere, regardless of case, and `%` is not treated as a wildcard: `"LastName", "LIKE", "Ro%"` returned 5 records where a SOQL prefix match finds 3, and `"LIKE", "Bl"` returned 2 records where SOQL finds none.
+
+**Write the operator as a literal.** An operator built at run time fails: `Char(60)` in place of `"<"` saved and published, but the preview failed with HTTP 500, and `Concat(Char(60), "=")` in place of `"<="` was rejected at publish with HTTP 400 ("invalid Handlebars script").
 
 {% include test-script.html bundle="next-ampscript-functions--retrievesalesforceobjects" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
 {% include test-script.html bundle="next-ampscript-functions--retrievesalesforceobjects" chapter="failing" lang="ampscript" label="Show calls that fail in Next (one email each)" %}

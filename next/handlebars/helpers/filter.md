@@ -9,7 +9,7 @@ platforms:
   - next
 mcn: differs-from-docs
 mcn_tested: 2026-11-25
-mcn_note: "The documented call form fails the email preview with HTTP 500 on a list of objects built in AMPscript, although `each` and `sort` read the same list. Other list sources are untested."
+mcn_note: "The documented call form fails the email preview with HTTP 500 on a list of objects built in AMPscript, and on a list built with `jsonpath`, although `each`, `sort` and `map` read the same lists."
 verification: in-progress
 test_scripts: complete
 ---
@@ -42,6 +42,7 @@ Returns `array`.
 Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email, with a list of objects built in AMPscript (Handlebars reads it as variable `rows`):
 
 - `%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}` fails the email preview with HTTP 500. The documented result is `[Bob][Cid]`. The same `rows` render with `each` and with `sort`.
+- `{{#each (filter (jsonpath '[{"name":"Bob","age":27},{"name":"Ann","age":21}]' "$") "age" ">" 22 "number")}}[{{name}}]{{/each}}` also fails the preview with HTTP 500, as do a string comparison (`"name" "==" "Ann" "string"`) and the documented chain `map (filter …) "name"`. The same `jsonpath` list renders with `each`.
 - `{{#if false}}{{filter myList "age" ">" 25 "number"}}{{/if}}` is accepted when the email is saved.
 {% endraw %}
 
@@ -51,7 +52,7 @@ Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email, with a
 ## Differs from official docs
 
 {% raw %}
-- The reference shows `{{filter myList "age" ">" 25 "number"}}` returning the matching objects. In Marketing Cloud Next (tested 2026-11-25): the same call form on a list of objects built with AMPscript `BuildRowsetFromJSON` failed the email preview with HTTP 500, although `each` and `sort` read that list. Lists from other sources were not tried. [Details](/next/differs-from-docs/#hb-filter-preview-http-500)
+- The reference shows `{{filter myList "age" ">" 25 "number"}}` returning the matching objects. In Marketing Cloud Next (tested 2026-11-25): the same call form on a list of objects built with AMPscript `BuildRowsetFromJSON` failed the email preview with HTTP 500, although `each` and `sort` read that list. Lists built with `jsonpath` fail the same way. [Details](/next/differs-from-docs/#hb-filter-preview-http-500)
 {% endraw %}
 
 {% include mcn-status.html %}

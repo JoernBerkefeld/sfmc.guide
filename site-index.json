@@ -837,7 +837,7 @@
     "url": "/next/ampscript/functions/lookup/",
     "section": "AMPscript Function Reference (Next)",
     "type": "page",
-    "description": "AMPscript Lookup in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves, and a lookup against a marketing object renders the stored value."
+    "description": "AMPscript Lookup in Marketing Cloud Next: reads one field of a marketing object record by key or other fields; no match, several pairs and several matches behave as in Engagement."
   },
   {
     "name": "AMPscript LookupOrderedRows",
@@ -2161,6 +2161,20 @@
     "section": "Tools",
     "type": "page",
     "description": "Prettier plugin for AMPscript, SSJS, Handlebars, and SQL with SFMC-friendly defaults."
+  },
+  {
+    "name": "Querying Data Extensions with AMPscript",
+    "url": "/engagement/querying-data/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Read rows from a Data Extension with AMPscript: Lookup, LookupRows, LookupOrderedRows and their case-sensitive variants, with a SQL-to-AMPscript cheat sheet."
+  },
+  {
+    "name": "Querying Data in Next",
+    "url": "/next/querying-data/",
+    "section": "Next",
+    "type": "page",
+    "description": "Read Sales Cloud objects and marketing objects in Marketing Cloud Next emails with Handlebars query, queryFirst or AMPscript; SQL cheat sheet, data graph tests."
   },
   {
     "name": "Segment members",

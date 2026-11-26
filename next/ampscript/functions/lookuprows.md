@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AMPscript LookupRows (Next)"
-description: "AMPscript LookupRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+description: "AMPscript LookupRows in Marketing Cloud Next: read matching marketing object records into a rowset. Syntax and behaviour proven in a Marketing Cloud Next email, although the official reference lists the function as unavailable in Next."
 parent: AMPscript Function Reference (Next)
 parent_url: /next/ampscript/functions/
 permalink: /next/ampscript/functions/lookuprows/
@@ -11,10 +11,10 @@ syntax: "LookupRows(dataExt, searchColumn1, searchValue1[, searchColumnN, search
 return_type: rowset
 min_args: 3
 verification: in-progress
-differs_from_docs: false
-engagement: untested
-mcn_tested: 2026-11-23
-engagement_note: "Engagement returns every matching data extension row as a rowset, and an empty rowset when nothing matches. In Next, only saving an email with the call has been tested, so the two cannot be compared yet."
+differs_from_docs: true
+engagement: same
+mcn_tested: 2026-11-25
+engagement_note: "Both return every matching row as a rowset, and an empty rowset (`RowCount` `0`) when nothing matches. In Next the call read a marketing object, filtered on its key field and on another field."
 test_scripts: complete
 ---
 
@@ -36,30 +36,41 @@ test_scripts: complete
 
 ```ampscript
 %%[
-  SET @r = LookupRows("ProbeDE", "K", "v")
+  SET @rows = LookupRows("zzprobecoupons__mo", "CouponCode__c", "PROBE0001")
 ]%%
+%%=RowCount(@rows)=%%|%%=Field(Row(@rows, 1), "CouponCode__c")=%%
 ```
 
-An email containing this call, placed in a branch that never runs, saved and published. What the call returns in Next has not been tested.
+Renders `1|PROBE0001` for a test marketing object `zzprobecoupons__mo` that holds one record with the key `PROBE0001`. In Next, the first argument names a marketing object instead of a data extension.
 
 ## Return value
 
-**`rowset`** — the declared return type. No result has been observed in Next yet.
+**`rowset`** — every matching record, read with [`Row`](/next/ampscript/functions/row/) and [`Field`](/next/ampscript/functions/field/). When nothing matches, the rowset has `RowCount` `0`.
 
 ## Behaviour
 
-**Next accepts the syntax.** An email with `LookupRows("ProbeDE", "K", "v")` inside an `IF 1 == 2` branch saved and published, and the rest of the email rendered.
+Tested in Marketing Cloud Next emails on 2026-11-25, one call per email, on the test marketing object `zzprobecoupons__mo` (key field `CouponCode__c`):
 
-**Rendering was not tested.** Reading rows needs a data source in the Next org, and none was available for the test. Do not rely on the Engagement results until they are checked in Next.
+**Filters on the key field.** `LookupRows("zzprobecoupons__mo", "CouponCode__c", "PROBE0001")` returned one row, and `Field` read `PROBE0001` from it.
+
+**Filters on other fields too.** `LookupRows("zzprobecoupons__mo", "IsClaimed__c", "false")` returned the one unclaimed record (`RowCount` `1`).
+
+**No match is not an error.** `LookupRows("zzprobecoupons__mo", "CouponCode__c", "NOPE0000")` returned a rowset with `RowCount` `0`.
+
+**The syntax is accepted at save.** An email with `LookupRows("ProbeDE", "K", "v")` inside an `IF 1 == 2` branch saved and published (2026-11-23).
 
 {% include test-script.html bundle="next-ampscript-functions--lookuprows" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
+
+## Differs from official docs
+
+- **Documented as unavailable in Next, yet it works.** The availability table of the reference says No for Marketing Cloud Next. In a Next email the call read a marketing object: a key-field filter returned the matching row, a filter on another field worked too, and no match gave `RowCount` `0`. A number key accepts the value as a string or a number. Two limits showed up on 2026-11-26: a filter that matched two records returned one row, and the same field in two pairs uses only the last pair. [Card](/next/differs-from-docs/#lookuprows-available-in-next)
 
 {% include platform-compare.html %}
 
 ## See also
 
 - [`Lookup`](/next/ampscript/functions/lookup/) — a single value from the first match
-- [`LookupOrderedRows`](/next/ampscript/functions/lookuporderedrows/) — sorted and capped
+- [`LookupOrderedRows`](/next/ampscript/functions/lookuporderedrows/) — the sorted variant; it failed every render test in Next
 - [`RowCount`](/next/ampscript/functions/rowcount/)
 - [`Row`](/next/ampscript/functions/row/)
 - [Official reference](https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows.html)

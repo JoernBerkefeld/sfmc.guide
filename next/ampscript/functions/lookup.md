@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AMPscript Lookup (Next)"
-description: "AMPscript Lookup in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves, and a lookup against a marketing object renders the stored value."
+description: "AMPscript Lookup in Marketing Cloud Next: reads one field of a marketing object record by key or other fields; no match, several pairs and several matches behave as in Engagement."
 parent: AMPscript Function Reference (Next)
 parent_url: /next/ampscript/functions/
 permalink: /next/ampscript/functions/lookup/
@@ -12,9 +12,9 @@ return_type: string
 min_args: 4
 verification: in-progress
 differs_from_docs: false
-engagement: untested
-mcn_tested: 2026-11-25
-engagement_note: "Engagement returns the column value of the first matching data extension row, or an empty string when nothing matches. In Next, one lookup against a marketing object returned the stored value; the Engagement edge cases (no match, several column/value pairs, numeric criteria) are not checked yet, so the two cannot be compared."
+engagement: same
+mcn_tested: 2026-11-26
+engagement_note: "Both return the column value of the first matching record, or an empty string when nothing matches, and combine several column/value pairs with AND. In Next the first argument is a marketing object instead of a data extension, and number fields print with one decimal (8 as 8.0)."
 test_scripts: complete
 ---
 
@@ -55,7 +55,7 @@ Against a test marketing object `zzprobecoupons__mo` with the key field `CouponC
 
 **Next accepts the syntax.** An email with `Lookup("ProbeDE", "F", "K", "v")` inside an `IF 1 == 2` branch saved and published, and the rest of the email rendered.
 
-**A single lookup renders.** Reading `IsClaimed__c` from a test marketing object by its key field returned `false`. Do not rely on the Engagement results (first match, empty string on no match, several column/value pairs, numeric criteria) until they are checked in Next.
+**Lookups on a marketing object behave as in Engagement.** Reading `IsClaimed__c` by the key field returned `false`. Tested on 2026-11-26 with a second marketing object (number key `CouponNo__c`): a number key accepts the value as a string or a number, a filter on a field other than the key works, no match returns an empty string, two column/value pairs combine with AND, and a filter that matches two records returns the value of one of them (`8.0`).
 
 {% include test-script.html bundle="next-ampscript-functions--lookup" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
 

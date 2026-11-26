@@ -8,3 +8,12 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[%%[IF 1 == 2 THEN SET @r = LookupRows("ProbeDE","K","v") ENDIF]%%gated]</p>
+  <p>c2 expect=[1|PROBE0001] got=[%%[ SET @lr1 = LookupRows("zzprobecoupons__mo","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lr1)=%%|%%=Field(Row(@lr1,1),"CouponCode__c")=%%]</p>
+  <p>c3 expect=[0] got=[%%[ SET @lr2 = LookupRows("zzprobecoupons__mo","CouponCode__c","NOPE0000") ]%%%%=RowCount(@lr2)=%%]</p>
+  <p>c4 expect=[1] got=[%%[ SET @lr3 = LookupRows("zzprobecoupons__mo","IsClaimed__c","false") ]%%%%=RowCount(@lr3)=%%]</p>
+  <p>c5 expect=[1|seven] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","CouponNo__c","7") ]%%%%=RowCount(@r)=%%|%%=Field(Row(@r,1),"Label__c")=%%]</p>
+  <p>c6 expect=[1|seven] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","CouponNo__c",7) ]%%%%=RowCount(@r)=%%|%%=Field(Row(@r,1),"Label__c")=%%]</p>
+  <p>c7 expect=[1|70.0] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","Points__c","7") ]%%%%=RowCount(@r)=%%|%%=Field(Row(@r,1),"CouponNo__c")=%%]</p>
+  <p>c8 expect=[1] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","CouponNo__c","7","Points__c","70") ]%%%%=RowCount(@r)=%%]</p>
+  <p>c9 expect=[0] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","CouponNo__c","99") ]%%%%=RowCount(@r)=%%]</p>
+  <p>c10 expect=[1|9.0] got=[%%[ SET @r = LookupRows("zzprobenumkey__mo","CouponNo__c","8","CouponNo__c","9") ]%%%%=RowCount(@r)=%%|%%=Field(Row(@r,1),"CouponNo__c")=%%]</p>

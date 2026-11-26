@@ -9,7 +9,7 @@ platforms:
   - next
 mcn: differs-from-docs
 mcn_tested: 2026-11-25
-mcn_note: "Works on a marketing object when an inline filter on its key field is given; without that filter the preview fails with HTTP 500."
+mcn_note: "On Sales Cloud objects, `where` with `params` and `sortBy` pick the expected record, and no match renders empty. On a marketing object it works when an inline filter is given (on the key or another field); without one, or with `sortBy`, the preview fails with HTTP 500."
 verification: in-progress
 test_scripts: complete
 ---
@@ -41,7 +41,13 @@ Tested in Marketing Cloud Next emails on 2026-11-25, one call per email, against
 
 - `{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}` renders `false`, the stored value.
 - Without the key filter (the call on its own, inside `#with`, or inside `get`): the preview fails with HTTP 500 and no message.
-- A CRM call inside `{{#if false}}…{{/if}}` is accepted when the email is saved; the CRM form was not rendered.
+- A CRM call inside `{{#if false}}…{{/if}}` is accepted when the email is saved.
+
+On the `Contact` object (`type="CRM"`), with the expected record taken from a SOQL query of the same org:
+
+- `{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="pi__score__c = :s" params=(hash s=82)) "LastName"}}` renders the last name of the one matching contact.
+- With `where="pi__score__c > :s" params=(hash s=200)`, `sortBy="pi__score__c DESC"` returns the contact with the highest score and `sortBy="pi__score__c ASC"` the one with the lowest.
+- When nothing matches (`s=1`), `[{{get (queryFirst …) "LastName"}}]` renders `[]` and the email renders normally.
 
 This is the Handlebars counterpart of AMPscript `Lookup`: `Lookup("zzprobecoupons__mo","IsClaimed__c","CouponCode__c","PROBE0001")` rendered the same `false`.
 {% endraw %}
@@ -54,7 +60,7 @@ Thanks to Nobuyuki Watanabe's [SFMC Tips #327](https://medium.com/@marketingclou
 ## Differs from official docs
 
 {% raw %}
-- On a marketing object (`type="MO"`), the call needs an inline filter on the object's key field, such as `KeyField__c="value"`. Without one, the preview fails with HTTP 500 and no message, although the reference lists only `object` and `type` as required. [Details](/next/differs-from-docs/#hb-queryfirst-mo-needs-key-filter)
+- On a marketing object (`type="MO"`), the call needs at least one inline filter, such as `KeyField__c="value"`; a field other than the key works too. Without one, the preview fails with HTTP 500 and no message, although the reference lists only `object` and `type` as required. `sortBy` fails the same way. [Details](/next/differs-from-docs/#hb-queryfirst-mo-needs-key-filter)
 {% endraw %}
 
 {% include mcn-status.html %}

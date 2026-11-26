@@ -11,9 +11,23 @@ behaviour: |
   <p>c2 expect=[0] got=[%%[ SET @o1rs = RetrieveSalesforceObjects("Contact","Id","Id","=","000000000000000AAA") ]%%%%=RowCount(@o1rs)=%%]</p>
   <p>c3 expect=[false] got=[%%[ SET @o2rs = RetrieveSalesforceObjects("Contact","Id","Id","=","000000000000000AAA") ]%%%%=v(Empty(@o2rs))=%%]</p>
   <p>c4 expect=[18] got=[%%[ SET @o3rs = RetrieveSalesforceObjects("Contact","Id","IsDeleted","=","false") IF RowCount(@o3rs) > 0 THEN SET @o3r = Row(@o3rs,1) SET @o3v = Length(Field(@o3r,"Id")) ENDIF ]%%%%=v(@o3v)=%%]</p>
+  <p>c5 expect=[1|Blau] got=[%%[ SET @r1 = RetrieveSalesforceObjects("Contact","LastName,pi__score__c","pi__score__c","=","82") ]%%%%=RowCount(@r1)=%%|%%=Field(Row(@r1,1),"LastName")=%%]</p>
+  <p>c6 expect=[2] got=[%%[ SET @r2 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c",">","300") ]%%%%=RowCount(@r2)=%%]</p>
+  <p>c7 expect=[2] got=[%%[ SET @r3 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c",">=","301") ]%%%%=RowCount(@r3)=%%]</p>
+  <p>c8 expect=[1|Chopra] got=[%%[ SET @r6 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c",">","290","LastName","!=","Adelson") ]%%%%=RowCount(@r6)=%%|%%=Field(Row(@r6,1),"LastName")=%%]</p>
+  <p>c9 expect=[0] got=[%%[ SET @r7 = RetrieveSalesforceObjects("Contact","LastName","LastName","=","Blau","pi__score__c","=","94") ]%%%%=RowCount(@r7)=%%]</p>
+  <p>c10 expect=[5] got=[%%[ SET @r11 = RetrieveSalesforceObjects("Contact","LastName","LastName","LIKE","Ro%") ]%%%%=RowCount(@r11)=%%]</p>
+  <p>c11 expect=[2] got=[%%[ SET @r12 = RetrieveSalesforceObjects("Contact","LastName","LastName","LIKE","Bl") ]%%%%=RowCount(@r12)=%%]</p>
+  <p>c12 expect=[2] got=[%%[ SET @r8 = RetrieveSalesforceObjects("Contact","LastName","LastName","LIKE","Bl%") ]%%%%=RowCount(@r8)=%%]</p>
+  <p>c13 expect=[1] got=[%%[ SET @r9 = RetrieveSalesforceObjects("Contact","LastName","Birthdate","=","1965-07-26") ]%%%%=RowCount(@r9)=%%]</p>
+  <p>c14 expect=[2] got=[%%[ SET @r13 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c","<","35") ]%%%%=RowCount(@r13)=%%]</p>
+  <p>c15 expect=[2] got=[%%[ SET @r14 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c","<=","34") ]%%%%=RowCount(@r14)=%%]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->
 
   <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
   %%[ SET @oe1rs = RetrieveSalesforceObjects("NotARealObject__x","Id","Id","=","000000000000000AAA") ]%%%%=v(RowCount(@oe1rs))=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @r4 = RetrieveSalesforceObjects("Contact","LastName","pi__score__c",Char(60),"35") ]%%%%=RowCount(@r4)=%%

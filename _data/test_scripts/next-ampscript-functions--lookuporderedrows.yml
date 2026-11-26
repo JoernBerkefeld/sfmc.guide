@@ -8,3 +8,21 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[%%[IF 1 == 2 THEN SET @r = LookupOrderedRows("ProbeDE",1,"K asc","K","v") ENDIF]%%gated]</p>
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview or block the save. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @lo1 = LookupOrderedRows("zzprobecoupons__mo",5,"CouponCode__c DESC","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lo1)=%%|%%=Field(Row(@lo1,1),"CouponCode__c")=%%
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @lo2 = LookupOrderedRows("zzprobecoupons__mo",0,"CouponCode__c ASC","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lo2)=%%
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @lo3 = LookupOrderedRows("zzprobecoupons__mo",1,"CouponCode__c DESC","IsClaimed__c","false") ]%%%%=RowCount(@lo3)=%%
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @lo4 = LookupOrderedRows("zzprobecoupons__mo",1,"CouponCode__c","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lo4)=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  %%[ SET @lo5 = LookupOrderedRows("zzprobecoupons__mo",1,"IsClaimed__c desc","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lo5)=%%

@@ -47,7 +47,7 @@ platforms:
           <option value="CRM">CRM (Sales Cloud object)</option>
           <option value="MO">MO (marketing object)</option>
         </select>
-        <span class="sqlc-hint">Sorting with sortBy works on CRM objects only.</span>
+        <span class="sqlc-hint">Marketing objects: exact-value filters joined with AND, no sorting. A filter that matches several records may return only one.</span>
       </div>
     </div>
   </span>

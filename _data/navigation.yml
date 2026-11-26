@@ -23,6 +23,8 @@
       url: /engagement/ampscript-ssjs-interplay/
     - title: FAQ
       url: /engagement/faq/
+    - title: Querying Data Extensions with AMPscript
+      url: /engagement/querying-data/
     - title: Einstein Recommendations
       url: /engagement/einstein/recommendation/
       children:
@@ -337,6 +339,8 @@
   children:
     - title: Overview
       url: /next/
+    - title: Querying data
+      url: /next/querying-data/
     - title: AMPscript Function Index
       url: /next/ampscript/functions/
       children:

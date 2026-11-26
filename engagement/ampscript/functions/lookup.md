@@ -13,9 +13,9 @@ min_args: 4
 verification: verified
 test_scripts: complete
 differs_from_docs: false
-mcn: untested
-mcn_tested: 2026-11-23
-mcn_note: "An email that calls `Lookup` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
+mcn: same
+mcn_tested: 2026-11-26
+mcn_note: "In Next, Lookup reads a marketing object instead of a data extension. Tested on marketing objects: key and other fields, no match (empty string), two column/value pairs (AND) and several matches (one value) behave as in Engagement; number fields print with one decimal."
 ---
 
 {% include verification-status.html %}

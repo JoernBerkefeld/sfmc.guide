@@ -9,9 +9,81 @@ behaviour: |
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[{{#if false}}{{query object="Contact" type="CRM" fields="Id" limit=1}}{{/if}}gated]</p>
   <p>c2 expect=[PROBE0001;] got=[{{#each (query type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001")}}{{CouponCode__c}};{{/each}}]</p>
+  <p>c3 expect=[Blau;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c = :s" params=(hash s=82))}}{{LastName}};{{/each}}]</p>
+  <p>c4 expect=[Blau;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName = :n" params=(hash n="Blau"))}}{{LastName}};{{/each}}]</p>
+  <p>c5 expect=[Blau;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName = :n" params=(hash n="blau"))}}{{LastName}};{{/each}}]</p>
+  <p>c6 expect=[Blau;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c = :s" params=(hash s="82"))}}{{LastName}};{{/each}}]</p>
+  <p>c7 expect=[Chopra;Adelson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c > :s" params=(hash s=300) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c8 expect=[Chopra;Adelson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c >= :s" params=(hash s=301) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c9 expect=[Phillips;Partner;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c < :s" params=(hash s=35) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c10 expect=[Phillips;Partner;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c <= :s" params=(hash s=34) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c11 expect=[Chopra;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName != :n AND pi__score__c > :s" params=(hash n="Adelson" s=290))}}{{LastName}};{{/each}}]</p>
+  <p>c12 expect=[Brown;Frost;Rogers;Rose;Rossi;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n" params=(hash n="Ro%") sortBy="LastName ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c13 expect=[Blay;Blau;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n" params=(hash n="Bl"))}}{{LastName}};{{/each}}]</p>
+  <p>c14 expect=[Brennaman;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n" params=(hash n="%ennam%"))}}{{LastName}};{{/each}}]</p>
+  <p>c15 expect=[Bowden;Brown;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n AND pi__score__c > :s" params=(hash n="B%" s=150) sortBy="LastName ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c16 expect=[Phillips;Adelson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c = :a OR pi__score__c = :b" params=(hash a=27 b=345) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c17 expect=[Brennaman;Brown;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n AND (pi__score__c < :lo OR pi__score__c > :hi)" params=(hash n="B%" lo=50 hi=200) sortBy="LastName ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c18 expect=[Brennaman;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="Birthdate = :d" params=(hash d="1965-07-26"))}}{{LastName}};{{/each}}]</p>
+  <p>c19 expect=[Brown;Green;Jones;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="Birthdate > :d AND pi__score__c > :s" params=(hash d="1988-01-01" s=0) sortBy="LastName ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c20 expect=[Bergman;Bowden;Distributor;Lambert;O&amp;#39;Brien Jr;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n AND Birthdate < :d" params=(hash n="B%" d="1963-01-01") sortBy="LastName ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c21 expect=[Jones;Pearson;Jeffries;Brown;Templey;Chopra;Adelson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c > :s" params=(hash s=200) sortBy="pi__score__c ASC")}}{{LastName}};{{/each}}]</p>
+  <p>c22 expect=[Adelson;Chopra;Templey;Brown;Jeffries;Pearson;Jones;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c > :s" params=(hash s=200) sortBy="pi__score__c DESC")}}{{LastName}};{{/each}}]</p>
+  <p>c23 expect=[Jones;Pearson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c > :s" params=(hash s=200) sortBy="pi__score__c ASC" limit=2)}}{{LastName}};{{/each}}]</p>
+  <p>c24 expect=[Blau..;] got=[{{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c = :s" params=(hash s=82))}}{{LastName}}.{{FirstName}}.{{pi__score__c}};{{/each}}]</p>
+  <p>c25 expect=[..;] got=[{{#each (query type="CRM" object="Contact" where="pi__score__c = :s" params=(hash s=82))}}{{LastName}}.{{FirstName}}.{{pi__score__c}};{{/each}}]</p>
+  <p>c26 expect=[5] got=[{{#each (query type="MO" object="zzprobecoupons__mo" fields="CouponCode__c" where="CouponCode__c = :c" params=(hash c="PROBE0001"))}}{{CouponCode__c}};{{/each}}]</p>
+  <p>c27 expect=[7.0|seven|70.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7)}}{{CouponNo__c}}|{{Label__c}}|{{Points__c}};{{/each}}]</p>
+  <p>c28 expect=[7.0|seven;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c="7")}}{{CouponNo__c}}|{{Label__c}};{{/each}}]</p>
+  <p>c29 expect=[] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=99)}}{{Label__c}};{{/each}}]</p>
+  <p>c30 expect=[seventy;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Points__c=7)}}{{Label__c}};{{/each}}]</p>
+  <p>c31 expect=[seven;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7 Points__c=70)}}{{Label__c}};{{/each}}]</p>
+  <p>c32 expect=[12.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="twelve")}}{{CouponNo__c}};{{/each}}]</p>
+  <p>c33 expect=[PROBE0001;] got=[{{#each (query type="MO" object="zzprobecoupons__mo" IsClaimed__c=false)}}{{CouponCode__c}};{{/each}}]</p>
+  <p>c34 expect=[8.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Points__c=80.0)}}{{CouponNo__c}};{{/each}}]</p>
+  <p>c35 expect=[] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="none")}}{{CouponNo__c}};{{/each}}]</p>
+  <p>c36 expect=[seven;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7 fields="Label__c")}}{{Label__c}};{{/each}}]</p>
+  <p>c37 expect=[group;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group" limit=1)}}{{Label__c}};{{/each}}]</p>
+  <p>c38 expect=[8.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group")}}{{CouponNo__c}};{{/each}}]</p>
+  <p>c39 expect=[Brown;] got=[{{#each (query type="CRM" object="Contact" fields="LastName" where="LastName = :n AND MailingCity != :c" params=(hash n="Brown" c=null))}}{{LastName}};{{/each}}]</p>
+  <p>c40 expect=[Adelson;] got=[{{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s" params=(hash s=300) sortBy="LastName ASC" limit="1")}}{{LastName}};{{/each}}]</p>
+  <p>c41 expect=[Brown|;] got=[{{#each (query type="CRM" object="Contact" fields="LastName,Account.Name" where="LastName = :n" params=(hash n="Brown"))}}{{LastName}}|{{Account.Name}};{{/each}}]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->
 
   <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
   {{#each (query object="zzprobecoupons__mo" type="MO" fields="CouponCode__c")}}{{CouponCode__c}};{{/each}}
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="LastName = 'Blau'")}}{{LastName}};{{/each}}
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="pi__score__c = 82")}}{{LastName}};{{/each}}
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName = 'Blau' AND pi__score__c = :s" params=(hash s=82))}}{{LastName}};{{/each}}
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001" fields="CouponCode__c" where="IsClaimed__c = :f" params=(hash f=false))}}{{CouponCode__c}};{{/each}}
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="MO" object="zzprobecoupons__mo" fields="CouponCode__c" where="CouponCode__c LIKE :c" params=(hash c="PROBE%"))}}{{CouponCode__c}};{{/each}}
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group" sortBy="Points__c DESC")}}{{CouponNo__c}};{{/each}}
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :a AND LastName <> :n" params=(hash a=300 n="Chopra") sortBy="LastName ASC")}}{{LastName}};{{/each}}
+
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="FirstName,LastName" where="FirstName = :f" params=(hash f="Sarah") sortBy="FirstName ASC, LastName DESC")}}{{LastName}};{{/each}}
+
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="LastName IN (:a, :b)" params=(hash a="Brown" b="Blau") sortBy="LastName ASC")}}{{LastName}};{{/each}}
+
+  <!-- email 11: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s AND LastName NOT IN (:a, :b)" params=(hash s=300 a="Chopra" b="Nobody") sortBy="LastName ASC")}}{{LastName}};{{/each}}
+
+  <!-- email 12: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s AND NOT (LastName = :n)" params=(hash s=300 n="Chopra"))}}{{LastName}};{{/each}}

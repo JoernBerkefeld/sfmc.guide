@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "AMPscript LookupOrderedRows (Next)"
-description: "AMPscript LookupOrderedRows in Marketing Cloud Next: syntax and what has been proven so far. An email containing the call saves; rendering it has not been tested in Next."
+description: "AMPscript LookupOrderedRows in Marketing Cloud Next: an email containing the call saves, but every rendered call on a marketing object failed. Use LookupRows instead."
 parent: AMPscript Function Reference (Next)
 parent_url: /next/ampscript/functions/
 permalink: /next/ampscript/functions/lookuporderedrows/
@@ -12,9 +12,9 @@ return_type: rowset
 min_args: 5
 verification: in-progress
 differs_from_docs: false
-engagement: untested
-mcn_tested: 2026-11-23
-engagement_note: "Engagement returns the matching data extension rows sorted by the given column and capped at `numRows`. In Next, only saving an email with the call has been tested, so the two cannot be compared yet."
+engagement: differs
+mcn_tested: 2026-11-25
+engagement_note: "Engagement returns the matching data extension rows sorted by the given column and capped at `numRows`. In Next, every call tested on a marketing object failed the email preview with HTTP 500, although the email saved and published."
 test_scripts: complete
 ---
 
@@ -38,23 +38,29 @@ test_scripts: complete
 
 ```ampscript
 %%[
-  SET @r = LookupOrderedRows("ProbeDE", 1, "K asc", "K", "v")
+  SET @rows = LookupOrderedRows("zzprobecoupons__mo", 5, "CouponCode__c DESC", "CouponCode__c", "PROBE0001")
 ]%%
+%%=RowCount(@rows)=%%
 ```
 
-An email containing this call, placed in a branch that never runs, saved and published. What the call returns in Next has not been tested.
+The email saves and publishes, but the preview fails with HTTP 500 and no message. The test marketing object `zzprobecoupons__mo` holds a record with the key `PROBE0001`, and `LookupRows` with the same filter returns it.
 
 ## Return value
 
-**`rowset`** — the declared return type. No result has been observed in Next yet.
+**`rowset`** — the declared return type. No rendered call has returned a result in Next.
 
 ## Behaviour
 
-**Next accepts the syntax.** An email with `LookupOrderedRows("ProbeDE", 1, "K asc", "K", "v")` inside an `IF 1 == 2` branch saved and published, and the rest of the email rendered.
+Tested in Marketing Cloud Next emails on 2026-11-25, one call per email, on the test marketing object `zzprobecoupons__mo` (key field `CouponCode__c`):
 
-**Rendering was not tested.** Sorting, the row cap and case-insensitive matching need a data source in the Next org, and none was available for the test. Do not rely on the Engagement results until they are checked in Next.
+**Every rendered call failed.** The preview answered HTTP 500 with no message for each form tried: a row count of `0`, `1` and `5`; the sort column with `ASC`, `DESC`, lowercase `desc` and no direction; a filter on the key field and a filter on another field (`"IsClaimed__c", "false"`). The failures repeated with longer waits for the preview.
+
+**The syntax is accepted at save.** An email with `LookupOrderedRows("ProbeDE", 1, "K asc", "K", "v")` inside an `IF 1 == 2` branch saved and published (2026-11-23), and the rest of the email rendered. A call that runs is only caught when the email is rendered.
+
+**Use [`LookupRows`](/next/ampscript/functions/lookuprows/) instead.** It returns the same marketing object rows with the same filters; it does not sort or cap them.
 
 {% include test-script.html bundle="next-ampscript-functions--lookuporderedrows" chapter="behaviour" lang="ampscript" label="Show Next test script" %}
+{% include test-script.html bundle="next-ampscript-functions--lookuporderedrows" chapter="failing" lang="ampscript" label="Show calls that fail in Next (one email each)" %}
 
 {% include platform-compare.html %}
 

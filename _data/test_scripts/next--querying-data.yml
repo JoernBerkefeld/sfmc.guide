@@ -1,0 +1,101 @@
+# Next test scripts for /next/querying-data/.
+# Hand-written (not generated): every chapter is the exact email that was rendered in the
+# previewEmail probe on 2026-11-26 (one HTML component, draft ListEmail, never sent).
+# Rendered by _includes/test-script.html.
+sales-cloud-objects: |
+  <!-- Marketing Cloud Next test script: Sales Cloud objects (Contact). Paste it into the HTML
+       component of a Next email and open the preview. Each line prints the result Next gave
+       in the test run (expect) next to the result of this run (got). The expected names come
+       from the demo Contacts of the test org; with other data, compare against a SOQL query
+       with the same filter. RetrieveSalesforceObjects has no sort order, so c7 may list the
+       same three names in another order. Rendered as one email on 2026-11-26. -->
+  <p>c1 expect=[Lisa Jones;] got=[{{#each (query type="CRM" object="Contact" fields="FirstName,LastName" where="MailingCity = :city AND Birthdate > :born" params=(hash city="Denver" born="1980-01-01"))}}{{FirstName}} {{LastName}};{{/each}}]</p>
+  <p>c2 expect=[Bowden;Brennaman;Jones;] got=[{{#each (query type="CRM" object="Contact" fields="LastName" where="MailingCity = :a OR MailingCity = :b" params=(hash a="Denver" b="Boston") sortBy="LastName ASC" limit=3)}}{{LastName}};{{/each}}]</p>
+  <p>c3 expect=[Sutherland] got=[{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="MailingCity = :city" params=(hash city="Wichita") sortBy="Birthdate DESC") "LastName"}}]</p>
+  <p>c4 expect=[Jason Brennaman] got=[{{#with (queryFirst type="CRM" object="Contact" fields="FirstName,LastName" where="LastName = :n" params=(hash n="Brennaman"))}}{{FirstName}} {{LastName}}{{/with}}]</p>
+  <p>c5 expect=[none] got=[{{#if (queryFirst type="CRM" object="Contact" fields="LastName" where="LastName = :n" params=(hash n="Nobody"))}}found{{else}}none{{/if}}]</p>
+  <p>c6 expect=[1|Jones] got=[%%[ SET @den = RetrieveSalesforceObjects("Contact","FirstName,LastName","MailingCity","=","Denver","Birthdate",">","1980-01-01") ]%%%%=RowCount(@den)=%%|%%=Field(Row(@den,1),"LastName")=%%]</p>
+  <p>c7 expect=[Sullivan;Janzen;Chopra;] got=[%%[ SET @wic = RetrieveSalesforceObjects("Contact","LastName","MailingCity","=","Wichita","LeadSource","=","Cold Call") FOR @i = 1 TO RowCount(@wic) DO ]%%%%=Field(Row(@wic,@i),"LastName")=%%;%%[ NEXT @i ]%%]</p>
+marketing-objects: |
+  <!-- Marketing Cloud Next test script: marketing objects. Needs two marketing objects:
+       zzprobecoupons__mo (text key CouponCode__c, one record PROBE0001 with IsClaimed__c = false)
+       and zzprobenumkey__mo (number key CouponNo__c, Label__c text, Points__c number; records
+       7/seven/70, 8/group/80, 9/group/90, 12/twelve/120, 70/seventy/7). Replace the names with
+       your own objects. Each line prints the result Next gave in the test run (expect) next to the
+       result of this run (got). Rendered as one email on 2026-11-26. Write a number field the same
+       way (quoted or not) in every call of one email: mixing both fails the preview. -->
+  <p>c1 expect=[PROBE0001|false;] got=[{{#each (query type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001")}}{{CouponCode__c}}|{{IsClaimed__c}};{{/each}}]</p>
+  <p>c2 expect=[false] got=[{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}]</p>
+  <p>c3 expect=[PROBE0001] got=[{{#with (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001")}}{{CouponCode__c}}{{/with}}]</p>
+  <p>c4 expect=[false] got=[%%=Lookup("zzprobecoupons__mo","IsClaimed__c","CouponCode__c","PROBE0001")=%%]</p>
+  <p>c5 expect=[1|false] got=[%%[ SET @cp = LookupRows("zzprobecoupons__mo","CouponCode__c","PROBE0001") ]%%%%=RowCount(@cp)=%%|%%=Field(Row(@cp,1),"IsClaimed__c")=%%]</p>
+  <p>c6 expect=[0] got=[%%[ SET @none = LookupRows("zzprobecoupons__mo","CouponCode__c","NOPE0000") ]%%%%=RowCount(@none)=%%]</p>
+  <p>c7 expect=[7.0|seven|70.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7)}}{{CouponNo__c}}|{{Label__c}}|{{Points__c}};{{/each}}]</p>
+  <p>c8 expect=[seventy;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Points__c=7)}}{{Label__c}};{{/each}}]</p>
+  <p>c9 expect=[seven;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7 Points__c=70)}}{{Label__c}};{{/each}}]</p>
+  <p>c10 expect=[group;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group" limit=1)}}{{Label__c}};{{/each}}]</p>
+  <p>c11 expect=[70.0] got=[{{get (queryFirst type="MO" object="zzprobenumkey__mo" Label__c="seventy") "CouponNo__c"}}]</p>
+  <p>c12 expect=[1|seven] got=[%%[ SET @nk = LookupRows("zzprobenumkey__mo","CouponNo__c",7) ]%%%%=RowCount(@nk)=%%|%%=Field(Row(@nk,1),"Label__c")=%%]</p>
+  <p>c13 expect=[twelve] got=[%%=Lookup("zzprobenumkey__mo","Label__c","CouponNo__c",12)=%%]</p>
+  <p>c14 expect=[8.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group")}}{{CouponNo__c}};{{/each}}]</p>
+  <p>c15 expect=[1] got=[%%[ SET @grp = LookupRows("zzprobenumkey__mo","Label__c","group") ]%%%%=RowCount(@grp)=%%]</p>
+data-graphs: |
+  <!-- Run each call below in its own Next email. In the test run (2026-11-26) every one of them
+       saved and published, but the preview failed with HTTP 500; a control email with
+       {{add 2 3}} rendered 5 before and after. "Marketing" is a data graph rooted on the
+       unified individual (key ssot__Id__c); "CMSM_Graph" one rooted on the individual.
+       Replace graph names, fields and the key value with your own. -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (queryFirst type="DG" object="Marketing" ssot__Id__c="<unified individual id>")}}{{@key}};{{/each}}
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing" ssot__Id__c="<unified individual id>") "ssot__FirstName__c"}}
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing") "ssot__FirstName__c"}}
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="CMSM_Graph") "ssot__FirstName__c"}}
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing" where="ssot__FirstName__c = :f" params=(hash f="Janice")) "ssot__LastName__c"}}
+failing: |
+  <!-- Run each call below in its own Next email: one of them in a combined email
+       would stop the whole preview. Each saved and published, and the preview failed with
+       HTTP 500 in the test run (2026-11-26, each alone, 10 x 15 s polling). -->
+
+  <!-- email 1: expect that the email saves, but the preview fails (HTTP 500): a value written into where -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="MailingCity = 'Denver'")}}{{LastName}};{{/each}}
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500): marketing object without its key-field filter -->
+  {{#each (query type="MO" object="zzprobecoupons__mo" fields="CouponCode__c")}}{{CouponCode__c}};{{/each}}
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500): where on a marketing object -->
+  {{#each (query type="MO" object="zzprobecoupons__mo" fields="CouponCode__c" where="CouponCode__c = :c" params=(hash c="PROBE0001"))}}{{CouponCode__c}};{{/each}}
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500): LookupOrderedRows -->
+  %%[ SET @ord = LookupOrderedRows("zzprobecoupons__mo",1,"CouponCode__c DESC","CouponCode__c","PROBE0001") ]%%%%=RowCount(@ord)=%%
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500): sortBy on a marketing object -->
+  {{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group" sortBy="Points__c DESC")}}{{CouponNo__c}};{{/each}}
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500): <> in where -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :a AND LastName <> :n" params=(hash a=300 n="Chopra"))}}{{LastName}};{{/each}}
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500): IN in where -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="LastName IN (:a, :b)" params=(hash a="Brown" b="Blau"))}}{{LastName}};{{/each}}
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500): NOT IN in where -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s AND LastName NOT IN (:a, :b)" params=(hash s=300 a="Chopra" b="Nobody"))}}{{LastName}};{{/each}}
+
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500): NOT (…) in where -->
+  {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s AND NOT (LastName = :n)" params=(hash s=300 n="Chopra"))}}{{LastName}};{{/each}}
+
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500): sortBy with two fields -->
+  {{#each (query type="CRM" object="Contact" fields="FirstName,LastName" where="FirstName = :f" params=(hash f="Sarah") sortBy="FirstName ASC, LastName DESC")}}{{LastName}};{{/each}}
+
+  <!-- email 11: both lines in ONE email; expect that it saves, but the preview fails (HTTP 500):
+       the same number field once unquoted and once quoted -->
+  {{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c=7)}}{{CouponNo__c}}|{{Label__c}}|{{Points__c}};{{/each}}
+  {{#each (query type="MO" object="zzprobenumkey__mo" CouponNo__c="12")}}{{Label__c}};{{/each}}

@@ -14,3 +14,12 @@ failing: |
 
   <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
   %%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (filter (jsonpath '[{"name":"Bob","age":27},{"name":"Ann","age":21}]' "$") "age" ">" 22 "number")}}[{{name}}]{{/each}}
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{map (filter (jsonpath '[{"name":"Bob","age":27},{"name":"Ann","age":21}]' "$") "age" ">" 22 "number") "name"}}
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{#each (filter (jsonpath '[{"name":"Bob"},{"name":"Ann"}]' "$") "name" "==" "Ann" "string")}}[{{name}}]{{/each}}

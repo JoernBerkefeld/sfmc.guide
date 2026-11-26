@@ -120,6 +120,18 @@ test('every Next test-script include has its generated bundle and chapter, and e
         }
     }
     assert.deepEqual(flagWrong, [], 'test_scripts: complete must match a generated test-script include; verification row required');
+    // hand-written bundles of Next topic pages (next/<topic>/index.md) count as used too
+    const topicMissing = [];
+    for (const d of fs.readdirSync(path.join(SITE, 'next'), { withFileTypes: true })) {
+        const f = path.join(SITE, 'next', d.name, 'index.md');
+        if (!d.isDirectory() || !fs.existsSync(f)) continue;
+        for (const m of fs.readFileSync(f, 'utf8').matchAll(/include test-script\.html bundle="([^"]+)" chapter="([^"]+)"/g)) {
+            used.add(m[1]);
+            const b = path.join(TS, `${m[1]}.yml`);
+            if (!fs.existsSync(b) || !new RegExp(`^${m[2]}: \\|$`, 'm').test(fs.readFileSync(b, 'utf8'))) topicMissing.push(`next/${d.name}: ${m[1]}#${m[2]}`);
+        }
+    }
+    assert.deepEqual(topicMissing, [], 'topic page includes without a bundle chapter');
     const unused = fs.readdirSync(TS).filter((n) => /^next-/.test(n) && !used.has(n.slice(0, -4)));
     assert.deepEqual(unused, [], 'generated bundles no page includes');
 });

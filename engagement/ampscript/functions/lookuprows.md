@@ -13,9 +13,9 @@ min_args: 3
 verification: verified
 test_scripts: complete
 differs_from_docs: false
-mcn: untested
-mcn_tested: 2026-11-23
-mcn_note: "An email that calls `LookupRows` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
+mcn: same
+mcn_tested: 2026-11-25
+mcn_note: "Next returns the matching rows of a marketing object as a rowset, filtering on the key field or on another field, and an empty rowset (`RowCount` `0`) when nothing matches, as Engagement does for a data extension."
 ---
 
 {% include verification-status.html %}

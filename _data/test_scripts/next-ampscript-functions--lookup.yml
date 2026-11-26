@@ -8,3 +8,10 @@ behaviour: |
        Assembled from single-call test emails (dates on the page); it has not been
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[%%[IF 1 == 2 THEN]%%%%=Lookup("ProbeDE","F","K","v")=%%%%[ENDIF]%%gated]</p>
+  <p>c2 expect=[seventy] got=[%%=Lookup("zzprobenumkey__mo","Label__c","CouponNo__c","70")=%%]</p>
+  <p>c3 expect=[twelve] got=[%%=Lookup("zzprobenumkey__mo","Label__c","CouponNo__c",12)=%%]</p>
+  <p>c4 expect=[seventy] got=[%%=Lookup("zzprobenumkey__mo","Label__c","Points__c",7)=%%]</p>
+  <p>c5 expect=[PROBE0001] got=[%%=Lookup("zzprobecoupons__mo","CouponCode__c","IsClaimed__c","false")=%%]</p>
+  <p>c6 expect=[[]] got=[[%%=Lookup("zzprobenumkey__mo","Label__c","CouponNo__c",99)=%%]]</p>
+  <p>c7 expect=[seven] got=[%%=Lookup("zzprobenumkey__mo","Label__c","CouponNo__c",7,"Points__c",70)=%%]</p>
+  <p>c8 expect=[8.0] got=[%%=Lookup("zzprobenumkey__mo","CouponNo__c","Label__c","group")=%%]</p>

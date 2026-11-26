@@ -15,6 +15,7 @@ Marketing Cloud Next changes what you can ship in content and automation compare
 |---|---|
 | [AMPscript function reference](/next/ampscript/functions/) | The supported AMPscript subset on its own searchable page, with the Handlebars mapping |
 | [Handlebars helper reference](/next/handlebars/helpers/) | The complete Handlebars helper catalog, searchable by category and origin |
+| [Querying data](/next/querying-data/) | Read Sales Cloud objects and marketing objects in emails with Handlebars or AMPscript, a SQL cheat sheet and tested calls |
 | [Differs from official docs](/next/differs-from-docs/) | AMPscript behaviour on Next that contradicts the official documentation |
 
 ## Tooling for Next

@@ -946,6 +946,22 @@
   testScript: |
     %%=Length(12345)=%%
 
+- name: "LookupRows"
+  url: "/next/ampscript/functions/lookuprows/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-data-extension/mc-ampscript-reference-data-extension-lookup-rows.html"
+  tagline: "Listed as unavailable in Next, but it reads marketing object rows"
+  category: "Data Extension"
+  object: "Data Extension"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "lookuprows-available-in-next"
+  body: |
+    The availability table of the reference marks the function as not available in Marketing Cloud Next.
+
+    In Next emails tested on 2026-11-25, one call per email, on a test marketing object: `LookupRows("zzprobecoupons__mo", "CouponCode__c", "PROBE0001")` returned one row and `Field` read `PROBE0001` from it. A filter on another field (`"IsClaimed__c", "false"`) returned the matching row too, and a value nothing matches returned `RowCount` `0`.
+  testScript: |
+    %%[ SET @lr1 = LookupRows("zzprobecoupons__mo","CouponCode__c","PROBE0001") ]%%%%=RowCount(@lr1)=%%|%%=Field(Row(@lr1,1),"CouponCode__c")=%%
+
 - name: "Lowercase"
   url: "/next/ampscript/functions/lowercase/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud-ampscript/references/mc-ampscript-string/mc-ampscript-reference-string-lowercase.html"
@@ -1632,7 +1648,9 @@
   body: |
     The reference shows `{{filter myList "age" ">" 25 "number"}}` returning the objects whose `age` is greater than 25.
 
-    In a Marketing Cloud Next email tested on 2026-11-25: on a list of objects built with AMPscript `BuildRowsetFromJSON` (read in Handlebars as `rows`), `{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}` let the email save, but the preview failed with HTTP 500 instead of rendering `[Bob][Cid]`. The same list renders with `each` and sorts correctly with `sort`. Lists from other sources were not tried.
+    In a Marketing Cloud Next email tested on 2026-11-25: on a list of objects built with AMPscript `BuildRowsetFromJSON` (read in Handlebars as `rows`), `{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}` let the email save, but the preview failed with HTTP 500 instead of rendering `[Bob][Cid]`. The same list renders with `each` and sorts correctly with `sort`.
+
+    A list built with `jsonpath` from a JSON string fails the same way: `{{#each (filter (jsonpath '[{"name":"Bob","age":27},{"name":"Ann","age":21}]' "$") "age" ">" 22 "number")}}[{{name}}]{{/each}}` gives HTTP 500, and so do a string comparison and the documented chain inside `map`. No list source we tried made `filter` render.
   testScript: |
     %%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}
 
@@ -1767,7 +1785,7 @@
 - name: "{{query}}"
   url: "/next/handlebars/helpers/query/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
-  tagline: "On a marketing object it needs a key-field filter, or the preview fails with HTTP 500"
+  tagline: "On a marketing object it needs an inline filter, or the preview fails with HTTP 500"
   category: "Handlebars Data"
   object: "Handlebars Data"
   severity: "high"
@@ -1776,16 +1794,66 @@
   body: |
     The reference lists only `object` and `type` as required for `query`; filtering by `where`/`params`, `id` or inline field conditions is described as optional.
 
-    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter on the object's key field was given. Without that filter the preview failed with HTTP 500 and no message.
+    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter was given. Without that filter the preview failed with HTTP 500 and no message. A `where` filter with `params` on the key field, such as `where="CouponCode__c = :c" params=(hash c="PROBE0001")`, failed the same way, with `=` and with `LIKE`.
+
+    Tests on 2026-11-26 with a second marketing object (number key `CouponNo__c`) showed that the inline filter may name any field (number, text or boolean, numbers with or without quotes) and that several filters combine with AND. `limit` works; `sortBy` fails with HTTP 500. A filter that matched two records returned only one of them.
 
     `{{#each (query type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001")}}{{CouponCode__c}};{{/each}}` rendered `PROBE0001;`.
   testScript: |
     {{#each (query object="zzprobecoupons__mo" type="MO" fields="CouponCode__c")}}{{CouponCode__c}};{{/each}}
 
+- name: "{{query}}"
+  url: "/next/handlebars/helpers/query/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  tagline: "A value written straight into where fails the preview with HTTP 500"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "hb-query-where-literal-fails"
+  body: |
+    The reference describes `where` with `:paramName` placeholders, and its grouping example writes the compared values straight into the filter.
+
+    In Marketing Cloud Next emails tested on 2026-11-25, one call per email, on the `Contact` object: `where="LastName = 'Blau'"` (a quoted string), `where="pi__score__c = 82"` (a number) and a filter mixing a quoted string with a placeholder all saved, but failed the preview with HTTP 500. The same filters with every value passed through `params=(hash …)` rendered the expected records.
+  testScript: |
+    {{#each (query type="CRM" object="Contact" fields="LastName" where="LastName = 'Blau'")}}{{LastName}};{{/each}}
+
+- name: "{{query}}"
+  url: "/next/handlebars/helpers/query/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  tagline: "LIKE matches anywhere in the field and ignores the % wildcard"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "hb-query-like-contains"
+  body: |
+    The reference lists `LIKE` among the `where` operators and shows it with a placeholder, without saying how it matches.
+
+    In Marketing Cloud Next emails tested on 2026-11-25 on the `Contact` object, compared with SOQL on the same org: `where="LastName LIKE :n"` matched the value anywhere in the field, regardless of case, and did not treat `%` as a wildcard. `n="Ro%"` returned `Brown`, `Frost`, `Rogers`, `Rose` and `Rossi`, where a SOQL prefix match returns only the last three; `n="%son"` also returned `Song`; `n="Bl"` returned `Blay` and `Blau`, where SOQL returns none.
+  testScript: |
+    {{#each (query type="CRM" object="Contact" fields="LastName,pi__score__c" where="LastName LIKE :n" params=(hash n="Ro%") sortBy="LastName ASC")}}{{LastName}};{{/each}}
+
+- name: "{{query}}"
+  url: "/next/handlebars/helpers/query/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-query.html"
+  tagline: "Without fields, every field of the result renders empty"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "medium"
+  discrepancy: "A3"
+  anchor: "hb-query-no-fields-empty"
+  body: |
+    The reference marks `fields` as optional, and its examples call `query` without it.
+
+    In a Marketing Cloud Next email tested on 2026-11-25 on the `Contact` object: `{{#each (query type="CRM" object="Contact" where="pi__score__c = :s" params=(hash s=82))}}{{LastName}}.{{FirstName}}.{{pi__score__c}};{{/each}}` rendered `..;` — one matching record, with every field empty. With `fields="LastName"` the same call rendered the last name, and only the listed fields were filled.
+  testScript: |
+    {{#each (query type="CRM" object="Contact" where="pi__score__c = :s" params=(hash s=82))}}{{LastName}}.{{FirstName}}.{{pi__score__c}};{{/each}}
+
 - name: "{{queryFirst}}"
   url: "/next/handlebars/helpers/queryfirst/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
-  tagline: "On a marketing object it needs a key-field filter, or the preview fails with HTTP 500"
+  tagline: "On a marketing object it needs an inline filter, or the preview fails with HTTP 500"
   category: "Handlebars Data"
   object: "Handlebars Data"
   severity: "high"
@@ -1794,7 +1862,7 @@
   body: |
     The reference lists only `object` and `type` as required for `queryFirst`; filtering by `where`/`params`, `id` or inline field conditions is described as optional.
 
-    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter on the object's key field was given. Without that filter the preview failed with HTTP 500 and no message.
+    In Marketing Cloud Next emails tested on 2026-11-25, one call per email: on a marketing object (`type="MO"`) the call rendered only when an inline filter was given. Without that filter the preview failed with HTTP 500 and no message. On 2026-11-26 a filter on a field other than the key worked as well, while `sortBy` failed with HTTP 500.
 
     `{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}` rendered `false`.
   testScript: |

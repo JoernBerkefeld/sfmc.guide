@@ -9,9 +9,18 @@ behaviour: |
        run as one email. Calls that make Next fail are listed separately. -->
   <p>c1 expect=[gated] got=[{{#if false}}{{queryFirst object="Contact" type="CRM" fields="Id"}}{{/if}}gated]</p>
   <p>c2 expect=[false] got=[{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}]</p>
+  <p>c3 expect=[Blau] got=[{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="pi__score__c = :s" params=(hash s=82)) "LastName"}}]</p>
+  <p>c4 expect=[Adelson] got=[{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s" params=(hash s=200) sortBy="pi__score__c DESC") "LastName"}}]</p>
+  <p>c5 expect=[Jones] got=[{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s" params=(hash s=200) sortBy="pi__score__c ASC") "LastName"}}]</p>
+  <p>c6 expect=[[]] got=[[{{get (queryFirst type="CRM" object="Contact" fields="LastName" where="pi__score__c = :s" params=(hash s=1)) "LastName"}}]]</p>
+  <p>c7 expect=[twelve] got=[{{get (queryFirst type="MO" object="zzprobenumkey__mo" CouponNo__c=12) "Label__c"}}]</p>
+  <p>c8 expect=[70.0] got=[{{get (queryFirst type="MO" object="zzprobenumkey__mo" Label__c="seventy") "CouponNo__c"}}]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview or block the save. -->
 
   <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
   {{get (queryFirst object="zzprobecoupons__mo" type="MO") "CouponCode__c"}}
+
+  <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="MO" object="zzprobenumkey__mo" Label__c="group" sortBy="Points__c DESC") "CouponNo__c"}}

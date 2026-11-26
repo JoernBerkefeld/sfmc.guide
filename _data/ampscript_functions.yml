@@ -1552,7 +1552,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.Lookup"
       url: "https://ssjs.guide/platform-functions/lookup/"
-  mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. All filter keys must fully specify the composite primary key."
+  mcnNotes: "In MCN, search arguments must be provided in column/value pairs - an odd count causes an error. Tested in a Next email on a marketing object: filters on the key field and on non-key number and boolean fields return the field of the matching record, and a number key accepts the value as a string or a number."
   description: "Returns a single field value from the first matching row in a data extension. A no-match returns an empty string."
   guideUrl: "https://ampscript.guide/lookup/"
 - name: "LookupOrderedRows"
@@ -1608,7 +1608,7 @@
   ssjsEquivalents:
     - name: "Platform.Function.LookupRows"
       url: "https://ssjs.guide/platform-functions/lookuprows/"
-  mcnNotes: "Tested in a Next email on a marketing object: filters on the key field and on a non-key field return the matching rows, and no match gives RowCount 0."
+  mcnNotes: "Tested in a Next email on a marketing object: filters on the key field and on a non-key field return the matching rows, and no match gives RowCount 0. A number key accepts the value as a string or a number. In a test where the filter matched two records, only one row was returned. When the same field appears in two pairs, only the last pair is used."
   description: "Returns a rowset of all matching rows from a data extension."
   guideUrl: "https://ampscript.guide/lookuprows/"
 - name: "LookupRowsCS"

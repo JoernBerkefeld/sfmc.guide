@@ -219,13 +219,76 @@ test('describeCode names the recognised lookup code', async () => {
   assert.equal(describeCode(''), UNKNOWN_CODE_KIND);
 });
 
+test('describeCode names the Next outputs by their target', async () => {
+  const { describeCode, CODE_KINDS } = await load();
+  const cases = {
+    'handlebars-query':
+      '{{#each (query type="CRM" object="Contact" fields="LastName")}}\n    {{LastName}}\n{{/each}}',
+    'handlebars-queryfirst':
+      '{{get (queryFirst type="CRM" object="Contact" fields="LastName") "LastName"}}',
+    'handlebars-query-mo':
+      '{{#each (query type="MO" object="Coupon__mo" CouponCode__c="A")}}\n    {{CouponCode__c}}\n{{/each}}',
+    'ampscript-rso':
+      '%%[\nSET @rows = RetrieveSalesforceObjects("Contact", "LastName", "LastName", "=", "A")\n]%%',
+  };
+  for (const [target, code] of Object.entries(cases)) {
+    assert.equal(describeCode(code, 'mcn'), CODE_KINDS[target], target);
+  }
+});
+
+test('CODE_KINDS names every Next target id', async () => {
+  const { CODE_KINDS } = await load();
+  const nextIds = [
+    'handlebars-query',
+    'handlebars-queryfirst',
+    'handlebars-query-mo',
+    'ampscript-rso',
+    'ampscript-lookuprows-mo',
+  ];
+  for (const id of nextIds) {
+    assert.ok(CODE_KINDS[id], id);
+  }
+  const { MCN_TARGETS } = await import(VENDOR_URL);
+  if (MCN_TARGETS.some((target) => target.id === 'handlebars-query-mo')) {
+    assert.deepEqual(
+      MCN_TARGETS.map((target) => target.id).toSorted(),
+      nextIds.toSorted(),
+      'the vendored core has the same Next targets',
+    );
+  }
+});
+
+/**
+ * The convert() options the page builds when an example is loaded.
+ *
+ * @param {(state: object) => object} buildOptions UI helper
+ * @param {string} platform mce | mcn
+ * @param {{ sql: string, dataSource?: string }} example example
+ * @returns {object} options
+ */
+function exampleOptions(buildOptions, platform, example) {
+  return buildOptions({
+    platform,
+    direction: 'toCode',
+    settings: {
+      deName: '',
+      deKey: '',
+      columns: '',
+      dataSource: example.dataSource ?? 'CRM',
+    },
+  });
+}
+
 test('the examples fit the real converter core', async () => {
-  const { EXAMPLES, collectMessages, describeCode, UNKNOWN_CODE_KIND } = await load();
-  const { convert } = await import(VENDOR_URL);
+  const { EXAMPLES, buildOptions, collectMessages, describeCode, UNKNOWN_CODE_KIND } = await load();
+  const { convert, MCN_TARGETS } = await import(VENDOR_URL);
+  // The vendored core emits Next code once it has the Next targets (sfmc-sql-converter 0.2.0).
+  const nextEmits = MCN_TARGETS.some((target) => target.id === 'handlebars-query-mo');
   const severities = { mce: new Set(), mcn: new Set() };
   for (const platform of ['mce', 'mcn']) {
     for (const example of EXAMPLES[platform]) {
-      const result = convert(example.sql, { platform, direction: 'toCode' });
+      const options = exampleOptions(buildOptions, platform, example);
+      const result = convert(example.sql, options);
       const wsproxy = result.outputs.find((output) => output.id === 'ssjs-wsproxy');
       for (const message of collectMessages(result, wsproxy)) {
         severities[platform].add(message.severity);
@@ -237,8 +300,16 @@ test('the examples fit the real converter core', async () => {
         const back = convert(wsproxy.code, { platform, direction: 'toSql' });
         assert.ok(back.roundTrip.ok, `${example.label}: converts back`);
       }
-      if (platform === 'mcn') {
-        // Next targets stay unavailable until their live tests are done.
+      if (platform === 'mcn' && nextEmits) {
+        assert.equal(hasError, /\(error\)$/u.test(example.label), `${example.label}: error label`);
+        const usable = result.outputs.filter((output) => typeof output.code === 'string');
+        assert.equal(usable.length > 0, !hasError, `${example.label}: Next output`);
+        for (const output of usable) {
+          const back = convert(output.code, { ...options, direction: 'toSql' });
+          assert.ok(back.roundTrip.ok, `${example.label}: ${output.id} converts back`);
+        }
+      } else if (platform === 'mcn') {
+        // 0.1.0: Next targets stay unavailable until their live tests are done.
         assert.ok(
           result.outputs.every((output) => output.unavailable),
           example.label,

@@ -13,9 +13,9 @@ min_args: 5
 verification: verified
 test_scripts: complete
 differs_from_docs: false
-mcn: untested
-mcn_tested: 2026-11-23
-mcn_note: "An email that calls `LookupOrderedRows` saves and publishes in Next, so the syntax is accepted. What it returns has not been tested in Next: that needs a data source in the Next org to read."
+mcn: differs
+mcn_tested: 2026-11-25
+mcn_note: "In Next, an email that calls `LookupOrderedRows` saves and publishes, but every call tested on a marketing object fails the preview with HTTP 500. Engagement returns the matching rows sorted and capped. Use `LookupRows` in Next."
 ---
 
 {% include verification-status.html %}
