@@ -1,7 +1,8 @@
 /**
  * Marketing Cloud Next emitters: turn a parsed SELECT (see `parseSql`) into Handlebars
  * (`query` / `queryFirst`) or AMPscript (`RetrieveSalesforceObjects`, `LookupRows`) that reads
- * the same records from a Sales Cloud object (`CRM`) or a marketing object (`MO`).
+ * the same records from a Sales Cloud object (`CRM`), a marketing object (`MO`) or a DMO of the
+ * email's bound data graph (`DG`).
  *
  * Only what the live probes proved is emitted (see `NEXT_RULES`, which points at the
  * verification DB rows); everything else makes the target unavailable with a plain reason.
@@ -10,7 +11,13 @@
 
 import { CodeWriter, collectClauses, conditionsOf, isContainsPattern } from './clauses.js';
 import { ampString, emitAmpscriptLookupRows, writeAmpLoop } from './emit-mce.js';
-import { LOOKUP_FIRST_ROW_ONLY, MO_ONE_MATCH, TOP_DROPPED, createMessage } from './messages.js';
+import {
+    DATA_GRAPH_SCOPE,
+    LOOKUP_FIRST_ROW_ONLY,
+    MO_ONE_MATCH,
+    TOP_DROPPED,
+    createMessage,
+} from './messages.js';
 
 /**
  * @typedef {import('./sql-parser.js').SelectAst} SelectAst
@@ -28,6 +35,7 @@ const QUERY_FIRST = `${DB}mcn-handlebars-email-queryfirst.json`;
 const RSO = `${DB}mcn-ampscript-email-retrievesalesforceobjects.json`;
 const LOOKUP_ROWS = `${DB}mcn-ampscript-email-lookuprows.json`;
 const LOOKUP_ORDERED_ROWS = `${DB}mcn-ampscript-email-lookuporderedrows.json`;
+const DATA_GRAPH = `${DB}mcn-handlebars-email-datagraph.json`;
 
 /**
  * Builds verification DB references `file#checklist[i]` (0-based, as in the JSON array).
@@ -131,6 +139,23 @@ export const NEXT_RULES = Object.freeze({
     lookupRowsMo: { value: true, db: rows(LOOKUP_ROWS, 0, 2, 3, 4, 7, 8, 9) },
     // LookupOrderedRows fails in Next: no ORDER BY / TOP for AMPscript
     noOrderedLookup: { value: true, db: rows(LOOKUP_ORDERED_ROWS, 2, 3, 4, 5, 6) },
+    // DG: #each over a DMO array directly under the root of the email's bound data graph
+    // (Email Builder preview only; the previewEmail API does not load the graph)
+    dgEach: { value: true, db: rows(DATA_GRAPH, 3, 19) },
+    // DG row check inside the loop: compare (SQL → helper operator), and, or; <, <= and >= are
+    // listed by the helper but were not probed one by one
+    dgOperators: {
+        value: Object.freeze({ '=': '==', '<>': '!=', '<': '<', '<=': '<=', '>': '>', '>=': '>=' }),
+        db: rows(DATA_GRAPH, 4, 5, 6, 7, 10),
+    },
+    // DG: compare == is case-sensitive (unlike SQL Server)
+    dgCaseSensitive: { value: true, db: rows(DATA_GRAPH, 9) },
+    // DG ORDER BY: sort arr "Field" "asc"|"desc" "string"
+    dgSort: { value: true, db: rows(DATA_GRAPH, 11, 12) },
+    // DG TOP: slice arr 0 N, also around sort
+    dgSlice: { value: true, db: rows(DATA_GRAPH, 13, 14) },
+    // DG: the filter helper breaks the preview (5 arguments) or the save (4 arguments)
+    dgFilterHelper: { value: false, db: rows(DATA_GRAPH, 17, 18) },
 });
 
 // Salesforce API names: letters, digits and underscores, starting with a letter
@@ -595,6 +620,187 @@ export function emitHandlebarsQueryMo(ast, options = {}) {
 }
 
 // ------------------------------------------------------------------------------------------
+// Handlebars DG: a DMO array of the email's bound data graph
+// ------------------------------------------------------------------------------------------
+
+const DG_LABEL = 'The data graph output';
+
+/**
+ * Explains a WHERE part the data graph output can't express (IN and NOT IN become `or` /
+ * `and` chains of `compare`).
+ *
+ * @param {object} expr expression node
+ * @returns {string|null} reason, or null when the tree fits
+ */
+function dgWhereProblem(expr) {
+    switch (expr.type) {
+        case 'and':
+        case 'or': {
+            return dgWhereProblem(expr.left) ?? dgWhereProblem(expr.right);
+        }
+        case 'in': {
+            return null;
+        }
+        case 'like': {
+            return `${DG_LABEL} has no proven way to match a pattern, so LIKE can't be converted. Compare whole values with = instead.`;
+        }
+        default: {
+            return whereProblem(expr, {
+                label: DG_LABEL,
+                or: true,
+                ops: NEXT_RULES.dgOperators.value,
+                like: false,
+            });
+        }
+    }
+}
+
+/**
+ * Inside the loop a field is written bare (`{{Field}}`, `(compare Field …)`), so a name like
+ * `this`, `length` or `sort` would read the row or call a helper instead of the field. DMO
+ * field API names always contain `__` (ssot__FirstName__c, KQ_Id__c) and no helper name does,
+ * so a selected or filtered field without `__` is refused. The sort field is a quoted string
+ * and the FROM name too, so they need no check.
+ *
+ * @param {SelectAst} ast statement
+ * @returns {string|null} reason, or null when every bare field fits
+ */
+function dgFieldProblem(ast) {
+    const names = [
+        ...(Array.isArray(ast.columns) ? ast.columns.map((column) => column.name) : []),
+        ...conditionsOf(ast.where).map((expr) => expr.column),
+    ];
+    const bad = names.find((name) => !name.includes('__'));
+    return bad === undefined
+        ? null
+        : `${DG_LABEL} needs DMO field API names, which contain __ (e.g. ssot__FirstName__c). "${bad}" could read the whole row or call a Handlebars helper of that name instead of the field.`;
+}
+
+/**
+ * Formats `(compare Field "op" value)`.
+ *
+ * @param {string} column field
+ * @param {string} op SQL operator
+ * @param {{kind: string, value: string}} value value node
+ * @returns {string} sub-expression
+ */
+function dgCompare(column, op, value) {
+    return `(compare ${column} ${hbString(NEXT_RULES.dgOperators.value[op])} ${hbValue(value)})`;
+}
+
+/**
+ * Writes a WHERE tree as nested `and` / `or` / `compare` sub-expressions. IN becomes an `or`
+ * chain of `==`, NOT IN an `and` chain of `!=`.
+ *
+ * @param {CodeWriter} out writer
+ * @param {object} expr expression node
+ * @param {Map<object, string>} idOf node → clause id
+ */
+function writeDgCondition(out, expr, idOf) {
+    if (expr.type === 'and' || expr.type === 'or') {
+        out.write(`(${expr.type} `);
+        writeDgCondition(out, expr.left, idOf);
+        out.write(' ');
+        writeDgCondition(out, expr.right, idOf);
+        out.write(')');
+        return;
+    }
+    if (expr.type !== 'in') {
+        out.mark(idOf.get(expr), dgCompare(expr.column, expr.op, expr.value));
+        return;
+    }
+    const [junction, op] = expr.negated ? ['and', '<>'] : ['or', '='];
+    // left fold: (or (or a b) c), the way the SQL parser builds an OR chain
+    const text = expr.values
+        .map((value) => dgCompare(expr.column, op, value))
+        .reduce((left, right) => `(${junction} ${left} ${right})`);
+    out.mark(idOf.get(expr), text);
+}
+
+/**
+ * Emits `{{#each (get (get @root "$dataGraph") "Dmo__dlm")}}` over a DMO array directly under
+ * the root of the email's bound data graph: WHERE as `{{#if}}` with `compare` / `and` / `or`,
+ * ORDER BY (one column) as `sort … "string"`, TOP as `slice … 0 N` (only without WHERE: slice
+ * runs before the row check).
+ *
+ * @param {SelectAst} ast statement
+ * @param {NextEmitOptions} [options] options
+ * @returns {EmitResult|{unavailable: string}} code or the reason it cannot be generated
+ */
+export function emitHandlebarsDataGraph(ast, options = {}) {
+    const problem = firstProblem(
+        starProblem(ast, DG_LABEL),
+        nameProblem(ast),
+        ast.where && dgWhereProblem(ast.where),
+        ast.orderBy?.length > 1 &&
+            `${DG_LABEL} sorts by one field only. Sort by one column, or sort the rows in your code.`,
+        dgFieldProblem(ast),
+        hbValueProblem(ast),
+    );
+    if (problem) {
+        return problem;
+    }
+    const { clauses, idOf } = collectClauses(ast, options.sourceText);
+    const hasTop = ast.top !== null && ast.top !== undefined;
+    const isSliced = hasTop && !ast.where;
+    const [order] = ast.orderBy ?? [];
+    const out = new CodeWriter();
+    out.write('{{#each ');
+    out.write(isSliced ? '(slice ' : '');
+    out.write(order ? '(sort ' : '');
+    out.write('(get (get @root "$dataGraph") ').mark('from', hbString(ast.from.name)).write(')');
+    if (order) {
+        out.write(' ')
+            .mark(
+                idOf.get(order),
+                `${hbString(order.column)} ${hbString(order.direction.toLowerCase())}`,
+            )
+            .write(' "string")');
+    }
+    if (isSliced) {
+        out.write(' ').mark('top', `0 ${ast.top}`).write(')');
+    }
+    out.write('}}\n');
+    let indent = INDENT;
+    if (ast.where) {
+        out.write(`${INDENT}{{#if `);
+        writeDgCondition(out, ast.where, idOf);
+        out.write('}}\n');
+        indent += INDENT;
+    }
+    out.write(indent);
+    for (const [index, column] of ast.columns.entries()) {
+        out.write(index ? ' ' : '').mark(idOf.get(column), `{{${column.name}}}`);
+    }
+    out.write('\n');
+    out.write(ast.where ? `${INDENT}{{/if}}\n` : '');
+    out.write('{{/each}}');
+    const messages = [];
+    const dropped = [];
+    if (hasTop && !isSliced) {
+        const topClause = clauses.find((clause) => clause.clauseId === 'top');
+        messages.push(
+            createMessage(
+                'warning',
+                TOP_DROPPED,
+                `slice would cut the rows before the {{#if}} check runs, so TOP ${ast.top} is left out. Count the matching rows in your code if you need ${ast.top} of them.`,
+                topClause?.loc ?? ast.loc,
+            ),
+        );
+        dropped.push('top');
+    }
+    messages.push(
+        createMessage(
+            'info',
+            DATA_GRAPH_SCOPE,
+            `The rows are the recipient's own ${ast.from.name} rows from the data graph the email is bound to; ${ast.from.name} must be a DMO directly under the graph's root. This was proven in the Email Builder preview only: the preview API does not load the data graph, and a real send is untested. Text comparisons are case-sensitive, and values that look like numbers compare as numbers${order ? `. sort compares the values as text, and a sort field the graph does not hold makes the whole email fail in the preview, so check that ${order.column} is part of the graph` : ''}.`,
+            ast.from.loc,
+        ),
+    );
+    return finish(out, messages, dropped);
+}
+
+// ------------------------------------------------------------------------------------------
 // AMPscript: RetrieveSalesforceObjects (CRM), LookupRows (MO)
 // ------------------------------------------------------------------------------------------
 
@@ -735,13 +941,15 @@ export function emitAmpscriptLookupRowsMo(ast, options = {}) {
 
 /**
  * Marketing Cloud Next targets in display order. `dataSource` is the data source the target
- * reads (`CRM` = Sales Cloud object, `MO` = marketing object); `normalize` holds the round-trip
+ * reads (`CRM` = Sales Cloud object, `MO` = marketing object, `DG` = DMO of the email's bound
+ * data graph); `normalize` holds the round-trip
  * flags (see `normalizeSql`). Handlebars keeps the value type (`p1="5"` is text, `p1=5` a
  * number), so its targets compare typed; AMPscript writes every value as a string.
  *
  * @type {ReadonlyArray<{id: string, language: 'handlebars'|'ampscript', label: string,
- * dataSource: 'CRM'|'MO', emit: (ast: SelectAst, options?: NextEmitOptions) =>
- * EmitResult|{unavailable: string}, normalize: {dropTop?: boolean, isTyped?: boolean}}>}
+ * dataSource: 'CRM'|'MO'|'DG', emit: (ast: SelectAst, options?: NextEmitOptions) =>
+ * EmitResult|{unavailable: string}, normalize: {dropTop?: boolean, isTyped?: boolean,
+ * expandIn?: boolean, expandNotIn?: boolean}}>}
  */
 export const MCN_TARGETS = Object.freeze([
     {
@@ -784,5 +992,14 @@ export const MCN_TARGETS = Object.freeze([
         dataSource: 'MO',
         emit: emitAmpscriptLookupRowsMo,
         normalize: {},
+    },
+    {
+        id: 'handlebars-datagraph',
+        language: 'handlebars',
+        label: '$dataGraph',
+        dataSource: 'DG',
+        emit: emitHandlebarsDataGraph,
+        // IN / NOT IN are written as or / and chains of compare
+        normalize: { isTyped: true, expandIn: true, expandNotIn: true },
     },
 ]);

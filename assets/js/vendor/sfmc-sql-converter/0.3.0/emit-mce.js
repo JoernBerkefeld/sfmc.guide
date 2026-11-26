@@ -123,6 +123,119 @@ export const SQL_LIKE_HELPER = [
     '',
 ].join('\n');
 
+/**
+ * SSJS helper (ES3-safe) that applies ORDER BY and TOP to rows read from a data extension.
+ * It copies the rows into a new array first (the platform result need not be a real array),
+ * sorts the copy with an explicit compare function (a bare `sort()` throws in SSJS), and cuts
+ * it with `slice(0, top)` (a bare `slice()` throws too). Empty values sort first, two values
+ * that both read as numbers compare as numbers, anything else as text without case, like SQL
+ * Server. Rows may be plain objects (column names without case) or WSProxy results with a
+ * `Properties` array. `top` 0 keeps every row. `order` is `[["Column", "ASC"|"DESC"], …]`.
+ * No inner function may carry the name of an Object.prototype member: an inner `valueOf`
+ * never returned the field value in the engine, so nothing sorted (proven live 2026-11-26).
+ */
+export const ORDER_ROWS_HELPER = [
+    'function orderRows(list, order, top) {',
+    '    var copy = [];',
+    '    if (list) {',
+    '        for (var r = 0; r < list.length; r++) {',
+    '            copy.push(list[r]);',
+    '        }',
+    '    }',
+    '    function fieldValue(row, name) {',
+    '        var lower = name.toLowerCase();',
+    '        var props = row.Properties;',
+    '        // a WSProxy result: Properties is a list of {Name, Value} (a column named Properties is not)',
+    '        if (props && props.length > 0 && props[0] && props[0].Name !== undefined) {',
+    '            for (var p = 0; p < props.length; p++) {',
+    '                if (String(props[p].Name).toLowerCase() === lower) {',
+    '                    return props[p].Value;',
+    '                }',
+    '            }',
+    '            return null;',
+    '        }',
+    '        for (var key in row) {',
+    '            if (String(key).toLowerCase() === lower) {',
+    '                return row[key];',
+    '            }',
+    '        }',
+    '        return null;',
+    '    }',
+    '    function compareValues(a, b) {',
+    '        var aEmpty = a === null || a === undefined || a === "";',
+    '        var bEmpty = b === null || b === undefined || b === "";',
+    '        if (aEmpty || bEmpty) {',
+    '            return aEmpty === bEmpty ? 0 : (aEmpty ? -1 : 1);',
+    '        }',
+    '        var x = a - 0;',
+    '        var y = b - 0;',
+    '        if (isNaN(x) || isNaN(y)) {',
+    '            x = String(a).toLowerCase();',
+    '            y = String(b).toLowerCase();',
+    '        }',
+    '        return x < y ? -1 : (x > y ? 1 : 0);',
+    '    }',
+    '    if (order.length) {',
+    '        copy.sort(function (a, b) {',
+    '            for (var k = 0; k < order.length; k++) {',
+    '                var result = compareValues(fieldValue(a, order[k][0]), fieldValue(b, order[k][0]));',
+    '                if (result !== 0) {',
+    '                    return order[k][1] === "DESC" ? -result : result;',
+    '                }',
+    '            }',
+    '            return 0;',
+    '        });',
+    '    }',
+    '    return top > 0 && copy.length > top ? copy.slice(0, top) : copy;',
+    '}',
+    '',
+].join('\n');
+
+/**
+ * Writes `rows = orderRows(rows, [["Col", "DIR"], …], top);` with each sort pair marked as its
+ * ORDER BY clause and the count as TOP. Nothing is written without ORDER BY and TOP.
+ *
+ * @param {CodeWriter} out writer
+ * @param {SelectAst} ast statement
+ * @param {Map<object, string>} idOf node → clause id
+ */
+function writeOrderRowsCall(out, ast, idOf) {
+    if (!requiresOrderRows(ast)) {
+        return;
+    }
+    out.write('rows = orderRows(rows, [');
+    const orderBy = ast.orderBy ?? [];
+    for (const [index, item] of orderBy.entries()) {
+        out.write(index ? ', ' : '').mark(
+            idOf.get(item),
+            `[${jsString(item.column)}, "${item.direction}"]`,
+        );
+    }
+    out.write('], ');
+    if (hasTop(ast)) {
+        out.mark('top', String(ast.top));
+    } else {
+        out.write('0');
+    }
+    out.write(');\n');
+}
+
+/**
+ * @param {SelectAst} ast statement
+ * @returns {boolean} true when the query has TOP
+ */
+function hasTop(ast) {
+    return ast.top !== null && ast.top !== undefined;
+}
+
+/**
+ * @param {SelectAst} ast statement
+ * @returns {boolean} true when the SSJS code must sort or cut the rows
+ */
+function requiresOrderRows(ast) {
+    return Boolean(ast.orderBy?.length) || hasTop(ast);
+}
+
 // the six characters backslash, u, 0, 0, 5, C: a backslash written as a unicode escape
 export const BACKSLASH_ESCAPE = ['\\', 'u005C'].join('');
 const AMPSCRIPT_LOOP_VARIABLES = new Set(['rows', 'row', 'rowcount', 'i']);
@@ -261,7 +374,7 @@ function dropClauses(ast, clauses, drop, label) {
             createMessage(
                 'warning',
                 TOP_DROPPED,
-                `${label} cannot limit the number of rows, so TOP ${ast.top} is left out. Stop after ${ast.top} rows in your code, or use LookupOrderedRows.`,
+                `${label} cannot limit the number of rows, so TOP ${ast.top} is left out. Use the LookupOrderedRows output, which takes a row count, or an SSJS output.`,
                 topClause?.loc ?? ast.loc,
             ),
         );
@@ -272,7 +385,7 @@ function dropClauses(ast, clauses, drop, label) {
             createMessage(
                 'warning',
                 ORDER_BY_DROPPED,
-                `${label} cannot sort rows, so ORDER BY is left out. Sort the rows in your code, or use LookupOrderedRows.`,
+                `${label} cannot sort rows, so ORDER BY is left out. Use the LookupOrderedRows output, which sorts, or an SSJS output.`,
                 orderByLoc(ast),
             ),
         );
@@ -638,7 +751,8 @@ export function emitSsjsWsproxy(ast, options = {}) {
     const { checks } = plan;
     const rowsAsObjects = options.output?.rowsAsObjects ?? true;
     const isPaging = options.output?.paging ?? false;
-    const missing = missingCheckColumns(context.columns, checks);
+    // sort columns missing from the SELECT are read too, or every row would sort as empty
+    const missing = missingCheckColumns(context.columns, [...checks, ...(ast.orderBy ?? [])]);
     const out = new CodeWriter();
     out.write(SSJS_START);
     if (missing.length) {
@@ -653,6 +767,9 @@ export function emitSsjsWsproxy(ast, options = {}) {
     writeNotInMarker(out, ast);
     if (checks.length) {
         out.write(SQL_LIKE_HELPER);
+    }
+    if (requiresOrderRows(ast)) {
+        out.write(ORDER_ROWS_HELPER);
     }
     if (rowsAsObjects || checks.length) {
         out.write(
@@ -718,6 +835,7 @@ export function emitSsjsWsproxy(ast, options = {}) {
             '    }\n} else {\n    retrieveError = String(result.Status);\n}\nif (result.HasMoreRows) {\n    // only the first batch was read: turn on paging in the settings to read every row\n    hasMoreRows = true;\n}\n',
         );
     }
+    writeOrderRowsCall(out, ast, context.idOf);
     out.write(SSJS_END);
     const messages = [...plan.messages];
     if (!isPaging) {
@@ -725,18 +843,12 @@ export function emitSsjsWsproxy(ast, options = {}) {
             createMessage(
                 'info',
                 FIRST_BATCH_ONLY,
-                'Without paging only the first batch of up to 2,500 rows is read; turn on paging for more.',
+                `Without paging only the first batch of up to 2,500 rows is read; turn on paging for more.${requiresOrderRows(ast) ? ' Sorting and TOP apply to that batch only.' : ''}`,
                 ast.from.loc,
             ),
         );
     }
-    return finish(
-        out,
-        withMessages(
-            dropClauses(ast, context.clauses, { orderBy: true, top: true }, 'WSProxy retrieve'),
-            messages,
-        ),
-    );
+    return finish(out, withMessages({ messages: [], dropped: [] }, messages));
 }
 
 /**
@@ -766,6 +878,9 @@ export function emitSsjsRowsRetrieve(ast, options = {}) {
     if (checks.length) {
         out.write(SQL_LIKE_HELPER);
     }
+    if (requiresOrderRows(ast)) {
+        out.write(ORDER_ROWS_HELPER);
+    }
     out.write('var de = DataExtension.Init(').mark('from', jsString(context.deKey)).write(');\n');
     if (ast.where) {
         out.write('var filter = ');
@@ -785,14 +900,9 @@ export function emitSsjsRowsRetrieve(ast, options = {}) {
                 : 'var rows = de.Rows.Retrieve();\n',
         );
     }
+    writeOrderRowsCall(out, ast, context.idOf);
     out.write(SSJS_END);
-    return finish(
-        out,
-        withMessages(
-            dropClauses(ast, context.clauses, { orderBy: true, top: true }, 'Rows.Retrieve'),
-            plan.messages,
-        ),
-    );
+    return finish(out, withMessages({ messages: [], dropped: [] }, plan.messages));
 }
 
 // ------------------------------------------------------------------------------------------
@@ -950,15 +1060,20 @@ export function emitSsjsLookupRows(ast, options = {}) {
     if (Array.isArray(ast.columns)) {
         writeSelectComment(out, context.columns);
     }
+    if (requiresOrderRows(ast)) {
+        out.write(ORDER_ROWS_HELPER);
+    }
     out.write('var rows = Platform.Function.LookupRows(')
         .mark('from', jsString(context.deName))
         .write(', ');
     writeSsjsLookupArrays(out, check.pairs, context.idOf);
-    out.write(');\nvar rowCount = rows ? rows.length : 0;\n').write(SSJS_END);
+    out.write(');\n');
+    writeOrderRowsCall(out, ast, context.idOf);
+    out.write('var rowCount = rows ? rows.length : 0;\n').write(SSJS_END);
     return finish(
         out,
         withMessages(
-            dropClauses(ast, context.clauses, { orderBy: true, top: true }, 'LookupRows'),
+            { messages: [], dropped: [] },
             lookupLimitMessages(ast, context.clauses, 'LookupRows'),
         ),
     );

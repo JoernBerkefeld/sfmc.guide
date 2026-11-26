@@ -140,7 +140,7 @@ test('debounce runs once after the last call and can be cancelled', async (t) =>
 });
 
 const VENDOR_URL = pathToFileURL(
-  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.2.0', 'index.js'),
+  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.3.0', 'index.js'),
 ).href;
 
 test('the UI imports the converter core only from a versioned vendor folder', () => {
@@ -250,6 +250,7 @@ test('CODE_KINDS names every Next target id', async () => {
     'handlebars-query-mo',
     'ampscript-rso',
     'ampscript-lookuprows-mo',
+    'handlebars-datagraph',
   ];
   for (const id of nextIds) {
     assert.ok(CODE_KINDS[id], id);
@@ -314,7 +315,8 @@ test('the examples fit the real converter core', async () => {
       }
     }
   }
-  assert.ok(severities.mce.has('warning') && severities.mce.has('error'), 'mce severities');
+  // since 0.3.0 the SSJS outputs keep ORDER BY and TOP, so no Engagement example warns any more
+  assert.ok(severities.mce.has('info') && severities.mce.has('error'), 'mce severities');
   assert.ok(severities.mcn.has('error'), 'mcn error example');
 });
 
@@ -333,7 +335,7 @@ test('withAllNextTargets lists every Next target, the other data source unavaila
   const { withAllNextTargets, buildOptions } = await load();
   const { convert, MCN_TARGETS } = await import(VENDOR_URL);
   const sql = "SELECT Label__c FROM Coupon__mo WHERE Code__c = 'A'";
-  for (const dataSource of ['CRM', 'MO']) {
+  for (const dataSource of ['CRM', 'MO', 'DG']) {
     const options = buildOptions({
       platform: 'mcn',
       direction: 'toCode',
@@ -379,5 +381,6 @@ test('restoreSettings keeps stored settings and falls back on bad values', async
     }),
     { deName: 'Orders', deKey: 'orders_key', columns: 'Id, Email', dataSource: 'MO' },
   );
-  assert.deepEqual(restoreSettings({ deName: 42, dataSource: 'DG', extra: 'x' }), defaults);
+  assert.deepEqual(restoreSettings({ deName: 42, dataSource: 'DMO', extra: 'x' }), defaults);
+  assert.equal(restoreSettings({ dataSource: 'DG' }).dataSource, 'DG');
 });

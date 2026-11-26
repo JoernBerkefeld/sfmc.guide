@@ -45,8 +45,9 @@ platforms:
     <span class="sqlc-radio-row">
       <label><input type="radio" name="sqlc-data-source" value="CRM" checked> CRM (Sales Cloud object)</label>
       <label><input type="radio" name="sqlc-data-source" value="MO"> MO (marketing object)</label>
+      <label><input type="radio" name="sqlc-data-source" value="DG"> DG (DMO in the email's data graph)</label>
     </span>
-    <span class="sqlc-hint">Marketing objects: exact-value filters joined with AND, no sorting. A filter that matches several records may return only one.</span>
+    <span class="sqlc-hint">Marketing objects: exact-value filters joined with AND, no sorting. A filter that matches several records may return only one. Data graph: only the recipient's own rows of a DMO directly under the root of the graph bound to the email.</span>
   </fieldset>
 </div>
 <div class="sqlc-body">

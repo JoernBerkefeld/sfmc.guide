@@ -2,7 +2,9 @@
  * Reads Marketing Cloud Next Handlebars `query` / `queryFirst` calls back into the SQL AST of
  * `parseSql`: `{{#each (query type="CRM" object="X" fields="A,B" where="A = :p1"
  * params=(hash p1="v") sortBy="A ASC" limit=5)}}`, `{{get (queryFirst …) "A"}}` and the
- * marketing object form `(query type="MO" object="X" Key__c="v")`.
+ * marketing object form `(query type="MO" object="X" Key__c="v")`, plus the data graph loop
+ * `{{#each (slice (sort (get (get @root "$dataGraph") "Dmo__dlm") "A" "asc" "string") 0 5)}}` with
+ * an optional `{{#if (and (compare A "==" "v") …)}}` row check.
  *
  * Only deterministic input converts: every value in `where` must be a `:name` placeholder that
  * `params` defines exactly once (Next fails on literals in `where`). The code is read as text;
@@ -11,6 +13,7 @@
 
 import { nextLikeInner, nextLikeWildcardMessage } from './clauses.js';
 import {
+    ARGUMENT_COUNT,
     INVALID_ARGUMENT,
     INVALID_COUNT,
     INVALID_FILTER,
@@ -45,6 +48,9 @@ const BODY_FIELD = /\{\{\s*([A-Za-z_]\w*)\s*\}\}/g;
 const OPERATORS = { '=': '=', '!=': '<>', '<>': '<>', '<': '<', '<=': '<=', '>': '>', '>=': '>=' };
 const CRM_KEYS = new Set(['type', 'object', 'fields', 'where', 'params', 'sortBy', 'limit']);
 const MO_FORBIDDEN = new Set(['fields', 'where', 'params', 'sortBy', 'limit']);
+const DATA_GRAPH = /["']\$dataGraph["']/;
+// compare operators of the data graph output → SQL
+const GRAPH_OPERATORS = { '==': '=', '!=': '<>', '<': '<', '<=': '<=', '>': '>', '>=': '>=' };
 
 /**
  * @typedef {object} HbToken
@@ -851,6 +857,426 @@ function findCalls(text) {
     return calls;
 }
 
+// ------------------------------------------------------------------------------------------
+// $dataGraph: {{#each (slice (sort (get (get @root "$dataGraph") "Dmo__dlm") "F" "asc" "string")
+// 0 N)}} {{#if (and (compare F "==" "v") …)}} {{F}} {{/if}} {{/each}}
+// ------------------------------------------------------------------------------------------
+
+/**
+ * Groups the tokens of an expression into sub-expressions: `( … )` becomes a list node and
+ * `@root` one identifier.
+ *
+ * @param {object} context parse context
+ * @param {HbToken[]} tokens tokens
+ * @param {number} from offset where the expression starts (for an empty one)
+ * @returns {object} the single expression
+ */
+function readExpression(context, tokens, from) {
+    let index = 0;
+    const readItem = () => {
+        const token = tokens[index++];
+        if (token.type === 'punct' && token.value === '(') {
+            const items = [];
+            while (
+                index < tokens.length &&
+                !(tokens[index].type === 'punct' && tokens[index].value === ')')
+            ) {
+                items.push(readItem());
+            }
+            if (index >= tokens.length) {
+                fail(
+                    context,
+                    MISSING_CLOSING_PAREN,
+                    'This bracket is never closed. Add a closing bracket ).',
+                    token.start,
+                    token.end,
+                );
+            }
+            const close = tokens[index++];
+            return { type: 'list', items, start: token.start, end: close.end };
+        }
+        const next = tokens[index];
+        if (token.value === '@' && next?.type === 'ident' && next.start === token.end) {
+            index++;
+            return { type: 'ident', value: `@${next.value}`, start: token.start, end: next.end };
+        }
+        if (token.type === 'punct') {
+            fail(context, SYNTAX_ERROR, `Unexpected "${token.value}".`, token.start, token.end);
+        }
+        return token;
+    };
+    if (tokens.length === 0) {
+        fail(context, SYNTAX_ERROR, 'The block has no expression.', from, from);
+    }
+    const expression = readItem();
+    if (index < tokens.length) {
+        fail(
+            context,
+            SYNTAX_ERROR,
+            `Unexpected "${tokens[index].value}" after the expression.`,
+            tokens[index].start,
+            tokens[index].end,
+        );
+    }
+    return expression;
+}
+
+/**
+ * Checks whether a node is the sub-expression `(name …)`.
+ *
+ * @param {object} node expression node
+ * @param {string} name helper name
+ * @returns {boolean} true when it is
+ */
+function isCall(node, name) {
+    return node.type === 'list' && node.items[0]?.type === 'ident' && node.items[0].value === name;
+}
+
+/**
+ * Fails unless a sub-expression has the given number of parts (helper name included).
+ *
+ * @param {object} context parse context
+ * @param {object} node list node
+ * @param {number} count expected number of parts
+ * @param {string} hint the form to write
+ */
+function requireParts(context, node, count, hint) {
+    if (node.items.length !== count) {
+        fail(context, ARGUMENT_COUNT, `Write this as ${hint}.`, node.start, node.end);
+    }
+}
+
+/**
+ * Returns a string argument or fails.
+ *
+ * @param {object} context parse context
+ * @param {object} node argument
+ * @param {string} hint what it must be
+ * @returns {HbToken} string token
+ */
+function requireStringArgument(context, node, hint) {
+    if (node.type !== 'string' || !node.value.trim()) {
+        fail(context, INVALID_ARGUMENT, `Expected ${hint} in double quotes.`, node.start, node.end);
+    }
+    return node;
+}
+
+/**
+ * Reads the loop source: optional `slice … 0 N`, optional `sort … "F" "asc"|"desc" "string"`
+ * and `(get (get @root "$dataGraph") "Dmo__dlm")`.
+ *
+ * @param {object} context parse context
+ * @param {object} node expression after #each
+ * @returns {{from: HbToken, orderBy: object[], top: number|null, slice: object|null}} parts
+ */
+function readGraphSource(context, node) {
+    let current = node;
+    let top = null;
+    let slice = null;
+    if (isCall(current, 'slice')) {
+        requireParts(context, current, 4, '(slice (…) 0 10)');
+        const [, inner, first, count] = current.items;
+        if (first.type !== 'number' || first.value !== '0') {
+            fail(
+                context,
+                INVALID_COUNT,
+                'slice must start at 0 to stand for TOP: (slice (…) 0 10).',
+                first.start,
+                first.end,
+            );
+        }
+        if (count.type !== 'number' || !/^[1-9]\d*$/.test(count.value)) {
+            fail(
+                context,
+                INVALID_COUNT,
+                'The end of slice must be a whole number of rows, e.g. 10.',
+                count.start,
+                count.end,
+            );
+        }
+        top = Number(count.value);
+        slice = current;
+        current = inner;
+    }
+    const orderBy = [];
+    if (isCall(current, 'sort')) {
+        requireParts(context, current, 5, '(sort (…) "Field" "asc" "string")');
+        const [, inner, field, direction, sortType] = current.items;
+        const column = requireStringArgument(context, field, 'the field to sort by');
+        const order = requireStringArgument(context, direction, '"asc" or "desc"');
+        if (!['asc', 'desc'].includes(order.value.toLowerCase())) {
+            fail(
+                context,
+                INVALID_ORDER_BY,
+                'The sort direction must be "asc" or "desc".',
+                order.start,
+                order.end,
+            );
+        }
+        if (sortType.type !== 'string' || sortType.value !== 'string') {
+            fail(
+                context,
+                INVALID_ORDER_BY,
+                'Only sort by "string" was tested on a data graph; write "string" as the last argument.',
+                sortType.start,
+                sortType.end,
+            );
+        }
+        orderBy.push({
+            column: column.value,
+            direction: order.value.toUpperCase(),
+            loc: makeLoc(context, column.start, order.end),
+        });
+        current = inner;
+    }
+    const graphHint = '(get (get @root "$dataGraph") "Dmo__dlm")';
+    const isGraph =
+        isCall(current, 'get') &&
+        current.items.length === 3 &&
+        isCall(current.items[1], 'get') &&
+        current.items[1].items.length === 3 &&
+        current.items[1].items[1].value === '@root' &&
+        current.items[1].items[2].type === 'string' &&
+        current.items[1].items[2].value === '$dataGraph';
+    if (!isGraph) {
+        fail(
+            context,
+            INVALID_ARGUMENT,
+            `Expected a DMO of the bound data graph: ${graphHint}.`,
+            current.start,
+            current.end,
+        );
+    }
+    const from = requireStringArgument(context, current.items[2], 'the DMO name');
+    return { from, orderBy, top, slice };
+}
+
+/**
+ * Reads a row check: `(compare F "op" value)`, `(and …)` and `(or …)` with two or more
+ * operands.
+ *
+ * @param {object} context parse context
+ * @param {object} node expression
+ * @returns {object} WHERE expression
+ */
+function readGraphCondition(context, node) {
+    if (isCall(node, 'and') || isCall(node, 'or')) {
+        const type = node.items[0].value;
+        if (node.items.length < 3) {
+            fail(
+                context,
+                ARGUMENT_COUNT,
+                `${type} needs at least two conditions.`,
+                node.start,
+                node.end,
+            );
+        }
+        return node.items
+            .slice(1)
+            .map((item) => readGraphCondition(context, item))
+            .reduce((left, right) => ({
+                type,
+                left,
+                right,
+                loc: makeLoc(context, left.loc.start, right.loc.end),
+            }));
+    }
+    if (!isCall(node, 'compare')) {
+        fail(
+            context,
+            INVALID_FILTER,
+            'Only (compare Field "op" value), (and …) and (or …) read back as a WHERE.',
+            node.start,
+            node.end,
+        );
+    }
+    requireParts(context, node, 4, '(compare Field "==" "value")');
+    const [, field, operator, value] = node.items;
+    if (field.type !== 'ident' || !/^[A-Za-z]\w*$/.test(field.value)) {
+        fail(
+            context,
+            INVALID_FILTER,
+            'The first argument of compare must be a field name, e.g. (compare LastName "==" "x").',
+            field.start,
+            field.end,
+        );
+    }
+    if (operator.type !== 'string' || !Object.hasOwn(GRAPH_OPERATORS, operator.value)) {
+        fail(
+            context,
+            UNKNOWN_FILTER_OPERATOR,
+            'The operator must be "==", "!=", "<", "<=", ">" or ">=" in double quotes.',
+            operator.start,
+            operator.end,
+        );
+    }
+    if (value.type !== 'string' && value.type !== 'number') {
+        fail(
+            context,
+            INVALID_FILTER_VALUE,
+            'The value must be text in double quotes or a number.',
+            value.start,
+            value.end,
+        );
+    }
+    return {
+        type: 'compare',
+        op: GRAPH_OPERATORS[operator.value],
+        column: field.value,
+        value: {
+            kind: value.type,
+            value: value.value,
+            loc: makeLoc(context, value.start, value.end),
+        },
+        loc: makeLoc(context, node.start, node.end),
+    };
+}
+
+/**
+ * Reads the `{{Field}}` reads of the loop body; any other tag fails.
+ *
+ * @param {object} context parse context
+ * @param {number} from start offset
+ * @param {number} to end offset
+ * @returns {{name: string, loc: object}[]} columns
+ */
+function graphFields(context, from, to) {
+    const columns = [];
+    const tag = /\{\{[\s\S]*?\}\}/g;
+    const body = context.text.slice(from, to);
+    for (let match = tag.exec(body); match; match = tag.exec(body)) {
+        const start = from + match.index;
+        const field = /^\{\{\s*([A-Za-z]\w*)\s*\}\}$/.exec(match[0]);
+        if (!field || field[1] === 'else' || field[1] === 'this') {
+            fail(
+                context,
+                SYNTAX_ERROR,
+                'Inside the loop only plain field reads such as {{LastName}} read back as columns.',
+                start,
+                start + match[0].length,
+            );
+        }
+        const nameStart = start + match[0].indexOf(field[1]);
+        columns.push({
+            name: field[1],
+            loc: makeLoc(context, nameStart, nameStart + field[1].length),
+        });
+    }
+    if (columns.length === 0) {
+        fail(
+            context,
+            SYNTAX_ERROR,
+            'The loop reads no field. Add the fields to show, e.g. {{LastName}}.',
+            from,
+            to,
+        );
+    }
+    return columns;
+}
+
+/**
+ * Finds a closing tag or fails.
+ *
+ * @param {object} context parse context
+ * @param {RegExp} pattern closing tag pattern (global)
+ * @param {number} from offset to search from
+ * @param {{start: number, end: number, name: string}} opener the open tag
+ * @returns {{start: number, end: number}} the closing tag
+ */
+function closingTag(context, pattern, from, opener) {
+    pattern.lastIndex = from;
+    const match = pattern.exec(context.text);
+    if (!match) {
+        fail(
+            context,
+            MISSING_CLOSING_PAREN,
+            `This {{#${opener.name}}} block is never closed. Add {{/${opener.name}}}.`,
+            opener.start,
+            opener.end,
+        );
+    }
+    return { start: match.index, end: match.index + match[0].length };
+}
+
+/**
+ * Reads the `$dataGraph` loop the data graph output writes.
+ *
+ * @param {object} context parse context
+ * @param {object} meta meta data (mutated)
+ * @returns {object} SELECT AST
+ */
+function parseDataGraph(context, meta) {
+    const { text } = context;
+    const each = /\{\{#each(?=\s)/.exec(text);
+    if (!each) {
+        fail(
+            context,
+            NO_LOOKUP_FOUND,
+            'No data graph loop was found. Paste a {{#each (get (get @root "$dataGraph") "Dmo__dlm")}} block.',
+            0,
+            text.length,
+        );
+    }
+    const eachEnd = each.index + each[0].length;
+    const head = tokenizeCall(context, eachEnd, false);
+    const source = readGraphSource(context, readExpression(context, head.tokens, eachEnd));
+    const close = closingTag(context, /\{\{\/each\s*\}\}/g, head.end, {
+        name: 'each',
+        start: each.index,
+        end: head.end,
+    });
+    const ifTag = /^\s*\{\{#if(?=\s)/.exec(text.slice(head.end, close.start));
+    let where = null;
+    let columns;
+    if (ifTag) {
+        const ifStart = head.end + ifTag[0].indexOf('{{');
+        const ifNameEnd = head.end + ifTag[0].length;
+        const condition = tokenizeCall(context, ifNameEnd, false);
+        if (source.slice) {
+            fail(
+                context,
+                INVALID_COUNT,
+                'slice cuts the rows before the {{#if}} check runs, so the loop has no SQL equivalent (SQL applies TOP after WHERE). Remove slice or the check.',
+                source.slice.start,
+                source.slice.end,
+            );
+        }
+        where = readGraphCondition(context, readExpression(context, condition.tokens, ifNameEnd));
+        const endIf = closingTag(context, /\{\{\/if\s*\}\}/g, condition.end, {
+            name: 'if',
+            start: ifStart,
+            end: condition.end,
+        });
+        if (endIf.start > close.start || text.slice(endIf.end, close.start).trim()) {
+            fail(
+                context,
+                SYNTAX_ERROR,
+                'Write the {{#if}} block as the whole loop body: {{#each …}} {{#if …}} fields {{/if}} {{/each}}.',
+                ifStart,
+                condition.end,
+            );
+        }
+        columns = graphFields(context, condition.end, endIf.start);
+    } else {
+        columns = graphFields(context, head.end, close.start);
+    }
+    meta.target = 'handlebars-datagraph';
+    meta.dataSource = 'DG';
+    meta.deName = source.from.value;
+    return {
+        type: 'select',
+        top: source.top,
+        columns,
+        from: {
+            name: source.from.value,
+            loc: makeLoc(context, source.from.start, source.from.end),
+        },
+        where,
+        orderBy: source.orderBy,
+        loc: makeLoc(context, each.index, close.end),
+    };
+}
+
 /**
  * Parses the first call and builds the AST.
  *
@@ -860,6 +1286,9 @@ function findCalls(text) {
  */
 function parseProgram(context, meta) {
     const calls = findCalls(context.text);
+    if (calls.length === 0 && DATA_GRAPH.test(context.text)) {
+        return parseDataGraph(context, meta);
+    }
     if (calls.length === 0) {
         fail(
             context,
@@ -939,7 +1368,7 @@ function parseProgram(context, meta) {
  * Reads a Marketing Cloud Next Handlebars query back into the SQL AST. Never throws.
  *
  * @param {string} text Handlebars code
- * @returns {{ast: object|null, messages: import('./messages.js').Message[], meta: {target: string|null, dataSource?: 'CRM'|'MO', deName?: string}}} AST (null on error), messages and meta data
+ * @returns {{ast: object|null, messages: import('./messages.js').Message[], meta: {target: string|null, dataSource?: 'CRM'|'MO'|'DG', deName?: string}}} AST (null on error), messages and meta data
  */
 export function parseHandlebars(text) {
     const source = typeof text === 'string' ? text : '';

@@ -7,8 +7,8 @@
  * dropped). Direction `toSql`: lookup code → canonical SQL.
  *
  * Platform `mce` (Marketing Cloud Engagement) reads data extensions with SSJS / AMPscript;
- * `mcn` (Marketing Cloud Next) reads Sales Cloud objects (`dataSource: 'CRM'`) or marketing
- * objects (`'MO'`) with Handlebars / AMPscript, limited to what the live probes proved (see
+ * `mcn` (Marketing Cloud Next) reads Sales Cloud objects (`dataSource: 'CRM'`), marketing
+ * objects (`'MO'`) or a DMO of the email's bound data graph (`'DG'`) with Handlebars / AMPscript, limited to what the live probes proved (see
  * `NEXT_RULES` in emit-mcn.js).
  */
 
@@ -40,8 +40,8 @@ import { parseSql } from './sql-parser.js';
  * @property {string} [deName] data extension name (toSql: used when the code does not carry it)
  * @property {string} [deKey] data extension external key (default: the name)
  * @property {string[]} [columns] the columns `SELECT *` stands for
- * @property {'CRM'|'MO'} [dataSource] Next data source: Sales Cloud object (default) or
- * marketing object
+ * @property {'CRM'|'MO'|'DG'} [dataSource] Next data source: Sales Cloud object (default),
+ * marketing object or DMO of the email's bound data graph
  * @property {{fields: {name: string}[]}} [schema] data extension fields
  * @property {{rowsAsObjects?: boolean, paging?: boolean}} [output] WSProxy output options
  */
@@ -423,8 +423,8 @@ export function convert(input, options = {}) {
         throw new TypeError(`Unknown direction "${direction}". Use "toCode" or "toSql".`);
     }
     const dataSource = options.dataSource ?? 'CRM';
-    if (dataSource !== 'CRM' && dataSource !== 'MO') {
-        throw new TypeError(`Unknown data source "${dataSource}". Use "CRM" or "MO".`);
+    if (!['CRM', 'MO', 'DG'].includes(dataSource)) {
+        throw new TypeError(`Unknown data source "${dataSource}". Use "CRM", "MO" or "DG".`);
     }
     const resolved = { ...options, platform, dataSource };
     return direction === 'toSql' ? convertToSql(input, resolved) : convertToCode(input, resolved);

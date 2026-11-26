@@ -65,6 +65,7 @@ export const EMPTY_STRING_AS_SPACE = 'EMPTY_STRING_AS_SPACE';
 export const TOP_ABOVE_LOOKUP_LIMIT = 'TOP_ABOVE_LOOKUP_LIMIT';
 export const FIRST_BATCH_ONLY = 'FIRST_BATCH_ONLY';
 export const ORDER_BY_NEEDS_TOP = 'ORDER_BY_NEEDS_TOP';
+export const DATA_GRAPH_SCOPE = 'DATA_GRAPH_SCOPE';
 
 // --- reverse parsers (code to SQL) ------------------------------------------------------
 export const NO_LOOKUP_FOUND = 'NO_LOOKUP_FOUND';
@@ -141,6 +142,7 @@ export const MESSAGE_CODES = Object.freeze({
     TOP_ABOVE_LOOKUP_LIMIT,
     FIRST_BATCH_ONLY,
     ORDER_BY_NEEDS_TOP,
+    DATA_GRAPH_SCOPE,
     NO_LOOKUP_FOUND,
     ARGUMENT_COUNT,
     INVALID_ARGUMENT,

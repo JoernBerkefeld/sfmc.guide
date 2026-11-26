@@ -7,7 +7,7 @@ import {
   convert,
   parseAmpscript,
   parseSsjs,
-} from './vendor/sfmc-sql-converter/0.2.0/index.js';
+} from './vendor/sfmc-sql-converter/0.3.0/index.js';
 
 export const CONVERT_DELAY_MS = 300;
 export const MESSAGE_DELAY_MS = 1000;
@@ -52,8 +52,9 @@ export const EXAMPLES = {
       dataSource: 'MO',
     },
     {
-      label: 'AND only on a CRM object',
-      sql: "SELECT FirstName, LastName\nFROM [Contact]\nWHERE MailingCountry = 'DE'\n  AND LastName LIKE '%Mü%'",
+      label: 'Related DMO rows of the bound data graph',
+      sql: 'SELECT TOP 3 ssot__EmailAddress__c\nFROM [ssot__ContactPointEmail__dlm]\nORDER BY ssot__EmailAddress__c',
+      dataSource: 'DG',
     },
     {
       label: '= NULL instead of IS NULL (error)',
@@ -68,7 +69,7 @@ const TOKEN_PATTERNS = {
   ampscript:
     /(?<c>\/\*[\s\S]*?\*\/)|(?<s>"[^"\n]*"|'[^'\n]*')|(?<k>%%\[|\]%%|\b(?:VAR|SET|IF|THEN|ELSE|ELSEIF|ENDIF|FOR|TO|DO|NEXT|AND|OR|NOT)\b)|(?<v>@\w+)|(?<n>\b\d+(?:\.\d+)?\b)|(?<f>\b[A-Za-z_]\w*(?=\())/giu,
   handlebars:
-    /(?<c>\{\{!--[\s\S]*?--\}\}|\{\{![\s\S]*?\}\})|(?<s>"[^"\n]*"|'[^'\n]*')|(?<k>\{\{[#/]?|\}\})|(?<f>\b(?:each|if|else|unless|with|query|queryFirst|hash)\b)|(?<n>\b\d+(?:\.\d+)?\b)/gu,
+    /(?<c>\{\{!--[\s\S]*?--\}\}|\{\{![\s\S]*?\}\})|(?<s>"[^"\n]*"|'[^'\n]*')|(?<k>\{\{[#/]?|\}\})|(?<f>\b(?:each|if|else|unless|with|query|queryFirst|hash|get|compare|and|or|sort|slice)\b)|(?<n>\b\d+(?:\.\d+)?\b)/gu,
 };
 
 /**
@@ -115,6 +116,7 @@ export function groupOutputsByLanguage(outputs) {
 const DATA_SOURCE_REASONS = {
   CRM: 'Only for Sales Cloud objects: choose CRM as data source.',
   MO: 'Only for marketing objects: choose MO as data source.',
+  DG: 'Only for DMOs of the data graph bound to the email: choose DG as data source.',
 };
 
 /**
@@ -122,7 +124,7 @@ const DATA_SOURCE_REASONS = {
  * type falls back to the default, so old or edited storage can never break the page.
  *
  * @param {unknown} stored value read from storage
- * @returns {{deName: string, deKey: string, columns: string, dataSource: 'CRM' | 'MO'}} settings
+ * @returns {{deName: string, deKey: string, columns: string, dataSource: 'CRM' | 'MO' | 'DG'}} settings
  */
 export function restoreSettings(stored) {
   const settings = { deName: '', deKey: '', columns: '', dataSource: 'CRM' };
@@ -134,8 +136,8 @@ export function restoreSettings(stored) {
       settings[name] = stored[name];
     }
   }
-  if (stored.dataSource === 'MO') {
-    settings.dataSource = 'MO';
+  if (stored.dataSource === 'MO' || stored.dataSource === 'DG') {
+    settings.dataSource = stored.dataSource;
   }
   return settings;
 }
@@ -259,6 +261,7 @@ export const CODE_KINDS = {
   'handlebars-query-mo': 'Handlebars query (marketing object)',
   'ampscript-rso': 'RetrieveSalesforceObjects (AMPscript)',
   'ampscript-lookuprows-mo': 'LookupRows (AMPscript, marketing object)',
+  'handlebars-datagraph': 'Handlebars loop over the bound data graph',
 };
 
 export const UNKNOWN_CODE_KIND = 'SSJS, AMPscript or Handlebars code';
@@ -291,6 +294,9 @@ export function describeCode(text, platform = 'mce') {
     return CODE_KINDS[
       /\btype\s*=\s*["']MO["']/u.test(value) ? 'handlebars-query-mo' : 'handlebars-query'
     ];
+  }
+  if (/\$dataGraph/u.test(value)) {
+    return CODE_KINDS['handlebars-datagraph'];
   }
   if (/\bRetrieveSalesforceObjects\s*\(/iu.test(value)) {
     return CODE_KINDS['ampscript-rso'];

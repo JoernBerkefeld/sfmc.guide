@@ -7,6 +7,7 @@ export {
     emitHandlebarsQuery,
     emitHandlebarsQueryFirst,
     emitHandlebarsQueryMo,
+    emitHandlebarsDataGraph,
     emitAmpscriptRso,
     emitAmpscriptLookupRowsMo,
     hbString,

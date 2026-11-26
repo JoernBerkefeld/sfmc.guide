@@ -18,6 +18,7 @@ import {
     INVALID_FILTER_VALUE,
     INVALID_LOGICAL_OPERATOR,
     INVALID_OBJECT_TYPE,
+    INVALID_ORDER_BY,
     LIKE_MATCHES_ANYWHERE,
     MULTIPLE_LOOKUPS,
     NO_LOOKUP_FOUND,
@@ -1308,6 +1309,63 @@ function isFilterObject(node) {
 }
 
 /**
+ * Reads the first `orderRows(rows, [["Col", "ASC"|"DESC"], …], count)` call (the sort and TOP
+ * the SSJS emitters add after reading rows). The helper's own `function orderRows(` is skipped.
+ *
+ * @param {object} state parser state
+ * @returns {{orderBy: object[], top: number|null}|null} sort order and TOP, or null without a call
+ */
+function readOrderRows(state) {
+    const { context } = state;
+    const { tokens } = context;
+    const index = tokens.findIndex(
+        (token, position) =>
+            isIdent(token, 'orderRows') &&
+            !(position > 0 && isIdent(tokens[position - 1], 'function')) &&
+            isPunct(tokenAt(context, position + 1), '('),
+    );
+    if (index === -1) {
+        return null;
+    }
+    context.pos = index + 1;
+    const { args, end } = parseArguments(context);
+    const invalid = (start, stop) =>
+        fail(
+            context,
+            INVALID_ORDER_BY,
+            'orderRows needs the rows, a sort list such as [["Points", "DESC"], ["Email", "ASC"]] and a row count (0 for all rows).',
+            start,
+            stop,
+        );
+    if (args.length !== 3) {
+        invalid(tokens[index].start, end);
+    }
+    const list = resolve(state, args[1]);
+    if (list.kind !== 'array') {
+        invalid(args[1].start, args[1].end);
+    }
+    const orderBy = list.items.map((pairNode) => {
+        const pair = resolve(state, pairNode);
+        const [columnNode, directionNode] = pair.items ?? [];
+        const direction = directionNode && resolve(state, directionNode);
+        if (
+            pair.kind !== 'array' ||
+            pair.items.length !== 2 ||
+            direction.kind !== 'string' ||
+            !/^(?:ASC|DESC)$/i.test(direction.value)
+        ) {
+            invalid(pairNode.start, pairNode.end);
+        }
+        return {
+            column: requireString(state, columnNode, 'Each sort column'),
+            direction: direction.value.toUpperCase(),
+            loc: makeLoc(context, pair.start, pair.end),
+        };
+    });
+    return { orderBy, top: readCount(state, args[2]) };
+}
+
+/**
  * Parses the lookup call (or bare filter) and builds the AST.
  *
  * @param {object} state parser state
@@ -1357,6 +1415,13 @@ function parseProgram(state) {
             partial = readRowsRetrieve(state, call, args, callLoc);
         } else {
             partial = readLookupRows(state, call.kind === 'lookuporderedrows', args, callLoc);
+        }
+        if (call.kind !== 'lookuporderedrows') {
+            const order = readOrderRows(state);
+            if (order) {
+                partial.orderBy = order.orderBy;
+                partial.top = order.top;
+            }
         }
     }
     if (state.header.foldNotIn) {
