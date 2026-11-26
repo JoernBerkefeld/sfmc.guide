@@ -77,6 +77,45 @@
   white-space: normal;
 }
 
+// Code persistence matrix (/engagement/code-persistence/): the table scrolls sideways inside the
+// content column; notes sit on their own line below a name.
+.code-persistence-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.code-persistence-matrix td small,
+.code-persistence-matrix thead th small {
+  display: block;
+  margin-top: 0.3em;
+  font-weight: 400;
+}
+
+.code-persistence-matrix thead th {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+.code-persistence-matrix td:nth-child(-n + 2) {
+  min-width: 8em;
+}
+
+// "API" / "Editor" label above each chip where the two ways of saving differ
+.code-persistence-matrix .cp-channel {
+  display: block;
+  margin-top: 0.3em;
+  font-size: $text-xs;
+  color: #5a6475;
+}
+
+[data-theme='dark'] .code-persistence-matrix .cp-channel {
+  color: #9aa5b5;
+}
+
+.code-persistence-matrix tbody th[scope='rowgroup'] {
+  text-align: left;
+}
+
 [data-theme='dark'] .crud-chip {
   &--yes {
     color: #6fd39c;

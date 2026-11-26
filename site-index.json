@@ -2174,7 +2174,7 @@
     "url": "/next/querying-data/",
     "section": "Next",
     "type": "page",
-    "description": "Read Sales Cloud objects and marketing objects in Marketing Cloud Next emails with Handlebars query, queryFirst or AMPscript; SQL cheat sheet, data graph tests."
+    "description": "Read Sales Cloud objects and marketing objects in Marketing Cloud Next emails with Handlebars query, queryFirst or AMPscript; SQL cheat sheet, and the bound data graph."
   },
   {
     "name": "Segment members",

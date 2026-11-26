@@ -1,0 +1,130 @@
+# Results of the code persistence probe shown on /engagement/code-persistence/.
+# One entry per asset type. `api` and every `ui[].results` list one result per snippet, in the order of `snippets`.
+# Allowed results: kept | escaped | changed | removed | rejected | open
+# Measured 2026-11-26 on a child test business unit; see the page for the method.
+
+snippets:
+  - id: A1
+    label: AMPscript block
+    code: '%%[ SET @p = "A1" ]%%'
+  - id: A2
+    label: AMPscript inline
+    code: '%%="A2"=%%'
+  - id: A3
+    label: AMPscript script tag
+    code: '<script runat="server" language="ampscript">SET @p = "A3"</script>'
+  - id: S1
+    label: SSJS
+    code: '<script runat="server">Platform.Load("core","1");Write("S1");</script>'
+  - id: J1
+    label: Client-side JavaScript
+    code: '<script>console.log("J1");</script>'
+
+groups:
+  - name: Emails
+    types:
+      - name: HTML email
+        asset_type: htmlemail
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code view
+            results: [kept, kept, kept, kept, removed]
+      - name: Template-based email
+        asset_type: templatebasedemail
+        api: [kept, kept, kept, kept, removed]
+        note: Via API, the snippets were sent as an HTML block inside a slot.
+        ui:
+          - editor: HTML block in a slot
+            results: [kept, kept, kept, kept, removed]
+            note: The empty block was put into the slot by API, as a drag and drop could not be automated; the snippets were then saved in the email editor.
+      - name: Text-only email
+        asset_type: textonlyemail
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Text editor
+            results: [kept, kept, kept, kept, removed]
+
+  - name: Content blocks
+    types:
+      - name: HTML block
+        asset_type: htmlblock
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code editor
+            results: [kept, kept, kept, kept, removed]
+      - name: Code snippet
+        asset_type: codesnippetblock
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code editor
+            results: [kept, kept, kept, kept, removed]
+      - name: Free form block
+        asset_type: freeformblock
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: HTML Editor tab
+            results: [kept, kept, kept, kept, removed]
+          - editor: Content tab (rich text, typed)
+            results: [kept, kept, escaped, escaped, escaped]
+      - name: Text block
+        asset_type: textblock
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: HTML Editor tab
+            results: [kept, kept, kept, kept, removed]
+          - editor: Content tab (rich text, typed)
+            results: [kept, kept, escaped, escaped, escaped]
+
+  - name: Templates
+    types:
+      - name: Email template
+        asset_type: template
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code editor (Paste HTML)
+            results: [kept, kept, kept, kept, removed]
+
+  - name: CloudPages
+    types:
+      - name: Landing page
+        asset_type: webpage
+        api: [kept, kept, kept, kept, kept]
+        ui:
+          - editor: Code View
+            results: [kept, kept, kept, kept, kept]
+      - name: JavaScript code resource
+        asset_type: jscoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]
+      - name: CSS code resource
+        asset_type: csscoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]
+      - name: JSON code resource
+        asset_type: jsoncoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]
+      - name: Text code resource
+        asset_type: textcoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]
+      - name: XML code resource
+        asset_type: xmlcoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]
+      - name: RSS code resource
+        asset_type: rsscoderesource
+        api: [kept, kept, kept, kept, removed]
+        ui:
+          - editor: Code resource editor
+            results: [kept, kept, kept, kept, kept]

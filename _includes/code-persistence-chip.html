@@ -1,0 +1,12 @@
+{% comment %}
+  One result chip of the code persistence matrix (/engagement/code-persistence/).
+  include.result: kept | escaped | changed | removed | rejected | open
+{% endcomment %}
+{%- case include.result -%}
+{%- when "kept" -%}<span class="crud-chip crud-chip--yes">kept</span>
+{%- when "escaped" -%}<span class="crud-chip crud-chip--partial">escaped</span>
+{%- when "changed" -%}<span class="crud-chip crud-chip--partial">changed</span>
+{%- when "removed" -%}<span class="crud-chip crud-chip--no">removed</span>
+{%- when "rejected" -%}<span class="crud-chip crud-chip--no">rejected</span>
+{%- else -%}<span class="crud-chip crud-chip--none">open</span>
+{%- endcase -%}

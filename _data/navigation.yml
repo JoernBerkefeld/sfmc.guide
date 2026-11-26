@@ -25,6 +25,8 @@
       url: /engagement/faq/
     - title: Querying Data Extensions with AMPscript
       url: /engagement/querying-data/
+    - title: Where AMPscript, SSJS & JavaScript can be saved
+      url: /engagement/code-persistence/
     - title: Einstein Recommendations
       url: /engagement/einstein/recommendation/
       children:

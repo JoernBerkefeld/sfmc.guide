@@ -23,6 +23,7 @@ The broader Engagement guides include practical material ported from the [SFMC C
 | [Differs from official docs](/engagement/differs-from-docs/) | AMPscript behaviour on Engagement that contradicts the official documentation |
 | [FAQ](/engagement/faq/) | Automations, CloudPages, emails, Journey Builder, admin |
 | [Querying Data Extensions with AMPscript](/engagement/querying-data/) | Which lookup function to use, a SQL-to-AMPscript cheat sheet and a tested example per function |
+| [Where AMPscript, SSJS and JavaScript can be saved](/engagement/code-persistence/) | Which content types keep or silently remove each kind of code on save, by API and in the editor |
 | [Einstein Recommendations](/engagement/einstein/recommendation/) | Recommendation scenarios |
 | [Encryption](/engagement/encryption/) | Crypto patterns in Engagement |
 | [MobilePush setup](/engagement/mobilepush/) | App and Marketing Cloud setup for push, contact key and device registration, consent, troubleshooting |
