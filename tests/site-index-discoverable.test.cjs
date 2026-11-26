@@ -383,8 +383,9 @@ test('CMS tool page is discoverable and lists every type without version history
     'document',
     'audio',
     'brand',
-  ])
+  ]) {
     assert.match(page, new RegExp(`\\| \`${type}\` \\|`));
+  }
   assert.match(page, /--preview/);
   assert.doesNotMatch(page, /\b0\.\d+\.\d+\b|qualification|Unreleased/);
   assert.match(page, /https:\/\/github\.com\/JoernBerkefeld\/sf-plugin-cms/);
