@@ -21,7 +21,7 @@ You paste code into an email, a content block, a CloudPage or a script activity 
 - **A client-side `<script>` is removed.** Plain `<script>…</script>` disappears from emails, content blocks and templates. The save still reports success. No error, no warning.
 - **Landing pages keep everything,** including a client-side `<script>`.
 - **CloudPages code resources depend on how you save.** In the CloudPages editor a client-side `<script>` is kept. Through the API the same text is removed.
-- **Send contexts are AMPscript territory.** Sender profiles, subject lines, push and SMS text and other fields filled in per recipient held AMPscript, not SSJS, on a production business unit (see [AMPscript in send contexts](#ampscript-in-send-contexts), not tested).
+- **Send contexts are AMPscript territory.** Sender profiles, subject lines, push and SMS text and other fields filled in per recipient take AMPscript; SSJS is not recommended there (see [AMPscript in send contexts](#ampscript-in-send-contexts), not tested).
 - **Rich text editors turn tags into text.** If you type `<script …>` into the Content tab of a free form or text block, it is stored as escaped text (`&lt;script…`), so it never runs. AMPscript in `%%` delimiters is not affected.
 
 ## Results
@@ -140,9 +140,11 @@ Writing the AMPscript out literally, for example `Platform.Function.TreatAsConte
 
 {% include callout.html type="note" title="Not tested here" content="This section lists where AMPscript is used at send time. The fields come from a full retrieve of a business unit that sends email, push and SMS in production. Nothing in this section was saved or run as part of the test above." %}
 
-Fields that are filled in per recipient when a message goes out are AMPscript territory; we don't recommend SSJS there. Salesforce's [SSJS overview](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_serverSideJavaScript.html) advises AMPscript or the SSJS Platform functions for email messages and the SSJS Core library only for landing pages and applications, and it names AMPscript as the better fit when every recipient sees different content. On the business unit below, all of these fields held AMPscript and none held SSJS.
+Fields that are filled in per recipient when a message goes out are AMPscript territory; we don't recommend SSJS there. Salesforce's [SSJS overview](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_serverSideJavaScript.html) advises AMPscript or the SSJS Platform functions for email messages and the SSJS Core library only for landing pages and applications, and it names AMPscript as the better fit when every recipient sees different content.
 
-| Where | Fields that held AMPscript |
+Examples of where you can use AMPscript:
+
+| Where | Fields |
 |---|---|
 | Sender profile | From name, from address, auto-forward name and address |
 | Journey Builder email activity | Subject, preheader, CC, BCC |
@@ -155,13 +157,14 @@ Fields that are filled in per recipient when a message goes out are AMPscript te
 | Transactional SMS definition | Message |
 | Transactional email definition | CC, BCC |
 
-The retrieved in-app messages held no AMPscript, so in-app is not listed, although its title and message fields are filled in at send time like a push message.
-
-In Journey Builder, AMPscript support depends on the activity. From experience (not tested here), send activities generally take it in the fields that become part of the message, such as subject, title and body, but not in their settings, and other activity types take neither AMPscript nor SSJS. The business unit above fits that: 325 of 325 email activities and 35 of 45 push activities held AMPscript, while none of the 54 decision splits, 182 waits and 83 update-contact activities did.
+In Journey Builder, AMPscript support depends on the activity. From experience (not tested here), send activities generally take it in the fields that become part of the message, such as subject, title and body, but not in their settings, and other activity types take neither AMPscript nor SSJS. In practice, email and push activities often contain AMPscript, while decision splits, waits and update-contact activities don't.
 
 File naming patterns of imports, extracts and file transfers use personalization strings such as `%%Year%%`. Those are placeholders the platform replaces, not AMPscript.
 
 ## How this was tested
+
+<details class="testscript-details" markdown="1">
+<summary>Show test method</summary>
 
 - **Where:** a child business unit used for testing, Marketing Cloud Engagement, 26 November 2026.
 - **By API:** for every type, one new asset per snippet, created with `POST /asset/v1/content/assets`, plus one control asset holding only the two marker lines. Every control of the Content Builder and CloudPages types was stored as sent, so a removed snippet is never a type that failed to save. The code resources were created twice, once without and once with the content type the CloudPages editor sets.
@@ -171,6 +174,8 @@ File naming patterns of imports, extracts and file transfers use personalization
 - **Send contexts:** the list of send-time fields comes from a full retrieve of another business unit (not the test business unit) with the deployment tool mcdev; it was not tested.
 - **Not tested:** whether the code runs when an email is sent or a page is published, and a JavaScript code resource with plain JavaScript (no `<script>` tag).
 - **Browser extensions:** an extension that rewrites or formats editor content on save can change what gets stored. Format-on-save features were switched off for the test.
+
+</details>
 
 More metadata types will be added to this page over time.
 
