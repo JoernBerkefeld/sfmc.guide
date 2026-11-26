@@ -5,15 +5,21 @@
  * The code is read as text; it is never executed. Never throws.
  */
 
+import { nextLikeInner, nextLikeWildcardMessage } from './clauses.js';
+import { lookupRowsRepeatedFieldMessage, rsoRepeatedFieldMessage } from './emit-mcn.js';
 import { SYNTAX_ERROR } from './messages.js';
 import {
     ARGUMENT_COUNT,
     CASE_SENSITIVE_LOOKUP,
     INVALID_ARGUMENT,
     INVALID_COUNT,
+    INVALID_FILTER,
+    INVALID_FILTER_VALUE,
+    LIKE_MATCHES_ANYWHERE,
     LOOKUP_FIRST_ROW_ONLY,
     MULTIPLE_LOOKUPS,
     NO_LOOKUP_FOUND,
+    UNKNOWN_FILTER_OPERATOR,
     UNSUPPORTED_EXPRESSION,
     VARIABLE_VALUE,
 } from './messages.js';
@@ -53,6 +59,36 @@ const LOOKUP_FUNCTIONS = new Map(
         lookup: { target: 'ampscript-lookup', caseSensitive: false },
     }),
 );
+
+// Marketing Cloud Next: LookupRows on a marketing object and RetrieveSalesforceObjects
+const NEXT_FUNCTIONS = new Map(
+    Object.entries({
+        lookuprows: { target: 'ampscript-lookuprows-mo', caseSensitive: false },
+        retrievesalesforceobjects: { target: 'ampscript-rso', caseSensitive: false },
+    }),
+);
+
+// calls that exist in AMPscript but fail or are unproven in Next
+const NEXT_REJECTED = new Map(
+    Object.entries({
+        lookuporderedrows:
+            'LookupOrderedRows fails in Marketing Cloud Next. Use LookupRows and sort in your code.',
+        lookuporderedrowscs:
+            'LookupOrderedRowsCS fails in Marketing Cloud Next. Use LookupRows and sort in your code.',
+        lookuprowscs:
+            'LookupRowsCS is not proven in Marketing Cloud Next. Use LookupRows (it ignores case).',
+    }),
+);
+
+const RSO_OPERATORS = {
+    '=': '=',
+    '!=': '<>',
+    '<>': '<>',
+    '<': '<',
+    '<=': '<=',
+    '>': '>',
+    '>=': '>=',
+};
 
 /**
  * Parses one argument: a string or number literal. Variables and nested calls are errors.
@@ -169,14 +205,26 @@ function requireString(context, literal, what) {
  *
  * @param {object} context parse context
  * @param {AmpLiteral[]} pairs alternating column names and values
+ * @param {boolean} [isNext] true for Marketing Cloud Next (a repeated field fails)
  * @returns {object} expression node
  */
-function readPairs(context, pairs) {
+function readPairs(context, pairs, isNext = false) {
     const conditions = [];
+    const seen = new Set();
     for (let index = 0; index < pairs.length; index += 2) {
         const columnLiteral = pairs[index];
         const valueLiteral = pairs[index + 1];
         const column = requireString(context, columnLiteral, 'Each column name');
+        if (isNext && seen.has(column.toLowerCase())) {
+            fail(
+                context,
+                INVALID_FILTER,
+                `${lookupRowsRepeatedFieldMessage()} (${column}).`,
+                columnLiteral.start,
+                columnLiteral.end,
+            );
+        }
+        seen.add(column.toLowerCase());
         conditions.push({
             type: 'compare',
             op: '=',
@@ -247,13 +295,14 @@ function readCount(context, literal) {
  * Finds every lookup call.
  *
  * @param {object} context parse context
+ * @param {Map<string, object>} functions lookup functions by lower-case name
  * @returns {{index: number, name: string}[]} calls in source order
  */
-function findCalls(context) {
+function findCalls(context, functions) {
     const calls = [];
     for (const [index, token] of context.tokens.entries()) {
         const name = token.type === 'ident' ? token.value.toLowerCase() : '';
-        if (LOOKUP_FUNCTIONS.has(name) && isPunct(tokenAt(context, index + 1), '(')) {
+        if (functions.has(name) && isPunct(tokenAt(context, index + 1), '(')) {
             calls.push({ index, name });
         }
     }
@@ -261,20 +310,179 @@ function findCalls(context) {
 }
 
 /**
+ * Fails when the code uses a call that fails or is unproven in Next.
+ *
+ * @param {object} context parse context
+ */
+function rejectNextCalls(context) {
+    for (const [index, token] of context.tokens.entries()) {
+        const reason = token.type === 'ident' && NEXT_REJECTED.get(token.value.toLowerCase());
+        if (reason && isPunct(tokenAt(context, index + 1), '(')) {
+            fail(context, UNSUPPORTED_EXPRESSION, reason, token.start, token.end);
+        }
+    }
+}
+
+/**
+ * Reads the field list of RetrieveSalesforceObjects ("A,B") into column nodes.
+ *
+ * @param {object} context parse context
+ * @param {AmpLiteral} literal field list argument
+ * @returns {{name: string, loc: object}[]} columns
+ */
+function readRsoFields(context, literal) {
+    const text = requireString(context, literal, 'The field list');
+    const isExact = context.text.slice(literal.start + 1, literal.end - 1) === text;
+    const columns = [];
+    let offset = 0;
+    for (const part of text.split(',')) {
+        const name = part.trim();
+        if (!name) {
+            fail(
+                context,
+                INVALID_ARGUMENT,
+                'The field list has an empty entry. Separate the field names with single commas.',
+                literal.start,
+                literal.end,
+            );
+        }
+        const start = isExact ? literal.start + 1 + offset + part.indexOf(name) : literal.start;
+        columns.push({
+            name,
+            loc: makeLoc(context, start, isExact ? start + name.length : literal.end),
+        });
+        offset += part.length + 1;
+    }
+    return columns;
+}
+
+/**
+ * Reads the field / operator / value triplets of RetrieveSalesforceObjects into an AND chain.
+ * Next matches LIKE as "contains", so plain text such as `Ro%` becomes `%Ro%` with a warning;
+ * `_`, `[` or `%` inside the text fail. A field used twice fails (no rows in Next).
+ *
+ * @param {object} context parse context
+ * @param {AmpLiteral[]} triplets alternating field, operator and value
+ * @returns {object} expression node
+ */
+function readTriplets(context, triplets) {
+    const conditions = [];
+    const seen = new Set();
+    for (let index = 0; index < triplets.length; index += 3) {
+        const [columnLiteral, operatorLiteral, valueLiteral] = triplets.slice(index, index + 3);
+        const column = requireString(context, columnLiteral, 'Each field name');
+        if (seen.has(column.toLowerCase())) {
+            fail(
+                context,
+                INVALID_FILTER,
+                rsoRepeatedFieldMessage(column),
+                columnLiteral.start,
+                columnLiteral.end,
+            );
+        }
+        seen.add(column.toLowerCase());
+        const operator = requireString(context, operatorLiteral, 'Each operator').trim();
+        const value = makeValue(
+            context,
+            valueLiteral.value,
+            valueLiteral.start,
+            valueLiteral.end,
+            valueLiteral.kind === 'number',
+        );
+        const loc = makeLoc(context, columnLiteral.start, valueLiteral.end);
+        if (operator.toUpperCase() === 'LIKE') {
+            const parts = nextLikeInner(value.value);
+            if (!parts) {
+                fail(
+                    context,
+                    INVALID_FILTER_VALUE,
+                    nextLikeWildcardMessage(value.value),
+                    valueLiteral.start,
+                    valueLiteral.end,
+                );
+            }
+            const { inner } = parts;
+            if (!parts.isContains) {
+                report(
+                    context,
+                    'warning',
+                    LIKE_MATCHES_ANYWHERE,
+                    `Next matches LIKE as "contains" and ignores wildcards, so "${value.value}" is converted as '%${inner}%'.`,
+                    valueLiteral.start,
+                    valueLiteral.end,
+                );
+            }
+            const pattern = { ...value, kind: 'string', value: `%${inner}%` };
+            conditions.push({ type: 'like', column, pattern, loc });
+            continue;
+        }
+        const op = RSO_OPERATORS[operator];
+        if (!op) {
+            fail(
+                context,
+                UNKNOWN_FILTER_OPERATOR,
+                `"${operator}" is not an operator of RetrieveSalesforceObjects. Use =, !=, <, <=, >, >= or LIKE.`,
+                operatorLiteral.start,
+                operatorLiteral.end,
+            );
+        }
+        conditions.push({ type: 'compare', op, column, value, loc });
+    }
+    return andChain(context, conditions);
+}
+
+/**
+ * Builds the AST of a RetrieveSalesforceObjects call.
+ *
+ * @param {object} context parse context
+ * @param {AmpLiteral[]} args arguments
+ * @param {object} callLoc location of the call
+ * @returns {object} SELECT AST
+ */
+function rsoAst(context, args, callLoc) {
+    if (args.length < 5 || (args.length - 2) % 3 !== 0) {
+        fail(
+            context,
+            ARGUMENT_COUNT,
+            'Wrong number of arguments. Write it as RetrieveSalesforceObjects("Object", "Field1,Field2", "Field", "=", "value"[, …]): every condition needs a field, an operator and a value.',
+            callLoc.start,
+            callLoc.end,
+        );
+    }
+    const name = requireString(context, args[0], 'The object name');
+    return {
+        type: 'select',
+        top: null,
+        columns: readRsoFields(context, args[1]),
+        from: { name, loc: makeLoc(context, args[0].start, args[0].end) },
+        where: readTriplets(context, args.slice(2)),
+        orderBy: [],
+        loc: callLoc,
+    };
+}
+
+/**
  * Parses the first lookup call and builds the AST.
  *
  * @param {object} context parse context
  * @param {object} meta meta data (mutated)
+ * @param {boolean} isNext true for Marketing Cloud Next
  * @returns {object} SELECT AST
  */
-function parseProgram(context, meta) {
+function parseProgram(context, meta, isNext) {
     const header = readHeader(context);
-    const calls = findCalls(context);
+    if (isNext) {
+        rejectNextCalls(context);
+    }
+    const functions = isNext ? NEXT_FUNCTIONS : LOOKUP_FUNCTIONS;
+    const calls = findCalls(context, functions);
     if (calls.length === 0) {
         fail(
             context,
             NO_LOOKUP_FOUND,
-            'No supported lookup was found. Paste a LookupRows, LookupOrderedRows or Lookup call.',
+            isNext
+                ? 'No supported lookup was found. Paste a LookupRows or RetrieveSalesforceObjects call.'
+                : 'No supported lookup was found. Paste a LookupRows, LookupOrderedRows or Lookup call.',
             0,
             context.text.length,
         );
@@ -295,9 +503,14 @@ function parseProgram(context, meta) {
     context.pos = call.index + 1;
     const { args, end } = parseArguments(context);
     const callLoc = makeLoc(context, callToken.start, end);
-    const definition = LOOKUP_FUNCTIONS.get(call.name);
+    const definition = functions.get(call.name);
     const kind = call.name.replace(/cs$/, '');
     meta.target = definition.target;
+    if (kind === 'retrievesalesforceobjects') {
+        const ast = rsoAst(context, args, callLoc);
+        meta.deName = ast.from.name;
+        return ast;
+    }
     if (definition.caseSensitive) {
         report(
             context,
@@ -341,7 +554,7 @@ function parseProgram(context, meta) {
         top,
         columns,
         from: { name, loc: makeLoc(context, args[0].start, args[0].end) },
-        where: readPairs(context, pairs),
+        where: readPairs(context, pairs, isNext),
         orderBy,
         loc: callLoc,
     };
@@ -356,17 +569,22 @@ function parseProgram(context, meta) {
  * converted; loops and output code around it are ignored. A `/* SQL: SELECT a, b *\/` comment
  * supplies the column list LookupRows cannot carry.
  *
+ * With `{ platform: 'mcn' }` the Marketing Cloud Next calls are read instead: `LookupRows` on a
+ * marketing object and `RetrieveSalesforceObjects("Object", "F1,F2", "Field", "op", "v"[, …])`;
+ * LookupOrderedRows and the CS variants are errors there.
+ *
  * @param {string} text AMPscript code
+ * @param {{platform?: 'mce'|'mcn'}} [options] platform (default 'mce')
  * @returns {{ast: object|null, messages: import('./messages.js').Message[], meta: {target: string|null, deName?: string, deKey?: string}}} AST (null on error), messages and meta data
  */
-export function parseAmpscript(text) {
+export function parseAmpscript(text, options = {}) {
     const source = typeof text === 'string' ? text : '';
     const context = createContext(source);
     const meta = { target: null };
     const ast = runParser(context, () => {
         tokenize(context, 'ampscript', findAmpscriptRegions(source));
         rejectEmpty(context);
-        return parseProgram(context, meta);
+        return parseProgram(context, meta, options.platform === 'mcn');
     });
     return { ast, messages: context.messages, meta };
 }

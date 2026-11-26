@@ -2,7 +2,7 @@
 // The converter core is the sfmc-sql-converter package, vendored into ./vendor/ by its sync script.
 // Pure helpers are exported for tests/sql-converter-ui.test.cjs; the DOM part only runs in a browser.
 // Always import from the versioned folder: the service worker serves cached files first.
-import { convert, parseAmpscript, parseSsjs } from './vendor/sfmc-sql-converter/0.1.0/index.js';
+import { convert, parseAmpscript, parseSsjs } from './vendor/sfmc-sql-converter/0.2.0/index.js';
 
 export const CONVERT_DELAY_MS = 300;
 export const MESSAGE_DELAY_MS = 1000;

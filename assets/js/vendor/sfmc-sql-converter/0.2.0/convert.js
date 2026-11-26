@@ -6,14 +6,23 @@
  * back with the reverse parser and compared with the query, minus the clauses the target
  * dropped). Direction `toSql`: lookup code → canonical SQL.
  *
- * Only platform `mce` (Marketing Cloud Engagement) produces code for now; `mcn` (Marketing
- * Cloud Next) returns its outputs as unavailable until its live tests are done.
+ * Platform `mce` (Marketing Cloud Engagement) reads data extensions with SSJS / AMPscript;
+ * `mcn` (Marketing Cloud Next) reads Sales Cloud objects (`dataSource: 'CRM'`) or marketing
+ * objects (`'MO'`) with Handlebars / AMPscript, limited to what the live probes proved (see
+ * `NEXT_RULES` in emit-mcn.js).
  */
 
 import { collectClauses, locFromOffsets } from './clauses.js';
 import { MCE_TARGETS } from './emit-mce.js';
-import { DE_KEY_ASSUMED, SELECT_STAR_NEEDS_COLUMNS, createMessage } from './messages.js';
+import { MCN_TARGETS } from './emit-mcn.js';
+import {
+    DE_KEY_ASSUMED,
+    ORDER_BY_NEEDS_TOP,
+    SELECT_STAR_NEEDS_COLUMNS,
+    createMessage,
+} from './messages.js';
 import { parseAmpscript } from './parse-ampscript.js';
+import { parseHandlebars } from './parse-handlebars.js';
 import { parseSsjs } from './parse-ssjs.js';
 import { normalizeSql, printSql, printSqlWithSpans } from './print-sql.js';
 import { parseSql } from './sql-parser.js';
@@ -31,7 +40,8 @@ import { parseSql } from './sql-parser.js';
  * @property {string} [deName] data extension name (toSql: used when the code does not carry it)
  * @property {string} [deKey] data extension external key (default: the name)
  * @property {string[]} [columns] the columns `SELECT *` stands for
- * @property {'CRM'|'MO'} [dataSource] Next data source (reserved for the Next targets)
+ * @property {'CRM'|'MO'} [dataSource] Next data source: Sales Cloud object (default) or
+ * marketing object
  * @property {{fields: {name: string}[]}} [schema] data extension fields
  * @property {{rowsAsObjects?: boolean, paging?: boolean}} [output] WSProxy output options
  */
@@ -69,21 +79,32 @@ import { parseSql } from './sql-parser.js';
  * there was nothing to compare (a filter without a data extension name)
  */
 
-const NEXT_PENDING = 'Next targets are pending live tests.';
+/**
+ * Reads Next AMPscript back (LookupRows on a marketing object, RetrieveSalesforceObjects).
+ *
+ * @param {string} code AMPscript code
+ * @returns {{ast: SelectAst|null, messages: Message[], meta: object}} parse result
+ */
+function parseNextAmpscript(code) {
+    return parseAmpscript(code, { platform: 'mcn' });
+}
 
 /**
- * Marketing Cloud Next targets (all unavailable until the live tests are done).
+ * Returns the reverse parser of a target.
+ *
+ * @param {{language: string}} target target
+ * @param {'mce'|'mcn'} platform platform
+ * @returns {(code: string) => {ast: SelectAst|null, messages: Message[], meta: object}} parser
  */
-export const MCN_TARGETS = Object.freeze([
-    { id: 'handlebars-query', language: 'handlebars', label: 'query' },
-    { id: 'handlebars-queryfirst', language: 'handlebars', label: 'queryFirst' },
-    { id: 'ampscript-lookuprows', language: 'ampscript', label: 'LookupRows' },
-    {
-        id: 'ampscript-retrievesalesforceobjects',
-        language: 'ampscript',
-        label: 'RetrieveSalesforceObjects',
-    },
-]);
+function reverseParserOf(target, platform) {
+    if (target.language === 'handlebars') {
+        return parseHandlebars;
+    }
+    if (target.language === 'ssjs') {
+        return parseSsjs;
+    }
+    return platform === 'mcn' ? parseNextAmpscript : parseAmpscript;
+}
 
 /**
  * Builds the list of unavailable outputs for a target list.
@@ -143,8 +164,7 @@ function spanText(code, spans, clauseId) {
  * @returns {{ok: boolean, sql: string, note?: string}} round trip
  */
 function roundTripOf(ast, target, result, options) {
-    const parse = target.language === 'ssjs' ? parseSsjs : parseAmpscript;
-    const back = parse(result.code);
+    const back = reverseParserOf(target, options.platform)(result.code);
     if (!back.ast) {
         const reason = back.messages.find((message) => message.severity === 'error');
         return {
@@ -166,9 +186,8 @@ function roundTripOf(ast, target, result, options) {
     } else if (left.length) {
         note = `Same query without ${left.join(' and ')}, which ${target.label} leaves out.`;
     }
-    return note
-        ? { ok: isOk, sql: printSql(back.ast), note }
-        : { ok: isOk, sql: printSql(back.ast) };
+    const sql = printSql(back.ast, { isTyped: Boolean(target.normalize.isTyped) });
+    return note ? { ok: isOk, sql, note } : { ok: isOk, sql };
 }
 
 /**
@@ -180,21 +199,21 @@ function roundTripOf(ast, target, result, options) {
  */
 function convertToCode(input, options) {
     const { ast, messages } = parseSql(input);
-    if (options.platform === 'mcn') {
-        return {
-            outputs: unavailableOutputs(MCN_TARGETS, NEXT_PENDING),
-            messages,
-            clauseMap: [],
-            roundTrip: { ok: false, sql: '', note: NEXT_PENDING },
-        };
-    }
+    const targets =
+        options.platform === 'mcn'
+            ? MCN_TARGETS.filter((target) => target.dataSource === options.dataSource)
+            : MCE_TARGETS;
     if (!ast) {
         return {
-            outputs: unavailableOutputs(MCE_TARGETS, 'Fix the errors in the query first.'),
+            outputs: unavailableOutputs(targets, 'Fix the errors in the query first.'),
             messages,
             clauseMap: [],
             roundTrip: { ok: false, sql: '', note: 'The query has errors.' },
         };
+    }
+    if (options.platform === 'mcn') {
+        const emitOptions = { sourceText: input };
+        return { messages, ...emitAll(ast, input, targets, emitOptions, options) };
     }
     if (!options.deKey) {
         messages.push(
@@ -225,10 +244,24 @@ function convertToCode(input, options) {
         output: options.output,
         sourceText: input,
     };
+    return { messages, ...emitAll(ast, input, targets, emitOptions, options) };
+}
+
+/**
+ * Runs every target's emitter and collects outputs, the clause map and the round trip.
+ *
+ * @param {SelectAst} ast parsed query
+ * @param {string} input SQL text
+ * @param {ReadonlyArray<object>} targets targets with `emit` and `normalize`
+ * @param {object} emitOptions options passed to the emitters
+ * @param {ConvertOptions} options convert options
+ * @returns {{outputs: Output[], clauseMap: ClauseMapEntry[], roundTrip: object}} result parts
+ */
+function emitAll(ast, input, targets, emitOptions, options) {
     const { clauses } = collectClauses(ast, input);
     const outputs = [];
     const clauseMap = [];
-    for (const target of MCE_TARGETS) {
+    for (const target of targets) {
         const result = target.emit(ast, emitOptions);
         const base = { id: target.id, language: target.language, label: target.label };
         if (result.unavailable) {
@@ -257,7 +290,6 @@ function convertToCode(input, options) {
     const first = outputs.find((output) => output.roundTrip);
     return {
         outputs,
-        messages,
         clauseMap,
         roundTrip: first
             ? first.roundTrip
@@ -270,19 +302,48 @@ function convertToCode(input, options) {
  * AMPscript, else SSJS; the other parser is tried when the first one fails).
  *
  * @param {string} input code
+ * @param {'mce'|'mcn'} platform platform (Next reads Handlebars and Next AMPscript)
  * @returns {{ast: SelectAst|null, messages: Message[], meta: object}} parse result
  */
-function parseCode(input) {
+function parseCode(input, platform) {
     const isLooksLikeAmpscript = /%%\[|%%=|\bSET\s+@/i.test(input);
-    const parsers = isLooksLikeAmpscript
-        ? [parseAmpscript, parseSsjs]
-        : [parseSsjs, parseAmpscript];
+    let parsers;
+    if (platform === 'mcn') {
+        parsers = /\{\{/.test(input)
+            ? [parseHandlebars, parseNextAmpscript]
+            : [parseNextAmpscript, parseHandlebars];
+    } else {
+        parsers = isLooksLikeAmpscript ? [parseAmpscript, parseSsjs] : [parseSsjs, parseAmpscript];
+    }
     const primary = parsers[0](input);
     if (primary.ast) {
         return primary;
     }
     const secondary = parsers[1](input);
     return secondary.ast ? secondary : primary;
+}
+
+/**
+ * A query activity rejects ORDER BY without TOP (live check 2026-11-26, DB
+ * `entries/mce/mce-sql-query-activity-where-semantics.json`): tell the reader when the printed
+ * SQL sorts every row.
+ *
+ * @param {SelectAst} ast statement read from the code
+ * @param {'mce'|'mcn'} platform platform
+ * @returns {Message[]} the info message, or none
+ */
+function orderByNeedsTop(ast, platform) {
+    if (platform !== 'mce' || !ast.orderBy?.length || (ast.top !== null && ast.top !== undefined)) {
+        return [];
+    }
+    return [
+        createMessage(
+            'info',
+            ORDER_BY_NEEDS_TOP,
+            'The SQL sorts without TOP. A query activity in Automation Studio rejects ORDER BY without TOP, so add TOP with the number of rows you need before running it there.',
+            ast.orderBy[0].loc ?? ast.loc,
+        ),
+    ];
 }
 
 /**
@@ -294,15 +355,7 @@ function parseCode(input) {
  */
 function convertToSql(input, options) {
     const base = { id: 'sql', language: 'sql', label: 'SQL' };
-    if (options.platform === 'mcn') {
-        return {
-            outputs: [{ ...base, unavailable: NEXT_PENDING, spans: [] }],
-            messages: [],
-            clauseMap: [],
-            roundTrip: { ok: false, sql: '', note: NEXT_PENDING },
-        };
-    }
-    const back = parseCode(typeof input === 'string' ? input : '');
+    const back = parseCode(typeof input === 'string' ? input : '', options.platform);
     if (!back.ast) {
         return {
             outputs: [{ ...base, unavailable: 'Fix the errors in the code first.', spans: [] }],
@@ -316,7 +369,9 @@ function convertToSql(input, options) {
     if (options.deName && (!back.meta?.deName || !ast.from.name)) {
         ast.from = { ...ast.from, name: options.deName };
     }
-    const { sql, spans } = printSqlWithSpans(ast);
+    // Handlebars keeps the value type: p1="5" is text and must not print as 5
+    const typed = { isTyped: back.meta?.target?.startsWith('handlebars') ?? false };
+    const { sql, spans } = printSqlWithSpans(ast, typed);
     const clauseMap = collectClauses(ast).clauses.map((clause) => ({
         outputId: 'sql',
         clauseId: clause.clauseId,
@@ -340,10 +395,10 @@ function convertToSql(input, options) {
         };
     }
     const again = parseSql(sql);
-    const isOk = Boolean(again.ast) && normalizeSql(again.ast) === normalizeSql(ast);
+    const isOk = Boolean(again.ast) && normalizeSql(again.ast, typed) === normalizeSql(ast, typed);
     return {
         outputs: [{ ...base, code: sql, spans }],
-        messages: back.messages,
+        messages: [...back.messages, ...orderByNeedsTop(ast, options.platform)],
         clauseMap,
         roundTrip: isOk
             ? { ok: isOk, sql }
@@ -367,6 +422,10 @@ export function convert(input, options = {}) {
     if (direction !== 'toCode' && direction !== 'toSql') {
         throw new TypeError(`Unknown direction "${direction}". Use "toCode" or "toSql".`);
     }
-    const resolved = { ...options, platform };
+    const dataSource = options.dataSource ?? 'CRM';
+    if (dataSource !== 'CRM' && dataSource !== 'MO') {
+        throw new TypeError(`Unknown data source "${dataSource}". Use "CRM" or "MO".`);
+    }
+    const resolved = { ...options, platform, dataSource };
     return direction === 'toSql' ? convertToSql(input, resolved) : convertToCode(input, resolved);
 }

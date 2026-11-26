@@ -138,7 +138,7 @@ test('debounce runs once after the last call and can be cancelled', async (t) =>
 });
 
 const VENDOR_URL = pathToFileURL(
-  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.1.0', 'index.js'),
+  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.2.0', 'index.js'),
 ).href;
 
 test('the UI imports the converter core only from a versioned vendor folder', () => {
@@ -249,13 +249,11 @@ test('CODE_KINDS names every Next target id', async () => {
     assert.ok(CODE_KINDS[id], id);
   }
   const { MCN_TARGETS } = await import(VENDOR_URL);
-  if (MCN_TARGETS.some((target) => target.id === 'handlebars-query-mo')) {
-    assert.deepEqual(
-      MCN_TARGETS.map((target) => target.id).toSorted(),
-      nextIds.toSorted(),
-      'the vendored core has the same Next targets',
-    );
-  }
+  assert.deepEqual(
+    MCN_TARGETS.map((target) => target.id).toSorted(),
+    nextIds.toSorted(),
+    'the vendored core has the same Next targets',
+  );
 });
 
 /**
@@ -281,9 +279,7 @@ function exampleOptions(buildOptions, platform, example) {
 
 test('the examples fit the real converter core', async () => {
   const { EXAMPLES, buildOptions, collectMessages, describeCode, UNKNOWN_CODE_KIND } = await load();
-  const { convert, MCN_TARGETS } = await import(VENDOR_URL);
-  // The vendored core emits Next code once it has the Next targets (sfmc-sql-converter 0.2.0).
-  const nextEmits = MCN_TARGETS.some((target) => target.id === 'handlebars-query-mo');
+  const { convert } = await import(VENDOR_URL);
   const severities = { mce: new Set(), mcn: new Set() };
   for (const platform of ['mce', 'mcn']) {
     for (const example of EXAMPLES[platform]) {
@@ -300,7 +296,7 @@ test('the examples fit the real converter core', async () => {
         const back = convert(wsproxy.code, { platform, direction: 'toSql' });
         assert.ok(back.roundTrip.ok, `${example.label}: converts back`);
       }
-      if (platform === 'mcn' && nextEmits) {
+      if (platform === 'mcn') {
         assert.equal(hasError, /\(error\)$/u.test(example.label), `${example.label}: error label`);
         const usable = result.outputs.filter((output) => typeof output.code === 'string');
         assert.equal(usable.length > 0, !hasError, `${example.label}: Next output`);
@@ -308,12 +304,6 @@ test('the examples fit the real converter core', async () => {
           const back = convert(output.code, { ...options, direction: 'toSql' });
           assert.ok(back.roundTrip.ok, `${example.label}: ${output.id} converts back`);
         }
-      } else if (platform === 'mcn') {
-        // 0.1.0: Next targets stay unavailable until their live tests are done.
-        assert.ok(
-          result.outputs.every((output) => output.unavailable),
-          example.label,
-        );
       }
     }
   }

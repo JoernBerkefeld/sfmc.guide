@@ -21,6 +21,7 @@ import {
     MISSING_CLOSING_PAREN,
     NESTING_TOO_DEEP,
     NULL_COMPARISON,
+    NULL_FALLBACK_REWRITTEN,
     SYNTAX_ERROR,
     SYSTEM_DATA_VIEW,
     TABLE_HINT_IGNORED,
@@ -38,6 +39,7 @@ import {
     UNSUPPORTED_NOT_BETWEEN,
     UNSUPPORTED_NOT_CONDITION,
     UNSUPPORTED_NOT_LIKE,
+    UNSUPPORTED_OFFSET_FETCH,
     UNSUPPORTED_QUALIFIED_NAME,
     UNSUPPORTED_STAR_WITH_COLUMNS,
     UNSUPPORTED_SUBQUERY,
@@ -47,6 +49,7 @@ import {
     UNTERMINATED_STRING,
     createMessage,
 } from './messages.js';
+import { sqlLike } from './like.js';
 
 /**
  * @typedef {object} Loc
@@ -193,6 +196,10 @@ const WORD_PATTERN = /[\p{L}_#][\p{L}\p{N}_#$]*/uy;
 const NUMBER_PATTERN = /\d+(?:\.\d+)?/y;
 const WHITESPACE_PATTERN = /\s/;
 const INTEGER_PATTERN = /^\d+$/;
+// functions that replace NULL by a fallback; supported in WHERE as FN(column, value) op value
+const NULL_FALLBACK_FUNCTIONS = new Set(['ISNULL', 'COALESCE']);
+const NUMBER_TEXT_PATTERN = /^\s*-?\d+(?:\.\d+)?\s*$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?$/;
 
 /**
  * Internal signal that parsing stopped after an error message was recorded.
@@ -858,6 +865,204 @@ function parseIn(context, column, negated) {
 }
 
 /**
+ * Orders two literals the way SQL would: the literal kinds stand for the column type (a number
+ * on either side → numbers; two ISO dates → dates; else text without case and trailing spaces).
+ *
+ * @param {Value} left fallback value
+ * @param {Value} right compared value
+ * @returns {number|null} negative / 0 / positive, or null when the types do not fit together
+ */
+function compareLiterals(left, right) {
+    if (left.kind === 'number' || right.kind === 'number') {
+        if (!NUMBER_TEXT_PATTERN.test(left.value) || !NUMBER_TEXT_PATTERN.test(right.value)) {
+            return null;
+        }
+        return Number(left.value) - Number(right.value);
+    }
+    if (ISO_DATE_PATTERN.test(left.value) && ISO_DATE_PATTERN.test(right.value)) {
+        // Read every value as UTC: Date.parse reads a date-only text as UTC but a text with a
+        // time as local time, which would shift one side by the local offset.
+        const toTime = (text) => {
+            const iso = text.replace(' ', 'T');
+            return Date.parse(`${iso.includes('T') ? iso : `${iso}T00:00`}Z`);
+        };
+        return toTime(left.value) - toTime(right.value);
+    }
+    const a = left.value.trimEnd().toLowerCase();
+    const b = right.value.trimEnd().toLowerCase();
+    if (a === b) {
+        return 0;
+    }
+    return a < b ? -1 : 1;
+}
+
+/**
+ * Evaluates `fallback op value` at conversion time.
+ *
+ * @param {Value} fallback fallback literal
+ * @param {string} op comparison operator or 'LIKE'
+ * @param {Value} value compared literal or LIKE pattern
+ * @returns {boolean|null} the result, or null when the types do not fit together
+ */
+function fallbackMatches(fallback, op, value) {
+    if (op === 'LIKE') {
+        return sqlLike(fallback.value, value.value);
+    }
+    const order = compareLiterals(fallback, value);
+    if (order === null || Number.isNaN(order)) {
+        return null;
+    }
+    const results = {
+        '=': order === 0,
+        '<>': order !== 0,
+        '<': order < 0,
+        '<=': order <= 0,
+        '>': order > 0,
+        '>=': order >= 0,
+    };
+    return results[op];
+}
+
+/**
+ * Reads the fallback argument of ISNULL / COALESCE: a fixed value or NULL.
+ *
+ * @param {object} context parse context
+ * @param {{name: string, start: number}} column the column of the call
+ * @param {(detail: string) => never} unsupported fails with an explanation
+ * @returns {Value|null} the fallback, or null for NULL
+ */
+function parseFallbackValue(context, column, unsupported) {
+    const token = peek(context);
+    if (isKeyword(token, 'NULL')) {
+        advance(context);
+        return null;
+    }
+    if (token.type === 'word' && isSymbol(peek(context, 1), '(')) {
+        unsupported('Nested functions are not supported.');
+    }
+    if (isName(token)) {
+        unsupported('The fallback must be a fixed value, not a column.');
+    }
+    return parseValue(context, column);
+}
+
+/**
+ * Parses `ISNULL(column, fallback) op value` (also COALESCE with two arguments) and rewrites
+ * it without the function: `column op value`, plus `OR column IS NULL` when `fallback op value`
+ * is true. A NULL fallback adds no OR branch; comparing with NULL stays an error.
+ *
+ * @param {object} context parse context, positioned at the function name
+ * @returns {Expr} condition node (compare / like, or an OR with an IS NULL test)
+ */
+function parseFallbackPredicate(context) {
+    const functionToken = advance(context);
+    const name = functionToken.upper;
+    const callEnd = groupEnd(context, context.pos);
+    const unsupported = (detail) =>
+        fail(
+            context,
+            UNSUPPORTED_FUNCTION,
+            `${name}() is only supported in WHERE as ${name}(Column, value) compared with a fixed value, e.g. "${name}(Country, 'DE') = 'DE'". ${detail}`,
+            functionToken.start,
+            callEnd,
+        );
+    advance(context);
+    const first = peek(context);
+    if (first.type === 'word' && isSymbol(peek(context, 1), '(')) {
+        unsupported('Nested functions are not supported.');
+    }
+    if (!isName(first)) {
+        unsupported('The first argument must be a column name.');
+    }
+    const columnName = readName(context, 'column');
+    const column = { name: columnName.name, start: functionToken.start };
+    if (!isSymbol(peek(context), ',')) {
+        unsupported('It needs exactly two arguments: the column and the fallback value.');
+    }
+    advance(context);
+    const fallback = parseFallbackValue(context, column, unsupported);
+    if (isSymbol(peek(context), ',')) {
+        unsupported('More than two arguments are not supported.');
+    }
+    const close = peek(context);
+    if (!isSymbol(close, ')')) {
+        if (close.type === 'eof') {
+            fail(
+                context,
+                MISSING_CLOSING_PAREN,
+                `This ${name}( is never closed. Add a closing bracket ) after the fallback value.`,
+                functionToken.start,
+                close.start,
+            );
+        }
+        unexpected(context, `Close ${name}( with ) after the fallback value.`);
+    }
+    advance(context);
+    const operator = peek(context);
+    let op;
+    if (operator.type === 'symbol' && COMPARISON_OPERATORS.has(operator.value)) {
+        op = operator.value === '!=' ? '<>' : operator.value;
+    } else if (isKeyword(operator, 'LIKE')) {
+        op = 'LIKE';
+    } else if (isKeyword(operator, 'NOT') && isKeyword(peek(context, 1), 'LIKE')) {
+        fail(
+            context,
+            UNSUPPORTED_NOT_LIKE,
+            'NOT LIKE is not supported. Use LIKE with the opposite pattern, or filter the unwanted rows out in your code.',
+            operator.start,
+            peek(context, 1).end,
+        );
+    } else {
+        unsupported('Only =, <>, <, <=, >, >= and LIKE can follow it.');
+    }
+    advance(context);
+    const value = parseValue(context, { name: columnName.name, start: functionToken.start });
+    if (op === 'LIKE' && value.kind !== 'string') {
+        fail(
+            context,
+            EXPECTED_STRING,
+            `LIKE needs a text pattern in single quotes, e.g. LIKE '%${value.value}%'.`,
+            value.loc.start,
+            value.loc.end,
+        );
+    }
+    const loc = makeLoc(context, functionToken.start, value.loc.end);
+    const base =
+        op === 'LIKE'
+            ? { type: 'like', column: columnName.name, pattern: value, loc }
+            : { type: 'compare', op, column: columnName.name, value, loc };
+    const isOrNull = fallback ? fallbackMatches(fallback, op, value) : false;
+    if (isOrNull === null) {
+        unsupported(
+            `The fallback ${context.text.slice(fallback.loc.start, fallback.loc.end)} and the value ${context.text.slice(value.loc.start, value.loc.end)} have different types; use values of the column's type.`,
+        );
+    }
+    const source = context.text.slice(functionToken.start, value.loc.end);
+    const plain = `${columnName.name} ${op} ${context.text.slice(value.loc.start, value.loc.end)}`;
+    const reason = fallback
+        ? `the fallback ${context.text.slice(fallback.loc.start, fallback.loc.end)} ${isOrNull ? 'matches' : 'does not match'} the condition`
+        : 'the fallback is NULL';
+    report(
+        context,
+        'info',
+        NULL_FALLBACK_REWRITTEN,
+        `"${source}" is converted as "${plain}${isOrNull ? ` OR ${columnName.name} IS NULL` : ''}", because ${reason}. This assumes the fallback value fits the type of ${columnName.name}.`,
+        functionToken.start,
+        value.loc.end,
+    );
+    if (!isOrNull) {
+        return base;
+    }
+    const nullTest = {
+        type: 'null',
+        negated: false,
+        column: columnName.name,
+        loc: makeLoc(context, functionToken.start, close.end),
+    };
+    return { type: 'or', left: base, right: nullTest, loc };
+}
+
+/**
  * Parses a single condition such as `Age > 5`, `Name LIKE 'a%'` or `Email IS NULL`.
  *
  * @param {object} context parse context
@@ -865,6 +1070,13 @@ function parseIn(context, column, negated) {
  */
 function parsePredicate(context) {
     const first = peek(context);
+    if (
+        first.type === 'word' &&
+        NULL_FALLBACK_FUNCTIONS.has(first.upper) &&
+        isSymbol(peek(context, 1), '(')
+    ) {
+        return parseFallbackPredicate(context);
+    }
     if (first.type === 'string' || first.type === 'number' || isSymbol(first, '-')) {
         fail(
             context,
@@ -1387,6 +1599,33 @@ function rejectSetOperator(context) {
 }
 
 /**
+ * Fails with UNSUPPORTED_OFFSET_FETCH when the current token starts `OFFSET … FETCH …` paging.
+ *
+ * @param {object} context parse context
+ */
+function rejectOffsetFetch(context) {
+    const token = peek(context);
+    if (!isKeyword(token, 'OFFSET') && !(token.type === 'word' && token.upper === 'FETCH')) {
+        return;
+    }
+    let end = token.end;
+    for (let ahead = 0; ; ahead++) {
+        const candidate = peek(context, ahead);
+        if (candidate.type === 'eof' || isSymbol(candidate, ';')) {
+            break;
+        }
+        end = candidate.end;
+    }
+    fail(
+        context,
+        UNSUPPORTED_OFFSET_FETCH,
+        'OFFSET … FETCH (skipping rows / paging) is not supported. Use TOP to limit the number of rows instead, e.g. "SELECT TOP 10 … ORDER BY …".',
+        token.start,
+        end,
+    );
+}
+
+/**
  * Parses the ORDER BY list, starting at ORDER.
  *
  * @param {object} context parse context
@@ -1456,6 +1695,7 @@ function parseStatement(context) {
     rejectSetOperator(context);
     const orderBy = isKeyword(peek(context), 'ORDER') ? parseOrderBy(context) : [];
     rejectSetOperator(context);
+    rejectOffsetFetch(context);
     const end = context.tokens[context.pos - 1].end;
     if (isSymbol(peek(context), ';')) {
         advance(context);

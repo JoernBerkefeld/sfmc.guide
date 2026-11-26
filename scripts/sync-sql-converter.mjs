@@ -17,6 +17,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -54,7 +55,7 @@ for (const entry of readdirSync(vendorRoot, { withFileTypes: true })) {
     for (const file of readdirSync(full)) {
       rmSync(path.join(full, file));
     }
-    rmSync(full, { recursive: false, force: true });
+    rmdirSync(full);
   }
 }
 const target = path.join(vendorRoot, version);

@@ -1110,7 +1110,7 @@ function writeAmpPairs(out, pairs, idOf) {
  * @param {CodeWriter} out writer
  * @param {{name: string, clauseId?: string}[]|null} columns selected columns
  */
-function writeAmpLoop(out, columns) {
+export function writeAmpLoop(out, columns) {
     out.write(
         'SET @rowCount = RowCount(@rows)\nFOR @i = 1 TO @rowCount DO\n    SET @row = Row(@rows, @i)\n',
     );

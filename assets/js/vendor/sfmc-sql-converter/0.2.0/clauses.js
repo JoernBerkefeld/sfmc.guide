@@ -98,6 +98,33 @@ export function isContainsPattern(pattern) {
 }
 
 /**
+ * Reads a Next LIKE value the way the forward emitter accepts it: the text between one leading
+ * and one trailing `%`. Next matches "contains" and ignores wildcards, so an inner `_`, `[` or
+ * `%` has no SQL equivalent.
+ *
+ * @param {string} value LIKE value from Next code
+ * @returns {{inner: string, isContains: boolean}|null} the inner text and whether the value
+ * already was `%text%`, or null when the inner text holds `_`, `[` or `%`
+ */
+export function nextLikeInner(value) {
+    const inner = value.replace(/^%/, '').replace(/%$/, '');
+    if (/[%_[]/.test(inner)) {
+        return null;
+    }
+    return { inner, isContains: isContainsPattern(value) };
+}
+
+/**
+ * Explains why a Next LIKE value with `_`, `[` or `%` inside cannot be read back.
+ *
+ * @param {string} value LIKE value from Next code
+ * @returns {string} message
+ */
+export function nextLikeWildcardMessage(value) {
+    return `Next matches LIKE as "contains" and ignores wildcards, so "${value}" has no SQL equivalent: the _, [ or % inside the text would mean a wildcard in SQL. Use plain text, e.g. "%text%".`;
+}
+
+/**
  * Returns the filter Value used for an anchored LIKE pattern: the pattern without leading and
  * trailing `%` (the `like` operator adds them again), or `%` when nothing is left, because an
  * empty filter Value is rejected.

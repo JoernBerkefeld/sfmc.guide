@@ -6,6 +6,8 @@
  * name needs them, text in single quotes with `''` escaping, numbers unquoted. A text value
  * that is a plain number without leading zeros (e.g. '500', '-2.5') prints unquoted, because
  * the generated code carries every value as a string and the two forms compare as equal.
+ * Marketing Cloud Next keeps the type (`p1="5"` is text, `p1=5` a number): with `isTyped` the
+ * value kind alone decides, in printing and in the round-trip comparison.
  */
 
 import { CodeWriter, collectClauses } from './clauses.js';
@@ -47,10 +49,11 @@ export function formatName(name) {
  * Formats a literal value.
  *
  * @param {Value} value value node
+ * @param {boolean} [isTyped] true to quote every text value, even a plain number
  * @returns {string} SQL literal
  */
-export function formatValue(value) {
-    if (value.kind === 'number' || isPlainNumber(value.value)) {
+export function formatValue(value, isTyped = false) {
+    if (value.kind === 'number' || (!isTyped && isPlainNumber(value.value))) {
         return value.value;
     }
     return `'${value.value.replaceAll("'", "''")}'`;
@@ -63,41 +66,44 @@ export function formatValue(value) {
  * @param {object} expr expression node
  * @param {Map<object, string>} idOf node → clause id
  * @param {'and'|'or'|null} parent type of the enclosing node
+ * @param {boolean} isTyped true to quote every text value
  */
-function writeExpr(out, expr, idOf, parent) {
+function writeExpr(out, expr, idOf, parent, isTyped) {
     if (expr.type === 'and' || expr.type === 'or') {
         const isNeedsBrackets = expr.type === 'or' && parent === 'and';
         out.write(isNeedsBrackets ? '(' : '');
-        writeExpr(out, expr.left, idOf, expr.type);
+        writeExpr(out, expr.left, idOf, expr.type, isTyped);
         out.write(` ${expr.type.toUpperCase()} `);
-        writeExpr(out, expr.right, idOf, expr.type);
+        writeExpr(out, expr.right, idOf, expr.type, isTyped);
         out.write(isNeedsBrackets ? ')' : '');
         return;
     }
-    out.mark(idOf.get(expr), formatCondition(expr));
+    out.mark(idOf.get(expr), formatCondition(expr, isTyped));
 }
 
 /**
  * Formats a single condition.
  *
  * @param {object} expr condition node
+ * @param {boolean} isTyped true to quote every text value
  * @returns {string} SQL text
  */
-function formatCondition(expr) {
+function formatCondition(expr, isTyped) {
     const column = formatName(expr.column);
+    const literal = (value) => formatValue(value, isTyped);
     switch (expr.type) {
         case 'compare': {
-            return `${column} ${expr.op} ${formatValue(expr.value)}`;
+            return `${column} ${expr.op} ${literal(expr.value)}`;
         }
         case 'like': {
             return `${column} LIKE '${expr.pattern.value.replaceAll("'", "''")}'`;
         }
         case 'in': {
-            const values = expr.values.map((value) => formatValue(value)).join(', ');
+            const values = expr.values.map((value) => literal(value)).join(', ');
             return `${column} ${expr.negated ? 'NOT IN' : 'IN'} (${values})`;
         }
         case 'between': {
-            return `${column} BETWEEN ${formatValue(expr.low)} AND ${formatValue(expr.high)}`;
+            return `${column} BETWEEN ${literal(expr.low)} AND ${literal(expr.high)}`;
         }
         case 'null': {
             return `${column} IS ${expr.negated ? 'NOT NULL' : 'NULL'}`;
@@ -112,9 +118,11 @@ function formatCondition(expr) {
  * Prints an AST as canonical SQL and records where each clause is in the text.
  *
  * @param {SelectAst} ast statement
+ * @param {{isTyped?: boolean}} [options] isTyped: quote every text value (Next keeps types)
  * @returns {{sql: string, spans: Span[]}} SQL text and clause spans
  */
-export function printSqlWithSpans(ast) {
+export function printSqlWithSpans(ast, options = {}) {
+    const isTyped = Boolean(options.isTyped);
     const { idOf } = collectClauses(ast);
     const out = new CodeWriter();
     out.write('SELECT ');
@@ -131,7 +139,7 @@ export function printSqlWithSpans(ast) {
     out.write('\nFROM ').mark('from', formatName(ast.from.name));
     if (ast.where) {
         out.write('\nWHERE ');
-        writeExpr(out, ast.where, idOf, null);
+        writeExpr(out, ast.where, idOf, null, isTyped);
     }
     if (ast.orderBy?.length) {
         out.write('\nORDER BY ');
@@ -150,10 +158,11 @@ export function printSqlWithSpans(ast) {
  * Prints an AST as canonical SQL.
  *
  * @param {SelectAst} ast statement
+ * @param {{isTyped?: boolean}} [options] isTyped: quote every text value (Next keeps types)
  * @returns {string} SQL text
  */
-export function printSql(ast) {
-    return printSqlWithSpans(ast).sql;
+export function printSql(ast, options = {}) {
+    return printSqlWithSpans(ast, options).sql;
 }
 
 // ------------------------------------------------------------------------------------------
@@ -169,16 +178,20 @@ export function printSql(ast) {
  * @property {boolean} [expandBetween] treat `BETWEEN a AND b` like `>= a AND <= b`
  * @property {boolean} [dropTop] ignore TOP (the target dropped it)
  * @property {boolean} [dropOrderBy] ignore ORDER BY (the target dropped it)
+ * @property {boolean} [isTyped] compare text and number values by their kind: '5' differs from
+ * 5 (Next keeps the type)
  */
 
 /**
- * Normalizes a value: plain numbers compare by numeric value, everything else as text.
+ * Normalizes a value: plain numbers compare by numeric value, everything else as text. With
+ * `isTyped` the value kind decides instead of the text.
  *
  * @param {Value} value value node
+ * @param {NormalizeOptions} options flags
  * @returns {string} normalized value
  */
-function normalizeValue(value) {
-    if (isPlainNumber(value.value)) {
+function normalizeValue(value, options) {
+    if (options.isTyped ? value.kind === 'number' : isPlainNumber(value.value)) {
         return `n:${Number(value.value)}`;
     }
     return `s:${value.value}`;
@@ -214,13 +227,13 @@ function normalizeExpr(expr, options) {
             ]);
         }
         case 'compare': {
-            return ['compare', expr.op, column, normalizeValue(expr.value)];
+            return ['compare', expr.op, column, normalizeValue(expr.value, options)];
         }
         case 'like': {
             return ['like', column, `s:${expr.pattern.value}`];
         }
         case 'in': {
-            const values = expr.values.map((value) => normalizeValue(value));
+            const values = expr.values.map((value) => normalizeValue(value, options));
             if (expr.negated && options.expandNotIn) {
                 return junction(
                     'and',
@@ -236,8 +249,8 @@ function normalizeExpr(expr, options) {
             return ['in', expr.negated, column, values];
         }
         case 'between': {
-            const low = normalizeValue(expr.low);
-            const high = normalizeValue(expr.high);
+            const low = normalizeValue(expr.low, options);
+            const high = normalizeValue(expr.high, options);
             if (options.expandBetween) {
                 return junction('and', [
                     ['compare', '>=', column, low],

@@ -1,6 +1,17 @@
 export { parseSql } from './sql-parser.js';
 export * from './messages.js';
-export { convert, MCN_TARGETS } from './convert.js';
+export { convert } from './convert.js';
+export {
+    MCN_TARGETS,
+    NEXT_RULES,
+    emitHandlebarsQuery,
+    emitHandlebarsQueryFirst,
+    emitHandlebarsQueryMo,
+    emitAmpscriptRso,
+    emitAmpscriptLookupRowsMo,
+    hbString,
+} from './emit-mcn.js';
+export { parseHandlebars } from './parse-handlebars.js';
 export {
     MCE_TARGETS,
     emitSsjsWsproxy,
