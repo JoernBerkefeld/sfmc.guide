@@ -118,6 +118,29 @@ const DATA_SOURCE_REASONS = {
 };
 
 /**
+ * Turns stored settings back into a full settings object; anything missing or of the wrong
+ * type falls back to the default, so old or edited storage can never break the page.
+ *
+ * @param {unknown} stored value read from storage
+ * @returns {{deName: string, deKey: string, columns: string, dataSource: 'CRM' | 'MO'}} settings
+ */
+export function restoreSettings(stored) {
+  const settings = { deName: '', deKey: '', columns: '', dataSource: 'CRM' };
+  if (!stored || typeof stored !== 'object') {
+    return settings;
+  }
+  for (const name of ['deName', 'deKey', 'columns']) {
+    if (typeof stored[name] === 'string') {
+      settings[name] = stored[name];
+    }
+  }
+  if (stored.dataSource === 'MO') {
+    settings.dataSource = 'MO';
+  }
+  return settings;
+}
+
+/**
  * Lists every Next target in a fixed order, so switching the data source never makes a tab
  * vanish: targets of the other data source come back unavailable with the reason. Each label
  * names its data source, because CRM and MO both have a Handlebars `query`.
@@ -536,7 +559,7 @@ function init(root) {
     result: emptyResult(),
     messagesVisible: true,
     activeClause: null,
-    settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
+    settings: restoreSettings(readStorage('settings')),
   };
 
   const selectionKey = () => `${state.platform}:${state.direction}`;
@@ -546,6 +569,7 @@ function init(root) {
   function save() {
     writeStorage(state.platform, { direction: state.direction, input: elements.input.value });
     writeStorage('platform', state.platform);
+    writeStorage('settings', state.settings);
   }
 
   function loadPlatformInput() {
@@ -1004,6 +1028,7 @@ function init(root) {
     columns: elements.columns,
   };
   for (const [name, field] of Object.entries(settingFields)) {
+    field.value = state.settings[name];
     field.addEventListener('input', () => {
       state.settings[name] = field.value;
       scheduleConvert();

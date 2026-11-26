@@ -2345,6 +2345,13 @@
     "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
   },
   {
+    "name": "Where AMPscript, SSJS and JavaScript Can Be Saved",
+    "url": "/engagement/code-persistence/",
+    "section": "Engagement",
+    "type": "page",
+    "description": "Which Content Builder and CloudPages types keep AMPscript, SSJS and client-side JavaScript on save, by API and in the editor, tested live on Engagement."
+  },
+  {
     "name": "Why the SFMC Language Service Is Great on Its Own, and Even Better With ESLint and Prettier",
     "url": "/tools/language-service-eslint-prettier/",
     "section": "Tools",

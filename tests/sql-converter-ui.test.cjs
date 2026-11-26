@@ -364,3 +364,20 @@ test('withAllNextTargets lists every Next target, the other data source unavaila
   }
   assert.deepEqual(withAllNextTargets().length, MCN_TARGETS.length);
 });
+
+test('restoreSettings keeps stored settings and falls back on bad values', async () => {
+  const { restoreSettings } = await load();
+  const defaults = { deName: '', deKey: '', columns: '', dataSource: 'CRM' };
+  assert.deepEqual(restoreSettings(null), defaults);
+  assert.deepEqual(restoreSettings('broken'), defaults);
+  assert.deepEqual(
+    restoreSettings({
+      deName: 'Orders',
+      deKey: 'orders_key',
+      columns: 'Id, Email',
+      dataSource: 'MO',
+    }),
+    { deName: 'Orders', deKey: 'orders_key', columns: 'Id, Email', dataSource: 'MO' },
+  );
+  assert.deepEqual(restoreSettings({ deName: 42, dataSource: 'DG', extra: 'x' }), defaults);
+});

@@ -88,7 +88,7 @@ platforms:
       <button class="sqlc-toggle" id="sqlc-map-toggle" type="button" aria-pressed="true" aria-controls="sqlc-map" aria-labelledby="sqlc-map-toggle-label"></button>
       <span id="sqlc-map-toggle-label">Show mapping</span>
     </span>
-    <span>Converts as you type. Nothing leaves your browser.</span>
+    <span>Converts as you type. Nothing leaves your browser; your last input and settings stay saved there.</span>
   </div>
 </div>
 <div class="sqlc-tip" id="sqlc-tip" role="tooltip" hidden></div>
