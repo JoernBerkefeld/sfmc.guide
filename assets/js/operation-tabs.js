@@ -7,8 +7,7 @@
     const tabs = [...list.querySelectorAll('[data-method]')];
     const panels = [...root.querySelectorAll('[data-method-panel]')];
     // Every method is selectable, so an unavailable method (Not tested / Not supported) explains itself in its own panel.
-    // eslint-disable-next-line unicorn/consistent-function-scoping -- Selection closes over this operation's tabs and panels.
-    const select = (tab, focus = false) => {
+    const select = (tab, shouldFocus = false) => {
       if (!tabs.includes(tab)) {
         return;
       }
@@ -19,7 +18,7 @@
       for (const panel of panels) {
         panel.hidden = panel.dataset.methodPanel !== tab.dataset.method;
       }
-      if (focus) {
+      if (shouldFocus) {
         tab.focus();
       }
     };
@@ -75,7 +74,7 @@
   function revealFragment() {
     let id;
     try {
-      id = decodeURIComponent(globalThis.location.hash.slice(1));
+      id = decodeURIComponent(location.hash.slice(1));
     } catch {
       return;
     }
@@ -93,6 +92,6 @@
       }
     }
   }
-  globalThis.addEventListener('hashchange', revealFragment);
+  addEventListener('hashchange', revealFragment);
   revealFragment();
 })();

@@ -244,9 +244,7 @@
                 typeof value.replace === 'boolean' ||
                 (typeof value.replace === 'number' && Number.isFinite(value.replace))) &&
             (!Object.hasOwn(value, 'template') || typeof value.template === 'string') &&
-            Object.keys(value).every(
-                (key) => key === 'search' || key === 'replace' || key === 'template',
-            )
+            Object.keys(value).every((key) => ['search', 'replace', 'template'].includes(key))
         ) {
             return 'regex';
         }

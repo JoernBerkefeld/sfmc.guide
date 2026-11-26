@@ -29,8 +29,8 @@
         const id = 'mpb-mv-editor-' + ++sequence;
         let active;
         let confirmation;
-        let consumeClick = false;
-        let disposed = false;
+        let isConsumeClick = false;
+        let isDisposed = false;
 
         function element(tag, className = '', text = '') {
             const node = document.createElement(tag);
@@ -85,10 +85,12 @@
                 }
             });
             input.addEventListener('input', () => {
-                if (active && !options.readOnly()) {
-                    active.draft[property] = input.value;
-                    refreshError();
+                if (!active || options.readOnly()) {
+                	return;
                 }
+
+                active.draft[property] = input.value;
+                refreshError();
             });
             label.append(input);
             panel.dialog.append(label);
@@ -157,7 +159,7 @@
             apply.disabled = Boolean(reason) || options.readOnly();
             return reason;
         }
-        function cancelConfirmation(returnFocus = true) {
+        function cancelConfirmation(shouldReturnFocus = true) {
             if (!confirmation) {
                 return;
             }
@@ -165,11 +167,11 @@
             confirmation = undefined;
             warning.dialog.hidden = warning.backdrop.hidden = true;
             expanded(previous.cell, panel.dialog, active?.cell.key === previous.cell.key);
-            if (returnFocus) {
+            if (shouldReturnFocus) {
                 previous.focus.focus();
             }
         }
-        function dismiss(returnFocus = true) {
+        function dismiss(shouldReturnFocus = true) {
             cancelConfirmation(false);
             if (!active) {
                 return;
@@ -178,7 +180,7 @@
             active = undefined;
             panel.dialog.hidden = panel.backdrop.hidden = true;
             expanded(previous.cell, panel.dialog, false);
-            if (returnFocus) {
+            if (shouldReturnFocus) {
                 previous.cell.trigger.focus();
             }
         }
@@ -189,7 +191,7 @@
          * @param {object} cell key, name, marketLabel, value (native), trigger (focusable)
          */
         function open(cell) {
-            if (disposed || options.readOnly()) {
+            if (isDisposed || options.readOnly()) {
                 return;
             }
             cancelConfirmation(false);
@@ -231,10 +233,10 @@
          */
         function confirmSwitch(cell) {
             if (
-                disposed ||
+                isDisposed ||
+                confirmation ||
                 options.readOnly() ||
-                helpers.classifyMarketVariable(cell.value) !== 'regex' ||
-                confirmation
+                helpers.classifyMarketVariable(cell.value) !== 'regex'
             ) {
                 return;
             }
@@ -256,20 +258,22 @@
         function pointerdown(event) {
             if (confirmation && !warning.dialog.contains(event.target)) {
                 consume(event);
-                consumeClick = true;
+                isConsumeClick = true;
                 cancelConfirmation();
             } else if (!confirmation && event.target === panel.backdrop) {
                 consume(event);
-                consumeClick = true;
+                isConsumeClick = true;
                 dismiss();
             }
         }
         function click(event) {
-            if (consumeClick || (confirmation && !warning.dialog.contains(event.target))) {
-                consume(event);
-                consumeClick = false;
-                cancelConfirmation();
+            if (!(isConsumeClick || (confirmation && !warning.dialog.contains(event.target)))) {
+            	return;
             }
+
+            consume(event);
+            isConsumeClick = false;
+            cancelConfirmation();
         }
         function keydown(event) {
             const dialog = confirmation ? warning.dialog : active ? panel.dialog : null;
@@ -304,15 +308,15 @@
                 }
             }
         }
-        document.addEventListener('pointerdown', pointerdown, true);
-        document.addEventListener('click', click, true);
-        document.addEventListener('keydown', keydown, true);
+        document.addEventListener('pointerdown', pointerdown, {capture: true});
+        document.addEventListener('click', click, {capture: true});
+        document.addEventListener('keydown', keydown, {capture: true});
         function dispose() {
-            if (disposed) {
+            if (isDisposed) {
                 return;
             }
             dismiss(false);
-            disposed = true;
+            isDisposed = true;
             document.removeEventListener('pointerdown', pointerdown, true);
             document.removeEventListener('click', click, true);
             document.removeEventListener('keydown', keydown, true);

@@ -138,7 +138,7 @@ test('native market validation rejects unsupported imported shapes and patterns 
     { search: 'x', replace: 'x', template: false },
     { search: 'x', replace: 'x', flags: 'i' },
     Infinity,
-    Number.NaN,
+    NaN,
   ]) {
     assert.equal(classifyMarketVariable(value), 'invalid');
     assert.equal(displayedMarketVariableValue(value), '');
@@ -1130,7 +1130,7 @@ require('../assets/js/mcdev-pipeline-builder-header.js');
 require('../assets/js/mcdev-pipeline-step-environment-order.js');
 require('../assets/js/mcdev-pipeline-step-production-confirm.js');
 require('../assets/js/mcdev-pipeline-market-variable-editor.js');
-require('../assets/js/mcdev-pipeline-step-market-vars.js');
+require('../assets/js/mcdev-pipeline-step-market-variables.js');
 require('../assets/js/mcdev-pipeline-step-suffixes.js');
 require('../assets/js/mcdev-pipeline-step-rules.js');
 require('../assets/js/mcdev-pipeline-step-bu-assign.js');
@@ -5366,7 +5366,7 @@ test('script-order lock: index.md pipeline srcs match the test require() list', 
     'mcdev-pipeline-step-environment-order.js',
     'mcdev-pipeline-step-production-confirm.js',
     'mcdev-pipeline-market-variable-editor.js',
-    'mcdev-pipeline-step-market-vars.js',
+    'mcdev-pipeline-step-market-variables.js',
     'mcdev-pipeline-step-suffixes.js',
     'mcdev-pipeline-step-rules.js',
     'mcdev-pipeline-step-bu-assign.js',
@@ -5927,15 +5927,15 @@ test('native market values survive vanilla inference, adoption and saved-session
   assert.deepEqual(inferred.marketVariables.SIT.invalid, { unsupported: true });
   // Matching key sets copy native values, not their display strings.
   const references = seedMarketVariables({});
-  const vars = { token: config.markets.sit.token, zero: false };
+  const variables = { token: config.markets.sit.token, zero: false };
   controller.matchMarketsForPipeline(references, 'dev', {
     byBU: { DEV: 'dev', SIT: 'sit' },
     marketOf: {
-      dev: { keys: Object.keys(vars) },
-      sit: { keys: Object.keys(vars), vars, suffix: '_SIT' },
+      dev: { keys: Object.keys(variables) },
+      sit: { keys: Object.keys(variables), vars: variables, suffix: '_SIT' },
     },
   });
-  assert.deepEqual(controller.state.wizardState.marketVariables.SIT, vars);
+  assert.deepEqual(controller.state.wizardState.marketVariables.SIT, variables);
   const restore = installMemoryLocalStorage();
   try {
     controller.persistence.available = null;
@@ -5974,23 +5974,36 @@ test('market teardown composes with lineage on wizard rebuild, Download, intake 
   core.persistence = { currentId: null };
   core.renderBuilderHeader = () => {};
   const calls = [];
-  core.setBeforeWizardStepRender(() => calls.push('lineage'));
-  core.setMarketVariableTeardown(() => calls.push('market'));
+  core.setBeforeWizardStepRender(() => {
+    calls.push('lineage');
+  });
+  core.setMarketVariableTeardown(() => {
+    calls.push('market');
+  });
   core.state.step = 'wizard';
   core.setWizardStep('market-vars');
   core.render();
-  assert.deepEqual(calls.splice(0), ['market', 'lineage']);
+  assert.deepEqual(calls, ['market', 'lineage']);
+  calls.length = 0;
   core.setWizardStep('output');
-  core.registerStep({ id: 'output', render: () => calls.push('output') });
+  core.registerStep({
+    id: 'output',
+    render: () => {
+      calls.push('output');
+    },
+  });
   core.render();
-  assert.deepEqual(calls.splice(0), ['market', 'lineage', 'output']);
+  assert.deepEqual(calls, ['market', 'lineage', 'output']);
+  calls.length = 0;
   for (const view of ['intake', 'mode']) {
     core.goToStep(view);
-    assert.deepEqual(calls.splice(0), ['market', 'lineage']);
+    assert.deepEqual(calls, ['market', 'lineage']);
+    calls.length = 0;
   }
   core.setMarketVariableTeardown(null);
   core.renderWizardStep('rules');
-  assert.deepEqual(calls.splice(0), ['lineage']);
+  assert.deepEqual(calls, ['lineage']);
+  calls.length = 0;
   core.setMarketVariableTeardown(() => {
     throw new Error('dispose failed');
   });
@@ -6007,6 +6020,8 @@ function editMarketTableInput(node, value) {
 function marketTableFixture(values) {
   const document = { activeElement: null, listeners: new Map() };
   class Element {
+    parent;
+    hidden;
     constructor(tag) {
       this.tag = tag;
       this.ownerDocument = document;
@@ -6040,6 +6055,10 @@ function marketTableFixture(values) {
       document.activeElement = this;
       this.dispatch('focus');
     }
+    get firstElementChild() {
+      const [first] = this.children;
+      return first;
+    }
     getClientRects() {
       return this.hidden ? [] : [{}];
     }
@@ -6066,7 +6085,8 @@ function marketTableFixture(values) {
         stopImmediatePropagation() {},
         ...properties,
       };
-      for (const handler of this.listeners.get(type) || []) {
+      const handlers = this.listeners.get(type) || [];
+      for (const handler of handlers) {
         handler(event);
       }
     }
@@ -6088,7 +6108,8 @@ function marketTableFixture(values) {
       node.value = String(options.value ?? '');
       node.textContent = options.text || '';
       node.id = options.id;
-      for (const [key, value] of Object.entries(options.attrs || {})) {
+      const attributes = Object.entries(options.attrs || {});
+      for (const [key, value] of attributes) {
         node.setAttribute(key, value);
       }
       return node;
@@ -6121,10 +6142,11 @@ function marketTableFixture(values) {
     },
   };
   context.mpbController = C;
-  for (const filename of [
+  const marketScripts = [
     'mcdev-pipeline-market-variable-editor.js',
-    'mcdev-pipeline-step-market-vars.js',
-  ]) {
+    'mcdev-pipeline-step-market-variables.js',
+  ];
+  for (const filename of marketScripts) {
     vm.runInNewContext(
       fs.readFileSync(path.join(__dirname, '../assets/js', filename), 'utf8'),
       context,
@@ -6138,9 +6160,8 @@ function marketTableFixture(values) {
     nodes(row(name)).find((node) => node.className.split(/\s+/).includes('mpb-mv-input'));
   const mode = (name) =>
     nodes(row(name)).find((node) => node.className.split(/\s+/).includes('mpb-mv-mode'));
-  const host = panel.children[0];
-  const editorPanel = host.children[1];
-  const confirmation = host.children[3];
+  const host = panel.firstElementChild;
+  const [, editorPanel, , confirmation] = host.children;
   const fields = editorPanel.querySelectorAll().filter((node) => node.tag === 'input');
   const button = (root, text) =>
     nodes(root).find((node) => node.tag === 'button' && node.textContent === text);

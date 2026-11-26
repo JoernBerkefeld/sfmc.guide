@@ -123,7 +123,9 @@ test('debounce runs once after the last call and can be cancelled', async (t) =>
   const { debounce } = await load();
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const calls = [];
-  const debounced = debounce((value) => calls.push(value), 300);
+  const debounced = debounce((value) => {
+    calls.push(value);
+  }, 300);
   debounced(1);
   t.mock.timers.tick(200);
   debounced(2);
@@ -146,7 +148,11 @@ test('the UI imports the converter core only from a versioned vendor folder', ()
     path.join(__dirname, '..', 'assets', 'js', 'sql-converter-ui.js'),
     'utf8',
   );
-  const imports = [...source.matchAll(/\bfrom\s+'([^']+)'/gu)].map((match) => match[1]);
+  const imports = source
+    .matchAll(/\bfrom\s+'([^']+)'/gu)
+
+    .map((match) => match[1])
+    .toArray();
   assert.ok(imports.length > 0);
   for (const specifier of imports) {
     assert.match(specifier, /^\.\/vendor\/sfmc-sql-converter\/\d+\.\d+\.\d+\//u, specifier);
@@ -250,8 +256,8 @@ test('CODE_KINDS names every Next target id', async () => {
   }
   const { MCN_TARGETS } = await import(VENDOR_URL);
   assert.deepEqual(
-    MCN_TARGETS.map((target) => target.id).toSorted(),
-    nextIds.toSorted(),
+    MCN_TARGETS.map((target) => target.id).toSorted((a, b) => a.localeCompare(b)),
+    nextIds.toSorted((a, b) => a.localeCompare(b)),
     'the vendored core has the same Next targets',
   );
 });
@@ -282,7 +288,8 @@ test('the examples fit the real converter core', async () => {
   const { convert } = await import(VENDOR_URL);
   const severities = { mce: new Set(), mcn: new Set() };
   for (const platform of ['mce', 'mcn']) {
-    for (const example of EXAMPLES[platform]) {
+    const examples = EXAMPLES[platform];
+    for (const example of examples) {
       const options = exampleOptions(buildOptions, platform, example);
       const result = convert(example.sql, options);
       const wsproxy = result.outputs.find((output) => output.id === 'ssjs-wsproxy');
@@ -314,8 +321,9 @@ test('the examples fit the real converter core', async () => {
 test('every example has a label and SQL, four per platform', async () => {
   const { EXAMPLES } = await load();
   for (const platform of ['mce', 'mcn']) {
-    assert.equal(EXAMPLES[platform].length, 4, platform);
-    for (const example of EXAMPLES[platform]) {
+    const examples = EXAMPLES[platform];
+    assert.equal(examples.length, 4, platform);
+    for (const example of examples) {
       assert.ok(example.label && /^SELECT\b/.test(example.sql), example.label);
     }
   }

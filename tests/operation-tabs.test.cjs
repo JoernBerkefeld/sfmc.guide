@@ -9,6 +9,8 @@ const SITE = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(SITE, 'assets/js/operation-tabs.js'), 'utf8');
 
 class Element {
+  className;
+  scrolled;
   constructor(document, attributes = {}) {
     this.document = document;
     this.attributes = attributes;
@@ -26,8 +28,15 @@ class Element {
   setAttribute(name, value) {
     this.attributes[name] = value;
   }
+  get firstElementChild() {
+    return this.children.at(0);
+  }
+  get lastElementChild() {
+    return this.children.at(-1);
+  }
   querySelector(selector) {
-    return this.querySelectorAll(selector)[0];
+    const [first] = this.querySelectorAll(selector);
+    return first;
   }
   querySelectorAll(selector) {
     const key = {
@@ -88,11 +97,14 @@ function fixture(states = [['available', 'available', 'unknown']], hash = '') {
   });
   document.querySelectorAll = () => roots;
   document.getElementById = (id) => ids.get(id);
+  const listeners = {};
+  // The vm context is the browser global: bare `location` and `addEventListener` resolve on it.
   const window = {
+    document,
     location: { hash },
-    listeners: {},
+    listeners,
     addEventListener(name, callback) {
-      this.listeners[name] = callback;
+      listeners[name] = callback;
     },
   };
   return {
@@ -101,7 +113,7 @@ function fixture(states = [['available', 'available', 'unknown']], hash = '') {
     roots,
     ids,
     mount() {
-      vm.runInNewContext(source, { document, window, globalThis: window });
+      vm.runInNewContext(source, window);
     },
   };
 }
@@ -117,18 +129,18 @@ test('no JS leaves labeled server content readable; default CLI and switching pr
   const page = fixture();
   const root = page.roots[0];
   const original = panels(root);
-  assert.equal(root.children[0].hidden, true);
+  assert.equal(root.firstElementChild.hidden, true);
   assert.ok(original.every((panel) => !panel.hidden));
   page.mount();
-  assert.equal(root.children[0].attributes.role, 'tablist');
-  assert.equal(root.children[0].hidden, false);
+  assert.equal(root.firstElementChild.attributes.role, 'tablist');
+  assert.equal(root.firstElementChild.hidden, false);
   assert.equal(tabs(root)[0].attributes['aria-selected'], 'true');
   assert.equal(original[1].hidden, true);
   tabs(root)[1].fire('click');
   assert.equal(original[0].hidden, true);
   assert.equal(original[1].hidden, false);
   assert.equal(panels(root)[1], original[1]);
-  assert.equal(original[1].children[1].copyButton.preserved, true);
+  assert.equal(original[1].lastElementChild.copyButton.preserved, true);
   assert.equal(tabs(root)[1].attributes['aria-controls'], original[1].id);
   assert.equal(original[1].attributes['aria-labelledby'], tabs(root)[1].id);
   assert.equal(original[1].attributes.role, 'tabpanel');
@@ -180,11 +192,11 @@ test('all unavailable: every method is selectable, the first one opens and expla
   const page = fixture([['unknown', 'blocked', 'unknown']]);
   page.mount();
   const root = page.roots[0];
-  assert.equal(root.children[0].attributes.role, 'tablist');
+  assert.equal(root.firstElementChild.attributes.role, 'tablist');
   assert.equal(tabs(root)[0].attributes['aria-selected'], 'true');
   assert.equal(panels(root).length, 3);
   assert.equal(panels(root).filter((panel) => !panel.hidden).length, 1);
-  assert.equal(root.children[0].hidden, false);
+  assert.equal(root.firstElementChild.hidden, false);
 });
 
 test('initial and changed fragments reveal hidden content before scrolling without stealing focus', () => {
@@ -237,7 +249,9 @@ test('human workflows default to readable output with exactly eight explicit RES
     const structured = commands.filter((line) => / --json(?:\s|$)/u.test(line));
     if (name === 'segment-members') {
       assert.deepEqual(
-        structured.map((line) => line.split('sf api request rest ')[1].split(' --target-org')[0]),
+        structured.map(
+          (line) => line.split('sf api request rest ', 2)[1].split(' --target-org', 1)[0],
+        ),
         envelopePaths,
       );
       assert.match(page, /Deliberate CLI-envelope inspection/);
@@ -248,7 +262,7 @@ test('human workflows default to readable output with exactly eight explicit RES
       assert.equal(structured.length, 0, `${name}: no human command forces JSON`);
     }
     const addedIncludes = commands.filter((line) => line.includes('--include'));
-    if (name === 'segments' || name === 'calculated-insights' || name === 'identity-resolution') {
+    if (['segments', 'calculated-insights', 'identity-resolution'].includes(name)) {
       assert.equal(
         addedIncludes.length,
         name === 'identity-resolution' ? 6 : 2,
@@ -280,9 +294,11 @@ test('template renders each body once and plugin support is explicit, unknown by
 
 test('panel inline code wraps without changing fenced code whitespace or scrolling', () => {
   const stylesheet = fs.readFileSync(path.join(SITE, '_sass/_operation-tabs.scss'), 'utf8');
-  const panelCodeRules = [...stylesheet.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selector]) =>
-    selector.includes('code'),
-  );
+  const panelCodeRules = stylesheet
+    .matchAll(/([^{}]+)\{([^{}]*)\}/g)
+
+    .filter(([, selector]) => selector.includes('code'))
+    .toArray();
   assert.equal(panelCodeRules.length, 1, 'Only inline panel code needs a code-specific rule');
   const [, selector, declarations] = panelCodeRules[0];
   assert.equal(selector.trim(), '[data-method-panel] :not(pre) > code');
@@ -293,7 +309,7 @@ test('panel inline code wraps without changing fenced code whitespace or scrolli
 
 test('dark reasons have an explicit padded surface with at least 4.5:1 text contrast', () => {
   const stylesheet = fs.readFileSync(path.join(SITE, '_sass/_operation-tabs.scss'), 'utf8');
-  const darkStyles = stylesheet.split(/\[data-theme=['"]dark['"]\] \.operation-tabs\s*\{/)[1];
+  const darkStyles = stylesheet.split(/\[data-theme=['"]dark['"]\] \.operation-tabs\s*\{/, 2)[1];
   assert.ok(darkStyles, 'Component has a dark theme rule');
   const reasons = darkStyles.match(/&__reasons\s*\{([^}]+)\}/)?.[1];
   assert.ok(reasons, 'Dark reasons have their own rule');
@@ -320,7 +336,9 @@ test('dark reasons have an explicit padded surface with at least 4.5:1 text cont
 for (const name of ['data-graphs', 'calculated-insights']) {
   test(`${name}: all plugin recipes are operation-local and narrowly qualified`, () => {
     const source = fs.readFileSync(path.join(SITE, `next/data-cloud-devops/${name}.md`), 'utf8');
-    const captures = [...source.matchAll(/{% capture (\w+)_plugin %}([\s\S]*?){% endcapture %}/g)];
+    const captures = source
+      .matchAll(/{% capture (\w+)_plugin %}([\s\S]*?){% endcapture %}/g)
+      .toArray();
     assert.equal(captures.length, 4);
     const withoutPlugin = source.replaceAll(
       /{% capture \w+_plugin %}[\s\S]*?{% endcapture %}/g,
@@ -365,7 +383,9 @@ for (const name of ['data-graphs', 'calculated-insights']) {
       assert.doesNotMatch(source, /does not enable recursive CREATE/);
       assert.match(source, /Create sends the\s+file as written/);
       assert.doesNotMatch(update, /PUT \/services|Native API68 UPDATE is not implemented/);
-      const api = source.split('{% capture update_connect %}')[1].split('{% endcapture %}')[0];
+      const api = source
+        .split('{% capture update_connect %}', 2)[1]
+        .split('{% endcapture %}', 1)[0];
       assert.match(api, /PUT \/services\/data\/v68\.0\/ssot\/data-graphs/);
       assert.match(api, /not a claim of a documented or supported API contract/);
       assert.match(api, /version\s+`"0"` unchanged/);
@@ -373,7 +393,7 @@ for (const name of ['data-graphs', 'calculated-insights']) {
       for (const operation of ['create', 'update']) {
         const connect = source
           .split(`{% capture ${operation}_connect %}`)[1]
-          .split('{% endcapture %}')[0];
+          .split('{% endcapture %}', 1)[0];
         const body = JSON.parse(connect.match(/```json\n([\s\S]*?)\n```/)[1]);
         assert.equal(body.name, 'CustomerGraph');
         assert.equal(body.primaryObjectName, 'UnifiedssotIndividualMkt__dlm');
@@ -401,13 +421,17 @@ for (const name of ['data-graphs', 'calculated-insights']) {
         path.join(SITE, `_site/next/data-cloud-devops/${name}/index.html`),
         'utf8',
       );
-      const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+      const ids = html
+        .matchAll(/\bid="([^"]+)"/g)
+
+        .map((match) => match[1])
+        .toArray();
       assert.equal(new Set(ids).size, ids.length);
       // Split API tabs: CLI, Metadata API, Connect API and plugin for each of 4 operations.
       assert.equal((html.match(/data-method-panel=/g) || []).length, 16);
-      const panels = [
-        ...html.matchAll(/<section\b[^>]*data-method-panel="plugin"[^>]*>([\s\S]*?)<\/section>/g),
-      ];
+      const panels = html
+        .matchAll(/<section\b[^>]*data-method-panel="plugin"[^>]*>([\s\S]*?)<\/section>/g)
+        .toArray();
       assert.equal(panels.length, 4);
       for (const panel of panels) {
         assert.match(panel[1], /sf data360/);
@@ -426,7 +450,11 @@ for (const name of ['calculated-insights', 'segment-members']) {
         'utf8',
       );
       assert.doesNotMatch(html, /{%|```|{% endcapture/);
-      const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+      const ids = html
+        .matchAll(/\bid="([^"]+)"/g)
+
+        .map((match) => match[1])
+        .toArray();
       assert.equal(new Set(ids).size, ids.length, 'All rendered IDs unique');
       for (const operation of ['read', 'create', 'update', 'delete']) {
         assert.ok(ids.includes(operation), `Legacy operation anchor ${operation}`);
@@ -444,9 +472,11 @@ for (const name of ['calculated-insights', 'segment-members']) {
         assert.ok(ids.includes(slug), `Legacy method heading ${slug}`);
       }
       assert.equal((html.match(/data-operation-tabs/g) || []).length, 4);
-      const pluginButtons = [...html.matchAll(/<button\b[^>]*data-method="plugin"[^>]*>/g)].map(
-        (match) => match[0],
-      );
+      const pluginButtons = html
+        .matchAll(/<button\b[^>]*data-method="plugin"[^>]*>/g)
+
+        .map((match) => match[0])
+        .toArray();
       assert.equal(pluginButtons.length, 4);
       for (const [index, button] of pluginButtons.entries()) {
         // segment-members: Read (member export) and Update (segment publish) plugin tabs are available.
@@ -505,28 +535,29 @@ for (const [name, [prefix, readState, type]] of Object.entries(METADATA_API_STAT
     assert.match(include, /API 68\.0/);
     if (readState === 'available') {
       assert.match(include, /metadata_body=read_metadata/);
-      const body = page.split('{% capture read_metadata %}')[1].split('{% endcapture %}')[0];
+      const body = page.split('{% capture read_metadata %}', 2)[1].split('{% endcapture %}', 1)[0];
       assert.match(body, new RegExp(`<met:type>${type}</met:type>`));
       assert.match(body, /\/services\/Soap\/m\/68\.0/);
     } else {
       assert.doesNotMatch(page, /read_metadata/);
       assert.match(include, new RegExp(`listMetadata on ${type}`));
     }
-    const writesProven = METADATA_API_WRITES_PROVEN.has(name);
-    for (const operation of writesProven ? ['create', 'update', 'delete'] : ['create', 'update']) {
+    const isWritesProven = METADATA_API_WRITES_PROVEN.has(name);
+    const operations = isWritesProven ? ['create', 'update', 'delete'] : ['create', 'update'];
+    for (const operation of operations) {
       const write = page.match(
         new RegExp(String.raw`{% include operation-tabs\.html id="${prefix}-${operation}"[^\n]*%}`),
       )[0];
-      if (writesProven) {
+      if (isWritesProven) {
         assert.match(write, /metadata_state="available"/);
         assert.match(write, /API 68\.0/);
         assert.match(write, new RegExp(`metadata_body=${operation}_metadata`));
         const body = page
           .split(`{% capture ${operation}_metadata %}`)[1]
-          .split('{% endcapture %}')[0];
+          .split('{% endcapture %}', 1)[0];
         assert.match(body, new RegExp(`<met:${operation}Metadata>`));
         assert.match(body, new RegExp(type));
-      } else if (!(METADATA_API_UPDATE_ONLY.has(name) && operation === 'update')) {
+      } else if (!(operation === 'update' && METADATA_API_UPDATE_ONLY.has(name))) {
         assert.doesNotMatch(write, /metadata_state="available"/);
       }
     }

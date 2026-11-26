@@ -12,6 +12,7 @@ const api = context.mpbRegexDemo;
 
 // Minimal event-capable DOM: no production controller or browser dependency.
 class Node {
+  hidden;
   constructor(tag, document) {
     this.tag = tag;
     this.ownerDocument = document;
@@ -26,6 +27,10 @@ class Node {
         this.attributes[key] = enabled;
       },
     };
+  }
+  get firstElementChild() {
+    const [first] = this.children;
+    return first;
   }
   getAttribute(key) {
     return this.attributes[key];
@@ -131,8 +136,8 @@ test('inline controls update only their cell and keep fields stable while typing
   const host = nodes.find(
     (node) => node.dataset.market === 'dev' && node.dataset.variable === 'brandName',
   );
-  const button = host.children[0].children[1];
-  const editor = host.children[1];
+  const [controls, editor] = host.children;
+  const [, button] = controls.children;
   assert.equal(button.textContent, 'aA');
   assert.equal(editor.hidden, true);
   button.dispatch('click');
@@ -165,9 +170,8 @@ for (const variant of ['popover', 'panel']) {
     const host = nodes.find(
       (node) => node.dataset.market === 'dev' && node.dataset.variable === 'brandName',
     );
-    const button = host.children[0].children[1];
-    const edit =
-      variant === 'panel' ? host.children[0].children[0].children[0] : host.children[0].children[2];
+    const [valueControl, button, popoverEdit] = host.firstElementChild.children;
+    const edit = variant === 'panel' ? valueControl.firstElementChild : popoverEdit;
     const editor = nodes.find((node) => node.id === 'regex-demo-dev-brandName-editor');
     const pattern = nodes.find((node) => node.id === 'regex-demo-dev-brandName-pattern');
     const value = nodes.find((node) => node.id === 'regex-demo-dev-brandName-draft-value');
@@ -177,7 +181,7 @@ for (const variant of ['popover', 'panel']) {
     button.dispatch('click');
     assert.equal(editor.hidden, false);
     assert.equal(document.activeElement, pattern);
-    assert.match(editor.children[0].textContent, /brandName.*Brand_DEV/);
+    assert.match(editor.firstElementChild.textContent, /brandName.*Brand_DEV/);
     pattern.value = '[';
     pattern.dispatch('input');
     assert.equal(apply.disabled, true);
@@ -213,7 +217,8 @@ for (const variant of ['popover', 'panel']) {
     button.dispatch('click');
     if (variant === 'panel') {
       const warning = nodes.find((node) => node.id === 'regex-demo-dev-brandName-confirmation');
-      warning.children.at(-1).children[1].dispatch('click');
+      const [, switchText] = warning.children.at(-1).children;
+      switchText.dispatch('click');
     }
     assert.equal(state.cells.dev.brandName.mode, 'literal');
     if (variant === 'panel') {
@@ -223,7 +228,8 @@ for (const variant of ['popover', 'panel']) {
       assert.equal(state.cells.dev.brandName.pattern, '(Example)');
     }
     const suffixRow = nodes.find((node) => node.dataset.var === 'suffix');
-    assert.equal(suffixRow.children[2].children[0].className, 'mpb-suffix-input');
+    const suffixCell = suffixRow.children.at(2);
+    assert.equal(suffixCell.firstElementChild.className, 'mpb-suffix-input');
   });
 
   test(
@@ -231,11 +237,9 @@ for (const variant of ['popover', 'panel']) {
     () => {
       const { state, nodes, document, root } = fixture(variant);
       const hosts = nodes.filter((node) => node.dataset.market && node.dataset.variable);
-      const first = hosts[0].children[0].children[1];
-      const second =
-        variant === 'panel'
-          ? hosts[1].children[0].children[0].children[0]
-          : hosts[1].children[0].children[2];
+      const [, first] = hosts[0].firstElementChild.children;
+      const [secondValue, , secondEdit] = hosts[1].firstElementChild.children;
+      const second = variant === 'panel' ? secondValue.firstElementChild : secondEdit;
       const editor = nodes.find((node) => node.id === 'regex-demo-dev-brandName-editor');
       const pattern = nodes.find((node) => node.id === 'regex-demo-dev-brandName-pattern');
       first.dispatch('click');
@@ -282,8 +286,8 @@ for (const openDraft of [false, true]) {
       const host = nodes.find(
         (node) => node.dataset.market === 'uat' && node.dataset.variable === 'brandName',
       );
-      const [label, button] = host.children[0].children;
-      const field = label.children[0];
+      const [label, button] = host.firstElementChild.children;
+      const field = label.firstElementChild;
       const editor = nodes.find((node) => node.id === 'regex-demo-uat-brandName-editor');
       const warning = nodes.find((node) => node.id === 'regex-demo-uat-brandName-confirmation');
       const pattern = nodes.find((node) => node.id === 'regex-demo-uat-brandName-pattern');
@@ -303,19 +307,20 @@ for (const openDraft of [false, true]) {
         }
         template.focus();
       }
-      let prevented = false;
+      let isPrevented = false;
       document.dispatch('pointerdown', {
         target: button,
         preventDefault() {
-          prevented = true;
+          isPrevented = true;
         },
       });
-      assert.equal(prevented, true);
+      assert.equal(isPrevented, true);
       button.dispatch('click');
       assert.equal(warning.hidden, false);
       assert.equal(warning.getAttribute('role'), 'alertdialog');
       assert.match(
-        warning.children[1].textContent,
+        warning.children.find((node) => node.id === warning.getAttribute('aria-describedby'))
+          .textContent,
         /deletes the search pattern and template replacement/,
       );
       assert.equal(cancel.textContent, 'Cancel');
@@ -407,10 +412,10 @@ test('panel templates stay visible and default templates are absent from applied
   const host = nodes.find(
     (node) => node.dataset.market === 'dev' && node.dataset.variable === 'brandName',
   );
-  const [valueLabel, button] = host.children[0].children;
-  const edit = valueLabel.children[0];
+  const [valueLabel, button] = host.firstElementChild.children;
+  const edit = valueLabel.firstElementChild;
   assert.equal(valueLabel.textContent, '');
-  assert.match(valueLabel.children[0].attributes['aria-label'], /Market value for brandName/);
+  assert.match(edit.attributes['aria-label'], /Market value for brandName/);
   const editor = nodes.find((node) => node.id === 'regex-demo-dev-brandName-editor');
   assert.equal(editor.children.find((node) => node.tag === 'label').textContent, 'Market value');
   const template = nodes.find((node) => node.id === 'regex-demo-dev-brandName-template');
@@ -421,7 +426,7 @@ test('panel templates stay visible and default templates are absent from applied
     (node) => node.className === 'regex-demo-template',
   );
   assert.equal(templateContainer.tag, 'div');
-  assert.equal(templateContainer.children[0].textContent, 'Template replacement');
+  assert.equal(templateContainer.firstElementChild.textContent, 'Template replacement');
   apply.dispatch('click');
   assert.equal(Object.hasOwn(state.cells.dev.brandName, 'template'), false);
   edit.dispatch('click');
@@ -443,7 +448,7 @@ test('panel templates stay visible and default templates are absent from applied
     const otherHost = other.nodes.find(
       (node) => node.dataset.market === 'dev' && node.dataset.variable === 'brandName',
     );
-    assert.equal(otherHost.children[0].children[0].textContent, 'Market value');
+    assert.equal(otherHost.firstElementChild.firstElementChild.textContent, 'Market value');
     assert.equal(other.state.cells.dev.brandName.template, '{{{brandName}}}');
     assert.ok(other.nodes.some((node) => node.tag === 'details'));
   }
@@ -451,7 +456,7 @@ test('panel templates stay visible and default templates are absent from applied
 
 test('production market variable script contains no obsolete unavailable-rule directive', () => {
   const production = fs.readFileSync(
-    path.join(SITE, 'assets/js/mcdev-pipeline-step-market-vars.js'),
+    path.join(SITE, 'assets/js/mcdev-pipeline-step-market-variables.js'),
     'utf8',
   );
   assert.doesNotMatch(production, /eslint-disable unicorn\/name-replacements/);

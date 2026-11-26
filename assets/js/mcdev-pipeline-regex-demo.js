@@ -85,7 +85,7 @@
         let active;
         let confirmation;
 
-        function cancelConfirmation(returnFocus = true) {
+        function cancelConfirmation(shouldReturnFocus = true) {
             if (!confirmation) {
                 return;
             }
@@ -97,12 +97,12 @@
                 'aria-controls',
                 previous.editor.id.replace('-confirmation', '-editor'),
             );
-            if (returnFocus) {
+            if (shouldReturnFocus) {
                 previous.focus.focus();
             }
         }
 
-        function dismiss(returnFocus = true) {
+        function dismiss(shouldReturnFocus = true) {
             if (!active) {
                 return;
             }
@@ -111,7 +111,7 @@
             previous.editor.hidden = true;
             previous.trigger.setAttribute('aria-expanded', 'false');
             previous.reset();
-            if (returnFocus) {
+            if (shouldReturnFocus) {
                 previous.trigger.focus();
             }
         }
@@ -120,11 +120,11 @@
             if (!active) {
                 return;
             }
-            const narrow = view.innerWidth <= 640;
-            const modal = narrow || variant === 'panel';
-            active.editor.classList.toggle('regex-demo-dialog', narrow);
-            active.editor.setAttribute('aria-modal', String(modal));
-            if (variant !== 'popover' || narrow) {
+            const isNarrow = view.innerWidth <= 640;
+            const isModal = isNarrow || variant === 'panel';
+            active.editor.classList.toggle('regex-demo-dialog', isNarrow);
+            active.editor.setAttribute('aria-modal', String(isModal));
+            if (variant !== 'popover' || isNarrow) {
                 active.editor.style.left = '';
                 active.editor.style.top = '';
                 return;
@@ -208,8 +208,10 @@
                     }
                 }
             });
+            // eslint-disable-next-line unicorn/prefer-observer-apis -- the popover is pinned to the viewport; ResizeObserver does not fire on viewport-only resizes (approved 2026-11-26)
             view.addEventListener('resize', positionEditor);
-            document.addEventListener('scroll', positionEditor, true);
+            // eslint-disable-next-line unicorn/prefer-observer-apis -- the popover must follow every scroll; IntersectionObserver cannot track scroll position (approved 2026-11-26)
+            document.addEventListener('scroll', positionEditor, {capture: true});
         }
 
         function element(tag, className = '', text = '') {
@@ -302,10 +304,12 @@
                     }
                 });
                 valueInput.addEventListener('keydown', (event) => {
-                    if (cell.mode === 'regex' && ['Enter', ' '].includes(event.key)) {
-                        event.preventDefault();
-                        openEditor(valueInput);
+                    if (!(cell.mode === 'regex' && ['Enter', ' '].includes(event.key))) {
+                    	return;
                     }
+
+                    event.preventDefault();
+                    openEditor(valueInput);
                 });
             }
             const draftValueInput = isInline

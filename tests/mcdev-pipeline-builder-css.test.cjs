@@ -44,9 +44,11 @@ const SMOKE_SELECTORS = [
  * @returns {string} Matching declarations, including shared selector blocks.
  */
 function declarations(css, selector) {
-  const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+  const blocks = css
+    .matchAll(/([^{}]+)\{([^{}]*)\}/g)
     .filter((match) => match[1].split(',').some((item) => item.trim() === selector))
-    .map((match) => match[2]);
+    .map((match) => match[2])
+    .toArray();
   assert.ok(blocks.length, `expected declaration block for ${selector}`);
   return blocks.join('\n');
 }
@@ -91,9 +93,9 @@ test('compiled mode buttons use action sizing and hidden buttons override inline
 
 test('compiled market-variable table scrolls all columns on phones and stays sticky on desktop', () => {
   const css = fs.readFileSync(CSS_PATH, 'utf8');
-  const narrowBlocks = [
-    ...css.matchAll(/@media\s*\(max-width:\s*640px\)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g),
-  ];
+  const narrowBlocks = css
+    .matchAll(/@media\s*\(max-width:\s*640px\)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g)
+    .toArray();
   assert.ok(narrowBlocks.length, 'expected the existing 640px responsive breakpoint');
   const narrowCss = narrowBlocks.map((match) => match[1]).join('\n');
   const desktopCss = narrowBlocks.reduce((result, match) => result.replace(match[0], ''), css);

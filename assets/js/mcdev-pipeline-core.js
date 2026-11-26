@@ -131,8 +131,8 @@
     function render() {
         // These views bypass renderWizardStep; release both editors before hiding their host.
         if (
-            state.step !== 'wizard' ||
             wizardStep === 'output' ||
+            state.step !== 'wizard' ||
             typeof hooks.render === 'function'
         ) {
             teardownWizardEditors();

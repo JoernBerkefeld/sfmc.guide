@@ -69,15 +69,15 @@ const TOKEN_PATTERNS = {
 /**
  * Debounce a function: it runs once, `wait` ms after the last call.
  *
- * @param {(...args: unknown[]) => void} fn function to call
+ * @param {(...args: unknown[]) => void} callback function to call
  * @param {number} wait delay in ms
  * @returns {((...args: unknown[]) => void) & { cancel: () => void }} debounced function with a cancel method
  */
-export function debounce(fn, wait) {
+export function debounce(callback, wait) {
   let timer;
-  const debounced = (...args) => {
+  const debounced = (...arguments_) => {
     clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), wait);
+    timer = setTimeout(() => callback(...arguments_), wait);
   };
   debounced.cancel = () => clearTimeout(timer);
   return debounced;
@@ -91,7 +91,8 @@ export function debounce(fn, wait) {
  */
 export function groupOutputsByLanguage(outputs) {
   const groups = [];
-  for (const output of outputs ?? []) {
+  const list = outputs ?? [];
+  for (const output of list) {
     let group = groups.find((entry) => entry.language === output.language);
     if (!group) {
       group = {
@@ -406,7 +407,7 @@ export function buildOptions(state) {
 
 function readStorage(key) {
   try {
-    const raw = globalThis.localStorage.getItem(STORAGE_PREFIX + key);
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -415,7 +416,7 @@ function readStorage(key) {
 
 function writeStorage(key, value) {
   try {
-    globalThis.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
   } catch {
     // Storage blocked or full: the page works without it.
   }
@@ -515,13 +516,13 @@ function init(root) {
 
   // ── Rendering ──
   function renderChrome() {
-    const toCode = state.direction === 'toCode';
+    const isToCode = state.direction === 'toCode';
     for (const button of elements.platform.querySelectorAll('button')) {
       button.setAttribute('aria-pressed', String(button.dataset.platform === state.platform));
     }
-    elements.swap.classList.toggle('is-flipped', !toCode);
+    elements.swap.classList.toggle('is-flipped', !isToCode);
     renderInputTitle();
-    if (toCode) {
+    if (isToCode) {
       elements.inputSub.textContent =
         state.platform === 'mce' ? 'SELECT … FROM [DE] WHERE …' : 'SELECT … FROM [Object] WHERE …';
     } else {
@@ -530,7 +531,7 @@ function init(root) {
           ? 'A WSProxy retrieve, Rows.Retrieve or Lookup call, or a filter object'
           : 'A Handlebars query or queryFirst call, or an AMPscript lookup';
     }
-    elements.input.placeholder = toCode
+    elements.input.placeholder = isToCode
       ? 'Type a SELECT query, or load an example'
       : 'Paste the code to turn back into SQL';
     renderSettingsFields();
@@ -560,11 +561,11 @@ function init(root) {
       .map((group) => {
         const buttons = group.outputs
           .map((output) => {
-            const selected = shown !== null && output.id === shown.id;
+            const isSelected = shown !== null && output.id === shown.id;
             const reason = output.unavailable ?? '';
-            const disabled = typeof output.code !== 'string';
-            const name = `${group.label} ${output.label}${disabled ? `, not available: ${reason}` : ''}`;
-            return `<button type="button" role="tab" class="sqlc-tab" id="sqlc-tab-${escapeHtml(output.id)}" data-output="${escapeHtml(output.id)}" aria-selected="${selected}" aria-controls="sqlc-output" tabindex="${selected ? 0 : -1}" aria-label="${escapeHtml(name)}"${disabled ? ` aria-disabled="true" title="${escapeHtml(reason)}"` : ''}>${output.label === group.label ? '' : `<span class="sqlc-tab-lang">${escapeHtml(group.label)} ·</span> `}${escapeHtml(output.label)}</button>`;
+            const isDisabled = typeof output.code !== 'string';
+            const name = `${group.label} ${output.label}${isDisabled ? `, not available: ${reason}` : ''}`;
+            return `<button type="button" role="tab" class="sqlc-tab" id="sqlc-tab-${escapeHtml(output.id)}" data-output="${escapeHtml(output.id)}" aria-selected="${isSelected}" aria-controls="sqlc-output" tabindex="${isSelected ? 0 : -1}" aria-label="${escapeHtml(name)}"${isDisabled ? ` aria-disabled="true" title="${escapeHtml(reason)}"` : ''}>${output.label === group.label ? '' : `<span class="sqlc-tab-lang">${escapeHtml(group.label)} ·</span> `}${escapeHtml(output.label)}</button>`;
           })
           .join('');
         return `<span class="sqlc-tab-group" role="presentation">${buttons}</span>`;
@@ -575,10 +576,9 @@ function init(root) {
       const first = elements.tabs.querySelector('[role="tab"]');
       first.tabIndex = 0;
     }
+    elements.output.removeAttribute('aria-labelledby');
     if (shown) {
       elements.output.setAttribute('aria-labelledby', `sqlc-tab-${shown.id}`);
-    } else {
-      elements.output.removeAttribute('aria-labelledby');
     }
   }
 
@@ -590,9 +590,9 @@ function init(root) {
       ? 'Swap direction and use the output as input'
       : 'Nothing to swap: there is no output yet';
     if (!shown) {
-      const empty = elements.input.value.trim() === '';
+      const isEmpty = elements.input.value.trim() === '';
       elements.output.innerHTML = `<span class="sqlc-placeholder">${
-        empty
+        isEmpty
           ? 'The result appears here as you type.'
           : 'No output fits this query yet. The messages above and the tab tooltips say why.'
       }</span>`;
@@ -622,7 +622,7 @@ function init(root) {
     const text = elements.input.value;
     const ranges = visibleMessages().map((message) => ({
       ...messageRange(text, message),
-      className: `sqlc-mark sqlc-mark--${SEVERITY_LABELS[message.severity] ? message.severity : 'error'}`,
+      className: `sqlc-mark sqlc-mark--${Object.hasOwn(SEVERITY_LABELS, message.severity) ? message.severity : 'error'}`,
     }));
     const clause = shownClauses().find((entry) => entry.clauseId === state.activeClause);
     if (clause?.loc && clause.loc.end > clause.loc.start) {
@@ -638,7 +638,7 @@ function init(root) {
     elements.messages.hidden = messages.length === 0;
     elements.messages.innerHTML = messages
       .map((message, index) => {
-        const severity = SEVERITY_LABELS[message.severity] ? message.severity : 'error';
+        const severity = Object.hasOwn(SEVERITY_LABELS, message.severity) ? message.severity : 'error';
         const where = message.line
           ? `<button type="button" class="sqlc-msg-where" data-index="${index}">line ${message.line}, column ${message.column ?? 1}</button>`
           : '';
@@ -694,7 +694,7 @@ function init(root) {
   function renderAll() {
     if (
       state.activeClause &&
-      !shownClauses().some((entry) => entry.clauseId === state.activeClause)
+      shownClauses().every((entry) => entry.clauseId !== state.activeClause)
     ) {
       state.activeClause = null;
     }
@@ -765,10 +765,10 @@ function init(root) {
   }
 
   // ── Popover ──
-  function togglePopover(open, focusFirst = true) {
+  function togglePopover(open, shouldFocusFirst = true) {
     elements.settings.hidden = !open;
     elements.settingsButton.setAttribute('aria-expanded', String(open));
-    if (open && focusFirst) {
+    if (open && shouldFocusFirst) {
       const first = [...elements.settings.querySelectorAll('input, select')].find(
         (field) => !field.closest('[hidden]'),
       );
@@ -794,7 +794,7 @@ function init(root) {
     } catch {
       const range = document.createRange();
       range.selectNodeContents(elements.output);
-      const selection = globalThis.getSelection();
+      const selection = getSelection();
       selection.removeAllRanges();
       selection.addRange(range);
       elements.output.focus();
@@ -870,7 +870,7 @@ function init(root) {
       return;
     }
     const moves = { ArrowRight: 1, ArrowLeft: -1, Home: -index, End: tabs.length - 1 - index };
-    if (!(event.key in moves)) {
+    if (!Object.hasOwn(moves, event.key)) {
       return;
     }
     event.preventDefault();
@@ -887,10 +887,10 @@ function init(root) {
   elements.copy.addEventListener('click', copyOutput);
 
   elements.mapToggle.addEventListener('click', () => {
-    const on = elements.mapToggle.getAttribute('aria-pressed') !== 'true';
-    elements.mapToggle.setAttribute('aria-pressed', String(on));
-    elements.map.hidden = !on;
-    if (!on) {
+    const isOn = elements.mapToggle.getAttribute('aria-pressed') !== 'true';
+    elements.mapToggle.setAttribute('aria-pressed', String(isOn));
+    elements.map.hidden = !isOn;
+    if (!isOn) {
       setActiveClause(null);
     }
   });
@@ -920,10 +920,12 @@ function init(root) {
     togglePopover(elements.settings.hidden);
   });
   elements.settings.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      togglePopover(false);
-      elements.settingsButton.focus();
+    if (event.key !== 'Escape') {
+      return;
     }
+
+    togglePopover(false);
+    elements.settingsButton.focus();
   });
   document.addEventListener('pointerdown', (event) => {
     if (!elements.settings.hidden && !event.target.closest('.sqlc-pop-wrap')) {

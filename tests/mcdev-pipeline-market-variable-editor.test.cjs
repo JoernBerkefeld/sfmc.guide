@@ -17,6 +17,7 @@ const source = fs.readFileSync(
 
 // Event-capable DOM fixture; dispatch follows document capture before the target.
 class Node {
+  parent;
   constructor(tag, document) {
     this.tag = tag;
     this.ownerDocument = document;
@@ -71,14 +72,14 @@ class Node {
           target: this,
           prevented: false,
           stopped: false,
-          preventDefault() {
-            this.prevented = true;
+          preventDefault: () => {
+            event.prevented = true;
           },
-          stopPropagation() {
-            this.stopped = true;
+          stopPropagation: () => {
+            event.stopped = true;
           },
-          stopImmediatePropagation() {
-            this.stopped = true;
+          stopImmediatePropagation: () => {
+            event.stopped = true;
           },
           ...properties,
         };
@@ -86,12 +87,17 @@ class Node {
       this.ownerDocument.dispatch(type, event);
     }
     if (!event.stopped) {
-      for (const handler of this.listeners.get(type) || []) {
+      const handlers = this.listeners.get(type) || [];
+      for (const handler of handlers) {
         handler(event);
       }
     }
     return event;
   }
+}
+function searchError(panel, search) {
+  // The error paragraph sits directly after the Search pattern field.
+  return panel.children[panel.children.indexOf(search.parent) + 1];
 }
 function edit(input, text) {
   input.value = text;
@@ -106,13 +112,17 @@ function fixture(value) {
   document.createElement = (tag) => new Node(tag, document);
   const root = new Node('div', document);
   const trigger = new Node('button', document);
-  let locked = false;
+  let isLocked = false;
   const commits = [];
   const cell = { key: 'bu/name', name: 'name', marketLabel: 'Brand DEV', value, trigger };
   const editor = context.mpbMarketVariableEditor.create(root, {
-    readOnly: () => locked,
-    onApply: (target, next) => commits.push({ kind: 'apply', target, value: next }),
-    onSwitch: (target, next) => commits.push({ kind: 'switch', target, value: next }),
+    readOnly: () => isLocked,
+    onApply: (target, next) => {
+      commits.push({ kind: 'apply', target, value: next });
+    },
+    onSwitch: (target, next) => {
+      commits.push({ kind: 'switch', target, value: next });
+    },
   });
   const [backdrop, panel, warningBackdrop, warning] = root.children;
   const [replace, search, template, apply, panelSwitch, cancel] = panel.querySelectorAll();
@@ -141,7 +151,7 @@ function fixture(value) {
     edit,
     drafts,
     lock: () => {
-      locked = true;
+      isLocked = true;
     },
   };
 }
@@ -149,7 +159,7 @@ function fixture(value) {
 test('search errors stay directly between Search pattern and Template replacement through correction', () => {
   const f = fixture();
   f.editor.open(f.cell);
-  const error = f.panel.children[4];
+  const error = searchError(f.panel, f.search);
   const siblings = [f.replace.parent, f.search.parent, error, f.template.parent];
   assert.deepEqual(f.panel.children.slice(2, 6), siblings);
   assert.deepEqual(
@@ -270,21 +280,30 @@ for (const action of ['cancel', 'escape', 'outside']) {
       assert.equal(f.warning.hidden, false);
       assert.equal(f.warning.attributes.role, 'alertdialog');
       assert.equal(f.document.activeElement, f.keep);
-      assert.match(f.warning.children[1].textContent, /deletes the search pattern/);
-      if (action === 'cancel') {
-        f.keep.dispatch('click');
-      }
-      if (action === 'escape') {
-        f.document.dispatch('keydown', { key: 'Escape' });
-      }
-      if (action === 'outside') {
-        let underlying = 0;
-        const outside = new Node('button', f.document);
-        outside.addEventListener('pointerdown', () => underlying++);
-        outside.addEventListener('click', () => underlying++);
-        assert.equal(outside.dispatch('pointerdown').prevented, true);
-        assert.equal(outside.dispatch('click').prevented, true);
-        assert.equal(underlying, 0);
+      const message = f.warning.children.find(
+        (node) => node.id === f.warning.attributes['aria-describedby'],
+      );
+      assert.match(message.textContent, /deletes the search pattern/);
+      switch (action) {
+        case 'cancel': {
+          f.keep.dispatch('click');
+          break;
+        }
+        case 'escape': {
+          f.document.dispatch('keydown', { key: 'Escape' });
+          break;
+        }
+        case 'outside': {
+          let underlying = 0;
+          const outside = new Node('button', f.document);
+          outside.addEventListener('pointerdown', () => underlying++);
+          outside.addEventListener('click', () => underlying++);
+          assert.equal(outside.dispatch('pointerdown').prevented, true);
+          assert.equal(outside.dispatch('click').prevented, true);
+          assert.equal(underlying, 0);
+          break;
+        }
+        // No default
       }
       assert.equal(f.warning.hidden, true);
       assert.equal(f.panel.hidden, false);
@@ -356,9 +375,12 @@ test('invalid imported objects cannot be silently converted; regex validation bl
   assert.equal(f.warning.hidden, true);
   assert.equal(f.apply.disabled, true);
   assert.equal(f.search.attributes['aria-invalid'], 'true');
-  assert.equal(f.panel.children[4].textContent, helpers.validateMarketVariable(f.cell.value));
-  assert.equal(f.panel.children[3], f.search.parent);
-  assert.equal(f.panel.children[5], f.template.parent);
+  assert.equal(
+    searchError(f.panel, f.search).textContent,
+    helpers.validateMarketVariable(f.cell.value),
+  );
+  assert.equal(f.panel.children.indexOf(f.search.parent), 3);
+  assert.equal(f.panel.children.indexOf(f.template.parent), 5);
   const valid = fixture();
   valid.editor.open(valid.cell);
   valid.edit(valid.search, '[');
@@ -366,9 +388,12 @@ test('invalid imported objects cannot be silently converted; regex validation bl
   assert.equal(valid.commits.length, 0);
   assert.equal(valid.search.attributes['aria-invalid'], 'true');
   assert.equal(valid.apply.disabled, true);
-  assert.match(valid.panel.children[4].textContent, /^Fix the regex search pattern: /);
-  assert.equal(valid.panel.children[3], valid.search.parent);
-  assert.equal(valid.panel.children[5], valid.template.parent);
+  assert.match(
+    searchError(valid.panel, valid.search).textContent,
+    /^Fix the regex search pattern: /,
+  );
+  assert.equal(valid.panel.children.indexOf(valid.search.parent), 3);
+  assert.equal(valid.panel.children.indexOf(valid.template.parent), 5);
   valid.edit(valid.search, 'ok');
   valid.edit(valid.replace, '');
   valid.apply.dispatch('click');

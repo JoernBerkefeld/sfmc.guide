@@ -46,11 +46,11 @@ function crudSchema(raw) {
   assert.ok(fm);
   const block = fm.match(/^crud:\n((?: {2}.+\n?)+)/m)?.[1];
   assert.ok(block, 'CRUD frontmatter exists');
-  const entries = [
-    ...block.matchAll(
+  const entries = block
+    .matchAll(
       /^ {2}(\w+): \{ status: "(yes|partial|unknown|no)", methods: \[([^\]]*)\](?:, method_statuses: \{ ([^{}]+) \})? \}$/gm,
-    ),
-  ];
+    )
+    .toArray();
   assert.equal(block.trimEnd().split('\n').length, 4);
   assert.deepEqual(
     entries.map((entry) => entry[1]),
@@ -106,12 +106,10 @@ test('Data Cloud CLI ratings require supplied Metadata workflows, not generic AP
   for (const slug of DATA_CLOUD_SLUGS) {
     const raw = pages.get(slug);
     crudSchema(raw);
-    const panels = [...raw.matchAll(/\{% include operation-tabs\.html ([^\n]+) %\}/gu)];
+    const panels = raw.matchAll(/\{% include operation-tabs\.html ([^\n]+) %\}/gu).toArray();
     assert.equal(panels.length, 4, `${slug}: all operations checked`);
-    for (const panel of panels) {
-      if (!panel[1].includes('cli_state="available"')) {
-        continue;
-      }
+    const cliPanels = panels.filter((panel) => panel[1].includes('cli_state="available"'));
+    for (const panel of cliPanels) {
       const capture = panel[1].match(/cli_body=(\w+)/u)?.[1];
       assert.ok(capture, `${slug}: available CLI panel supplies a body`);
       let body = raw.match(
@@ -181,9 +179,11 @@ test('Data Cloud CLI ratings require supplied Metadata workflows, not generic AP
 });
 
 function matrixChips(html) {
-  return [...html.matchAll(/data-crud-op="(\w+)" data-crud-status="(\w+)"/g)].map(
-    (match) => `${match[1]}:${match[2]}`,
-  );
+  return html
+    .matchAll(/data-crud-op="(\w+)" data-crud-status="(\w+)"/g)
+
+    .map((match) => `${match[1]}:${match[2]}`)
+    .toArray();
 }
 
 function expectedChips(raw, tool) {
@@ -200,9 +200,9 @@ function expectedChips(raw, tool) {
 }
 
 function assertCrudCell(html, expected) {
-  const [status, methodList] = expected.split(':');
+  const [status, methodList] = expected.split(':', 2);
   assert.match(html, new RegExp(`data-crud-status="${status}"`));
-  const icons = [...html.matchAll(/<img\b([^>]+)>/g)];
+  const icons = html.matchAll(/<img\b([^>]+)>/g).toArray();
   const methods = methodList ? methodList.split(',') : [];
   assert.equal(icons.length, methods.length);
   for (const [index, icon] of icons.entries()) {
@@ -464,9 +464,11 @@ test('Next Data Cloud CLI guide is discoverable without promising general CRUD',
       'utf8',
     );
     assert.deepEqual(
-      [...resource.matchAll(/^## (Read|Create|Update|Delete)(?: \{#\w+\})?$/gm)].map(
-        (match) => match[1],
-      ),
+      resource
+        .matchAll(/^## (Read|Create|Update|Delete)(?: \{#\w+\})?$/gm)
+
+        .map((match) => match[1])
+        .toArray(),
       // Every page lists its chapters Read, Create, Update, Delete.
       ['Read', 'Create', 'Update', 'Delete'],
       `${slug}: one logical resource with four main operations`,
@@ -615,12 +617,14 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     'utf8',
   );
   const intro = html.slice(0, html.indexOf('id="before-you-start"'));
-  const tables = [...intro.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)];
+  const tables = intro.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g).toArray();
   assert.equal(tables.length, 1);
   const table = tables[0][1];
-  const headers = [...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)].map((match) =>
-    match[1].trim(),
-  );
+  const headers = table
+    .matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)
+
+    .map((match) => match[1].trim())
+    .toArray();
   assert.deepEqual(headers, ['Type', 'Standard CLI', 'API', 'Plugin', 'Verified failures']);
   const expectedFragments = [
     'data-stream-configuration-datastreamdefinition',
@@ -639,13 +643,16 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     'kit-definition-datapackagekitdefinition',
     'kit-membership-datapackagekitobject',
   ];
-  const rows = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].slice(1);
+  const rows = table
+    .matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)
+    .toArray()
+    .slice(1);
   assert.equal(rows.length, expectedFragments.length);
   const fragments = [];
   for (const [rowIndex, row] of rows.entries()) {
-    const cells = [...row[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g)];
+    const cells = row[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g).toArray();
     assert.equal(cells.length, 5);
-    const links = [...cells[0][1].matchAll(/href="([^"#]+)#([^"]+)"/g)];
+    const links = cells[0][1].matchAll(/href="([^"#]+)#([^"]+)"/g).toArray();
     assert.equal(links.length, 1);
     assert.equal(links[0][1], `/next/data-cloud-devops/${DATA_CLOUD_SLUGS[rowIndex]}/`);
     const targetHtml = fs.readFileSync(
@@ -660,14 +667,14 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
       'utf8',
     );
     for (const operation of CRUD_OPERATIONS) {
-      const mappingRestriction =
+      const isMappingRestriction =
         DATA_CLOUD_SLUGS[rowIndex] === 'dlo-dmo-mapping' &&
         ['update', 'delete'].includes(operation);
-      const streamRetrieve =
+      const isStreamRetrieve =
         DATA_CLOUD_SLUGS[rowIndex] === 'data-stream-definition' && operation === 'read';
-      const sharedParagraph = mappingRestriction
+      const sharedParagraph = isMappingRestriction
         ? String.raw`\s*<p class="mapping-shared-restriction">[\s\S]*?</p>`
-        : streamRetrieve
+        : isStreamRetrieve
           ? String.raw`\s*<p>The plugin’s implemented exact-name selector is <code[^>]*>data-stream:API_NAME</code>[\s\S]*?</p>`
           : '';
       assert.match(
@@ -709,22 +716,24 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     }
     const summary = targetHtml.match(/<table class="crud-summary">([\s\S]*?)<\/table>/)?.[1];
     assert.ok(summary, 'Each detail has a horizontal summary');
-    const summaryHeaders = [...summary.matchAll(/<th scope="col">([\s\S]*?)<\/th>/g)];
+    const summaryHeaders = summary.matchAll(/<th scope="col">([\s\S]*?)<\/th>/g).toArray();
     assert.equal(summaryHeaders.length, 4);
     for (const [operationIndex, header] of summaryHeaders.entries()) {
       const operation = CRUD_OPERATIONS[operationIndex];
       const label = operation === 'read' ? 'Read' : operation[0].toUpperCase() + operation.slice(1);
       assert.equal(header[1], `<a href="#${ANCHOR[operation]}">${label}</a>`);
       assert.equal(
-        [...targetHtml.matchAll(/\bid="([^"]+)"/g)].filter(
-          (match) => match[1] === ANCHOR[operation],
-        ).length,
+        targetHtml
+          .matchAll(/\bid="([^"]+)"/g)
+
+          .filter((match) => match[1] === ANCHOR[operation])
+          .toArray().length,
         1,
         `${DATA_CLOUD_SLUGS[rowIndex]}: unique ${operation} target`,
       );
       assert.ok(targetHtml.includes(`<h2 id="${ANCHOR[operation]}">${label}</h2>`));
     }
-    const summaryCells = [...summary.matchAll(/<td>([\s\S]*?)<\/td>/g)];
+    const summaryCells = summary.matchAll(/<td>([\s\S]*?)<\/td>/g).toArray();
     assert.equal(summaryCells.length, 4);
     for (const [operationIndex, cell] of summaryCells.entries()) {
       assertCrudCell(cell[1], schema[operationIndex]);
@@ -750,9 +759,9 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
       ].includes(DATA_CLOUD_SLUGS[rowIndex])
     ) {
       assert.ok(methodTable, 'Explicit method grades render separately from overall');
-      const methodRows = [
-        ...methodTable.matchAll(/<tr><th scope="row">([^<]+)<\/th>([\s\S]*?)<\/tr>/g),
-      ];
+      const methodRows = methodTable
+        .matchAll(/<tr><th scope="row">([^<]+)<\/th>([\s\S]*?)<\/tr>/g)
+        .toArray();
       assert.deepEqual(
         methodRows.map((row) => row[1]),
         ['CLI', 'API', 'sf-plugin-data'],
@@ -765,7 +774,7 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
               .match(new RegExp(`^  ${operation}: (.+)$`, 'm'))[1]
               .match(new RegExp(String.raw`\b${tool}: "(\w+)"`))?.[1] || 'unknown',
         );
-        const gradeCells = [...row[2].matchAll(/<td>([\s\S]*?)<\/td>/g)];
+        const gradeCells = row[2].matchAll(/<td>([\s\S]*?)<\/td>/g).toArray();
         assert.equal(gradeCells.length, 4);
         for (const [index, cell] of gradeCells.entries()) {
           assert.match(cell[1], new RegExp(`data-crud-status="${grades[index]}"`));
@@ -787,7 +796,11 @@ test('all Data Cloud CLI introductory navigation fragments resolve in the built 
     }
     assert.ok(cells[4][1].trim(), `Missing scope for #${fragment}`);
     assert.equal(
-      [...targetHtml.matchAll(/\bid="([^"]+)"/g)].filter((match) => match[1] === fragment).length,
+      targetHtml
+        .matchAll(/\bid="([^"]+)"/g)
+
+        .filter((match) => match[1] === fragment)
+        .toArray().length,
       1,
       `Missing or ambiguous introductory target: #${fragment}`,
     );
@@ -828,7 +841,7 @@ crud:
   const cell = fs.readFileSync(path.join(SITE, '_includes/crud-cell.html'), 'utf8');
   assert.match(cell, /if status == 'yes' or status == 'partial'/);
   assert.ok(cell.indexOf('<img ') < cell.indexOf('{%- else -%}'));
-  assert.doesNotMatch(cell.split('{%- else -%}')[1], /<img/);
+  assert.doesNotMatch(cell.split('{%- else -%}', 2)[1], /<img/);
   for (const method of ['cli', 'api', 'plugin']) {
     const icon = fs.readFileSync(path.join(SITE, 'assets/icons', `${method}.svg`), 'utf8');
     assert.match(icon, /viewBox="0 0 64 64"/);
@@ -875,11 +888,11 @@ test('explicit method maps validate best single route without changing legacy ag
 
 test('CRUD overview preserves curated order and hides only explicit hidden targets', () => {
   const raw = fs.readFileSync(path.join(SITE, 'next/data-cloud-devops/index.md'), 'utf8');
-  const rows = [
-    ...raw.matchAll(
+  const rows = raw
+    .matchAll(
       /^ {2}- path: next\/data-cloud-devops\/([^\n]+)\.md\n {4}label: ([^\n]+)\n {4}anchor: ([^\n]+)\n {4}failures: '([^\n]+)'$/gm,
-    ),
-  ];
+    )
+    .toArray();
   assert.deepEqual(
     rows.map((row) => row[1]),
     DATA_CLOUD_SLUGS,
@@ -912,12 +925,12 @@ test('CRUD overview preserves curated order and hides only explicit hidden targe
   );
   assert.doesNotMatch(matrix, /if resource.discoverable|discoverable == true/);
   const html = fs.readFileSync(path.join(SITE, '_site/next/data-cloud-devops/index.html'), 'utf8');
-  const renderedRows = [
-    ...html.matchAll(/<td><a href="\/next\/data-cloud-devops\/[^"]+">[\s\S]*?<\/tr>/g),
-  ];
+  const renderedRows = html
+    .matchAll(/<td><a href="\/next\/data-cloud-devops\/[^"]+">[\s\S]*?<\/tr>/g)
+    .toArray();
   assert.equal(renderedRows.length, 15, 'Absent discoverable flags remain visible');
   for (const [index, row] of rows.entries()) {
-    const cells = [...renderedRows[index][0].matchAll(/<td>([\s\S]*?)<\/td>/g)];
+    const cells = renderedRows[index][0].matchAll(/<td>([\s\S]*?)<\/td>/g).toArray();
     const text = cells[4][1].replaceAll(/<[^>]+>/g, '').trim();
     assert.equal(text, row[4].replaceAll('`', ''), 'Scope prose is preserved');
   }
@@ -938,12 +951,14 @@ test('Data Cloud sidebar nests all resources and expands only for its current pa
   );
   assert.ok(branch, 'Clickable Data Cloud parent has nested children');
   assert.deepEqual(
-    [...branch[1].matchAll(/^ {10}url: \/next\/data-cloud-devops\/([^/]+)\/$/gm)].map(
-      (match) => match[1],
-    ),
+    branch[1]
+      .matchAll(/^ {10}url: \/next\/data-cloud-devops\/([^/]+)\/$/gm)
+
+      .map((match) => match[1])
+      .toArray(),
     NAV_SLUGS,
   );
-  assert.equal([...nav.matchAll(/url: \/next\/data-cloud-devops\//g)].length, 16);
+  assert.equal(nav.matchAll(/url: \/next\/data-cloud-devops\//g).toArray().length, 16);
   for (const slug of ['index', ...NAV_SLUGS, '../index']) {
     const html = fs.readFileSync(
       path.join(
@@ -964,11 +979,11 @@ test('Data Cloud sidebar nests all resources and expands only for its current pa
     assert.ok(parent, `${slug}: nested clickable parent exists`);
     assert.ok(parent[2].includes('sidebar-link--parent'));
     assert.match(parent[3], /Data Cloud DevOps[\s\S]*sidebar-chevron/);
-    const expanded = slug !== '../index';
-    assert.equal(parent[1].includes('is-expanded'), expanded, `${slug}: parent expansion`);
-    assert.equal(parent[4].includes('is-open'), expanded, `${slug}: child list expansion`);
+    const isExpanded = slug !== '../index';
+    assert.equal(parent[1].includes('is-expanded'), isExpanded, `${slug}: parent expansion`);
+    assert.equal(parent[4].includes('is-open'), isExpanded, `${slug}: child list expansion`);
     assert.equal(parent[2].includes('is-active'), slug === 'index', `${slug}: parent active`);
-    const links = [...parent[5].matchAll(/<a href="([^"]+)"\s*class="([^"]*)">/g)];
+    const links = parent[5].matchAll(/<a href="([^"]+)"\s*class="([^"]*)">/g).toArray();
     assert.deepEqual(
       links.map((match) => match[1]),
       NAV_SLUGS.map((child) => `/next/data-cloud-devops/${child}/`),
@@ -983,13 +998,15 @@ test('Data Cloud sidebar nests all resources and expands only for its current pa
 });
 
 test('Data Cloud split pages retain search discovery, scoped verification and cross-page links', () => {
-  const dir = path.join(SITE, 'next', 'data-cloud-devops');
+  const directory = path.join(SITE, 'next', 'data-cloud-devops');
   assert.deepEqual(
-    fs.readdirSync(dir).toSorted(),
-    ['index', ...DATA_CLOUD_SLUGS].map((slug) => slug + '.md').toSorted(),
+    fs.readdirSync(directory).toSorted((a, b) => a.localeCompare(b)),
+    ['index', ...DATA_CLOUD_SLUGS]
+      .map((slug) => slug + '.md')
+      .toSorted((a, b) => a.localeCompare(b)),
   );
   const index = JSON.parse(fs.readFileSync(path.join(SITE, 'site-index.json'), 'utf8'));
-  const main = fs.readFileSync(path.join(dir, 'index.md'), 'utf8');
+  const main = fs.readFileSync(path.join(directory, 'index.md'), 'utf8');
   assert.ok(main.includes("The plugin's `delete` command needs no manifest."));
   assert.match(main, /^## Data Spaces$/m);
   assert.ok(main.trimEnd().endsWith('is on the [Data Spaces](/next/data-spaces/) page.'));
@@ -1011,7 +1028,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   assert.doesNotMatch(main, /^\| \[DMOs\]/m);
   assert.doesNotMatch(main, /^crud:$/m);
   for (const slug of ['index', ...DATA_CLOUD_SLUGS]) {
-    const raw = fs.readFileSync(path.join(dir, slug + '.md'), 'utf8');
+    const raw = fs.readFileSync(path.join(directory, slug + '.md'), 'utf8');
     const url = '/next/data-cloud-devops/' + (slug === 'index' ? '' : slug + '/');
     assert.match(raw, /^verification: verified$/m);
     // The overview carries this limit in the verification badge title only; type pages also state it.
@@ -1048,7 +1065,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
     defaultHtml,
     /Every claim on this page was proven by running the function on a live Marketing Cloud Engagement CloudPage/,
   );
-  const dmo = fs.readFileSync(path.join(dir, 'data-model-object.md'), 'utf8');
+  const dmo = fs.readFileSync(path.join(directory, 'data-model-object.md'), 'utf8');
   assert.match(dmo, /"fields":\[\{"name":"UpdateNote","label":"Update Note","dataType":"Text"\}\]/);
   for (const text of [
     'about 28 seconds',
@@ -1060,20 +1077,20 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
     assert.ok(dmo.includes(text), text);
   }
   for (const slug of ['index', ...DATA_CLOUD_SLUGS]) {
-    const bytes = fs.readFileSync(path.join(dir, `${slug}.md`));
+    const bytes = fs.readFileSync(path.join(directory, `${slug}.md`));
     assert.notEqual(bytes.subarray(0, 3).toString('hex'), 'efbbbf', `${slug}: no BOM`);
     assert.ok(!bytes.includes(13), `${slug}: LF only`);
   }
   for (const slug of ['calculated-insight-definition', 'segment-definition']) {
-    assert.ok(!fs.existsSync(path.join(dir, `${slug}.md`)));
-    assert.ok(!index.some((entry) => entry.url === `/next/data-cloud-devops/${slug}/`));
+    assert.ok(!fs.existsSync(path.join(directory, `${slug}.md`)));
+    assert.ok(index.every((entry) => entry.url !== `/next/data-cloud-devops/${slug}/`));
   }
-  const graph = fs.readFileSync(path.join(dir, 'data-graphs.md'), 'utf8');
+  const graph = fs.readFileSync(path.join(directory, 'data-graphs.md'), 'utf8');
   const graphBody = (operation) =>
     JSON.parse(
       graph
         .split(`{% capture ${operation}_connect %}`)[1]
-        .split('{% endcapture %}')[0]
+        .split('{% endcapture %}', 1)[0]
         .match(/```json\n([\s\S]*?)\n```/)[1],
     );
   const create = graphBody('create');
@@ -1090,7 +1107,7 @@ test('Data Cloud split pages retain search discovery, scoped verification and cr
   assert.ok(Object.hasOwn(update, 'valuesDmoName'), 'update keeps generated names');
   assert.match(JSON.stringify(update), /ssot__LastName__c/);
   assert.doesNotMatch(graph, /paramsJson|mcp\/execute/);
-  const membership = fs.readFileSync(path.join(dir, 'data-package-kit-object.md'), 'utf8');
+  const membership = fs.readFileSync(path.join(directory, 'data-package-kit-object.md'), 'utf8');
   assert.match(membership, /### Moving a kit is not installing it/);
   assert.match(
     membership,

@@ -138,35 +138,35 @@
      * `marketVariables` — the `suffix` row reads `wizardState.suffixes` directly.
      *
      * @param {string} reference the buRef
-     * @param {string} varName the variable name
+     * @param {string} variableName the variable name
      * @returns {unknown} the native stored value or `''`
      */
-    function variableValueOf(reference, varName) {
+    function variableValueOf(reference, variableName) {
         const all = state.wizardState.marketVariables || {};
         const forBU = all[reference];
-        return forBU && Object.hasOwn(forBU, varName) ? forBU[varName] : '';
+        return forBU && Object.hasOwn(forBU, variableName) ? forBU[variableName] : '';
     }
 
     /**
-     * Write a variable value verbatim (no trim) into `wizardState.marketVariables[reference][varName]`,
+     * Write a variable value verbatim (no trim) into `wizardState.marketVariables[reference][variableName]`,
      * cloning the maps so the stored objects are never mutated in place.
      *
      * @param {string} reference the buRef
-     * @param {string} varName the variable name
+     * @param {string} variableName the variable name
      * @param {unknown} value the native value to store
      * @returns {boolean} whether the mutation was applied
      */
-    function setVariableValue(reference, varName, value) {
-        if (C.persistence.readOnly || varName === 'suffix') {
+    function setVariableValue(reference, variableName, value) {
+        if (variableName === 'suffix' || C.persistence.readOnly) {
             return false;
         }
         const builder = global.mpbConfigBuilder;
         const stored =
             builder.validateMarketVariable(value) === null
-                ? builder.normalizeMarketVariable(value, varName)
+                ? builder.normalizeMarketVariable(value, variableName)
                 : value;
         const all = { ...state.wizardState.marketVariables };
-        const forBU = { ...all[reference], [varName]: stored };
+        const forBU = { ...all[reference], [variableName]: stored };
         all[reference] = forBU;
         state.wizardState.marketVariables = all;
         return true;
@@ -176,12 +176,12 @@
      * Read the native scalar shown in a cell without coercing imported numbers or booleans.
      *
      * @param {string} reference the buRef
-     * @param {string} varName the variable key
+     * @param {string} variableName the variable key
      * @returns {string|number|boolean} the scalar or regex replacement
      */
-    function displayedVariableValueOf(reference, varName) {
+    function displayedVariableValueOf(reference, variableName) {
         return global.mpbConfigBuilder.displayedMarketVariableValue(
-            variableValueOf(reference, varName),
+            variableValueOf(reference, variableName),
         );
     }
 
@@ -293,7 +293,7 @@
      * @returns {boolean} true when a rename was applied, false on a guarded no-op
      */
     function renameVariable(pipelineReferences, oldName, newName) {
-        if (C.persistence.readOnly || oldName === 'suffix') {
+        if (oldName === 'suffix' || C.persistence.readOnly) {
             return false;
         }
         const next = String(newName ?? '').trim();
@@ -419,8 +419,8 @@
             const marketName = byBU[reference];
             const entry = Object.hasOwn(marketOf, marketName) ? marketOf[marketName] : null;
             // Key sets match: overwrite this BU's variables (values as-is) and its effective suffix.
-            const vars = entry.vars && typeof entry.vars === 'object' ? entry.vars : {};
-            nextVariables[reference] = { ...vars };
+            const variables = entry.vars && typeof entry.vars === 'object' ? entry.vars : {};
+            nextVariables[reference] = { ...variables };
             // Use the detector's pre-computed effective suffix (`entry.suffix`); `vars` never carries
             // `suffix` (stripped by the detector), so recomputing from it would drop real `.suffix`
             // values. Normalise so both sources land separator-prefixed exactly once.
@@ -443,7 +443,7 @@
      * @returns {void}
      */
     function deleteVariable(pipelineReferences, name) {
-        if (C.persistence.readOnly || name === 'suffix') {
+        if (name === 'suffix' || C.persistence.readOnly) {
             return;
         }
         const all = { ...state.wizardState.marketVariables };
@@ -470,20 +470,20 @@
      *
      * @param {string} environment the owning environment (for id uniqueness)
      * @param {string} reference the buRef
-     * @param {string} varName the variable name (`suffix` is special: see below)
+     * @param {string} variableName the variable name (`suffix` is special: see below)
      * @param {() => void} refreshAll repaint every row's warnings/border after a state edit
      * @param {object} editor draft editor for this rendered step
      * @returns {{cell: HTMLElement, input: HTMLInputElement, warnings: HTMLElement, reference: string, varName: string}}
      *   the built cell and its in-place-refresh handles
      */
-    function variableCell(environment, reference, varName, refreshAll, editor) {
+    function variableCell(environment, reference, variableName, refreshAll, editor) {
         const cell = makeElement('div', { class: 'mpb-env-node-control' });
         const inputId =
-            'mpb-mv-' + suffixSlug(environment) + '-' + suffixSlug(reference) + '-' + suffixSlug(varName);
+            'mpb-mv-' + suffixSlug(environment) + '-' + suffixSlug(reference) + '-' + suffixSlug(variableName);
 
-        const isSuffix = varName === 'suffix';
+        const isSuffix = variableName === 'suffix';
         const separator = state.wizardState.separator || '_';
-        const ariaLabel = varName + ' for ' + reference;
+        const ariaLabel = variableName + ' for ' + reference;
 
         let input;
         if (isSuffix) {
@@ -503,7 +503,7 @@
             cell.append(group);
         } else {
             // Native values stay typed in state; only the DOM display is stringified.
-            const initialValue = displayedVariableValueOf(reference, varName);
+            const initialValue = displayedVariableValueOf(reference, variableName);
             input = makeElement('input', {
                 type: 'text',
                 id: inputId,
@@ -511,45 +511,47 @@
                 value: initialValue,
                 attrs: { autocomplete: 'off', spellcheck: 'false', 'aria-label': ariaLabel },
             });
-            const kind = global.mpbConfigBuilder.classifyMarketVariable(variableValueOf(reference, varName));
-            const regex = kind === 'regex';
-            input.readOnly = regex || kind === 'invalid' || C.persistence.readOnly;
+            const kind = global.mpbConfigBuilder.classifyMarketVariable(variableValueOf(reference, variableName));
+            const isRegex = kind === 'regex';
+            input.readOnly = isRegex || kind === 'invalid' || C.persistence.readOnly;
             const control = makeElement('div', { class: 'mpb-mv-value-control' });
             const mode = makeElement('button', {
                 type: 'button',
                 class: 'mpb-btn mpb-btn--secondary mpb-mv-action-btn mpb-mv-mode',
-                text: regex ? '.*' : 'aA',
+                text: isRegex ? '.*' : 'aA',
                 attrs: {
-                    'aria-label': regex ? 'Switch ' + ariaLabel + ' to text' : 'Use regex for ' + ariaLabel,
-                    title: regex ? 'Switch to text' : 'Use regex',
+                    'aria-label': isRegex ? 'Switch ' + ariaLabel + ' to text' : 'Use regex for ' + ariaLabel,
+                    title: isRegex ? 'Switch to text' : 'Use regex',
                 },
             });
             mode.disabled = C.persistence.readOnly || kind === 'invalid';
             const descriptor = (trigger) => ({
-                key: JSON.stringify([reference, varName]),
-                name: varName,
+                key: JSON.stringify([reference, variableName]),
+                name: variableName,
                 marketLabel: bareBUName(reference) || reference,
                 reference: reference,
-                value: variableValueOf(reference, varName),
+                value: variableValueOf(reference, variableName),
                 trigger: trigger,
             });
             const open = () => {
-                if (!C.persistence.readOnly && regex) {
+                if (isRegex && !C.persistence.readOnly) {
                     editor.open(descriptor(input));
                 }
             };
             input.addEventListener('click', open);
             input.addEventListener('keydown', (event) => {
-                if (regex && (event.key === 'Enter' || event.key === ' ')) {
-                    event.preventDefault();
-                    open();
+                if (!(isRegex && (event.key === 'Enter' || event.key === ' '))) {
+                	return;
                 }
+
+                event.preventDefault();
+                open();
             });
             mode.addEventListener('click', () => {
-                if (C.persistence.readOnly || kind === 'invalid') {
+                if (kind === 'invalid' || C.persistence.readOnly) {
                     return;
                 }
-                if (regex) {
+                if (isRegex) {
                     editor.confirmSwitch(descriptor(mode));
                 } else {
                     editor.open(descriptor(mode));
@@ -575,7 +577,7 @@
                 };
             } else {
                 // Non-suffix values are stored EXACTLY as entered so intentional spaces round-trip.
-                setVariableValue(reference, varName, input.value);
+                setVariableValue(reference, variableName, input.value);
             }
             refreshAll();
             updateNavGate();
@@ -586,7 +588,7 @@
         const warnings = makeElement('div', { class: 'mpb-suffix-warnings' });
         cell.append(warnings);
 
-        return { cell: cell, input: input, warnings: warnings, reference: reference, varName: varName };
+        return { cell: cell, input: input, warnings: warnings, reference: reference, varName: variableName };
     }
 
     /**
@@ -599,17 +601,17 @@
      * per-cell `<td>` animation to the row and fires once per cell — `{ once: true }` clears on the
      * first. No-op in the headless test harness (no `querySelectorAll`).
      *
-     * @param {string} varName the variable name (data-var key) to flash
+     * @param {string} variableName the variable name (data-var key) to flash
      * @returns {void}
      */
-    function flashRow(varName) {
+    function flashRow(variableName) {
         const host = C.dom && C.dom.stepHost;
         if (!host || typeof host.querySelectorAll !== 'function') {
             return;
         }
         const rows = host.querySelectorAll('tr[data-var]');
         for (const row of rows) {
-            if (row.dataset.var !== varName) {
+            if (row.dataset.var !== variableName) {
                 continue;
             }
             row.classList.add('mpb-mv-flash');
@@ -680,13 +682,13 @@
      * flag guards the Enter→blur double-commit (Enter's `render()` detaches the input, then a trailing
      * blur fires on the dead node).
      *
-     * @param {string} varName the variable name for this row
+     * @param {string} variableName the variable name for this row
      * @param {string[]} pipelineReferences the pipeline's buRefs
      * @returns {{cell: HTMLElement, nameInput: ?HTMLInputElement}} the name cell + its input (null for suffix)
      */
-    function nameCell(varName, pipelineReferences) {
+    function nameCell(variableName, pipelineReferences) {
         const cell = makeElement('td', { class: 'mpb-mv-name-cell' });
-        if (varName === 'suffix') {
+        if (variableName === 'suffix') {
             cell.append(makeElement('span', { class: 'mpb-mv-name-static', text: 'suffix' }));
             return { cell: cell, nameInput: null };
         }
@@ -694,11 +696,11 @@
         const nameInput = makeElement('input', {
             type: 'text',
             class: 'mpb-mv-name-input',
-            value: varName,
+            value: variableName,
             attrs: {
                 autocomplete: 'off',
                 spellcheck: 'false',
-                'aria-label': 'Rename variable ' + varName,
+                'aria-label': 'Rename variable ' + variableName,
             },
         });
         const error = makeElement('div', { class: 'mpb-field-error-slot' });
@@ -712,7 +714,7 @@
          * @returns {string} the current error message ('' when valid)
          */
         function paintError() {
-            const message = variableNameError(nameInput.value, pipelineReferences, varName);
+            const message = variableNameError(nameInput.value, pipelineReferences, variableName);
             setText(error, '');
             const isInvalid = message !== '';
             nameInput.classList.toggle('mpb-input-warn', isInvalid);
@@ -734,16 +736,16 @@
                 return;
             }
             const next = nameInput.value.trim();
-            if (next === varName || variableNameError(next, pipelineReferences, varName) !== '') {
+            if (next === variableName || variableNameError(next, pipelineReferences, variableName) !== '') {
                 // Invalid or unchanged: never persist — revert the field to the stored name.
-                nameInput.value = varName;
+                nameInput.value = variableName;
                 setText(error, '');
                 nameInput.classList.remove('mpb-input-warn');
                 nameInput.setAttribute('aria-invalid', 'false');
                 return;
             }
             isCommitted = true;
-            if (!renameVariable(pipelineReferences, varName, next)) {
+            if (!renameVariable(pipelineReferences, variableName, next)) {
                 return;
             }
             scheduleAutosave();
@@ -759,7 +761,7 @@
                 commit();
             } else if (event.key === 'Escape') {
                 event.preventDefault();
-                nameInput.value = varName;
+                nameInput.value = variableName;
                 paintError();
                 nameInput.blur();
             }
@@ -772,14 +774,14 @@
      * Build the actions-column cell for a variable row: empty for `suffix`; otherwise a compact edit
      * (focus+select the rename input) and delete (confirm-then-delete) button pair.
      *
-     * @param {string} varName the variable name for this row
+     * @param {string} variableName the variable name for this row
      * @param {string[]} pipelineReferences the pipeline's buRefs
      * @param {?HTMLInputElement} nameInput the row's rename input (for the edit button), or null
      * @returns {HTMLElement} the actions `<td>`
      */
-    function actionsCell(varName, pipelineReferences, nameInput) {
+    function actionsCell(variableName, pipelineReferences, nameInput) {
         const cell = makeElement('td', { class: 'mpb-mv-actions-cell' });
-        if (varName === 'suffix') {
+        if (variableName === 'suffix') {
             return cell;
         }
 
@@ -789,7 +791,7 @@
             type: 'button',
             class: 'mpb-btn mpb-btn--secondary mpb-mv-action-btn',
             text: '✎',
-            attrs: { 'aria-label': 'Rename variable ' + varName, title: 'Rename' },
+            attrs: { 'aria-label': 'Rename variable ' + variableName, title: 'Rename' },
         });
         editButton.addEventListener('click', () => {
             if (C.persistence.readOnly || !(nameInput && typeof nameInput.focus === 'function')) {
@@ -806,24 +808,24 @@
             type: 'button',
             class: 'mpb-btn mpb-btn--danger mpb-mv-action-btn',
             text: '🗑',
-            attrs: { 'aria-label': 'Delete variable ' + varName, title: 'Delete' },
+            attrs: { 'aria-label': 'Delete variable ' + variableName, title: 'Delete' },
         });
         deleteButton.addEventListener('click', () => {
             if (C.persistence.readOnly) {
                 return;
             }
-            const filled = filledBUCountFor(pipelineReferences, varName);
+            const filled = filledBUCountFor(pipelineReferences, variableName);
             const total = pipelineReferences.length;
             const message =
                 filled > 0
                     ? 'Delete variable "' +
-                      varName +
+                      variableName +
                       '"? It has values in ' +
                       filled +
                       ' of ' +
                       total +
                       ' business unit(s) that will be permanently deleted. This cannot be undone.'
-                    : 'Delete variable "' + varName + '"?';
+                    : 'Delete variable "' + variableName + '"?';
             if (!global.confirm(message)) {
                 return;
             }
@@ -837,7 +839,7 @@
                 if (C.persistence.readOnly) {
                     return;
                 }
-                deleteVariable(pipelineReferences, varName);
+                deleteVariable(pipelineReferences, variableName);
                 scheduleAutosave();
                 render();
             };
@@ -1371,6 +1373,23 @@
     }
 
     /**
+     * First invalid stored value among one BU's non-`suffix` variables, as a gate reason.
+     *
+     * @param {string} reference the child BU reference
+     * @returns {string} `<name> for <reference>: <error>`, or '' when every value is valid
+     */
+    function firstInvalidVariableReason(reference) {
+        const names = variableNamesFor([reference]).filter((name) => name !== 'suffix');
+        for (const name of names) {
+            const error = global.mpbConfigBuilder.validateMarketVariable(variableValueOf(reference, name));
+            if (error) {
+                return name + ' for ' + reference + ': ' + error;
+            }
+        }
+        return '';
+    }
+
+    /**
      * `market-vars` gate: non-`suffix` variables may be empty (advisory only), but an empty or
      * duplicate `suffix` is a hard block (identical to `canProceedSuffixes`, via the same shared
      * validator). Surfaces the first offending buRef's message in the reason.
@@ -1396,14 +1415,9 @@
             }
         }
         for (const reference of references) {
-            for (const name of variableNamesFor([reference])) {
-                if (name === 'suffix') {
-                    continue;
-                }
-                const error = global.mpbConfigBuilder.validateMarketVariable(variableValueOf(reference, name));
-                if (error) {
-                    return { ok: false, reason: name + ' for ' + reference + ': ' + error };
-                }
+            const reason = firstInvalidVariableReason(reference);
+            if (reason) {
+                return { ok: false, reason: reason };
             }
         }
         return { ok: true, reason: '' };
