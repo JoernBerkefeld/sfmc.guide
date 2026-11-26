@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Querying Data in Next"
-description: "Read Sales Cloud objects and marketing objects in Marketing Cloud Next emails with Handlebars query, queryFirst or AMPscript; SQL cheat sheet, data graph tests."
+description: "Read Sales Cloud objects and marketing objects in Marketing Cloud Next emails with Handlebars query, queryFirst or AMPscript; SQL cheat sheet, and the bound data graph."
 parent: Next
 parent_url: /next/
 permalink: /next/querying-data/
@@ -10,9 +10,11 @@ platforms:
 test_scripts: complete
 ---
 
-Marketing Cloud Next emails can read three kinds of data while they render: Sales Cloud objects (CRM), marketing objects (MO) and Data 360 data graphs (DG). Handlebars reads all of them with [`query`](/next/handlebars/helpers/query/) and [`queryFirst`](/next/handlebars/helpers/queryfirst/); AMPscript has [`RetrieveSalesforceObjects`](/next/ampscript/functions/retrievesalesforceobjects/) for Sales Cloud objects and the `Lookup` family for marketing objects. This page shows which call works for which source and how a SQL `WHERE` clause turns into each one. For Data Extensions in Marketing Cloud Engagement, see the sister page [Querying Data Extensions](/engagement/querying-data/).
+Marketing Cloud Next emails can read three kinds of data while they render: Sales Cloud objects (CRM), marketing objects (MO) and Data 360 data graphs (DG). Handlebars reads Sales Cloud objects and marketing objects with [`query`](/next/handlebars/helpers/query/) and [`queryFirst`](/next/handlebars/helpers/queryfirst/), and the data graph bound to the email through `$dataGraph` merge fields; AMPscript has [`RetrieveSalesforceObjects`](/next/ampscript/functions/retrievesalesforceobjects/) for Sales Cloud objects and the `Lookup` family for marketing objects. This page shows which call works for which source and how a SQL `WHERE` clause turns into each one. For Data Extensions in Marketing Cloud Engagement, see the sister page [Querying Data Extensions](/engagement/querying-data/).
 
-Every example below was rendered in the preview of a Next email (one HTML component, previewed through the Email Direct Send preview API, never sent); the calls that failed are marked as such. The examples read data of a demo org: Sales Cloud `Contact` records, two small marketing objects (`zzprobecoupons__mo` with the text key field `CouponCode__c` and one record `PROBE0001`, `IsClaimed__c` `false`; `zzprobenumkey__mo` with the number key field `CouponNo__c`, a text field `Label__c` and a number field `Points__c`), and the data graph `Marketing`. Replace object, field and graph names with your own. The SQL table further down also draws on earlier single-call tests of the same helpers and functions.
+> **Skip the manual mapping:** paste a `SELECT` into the [SQL Converter](/tools/sql-converter/) and get the matching Handlebars and AMPscript lookup code for Sales Cloud and marketing objects, or paste lookup code to get the SQL back.
+
+Every example below was rendered in the preview of a Next email (one HTML component, previewed through the Email Direct Send preview API, never sent; the data graph merge fields in the Email Builder preview, because the preview API does not load the graph); the calls that failed are marked as such. The examples read data of a demo org: Sales Cloud `Contact` records, two small marketing objects (`zzprobecoupons__mo` with the text key field `CouponCode__c` and one record `PROBE0001`, `IsClaimed__c` `false`; `zzprobenumkey__mo` with the number key field `CouponNo__c`, a text field `Label__c` and a number field `Points__c`), and the data graphs `Marketing` (rooted on the unified individual) and `CMSM_Graph` (rooted on the individual). Replace object, field and graph names with your own. The SQL table further down also draws on earlier single-call tests of the same helpers and functions.
 
 {% raw %}
 
@@ -22,7 +24,7 @@ Every example below was rendered in the preview of a Next email (one HTML compon
 |---|---|---|---|---|
 | Sales Cloud object (`type="CRM"`) | `query`, `queryFirst` | `RetrieveSalesforceObjects` | Handlebars: `where` with `:placeholders` filled from `params=(hash …)`; AMPscript: field / operator / value triplets joined with AND | Handlebars: `sortBy="Field ASC"` / `"Field DESC"`, `limit`; AMPscript: none |
 | Marketing object (`type="MO"`) | `query`, `queryFirst` | `Lookup`, `LookupRows` | Handlebars: inline filters `Field="value"` on any field, joined with AND; AMPscript: column / value pairs | Handlebars: `limit` works, `sortBy` fails; AMPscript: none (`LookupOrderedRows` fails) |
-| Data graph (`type="DG"`) | `queryFirst` (documented; failed in our tests) | — | see [Data graphs](#data-graphs) | — |
+| Data graph bound to the email | root fields: `{{get (get @root "$dataGraph") "Field"}}`; related DMO rows: `#each` over `(get (get @root "$dataGraph") "<DMO API name>")` (both rendered in the Email Builder preview); `query` / `queryFirst type="DG"` failed in every test | — | always the previewed recipient; related rows: `#if` with `compare` / `equals`, joined with `and` / `or` (`filter` fails) | `sort`, then `slice` for the first N rows; `length` counts them |
 
 Rules of thumb:
 
@@ -150,19 +152,84 @@ Renders `8.0;` and `1`. Record 9 is found when the filter matches it alone (`Cou
 
 ## Data graphs
 
+An email reads Data 360 data through the data graph bound to it (the graph picked under the email's data sources in the editor). Everything below rendered in the Email Builder preview with a profile. The `query` and `queryFirst` helpers with `type="DG"` did not render in any form; see [Calls with type="DG" fail](#calls-with-typedg-fail).
+
+### Fields of the graph's root object
+
+The fields of the root object sit under `$dataGraph` on the root context, for the recipient being rendered:
+
+```handlebars
+{{get (get @root "$dataGraph") "ssot__FirstName__c"}}
+{{@root.$dataGraph.ssot__LastName__c}}
+```
+
+Both forms rendered the recipient's first and last name; the values matched a Data 360 SQL read of the same record. A field the graph does not contain renders empty. There is no filter: the record is always the recipient being previewed.
+
+{% endraw %}
+{% include test-script.html bundle="next--querying-data" chapter="data-graph-merge-fields" lang="handlebars" label="Show the data graph merge field test script" %}
+{% raw %}
+
+### Related DMO rows of the graph
+
+Each data model object related to the root object is a list under `$dataGraph`, named by the DMO's API name. Loop over it with `#each`; inside the loop, read the row's fields by name. In the `Marketing` graph, `UnifiedLinkssotIndividualMkt__dlm` holds one row per source record that was merged into the unified individual:
+
+```handlebars
+{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{ssot__DataSourceObjectId__c}}: {{SourceRecordId__c}};{{/each}}
+```
+
+For a recipient merged from one lead and one contact, the loop printed both rows, in the order the graph stores them.
+
+**Picking rows (SQL `WHERE`).** Wrap the row in `#if` and test it with [`compare`](/next/handlebars/helpers/compare/) or [`equals`](/next/handlebars/helpers/equals/); combine tests with `and` / `or`:
+
+```handlebars
+{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{#if (or (compare ssot__DataSourceObjectId__c "==" "Contact") (equals ssot__DataSourceObjectId__c "Lead"))}}{{SourceRecordId__c}};{{/if}}{{/each}}
+```
+
+`compare` also took `!=` and `>` (on text, `"Lead" > "D"` is true). Unlike SQL, `compare` with `==` is case-sensitive: `"contact"` did not match `Contact`. Values that look like numbers are compared as numbers, quoted or not: `"10" > "9"` is true, and so is `"10" == 10`. A field the row does not have simply compares as false. The [`filter`](/next/handlebars/helpers/filter/) helper, the obvious candidate, does not work here: its documented form saved but made the whole preview fail, and leaving out its last argument (`filterAs`) got the save rejected with HTTP 400.
+
+**Order and limit (SQL `ORDER BY` and `TOP`).** [`sort`](/next/handlebars/helpers/sort/) orders the list by one field (`"asc"` or `"desc"`, compared as `"string"` in the test), and [`slice`](/next/handlebars/helpers/slice/) keeps the first N rows. Nest them to get the first row after sorting:
+
+```handlebars
+{{#each (slice (sort (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm") "SourceRecordId__c" "asc" "string") 0 1)}}{{SourceRecordId__c}}{{/each}}
+```
+
+`slice` cuts the list before the loop runs, so it limits the rows the graph holds, not the rows an `#if` lets through. Testing `@index` inside the loop (`{{#if (compare @index "<" 1)}}`) counts the same way.
+
+**Counting rows.** [`length`](/next/handlebars/helpers/length/) returns the number of rows: `{{length (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}` rendered `2` for the same recipient.
+
+{% endraw %}
+{% include test-script.html bundle="next--querying-data" chapter="data-graph-related" lang="handlebars" label="Show the related DMO test script" %}
+{% raw %}
+
+### Which profile id loads which graph
+
+The Email Builder preview loads the graph for the profile id you pick, and that id has to match the key of the graph's root object:
+
+- a graph rooted on the unified individual (`Marketing`, root `UnifiedssotIndividualMkt__dlm`) rendered with the **unified individual id**;
+- a graph rooted on the individual (`CMSM_Graph`, root `ssot__Individual__dlm`) rendered with the **Individual id** (the source record id, here a Contact id); its related `ssot__ContactPointEmail__dlm` list gave the recipient's email address. With the unified individual id, the same email's preview stayed unrendered: the template text showed, without an error.
+
+Two limits from the same tests:
+
+- **The preview API does not load the graph.** The email preview API (`previewEmail`) rendered the merge fields empty, whatever individual id it was given. Instead, it turns the request's `attributes` into `@root`: `{"attributes":{"$dataGraph":{"ssot__FirstName__c":"AttrX"}}}` made the first-name line render `AttrX`. Use the Email Builder preview to check real graph data.
+- **A real send was not tested.** The tests never sent an email.
+
+### Calls with type="DG" fail
+
 The Salesforce reference documents `queryFirst` with `type="DG"`: `object` names the data graph, and an inline field condition picks the record (its example filters a unified profile on an email address). `query` lists only `CRM` and `MO` as types. In the form below, `ssot__Id__c` is the key field of the graph's root object:
 
 ```handlebars
 {{get (queryFirst type="DG" object="Marketing" ssot__Id__c="<unified individual id>") "ssot__FirstName__c"}}
 ```
 
-In our tests no `type="DG"` call rendered. Each of these forms saved and published, but made the preview fail with HTTP 500, alone in the email and with a working control email before and after:
+In our tests no `type="DG"` call rendered, with `queryFirst` or with `query`. Each of these forms saved and published, but made the preview fail with HTTP 500, alone in the email and with a working control email before and after:
 
-- an inline filter on the key field of the graph's root object, read with `get` or looped with `#each`, on a graph rooted on the unified individual (`Marketing`) and on one rooted on the individual (`ssot__Individual__dlm`);
+- an inline filter on the key field of the graph's root object, read with `get` or looped with `#each`, on both graphs, with a unified individual id and with a source Individual id;
+- the documented contact-point email filter (`contactPointEmail="<email>"`);
 - no filter, on both graphs, to see whether the graph follows the previewed recipient;
-- `where` with `params` on a field of the root object.
+- `where` with `params` on a field of the root object;
+- with `query`: the graph name or a related DMO (`ssot__ContactPointEmail__dlm`, `UnifiedLinkssotIndividualMkt__dlm`) as `object`, with and without a filter.
 
-The test email carried the data graph binding that the email editor stores with it (a different graph from the ones queried). Whether a matching binding, a real-time graph or a sent email behaves differently was not tested. The email editor's data graph merge fields are the documented alternative (not tested here).
+The emails were bound to the graph they queried, in the same data space (`default`); the ids were checked against the graph's data first, and the Email Builder preview used the profile id that loads that graph. It showed a generic error instead of the email. Read the bound graph as shown above instead.
 
 {% endraw %}
 {% include test-script.html bundle="next--querying-data" chapter="data-graphs" lang="handlebars" label="Show the data graph calls that failed (one email each)" %}
@@ -241,6 +308,12 @@ Two marketing object queries in one email that write the same number field once 
   <li><a href="/next/handlebars/helpers/get/">get</a></li>
   <li><a href="/next/handlebars/helpers/with/">with</a></li>
   <li><a href="/next/handlebars/helpers/hash/">hash</a></li>
+  <li><a href="/next/handlebars/helpers/each/">each</a></li>
+  <li><a href="/next/handlebars/helpers/compare/">compare</a></li>
+  <li><a href="/next/handlebars/helpers/sort/">sort</a></li>
+  <li><a href="/next/handlebars/helpers/slice/">slice</a></li>
+  <li><a href="/next/handlebars/helpers/length/">length</a></li>
+  <li><a href="/next/handlebars/helpers/filter/">filter</a></li>
   <li><a href="/next/ampscript/functions/retrievesalesforceobjects/">RetrieveSalesforceObjects</a></li>
   <li><a href="/next/ampscript/functions/lookup/">Lookup</a></li>
   <li><a href="/next/ampscript/functions/lookuprows/">LookupRows</a></li>

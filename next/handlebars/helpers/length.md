@@ -8,7 +8,7 @@ permalink: /next/handlebars/helpers/length/
 platforms:
   - next
 mcn: matches-docs
-mcn_tested: 2026-11-22
+mcn_tested: 2026-11-26
 mcn_note: "Every tested call rendered the documented result."
 test_scripts: complete
 verification: verified
@@ -39,6 +39,7 @@ Tested in a Marketing Cloud Next email on 2026-11-22:
 
 - `{{length "hello"}}` renders `5`, as documented.
 - `{{length "a b"}}` renders `3`, as documented.
+- On 2026-11-26, `{{length (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}` counted the rows of a related DMO list of the data graph bound to the email (`2` for a recipient with two linked source records, Email Builder preview).
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--length" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

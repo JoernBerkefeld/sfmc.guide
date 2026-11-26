@@ -40,10 +40,12 @@ marketing-objects: |
   <p>c14 expect=[8.0;] got=[{{#each (query type="MO" object="zzprobenumkey__mo" Label__c="group")}}{{CouponNo__c}};{{/each}}]</p>
   <p>c15 expect=[1] got=[%%[ SET @grp = LookupRows("zzprobenumkey__mo","Label__c","group") ]%%%%=RowCount(@grp)=%%]</p>
 data-graphs: |
-  <!-- Run each call below in its own Next email. In the test run (2026-11-26) every one of them
+  <!-- Run each call below in its own Next email. In the test runs (2026-11-26) every one of them
        saved and published, but the preview failed with HTTP 500; a control email with
        {{add 2 3}} rendered 5 before and after. "Marketing" is a data graph rooted on the
        unified individual (key ssot__Id__c); "CMSM_Graph" one rooted on the individual.
+       Emails 6 to 11 were bound to the graph they query, in the same data space (default);
+       where the Email Builder preview was tried, it showed a generic error.
        Replace graph names, fields and the key value with your own. -->
 
   <!-- email 1: expect that the email saves, but the preview fails (HTTP 500) -->
@@ -60,6 +62,50 @@ data-graphs: |
 
   <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
   {{get (queryFirst type="DG" object="Marketing" where="ssot__FirstName__c = :f" params=(hash f="Janice")) "ssot__LastName__c"}}
+
+  <!-- email 6: bound to Marketing; expect that the email saves, but the preview fails (HTTP 500): a source Individual id -->
+  {{get (queryFirst type="DG" object="Marketing" ssot__Id__c="<source Individual id>") "ssot__FirstName__c"}}
+
+  <!-- email 7: bound to Marketing; expect that the email saves, but the preview fails (HTTP 500): the documented contact-point email filter -->
+  {{get (queryFirst type="DG" object="Marketing" contactPointEmail="<email address>") "ssot__FirstName__c"}}
+
+  <!-- email 8: bound to CMSM_Graph; expect that the email saves, but the preview fails (HTTP 500): the documented contact-point email filter -->
+  {{get (queryFirst type="DG" object="CMSM_Graph" contactPointEmail="<email address>") "ssot__FirstName__c"}}
+
+  <!-- email 9: bound to CMSM_Graph; expect that the email saves, but the preview fails (HTTP 500): query on the graph -->
+  {{#each (query type="DG" object="CMSM_Graph" ssot__Id__c="<source Individual id>")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 10: bound to CMSM_Graph; expect that the email saves, but the preview fails (HTTP 500): query on a related DMO -->
+  {{#each (query type="DG" object="ssot__ContactPointEmail__dlm" ssot__PartyId__c="<source Individual id>")}}{{ssot__EmailAddress__c}};{{/each}}
+
+  <!-- email 11: bound to Marketing; expect that the email saves, but the preview fails (HTTP 500): query without a filter -->
+  {{#each (query type="DG" object="Marketing")}}{{ssot__FirstName__c}};{{/each}}
+data-graph-merge-fields: |
+  <!-- Marketing Cloud Next test script: fields of the data graph bound to the email. Bind the
+       email to a data graph (Marketing in the test org), paste this into an HTML component and
+       open the Email Builder preview with a profile (a unified individual of that graph).
+       Each line printed the recipient's value in the test run (2026-11-26); compare against a
+       Data 360 SQL read of the same individual. The email preview API (previewEmail) renders
+       both lines empty: it does not load the data graph. -->
+  <p>g1 first name=[{{get (get @root "$dataGraph") "ssot__FirstName__c"}}]</p>
+  <p>g2 last name=[{{@root.$dataGraph.ssot__LastName__c}}]</p>
+data-graph-related: |
+  <!-- Marketing Cloud Next test script: related DMO rows of the data graph bound to the email.
+       Bind the email to a data graph whose root object has a related DMO (Marketing in the
+       test org, related UnifiedLinkssotIndividualMkt__dlm), paste this into an HTML component
+       and open the Email Builder preview with a profile whose id is the key of the graph's
+       root object (here a unified individual). The expected values are those of a unified
+       individual merged from one Lead and one Contact (2026-11-26): replace the DMO, field
+       names and values with your own and compare against a Data 360 SQL read. Assembled from
+       the single-call tests of that day (which printed the source record ids); it has not
+       been run as one email. -->
+  <p>r1 all rows expect=[Lead;Contact;] got=[{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{ssot__DataSourceObjectId__c}};{{/each}}]</p>
+  <p>r2 compare == expect=[Contact;] got=[{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{#if (compare ssot__DataSourceObjectId__c "==" "Contact")}}{{ssot__DataSourceObjectId__c}};{{/if}}{{/each}}]</p>
+  <p>r3 compare is case-sensitive expect=[] got=[{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{#if (compare ssot__DataSourceObjectId__c "==" "contact")}}{{ssot__DataSourceObjectId__c}};{{/if}}{{/each}}]</p>
+  <p>r4 or + equals expect=[Lead;Contact;] got=[{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{#if (or (compare ssot__DataSourceObjectId__c "==" "Contact") (equals ssot__DataSourceObjectId__c "Lead"))}}{{ssot__DataSourceObjectId__c}};{{/if}}{{/each}}]</p>
+  <p>r5 sort asc expect=[Contact;Lead;] got=[{{#each (sort (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm") "ssot__DataSourceObjectId__c" "asc" "string")}}{{ssot__DataSourceObjectId__c}};{{/each}}]</p>
+  <p>r6 slice expect=[Lead;] got=[{{#each (slice (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm") 0 1)}}{{ssot__DataSourceObjectId__c}};{{/each}}]</p>
+  <p>r7 length expect=[2] got=[{{length (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}]</p>
 failing: |
   <!-- Run each call below in its own Next email: one of them in a combined email
        would stop the whole preview. Each saved and published, and the preview failed with

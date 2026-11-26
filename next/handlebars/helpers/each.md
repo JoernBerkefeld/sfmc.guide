@@ -8,7 +8,7 @@ permalink: /next/handlebars/helpers/each/
 platforms:
   - next
 mcn: matches-docs
-mcn_tested: 2026-11-25
+mcn_tested: 2026-11-26
 mcn_note: "Looping over an object or a list rendered as documented. Rows built in AMPscript and arrays from `jsonpath` both work as lists."
 test_scripts: complete
 verification: verified
@@ -42,6 +42,7 @@ Tested in Marketing Cloud Next emails on 2026-11-22 and 2026-11-25:
 - `{{#each (hash a="1" b="2")}}{{@key}}={{this}};{{/each}}` renders `a=1;b=2;`, as documented.
 - With a list of two rows built in AMPscript (`%%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21}]', '$[*]', 1) ]%%`), `{{#each rows}}{{@index}}={{name}};{{/each}}` renders `0=Bob;1=Ann;`.
 - `{{#each (jsonpath '[1,2,3]' "$")}}[{{this}}]{{/each}}` renders `[1][2][3]`.
+- On 2026-11-26, `{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}{{SourceRecordId__c}};{{/each}}` looped over a related DMO list of the data graph bound to the email (Email Builder preview with a profile), printing each row's field. See [Querying Data in Next](/next/querying-data/#related-dmo-rows-of-the-graph).
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--each" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

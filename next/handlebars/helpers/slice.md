@@ -8,7 +8,7 @@ permalink: /next/handlebars/helpers/slice/
 platforms:
   - next
 mcn: matches-docs
-mcn_tested: 2026-11-25
+mcn_tested: 2026-11-26
 mcn_note: "Every tested call rendered the documented result."
 verification: verified
 test_scripts: complete
@@ -41,6 +41,7 @@ Tested in a Marketing Cloud Next email on 2026-11-25, alone in the email:
 
 - `{{#each (slice (buildRowSetFromString "a|b|c|d|e" "|") 1 3)}}[{{this}}]{{/each}}` renders `[b][c]`, as documented: the start index is included, the end index is not.
 - The items of a `buildRowSetFromString` list are plain strings: `{{this}}` renders the value, `{{Value}}` renders nothing.
+- On a related DMO list of the data graph bound to the email (2026-11-26, Email Builder preview), `{{#each (slice (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm") 0 1)}}{{SourceRecordId__c}};{{/each}}` prints only the first stored row, like SQL `TOP 1`. See [Querying Data in Next](/next/querying-data/#related-dmo-rows-of-the-graph).
 {% endraw %}
 
 {% include test-script.html bundle="next-handlebars-helpers--slice" chapter="behaviour" lang="handlebars" label="Show Next test script" %}

@@ -1651,6 +1651,8 @@
     In a Marketing Cloud Next email tested on 2026-11-25: on a list of objects built with AMPscript `BuildRowsetFromJSON` (read in Handlebars as `rows`), `{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}` let the email save, but the preview failed with HTTP 500 instead of rendering `[Bob][Cid]`. The same list renders with `each` and sorts correctly with `sort`.
 
     A list built with `jsonpath` from a JSON string fails the same way: `{{#each (filter (jsonpath '[{"name":"Bob","age":27},{"name":"Ann","age":21}]' "$") "age" ">" 22 "number")}}[{{name}}]{{/each}}` gives HTTP 500, and so do a string comparison and the documented chain inside `map`. No list source we tried made `filter` render.
+
+    On 2026-11-26 the related DMO list of a data graph bound to the email failed too: `{{#each (filter (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm") "ssot__DataSourceObjectId__c" "==" "Contact" "string")}}{{SourceRecordId__c}};{{/each}}` saved, but the Email Builder preview showed an error for the whole email, while `each`, `sort` and `slice` read the same list. Without `filterAs` (which the reference marks as required) the save itself was rejected with HTTP 400. A row test inside the loop works instead: `{{#if (compare ssot__DataSourceObjectId__c "==" "Contact")}}`. See [Related DMO rows](/next/querying-data/#related-dmo-rows-of-the-graph).
   testScript: |
     %%[ SET @rows = BuildRowsetFromJSON('[{"name":"Bob","age":27},{"name":"Ann","age":21},{"name":"Cid","age":24}]', '$[*]', 1) ]%%{{#each (filter rows "age" ">" 22 "number")}}[{{name}}]{{/each}}
 
@@ -1867,3 +1869,21 @@
     `{{get (queryFirst type="MO" object="zzprobecoupons__mo" CouponCode__c="PROBE0001") "IsClaimed__c"}}` rendered `false`.
   testScript: |
     {{get (queryFirst object="zzprobecoupons__mo" type="MO") "CouponCode__c"}}
+
+- name: "{{queryFirst}}"
+  url: "/next/handlebars/helpers/queryfirst/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/handlebars-for-marketing-cloud-next/references/mcn-handlebars-data-references/mcn-handlebars-reference-data-queryfirst.html"
+  tagline: "With type DG it fails with HTTP 500 in every form tested"
+  category: "Handlebars Data"
+  object: "Handlebars Data"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "hb-queryfirst-dg-fails"
+  body: |
+    The reference lists `DG` as a valid `type` for `queryFirst`: `object` names a data graph, and its example picks a unified profile through a contact-point email filter.
+
+    In Marketing Cloud Next emails tested on 2026-11-26, one call per email, no `type="DG"` call rendered. Every form saved and published, but the preview failed with HTTP 500 (the Email Builder preview showed a generic error instead): an inline filter on the key of the graph's root object with a unified individual id or with a source Individual id, the documented `contactPointEmail="<email>"` filter, no filter, and `where` with `params`. The email was bound to the same data graph in the same data space (`default`), and the ids were checked against the graph's data beforehand.
+
+    The data graph bound to the email can be read instead: in the Email Builder preview with a profile, `{{get (get @root "$dataGraph") "ssot__FirstName__c"}}` rendered the recipient's first name. Its related DMO lists can be looped with `#each`, filtered with `#if` and `compare`, sorted with `sort` and cut with `slice`. See [Data graphs](/next/querying-data/#data-graphs).
+  testScript: |
+    {{get (queryFirst type="DG" object="Marketing" contactPointEmail="<email address>") "ssot__FirstName__c"}}

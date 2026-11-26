@@ -24,3 +24,27 @@ failing: |
 
   <!-- email 2: expect that the email saves, but the preview fails (HTTP 500) -->
   {{get (queryFirst type="MO" object="zzprobenumkey__mo" Label__c="group" sortBy="Points__c DESC") "CouponNo__c"}}
+
+  <!-- email 3: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing" ssot__Id__c="<unified individual id>") "ssot__FirstName__c"}}
+
+  <!-- email 4: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing" ssot__Id__c="<Individual id>") "ssot__FirstName__c"}}
+
+  <!-- email 5: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="CMSM_Graph" contactPointEmail="jbergman@example.com") "ssot__FirstName__c"}}
+
+  <!-- email 6: expect that the email saves, but the preview fails (HTTP 500) -->
+  {{get (queryFirst type="DG" object="Marketing" contactPointEmail="jbergman@example.com") "ssot__FirstName__c"}}
+
+  <!-- email 7: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph queryFirst, docs form contactPointEmail=, email bound to the named graph CMSM_Graph (which has a contact-point email DMO): {{get (queryFirst type="DG" object="CMSM_Graph" contactPointEmail="jbergman@example.com") "ssot__FirstName__c"}}
+
+  <!-- email 8: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph queryFirst filtered on the root key field, email bound to CMSM_Graph: {{get (queryFirst type="DG" object="CMSM_Graph" ssot__Id__c="<Individual id>") "ssot__FirstName__c"}}
+
+  <!-- email 9: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph queryFirst without a filter, email bound to CMSM_Graph: {{get (queryFirst type="DG" object="CMSM_Graph") "ssot__FirstName__c"}}
+
+  <!-- email 10: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph queryFirst without a filter, email bound to Marketing: {{get (queryFirst type="DG" object="Marketing") "ssot__FirstName__c"}}

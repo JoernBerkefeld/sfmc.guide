@@ -8,8 +8,8 @@ permalink: /next/handlebars/helpers/query/
 platforms:
   - next
 mcn: differs-from-docs
-mcn_tested: 2026-11-25
-mcn_note: "On Sales Cloud objects, `where` with `params` filters, sorts and limits as documented, but a value written straight into `where` fails the preview with HTTP 500, `LIKE` matches anywhere in the field without treating `%` as a wildcard, and a call without `fields` returns empty fields. On a marketing object only inline filters work (on any field, several joined with AND, `limit` allowed, `sortBy` fails); without one, or with `where`, the preview fails with HTTP 500."
+mcn_tested: 2026-11-26
+mcn_note: "On Sales Cloud objects, `where` with `params` filters, sorts and limits as documented, but a value written straight into `where` fails the preview with HTTP 500, `LIKE` matches anywhere in the field without treating `%` as a wildcard, and a call without `fields` returns empty fields. On a marketing object only inline filters work (on any field, several joined with AND, `limit` allowed, `sortBy` fails); without one, or with `where`, the preview fails with HTTP 500. `DG` as `type` is not documented and failed with HTTP 500 in every form tried."
 verification: in-progress
 test_scripts: complete
 ---
@@ -54,6 +54,8 @@ On the `Contact` object (`type="CRM"`), with the expected rows taken from a SOQL
 - Only the fields listed in `fields` are filled: with `fields="LastName"`, `{{FirstName}}` and the filter field render empty. Without `fields`, the matching record comes back but every field renders empty.
 - A value written straight into `where`, without a `:placeholder`, fails the preview with HTTP 500: `where="LastName = 'Blau'"`, `where="pi__score__c = 82"`, and a mix of a literal with a placeholder.
 - `{{#if false}}{{query object="Contact" type="CRM" fields="Id" limit=1}}{{/if}}` is accepted when the email is saved.
+
+Data graphs (`type="DG"`) are not among the documented types. Tested anyway on 2026-11-26, one call per email, each email bound to the graph it queried: `{{#each (query type="DG" object="Marketing")}}{{ssot__FirstName__c}};{{/each}}`, the same with the graph's key field as a filter, and a related DMO of the graph as `object` all saved, but the preview failed with HTTP 500. To loop over rows of a data graph, read the related DMO list of the graph bound to the email: `{{#each (get (get @root "$dataGraph") "UnifiedLinkssotIndividualMkt__dlm")}}…{{/each}}`; see [Querying Data in Next](/next/querying-data/#related-dmo-rows-of-the-graph).
 
 Use named parameters only; the helper is an inline helper, so loop over its result with `each`.
 {% endraw %}

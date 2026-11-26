@@ -87,3 +87,24 @@ failing: |
 
   <!-- email 12: expect that the email saves, but the preview fails (HTTP 500) -->
   {{#each (query type="CRM" object="Contact" fields="LastName" where="pi__score__c > :s AND NOT (LastName = :n)" params=(hash s=300 n="Chopra"))}}{{LastName}};{{/each}}
+
+  <!-- email 13: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query (type DG, not listed in the docs) with contactPointEmail=, email bound to CMSM_Graph: {{#each (query type="DG" object="CMSM_Graph" contactPointEmail="jbergman@example.com")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 14: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query filtered on the root key field, email bound to CMSM_Graph: {{#each (query type="DG" object="CMSM_Graph" ssot__Id__c="<Individual id>")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 15: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query without a filter, email bound to CMSM_Graph: {{#each (query type="DG" object="CMSM_Graph")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 16: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query on a related DMO of the bound graph (ssot__ContactPointEmail__dlm in CMSM_Graph): {{#each (query type="DG" object="ssot__ContactPointEmail__dlm" ssot__PartyId__c="<Individual id>")}}{{ssot__EmailAddress__c}};{{/each}}
+
+  <!-- email 17: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query filtered on the root key field, email bound to Marketing: {{#each (query type="DG" object="Marketing" ssot__Id__c="<unified individual id>")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 18: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query without a filter, email bound to Marketing: {{#each (query type="DG" object="Marketing")}}{{ssot__FirstName__c}};{{/each}}
+
+  <!-- email 19: expect that the email saves, but the preview fails (HTTP 500) -->
+  data graph query on a related DMO of the bound graph (UnifiedLinkssotIndividualMkt__dlm in Marketing): {{#each (query type="DG" object="UnifiedLinkssotIndividualMkt__dlm" UnifiedRecordId__c="<unified individual id>")}}{{SourceRecordId__c}};{{/each}}

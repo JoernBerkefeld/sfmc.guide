@@ -12,6 +12,8 @@ test_scripts: complete
 
 AMPscript has five functions that read rows from a Data Extension. All of them filter the same way: a list of column/value pairs that must all match exactly. This page shows which one to pick, how a SQL query from Automation Studio maps to them, and what the rows look like once you have them.
 
+> **Skip the manual mapping:** paste a `SELECT` into the [SQL Converter](/tools/sql-converter/) and get the matching AMPscript and SSJS lookup code, or paste lookup code to get the SQL back.
+
 Looking for the SSJS side? The same task in Server-Side JavaScript, including filters that AMPscript cannot express, is covered in [Querying Data Extensions on ssjs.guide](https://ssjs.guide/recipes/querying-data/).
 
 Every example below reads the same `Customers` Data Extension (Name and external key are both `Customers`). It is the table from the ssjs.guide recipe plus one row, C008, whose tier is written in lower case:
