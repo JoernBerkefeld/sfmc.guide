@@ -328,3 +328,39 @@ test('every example has a label and SQL, four per platform', async () => {
     }
   }
 });
+
+test('withAllNextTargets lists every Next target, the other data source unavailable', async () => {
+  const { withAllNextTargets, buildOptions } = await load();
+  const { convert, MCN_TARGETS } = await import(VENDOR_URL);
+  const sql = "SELECT Label__c FROM Coupon__mo WHERE Code__c = 'A'";
+  for (const dataSource of ['CRM', 'MO']) {
+    const options = buildOptions({
+      platform: 'mcn',
+      direction: 'toCode',
+      settings: { deName: '', deKey: '', columns: '', dataSource },
+    });
+    const { outputs } = convert(sql, options);
+    const all = withAllNextTargets(outputs);
+    assert.deepEqual(
+      all.map((output) => output.id),
+      MCN_TARGETS.map((target) => target.id),
+      `${dataSource}: every Next target, in a fixed order`,
+    );
+    for (const target of MCN_TARGETS) {
+      const output = all.find((item) => item.id === target.id);
+      assert.equal(output.label, `${target.label} (${target.dataSource})`, target.id);
+      if (target.dataSource === dataSource) {
+        const original = outputs.find((item) => item.id === target.id);
+        assert.equal(output.code, original.code, `${target.id}: output kept`);
+        assert.equal(output.unavailable, original.unavailable, `${target.id}: reason kept`);
+      } else {
+        assert.equal(typeof output.code, 'undefined', `${target.id}: no code`);
+        assert.match(
+          output.unavailable,
+          new RegExp(`choose ${target.dataSource} as data source`, 'u'),
+        );
+      }
+    }
+  }
+  assert.deepEqual(withAllNextTargets().length, MCN_TARGETS.length);
+});

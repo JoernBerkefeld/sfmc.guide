@@ -23,34 +23,31 @@ platforms:
   </span>
   <span class="sqlc-spacer"></span>
   <select class="sqlc-select" id="sqlc-example" aria-label="Load an example"></select>
-  <span class="sqlc-pop-wrap">
-    <button class="sqlc-btn" type="button" id="sqlc-settings-button" aria-expanded="false" aria-controls="sqlc-settings">Settings</button>
-    <div class="sqlc-popover" id="sqlc-settings" role="group" aria-label="Conversion settings" hidden>
-      <div class="sqlc-field" data-only="mce">
-        <label for="sqlc-de-name">Data Extension name</label>
-        <input type="text" id="sqlc-de-name" spellcheck="false" autocomplete="off" placeholder="From the FROM clause">
-        <span class="sqlc-hint">Leave empty to use the name in FROM.</span>
-      </div>
-      <div class="sqlc-field" data-only="mce">
-        <label for="sqlc-de-key">Data Extension external key</label>
-        <input type="text" id="sqlc-de-key" spellcheck="false" autocomplete="off" placeholder="Same as the name">
-        <span class="sqlc-hint">WSProxy and Rows.Retrieve need the external key; SQL only names the Data Extension.</span>
-      </div>
-      <div class="sqlc-field" data-only="mce">
-        <label for="sqlc-columns">Columns for SELECT *</label>
-        <input type="text" id="sqlc-columns" spellcheck="false" autocomplete="off" placeholder="SubscriberKey, Email, …">
-        <span class="sqlc-hint">Only needed for SELECT *; this panel opens by itself then.</span>
-      </div>
-      <div class="sqlc-field" data-only="mcn" hidden>
-        <label for="sqlc-data-source">Data source</label>
-        <select class="sqlc-select" id="sqlc-data-source">
-          <option value="CRM">CRM (Sales Cloud object)</option>
-          <option value="MO">MO (marketing object)</option>
-        </select>
-        <span class="sqlc-hint">Marketing objects: exact-value filters joined with AND, no sorting. A filter that matches several records may return only one.</span>
-      </div>
-    </div>
-  </span>
+</div>
+<div class="sqlc-settings" id="sqlc-settings" role="group" aria-label="Conversion settings">
+  <div class="sqlc-field" data-only="mce">
+    <label for="sqlc-de-name">Data Extension name</label>
+    <input type="text" id="sqlc-de-name" spellcheck="false" autocomplete="off" placeholder="From the FROM clause">
+    <span class="sqlc-hint">Leave empty to use the name in FROM.</span>
+  </div>
+  <div class="sqlc-field" data-only="mce">
+    <label for="sqlc-de-key">Data Extension external key</label>
+    <input type="text" id="sqlc-de-key" spellcheck="false" autocomplete="off" placeholder="Same as the name">
+    <span class="sqlc-hint">WSProxy and Rows.Retrieve need the external key; SQL only names the Data Extension.</span>
+  </div>
+  <div class="sqlc-field" data-only="mce">
+    <label for="sqlc-columns">Columns for SELECT *</label>
+    <input type="text" id="sqlc-columns" spellcheck="false" autocomplete="off" placeholder="SubscriberKey, Email, …">
+    <span class="sqlc-hint">Only needed for SELECT *.</span>
+  </div>
+  <fieldset class="sqlc-field sqlc-radios" id="sqlc-data-source" data-only="mcn" hidden>
+    <legend>Data source</legend>
+    <span class="sqlc-radio-row">
+      <label><input type="radio" name="sqlc-data-source" value="CRM" checked> CRM (Sales Cloud object)</label>
+      <label><input type="radio" name="sqlc-data-source" value="MO"> MO (marketing object)</label>
+    </span>
+    <span class="sqlc-hint">Marketing objects: exact-value filters joined with AND, no sorting. A filter that matches several records may return only one.</span>
+  </fieldset>
 </div>
 <div class="sqlc-body">
   <ul class="sqlc-msgs" id="sqlc-messages" aria-live="polite" aria-label="Messages" hidden></ul>
@@ -80,7 +77,7 @@ platforms:
       <pre class="sqlc-code sqlc-output" id="sqlc-output" role="tabpanel" tabindex="0"></pre>
     </section>
   </div>
-  <div class="sqlc-map" id="sqlc-map" hidden>
+  <div class="sqlc-map" id="sqlc-map">
     <span class="sqlc-map-label" id="sqlc-map-label">Clause map</span>
     <ul class="sqlc-map-list" id="sqlc-map-list" aria-labelledby="sqlc-map-label"></ul>
   </div>
@@ -88,12 +85,13 @@ platforms:
     <span class="sqlc-chip" id="sqlc-roundtrip" hidden></span>
     <span class="sqlc-chip sqlc-chip--muted" id="sqlc-counts"></span>
     <span class="sqlc-toggle-wrap">
-      <button class="sqlc-toggle" id="sqlc-map-toggle" type="button" aria-pressed="false" aria-controls="sqlc-map" aria-labelledby="sqlc-map-toggle-label"></button>
+      <button class="sqlc-toggle" id="sqlc-map-toggle" type="button" aria-pressed="true" aria-controls="sqlc-map" aria-labelledby="sqlc-map-toggle-label"></button>
       <span id="sqlc-map-toggle-label">Show mapping</span>
     </span>
     <span>Converts as you type. Nothing leaves your browser.</span>
   </div>
 </div>
+<div class="sqlc-tip" id="sqlc-tip" role="tooltip" hidden></div>
 <noscript><p class="sqlc-noscript">This converter runs in your browser and needs JavaScript. Turn on JavaScript to use it.</p></noscript>
 </div>
 <script type="module" src="{{ '/assets/js/sql-converter-ui.js' | relative_url | cache_bust }}"></script>

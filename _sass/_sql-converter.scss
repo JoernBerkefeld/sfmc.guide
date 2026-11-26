@@ -205,25 +205,79 @@ html.sqlc-page {
   }
 }
 
-// ── Settings popover ──────────────────────────────────────────────────────────
-.sqlc-pop-wrap { position: relative; }
-
-.sqlc-popover {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.375rem);
-  z-index: $z-builder-header + 1;
-  width: 18rem;
-  display: grid;
-  gap: $space-3;
-  padding: $space-3;
-  border: 1px solid var(--sqlc-border);
-  border-radius: $radius-md;
+// ── Settings row (always open, below the sticky tool bar, not sticky itself) ──
+.sqlc-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $space-3 $space-4;
+  margin: 0 (-$space-4);
+  padding: $space-3 $space-4;
   background: var(--sqlc-bg-surface);
-  box-shadow: var(--sqlc-shadow);
+  border-bottom: 1px solid var(--sqlc-border);
 
-  &[hidden],
+  @media (min-width: 1024px) {
+    margin: 0 (-$space-6);
+    padding: $space-3 $space-6;
+  }
+
+  .sqlc-field { flex: 1 1 14rem; max-width: 24rem; }
   [hidden] { display: none; }
+}
+
+.sqlc-radios {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+
+  legend {
+    padding: 0;
+    margin-bottom: 0.3rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sqlc-text-2);
+    font-weight: 600;
+  }
+}
+
+.sqlc-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem $space-4;
+
+  .sqlc-field & label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--sqlc-text);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  input { accent-color: var(--sqlc-accent); margin: 0; }
+}
+
+// ── Reason overlay for unavailable output tabs ────────────────────────────────
+.sqlc-tip {
+  position: fixed;
+  z-index: $z-builder-header + 2;
+  max-width: min(22rem, calc(100vw - 1rem));
+  padding: 0.45rem 0.6rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--sqlc-text);
+  background: var(--sqlc-bg-elevated);
+  border: 1px solid var(--sqlc-border);
+  border-radius: $radius-sm + 0.125rem;
+  box-shadow: var(--sqlc-shadow);
+  pointer-events: none;
+
+  &[hidden] { display: none; }
 }
 
 .sqlc-field {
@@ -370,7 +424,7 @@ html.sqlc-page {
 .sqlc-editor {
   position: relative;
   display: grid;
-  min-height: max(14rem, calc(100vh - 22rem));
+  min-height: max(7rem, calc((100vh - 22rem) / 2));
 }
 
 .sqlc .sqlc-backdrop {
@@ -417,8 +471,9 @@ html.sqlc-page {
 }
 
 .sqlc .sqlc-output {
-  min-height: max(14rem, calc(100vh - 22rem));
+  min-height: max(7rem, calc((100vh - 22rem) / 2));
   overflow: auto;
+  resize: vertical;
 
   &:focus-visible { outline-offset: -2px; }
 
@@ -651,9 +706,8 @@ html.sqlc-page {
   .sqlc-swap-col { justify-content: center; }
   .sqlc-swap { transform: rotate(90deg); }
   .sqlc-swap.is-flipped { transform: rotate(270deg); }
-  .sqlc-popover { width: min(18rem, calc(100vw - #{$space-8})); }
   .sqlc-editor,
-  .sqlc .sqlc-output { min-height: 12rem; }
+  .sqlc .sqlc-output { min-height: 6rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

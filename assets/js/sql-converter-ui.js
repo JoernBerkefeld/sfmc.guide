@@ -2,7 +2,12 @@
 // The converter core is the sfmc-sql-converter package, vendored into ./vendor/ by its sync script.
 // Pure helpers are exported for tests/sql-converter-ui.test.cjs; the DOM part only runs in a browser.
 // Always import from the versioned folder: the service worker serves cached files first.
-import { convert, parseAmpscript, parseSsjs } from './vendor/sfmc-sql-converter/0.2.0/index.js';
+import {
+  MCN_TARGETS,
+  convert,
+  parseAmpscript,
+  parseSsjs,
+} from './vendor/sfmc-sql-converter/0.2.0/index.js';
 
 export const CONVERT_DELAY_MS = 300;
 export const MESSAGE_DELAY_MS = 1000;
@@ -105,6 +110,37 @@ export function groupOutputsByLanguage(outputs) {
     group.outputs.push(output);
   }
   return groups;
+}
+
+const DATA_SOURCE_REASONS = {
+  CRM: 'Only for Sales Cloud objects: choose CRM as data source.',
+  MO: 'Only for marketing objects: choose MO as data source.',
+};
+
+/**
+ * Lists every Next target in a fixed order, so switching the data source never makes a tab
+ * vanish: targets of the other data source come back unavailable with the reason. Each label
+ * names its data source, because CRM and MO both have a Handlebars `query`.
+ *
+ * @param {object[]} outputs outputs of a Next conversion (toCode)
+ * @returns {object[]} one output per Next target
+ */
+export function withAllNextTargets(outputs) {
+  const list = outputs ?? [];
+  const known = new Set(MCN_TARGETS.map((target) => target.id));
+  const all = MCN_TARGETS.map((target) => {
+    const found = list.find((output) => output.id === target.id);
+    const label = `${target.label} (${target.dataSource})`;
+    return found
+      ? { ...found, label }
+      : {
+          id: target.id,
+          language: target.language,
+          label,
+          unavailable: DATA_SOURCE_REASONS[target.dataSource],
+        };
+  });
+  return [...all, ...list.filter((output) => !known.has(output.id))];
 }
 
 /**
@@ -455,13 +491,23 @@ function plural(count, word) {
   return `${count} ${word}${count === 1 ? '' : 's'}`;
 }
 
+/**
+ * The unavailable output tab an event happened on, if any.
+ *
+ * @param {Event} event DOM event
+ * @returns {Element|null} the tab, or null
+ */
+function disabledTab(event) {
+  return event.target.closest?.('[role="tab"][aria-disabled="true"]') ?? null;
+}
+
 function init(root) {
   const $ = (selector) => root.querySelector(selector);
   const elements = {
     platform: $('#sqlc-platform'),
     example: $('#sqlc-example'),
-    settingsButton: $('#sqlc-settings-button'),
     settings: $('#sqlc-settings'),
+    tip: $('#sqlc-tip'),
     deName: $('#sqlc-de-name'),
     deKey: $('#sqlc-de-key'),
     columns: $('#sqlc-columns'),
@@ -490,7 +536,6 @@ function init(root) {
     result: emptyResult(),
     messagesVisible: true,
     activeClause: null,
-    starPromptShown: false,
     settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
   };
 
@@ -545,6 +590,10 @@ function init(root) {
     for (const field of elements.settings.querySelectorAll('[data-only]')) {
       field.hidden = field.dataset.only !== state.platform;
     }
+    // The state decides, not what the browser restored into the radios after a reload.
+    for (const radio of elements.dataSource.querySelectorAll('input[type="radio"]')) {
+      radio.checked = radio.value === state.settings.dataSource;
+    }
   }
 
   function renderInputTitle() {
@@ -555,6 +604,7 @@ function init(root) {
   }
 
   function renderTabs() {
+    hideTip();
     const shown = currentOutput();
     const groups = groupOutputsByLanguage(state.result.outputs);
     const html = groups
@@ -565,7 +615,7 @@ function init(root) {
             const reason = output.unavailable ?? '';
             const isDisabled = typeof output.code !== 'string';
             const name = `${group.label} ${output.label}${isDisabled ? `, not available: ${reason}` : ''}`;
-            return `<button type="button" role="tab" class="sqlc-tab" id="sqlc-tab-${escapeHtml(output.id)}" data-output="${escapeHtml(output.id)}" aria-selected="${isSelected}" aria-controls="sqlc-output" tabindex="${isSelected ? 0 : -1}" aria-label="${escapeHtml(name)}"${isDisabled ? ` aria-disabled="true" title="${escapeHtml(reason)}"` : ''}>${output.label === group.label ? '' : `<span class="sqlc-tab-lang">${escapeHtml(group.label)} ·</span> `}${escapeHtml(output.label)}</button>`;
+            return `<button type="button" role="tab" class="sqlc-tab" id="sqlc-tab-${escapeHtml(output.id)}" data-output="${escapeHtml(output.id)}" aria-selected="${isSelected}" aria-controls="sqlc-output" tabindex="${isSelected ? 0 : -1}" aria-label="${escapeHtml(name)}"${isDisabled ? ` aria-disabled="true" data-reason="${escapeHtml(reason)}"` : ''}>${output.label === group.label ? '' : `<span class="sqlc-tab-lang">${escapeHtml(group.label)} ·</span> `}${escapeHtml(output.label)}</button>`;
           })
           .join('');
         return `<span class="sqlc-tab-group" role="presentation">${buttons}</span>`;
@@ -594,7 +644,7 @@ function init(root) {
       elements.output.innerHTML = `<span class="sqlc-placeholder">${
         isEmpty
           ? 'The result appears here as you type.'
-          : 'No output fits this query yet. The messages above and the tab tooltips say why.'
+          : 'No output fits this query yet. The messages above say why; point at a greyed-out tab to see its reason.'
       }</span>`;
       return;
     }
@@ -645,15 +695,6 @@ function init(root) {
         return `<li class="sqlc-msg sqlc-msg--${severity}"><span class="sqlc-msg-sev">${SEVERITY_LABELS[severity]}</span><div class="sqlc-msg-text">${escapeHtml(message.message ?? '')} ${where}</div></li>`;
       })
       .join('');
-    const needsColumns =
-      state.platform === 'mce' &&
-      messages.some((message) => message.code === 'SELECT_STAR_NEEDS_COLUMNS');
-    if (needsColumns && !state.starPromptShown) {
-      state.starPromptShown = true;
-      togglePopover(true, false);
-    } else if (!needsColumns) {
-      state.starPromptShown = false;
-    }
   }
 
   function renderMap() {
@@ -711,6 +752,9 @@ function init(root) {
   function runConvert() {
     const text = elements.input.value;
     state.result = text.trim() === '' ? emptyResult() : safeConvert(text, buildOptions(state));
+    if (state.platform === 'mcn' && state.direction === 'toCode' && state.result.outputs.length > 0) {
+      state.result = { ...state.result, outputs: withAllNextTargets(state.result.outputs) };
+    }
     renderAll();
     save();
   }
@@ -764,16 +808,19 @@ function init(root) {
     setActiveClause(target ? target.dataset.clause : null);
   }
 
-  // ── Popover ──
-  function togglePopover(open, shouldFocusFirst = true) {
-    elements.settings.hidden = !open;
-    elements.settingsButton.setAttribute('aria-expanded', String(open));
-    if (open && shouldFocusFirst) {
-      const first = [...elements.settings.querySelectorAll('input, select')].find(
-        (field) => !field.closest('[hidden]'),
-      );
-      first?.focus();
-    }
+  // ── Reason overlay for unavailable tabs (shows at once, unlike a title) ──
+  function showTip(tab) {
+    elements.tip.textContent = tab.dataset.reason ?? '';
+    elements.tip.hidden = false;
+    const box = tab.getBoundingClientRect();
+    const width = elements.tip.offsetWidth;
+    const left = Math.max(8, Math.min(box.left, innerWidth - width - 8));
+    elements.tip.style.left = `${left}px`;
+    elements.tip.style.top = `${box.bottom + 6}px`;
+  }
+
+  function hideTip() {
+    elements.tip.hidden = true;
   }
 
   // ── Scroll sync between the textarea and its highlight backdrop ──
@@ -833,7 +880,6 @@ function init(root) {
     if (state.platform === 'mcn') {
       // Next examples bring their data source.
       state.settings.dataSource = example.dataSource ?? 'CRM';
-      elements.dataSource.value = state.settings.dataSource;
     }
     renderChrome();
     convertNow();
@@ -854,7 +900,11 @@ function init(root) {
 
   elements.tabs.addEventListener('click', (event) => {
     const tab = event.target.closest('[role="tab"]');
-    if (!tab || tab.getAttribute('aria-disabled') === 'true') {
+    if (!tab) {
+      return;
+    }
+    if (tab.getAttribute('aria-disabled') === 'true') {
+      showTip(tab);
       return;
     }
     state.selected[selectionKey()] = tab.dataset.output;
@@ -916,35 +966,53 @@ function init(root) {
     elements.input.setSelectionRange(start, Math.min(end, elements.input.value.length));
   });
 
-  elements.settingsButton.addEventListener('click', () => {
-    togglePopover(elements.settings.hidden);
-  });
-  elements.settings.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') {
-      return;
+  elements.tabs.addEventListener('pointerover', (event) => {
+    const tab = disabledTab(event);
+    if (tab) {
+      showTip(tab);
     }
-
-    togglePopover(false);
-    elements.settingsButton.focus();
+  });
+  elements.tabs.addEventListener('pointerout', (event) => {
+    if (event.pointerType === 'mouse' && disabledTab(event)) {
+      hideTip();
+    }
+  });
+  elements.tabs.addEventListener('focusin', (event) => {
+    const tab = disabledTab(event);
+    if (tab) {
+      showTip(tab);
+    } else {
+      hideTip();
+    }
+  });
+  elements.tabs.addEventListener('focusout', hideTip);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      hideTip();
+    }
   });
   document.addEventListener('pointerdown', (event) => {
-    if (!elements.settings.hidden && !event.target.closest('.sqlc-pop-wrap')) {
-      togglePopover(false);
+    if (!disabledTab(event)) {
+      hideTip();
     }
   });
+  addEventListener('scroll', hideTip, { passive: true });
 
   const settingFields = {
     deName: elements.deName,
     deKey: elements.deKey,
     columns: elements.columns,
-    dataSource: elements.dataSource,
   };
   for (const [name, field] of Object.entries(settingFields)) {
-    field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => {
+    field.addEventListener('input', () => {
       state.settings[name] = field.value;
       scheduleConvert();
     });
   }
+  elements.dataSource.addEventListener('change', (event) => {
+    state.settings.dataSource = event.target.value;
+    scheduleConvert();
+  });
 
   // ── Start ──
   loadPlatformInput();
