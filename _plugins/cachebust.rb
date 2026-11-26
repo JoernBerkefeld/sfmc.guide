@@ -66,12 +66,14 @@ module Jekyll
       return Digest::MD5.file(file).hexdigest[0, 10] if File.file?(file)
 
       # SCSS/Sass sources compile to `.css` — the request is `/assets/css/x.css`
-      # but the real source is `/assets/css/x.scss`. Hash the source so the token
-      # is available regardless of build/render ordering.
+      # but the real source is `/assets/css/x.scss`. Hash the source together with
+      # every partial in the Sass directory: the entry file only `@use`s them, so a
+      # change to a partial alone must still change the token (the service worker
+      # serves the cached copy of an unchanged URL first).
       if rel.end_with?('.css')
         %w[.scss .sass].each do |ext|
           src = File.join(site.source, rel.sub(/\.css\z/, ext))
-          return Digest::MD5.file(src).hexdigest[0, 10] if File.file?(src)
+          return sass_token(site, src) if File.file?(src)
         end
       end
 
@@ -80,6 +82,22 @@ module Jekyll
       return Digest::MD5.file(dest).hexdigest[0, 10] if File.file?(dest)
 
       nil
+    end
+
+    # Hash a Sass entry file plus all files of the configured Sass directory.
+    #
+    # @param site [Jekyll::Site] the current site
+    # @param src [String] absolute path of the entry file
+    # @return [String] a short hex token
+    def sass_token(site, src)
+      sass_dir = File.join(site.source, site.config.dig('sass', 'sass_dir') || '_sass')
+      files = [src] + Dir.glob(File.join(sass_dir, '**', '*')).select { |f| File.file?(f) }.sort
+      digest = Digest::MD5.new
+      files.each do |f|
+        digest << f.delete_prefix(site.source)
+        digest << File.binread(f)
+      end
+      digest.hexdigest[0, 10]
     end
   end
 end
