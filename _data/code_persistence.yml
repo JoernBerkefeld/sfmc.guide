@@ -128,3 +128,12 @@ groups:
         ui:
           - editor: Code resource editor
             results: [kept, kept, kept, kept, kept]
+  - name: Automation Studio
+    types:
+      - name: Script activity
+        asset_type: /automation/v1/scripts
+        api: [rejected, rejected, rejected, kept, kept]
+        note: Each snippet was the whole script; marker lines around it fail the SSJS check on their own.
+        ui:
+          - editor: Script activity editor
+            results: [rejected, rejected, rejected, kept, kept]
