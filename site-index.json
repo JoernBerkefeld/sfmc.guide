@@ -1407,13 +1407,6 @@
     "description": "Working with Einstein Recommendations in Marketing Cloud Engagement."
   },
   {
-    "name": "Data 360 DevTools for VS Code",
-    "url": "/tools/vscode-data360/",
-    "section": "Tools",
-    "type": "page",
-    "description": "Retrieve, deploy and delete Data 360 configuration from VS Code, with a data space view of your project."
-  },
-  {
     "name": "Data Cloud DevOps",
     "url": "/next/data-cloud-devops/",
     "section": "Next",

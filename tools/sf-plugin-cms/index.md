@@ -43,13 +43,13 @@ Salesforce CLI (`sf cms`) plugin that copies Marketing Cloud CMS content between
 | Form | `form` |
 | Landing page template | `landing-page-template` |
 | Landing page | `landing-page` |
-| Preference page | `preference-page` (create refused by Salesforce) |
+| Preference page | `preference-page` (create refused by Salesforce; pages made in the CMS editor are not found) |
 | Expression | `expression` |
 | Tracked link | `tracked-link` |
 
 ### Not handled
 
-- **Preference page:** Salesforce refuses to create one through the API (`CONTENT_TYPE_DISABLED_FOR_API`).
+- **Preference page:** Salesforce refuses to create or update one through the API (`CONTENT_TYPE_DISABLED_FOR_API`). Create it in the CMS editor. A page made there does not show up in the SOQL queries the plugin uses to find items, so `retrieve` lists none, `publish` and `unpublish` report `COMPONENT_NOT_FOUND` and `delete` reports it as unchanged.
 - **Universal fragment:** its CMS editor never finishes loading.
 - **Mobile inbox message** and **SMS DLT template:** not available in the org.
 - **WhatsApp template message:** needs a connected WhatsApp Business Account.
@@ -70,7 +70,7 @@ sf cms publish -o target --workspace Default_Content_Workspace -m email:Welcome_
 - **Preview first:** `--preview` on deploy, delete, publish and unpublish reports `create`, `update`, `unchanged`, `delete` or `blocked` per component and changes nothing.
 - **Deploy:** creates components the destination does not have and updates the default variant of the ones it has; unchanged components are not written. Referenced components are written first. If anything is blocked, nothing is written; the first failed write stops the deploy, and there is no rollback.
 - **Retrieve is lenient, deploy is strict:** retrieve keeps settings it does not recognise in the file; deploy refuses such a file and names the setting. Values are not checked by the plugin: Salesforce decides, and its answer is shown.
-- **Delete:** takes components by name only, confirms the delete by reading back, then removes the local files (`--keep-local-files` keeps them). It lists the components and asks before it deletes, as `sf project delete source` does; `--no-prompt` (`-r`) skips the question and is required in CI and with `--json`. A component with other variants is refused, because Salesforce would delete them too. Deleted components stay in Salesforce's recycle bin: until the bin is emptied, a component with the same API name cannot be created in that workspace again ("You can't create multiple files with the same file name").
+- **Delete:** takes components by name only, confirms the delete by reading back, then removes the local files (`--keep-local-files` keeps them). It lists the components and asks before it deletes, as `sf project delete source` does; `--no-prompt` (`-r`) skips the question and is required in CI and with `--json`. A component with other variants is refused, because Salesforce would delete them too. It deletes through a Metadata API destructive deploy, the same way as `sf project delete source`: Salesforce renames the deleted item to `<ApiName>-<ID>`, so the API name is free again at once, also for items in folders and published items. Preference pages are still deleted through the Connect REST API. A deploy still running when `--timeout` ends reports an unknown outcome with the deploy ID and exits 69.
 - **Folders:** the file names the folder path from the workspace root; missing folders are created on deploy. Existing components are never moved.
 - **References:** a component used by another one (an image, a brand, a content block embedded as `@cms/…`, a landing page's template) is stored by type and API name, so the same file works in every workspace and org. A reference the destination does not have blocks the deploy, unless the same deploy creates it.
 - **Salesforce records:** a tracked link's Campaign is stored by name, a form's record type by object and developer name. Deploy looks them up in the destination org and never creates them.
@@ -86,6 +86,7 @@ sf cms publish -o target --workspace Default_Content_Workspace -m email:Welcome_
 
 ## Links
 
+- [CMS DevOps](/next/cms-devops/): which type works with this plugin and with the standard CLI, verified behaviour and open gaps
 - [GitHub](https://github.com/JoernBerkefeld/sf-plugin-cms)
 - [npm](https://www.npmjs.com/package/sf-plugin-cms)
 
