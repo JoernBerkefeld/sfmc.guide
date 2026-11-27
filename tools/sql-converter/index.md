@@ -22,6 +22,8 @@ platforms:
     <button type="button" data-platform="mcn" aria-pressed="false">Next</button>
   </span>
   <span class="sqlc-spacer"></span>
+  <span class="sqlc-copy-status" id="sqlc-share-status" role="status"></span>
+  <button class="sqlc-btn" type="button" id="sqlc-share" title="Copies a link to exactly what you see right now, with every detail (SQL or code, platform, settings and the chosen tab), to share with a co-worker or keep as a bookmark."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>Share</button>
   <select class="sqlc-select" id="sqlc-example" aria-label="Load an example"></select>
 </div>
 <div class="sqlc-settings" id="sqlc-settings" role="group" aria-label="Conversion settings">
@@ -62,7 +64,7 @@ platforms:
       </div>
       <div class="sqlc-editor">
         <div class="sqlc-code sqlc-backdrop" id="sqlc-backdrop" aria-hidden="true"></div>
-        <textarea class="sqlc-code sqlc-input" id="sqlc-input" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-labelledby="sqlc-input-title" aria-describedby="sqlc-messages"></textarea>
+        <textarea class="sqlc-code sqlc-input" id="sqlc-input" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="soft" aria-labelledby="sqlc-input-title" aria-describedby="sqlc-messages"></textarea>
       </div>
     </section>
     <div class="sqlc-swap-col">
@@ -71,9 +73,6 @@ platforms:
     <section class="sqlc-pane" aria-label="Output">
       <div class="sqlc-pane-head">
         <div class="sqlc-tabs" id="sqlc-tabs" role="tablist" aria-label="Output method"></div>
-        <span class="sqlc-spacer"></span>
-        <span class="sqlc-copy-status" id="sqlc-copy-status" role="status"></span>
-        <button class="sqlc-btn" type="button" id="sqlc-copy">Copy</button>
       </div>
       <pre class="sqlc-code sqlc-output" id="sqlc-output" role="tabpanel" tabindex="0"></pre>
     </section>

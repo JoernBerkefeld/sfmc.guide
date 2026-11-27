@@ -7,7 +7,7 @@ import {
   convert,
   parseAmpscript,
   parseSsjs,
-} from './vendor/sfmc-sql-converter/0.3.0/index.js';
+} from './vendor/sfmc-sql-converter/0.4.0/index.js';
 
 export const CONVERT_DELAY_MS = 300;
 export const MESSAGE_DELAY_MS = 1000;
@@ -140,6 +140,98 @@ export function restoreSettings(stored) {
     settings.dataSource = stored.dataSource;
   }
   return settings;
+}
+
+export const SELECTION_KEYS = ['mce:toCode', 'mce:toSql', 'mcn:toCode', 'mcn:toSql'];
+
+/**
+ * Turns the stored tab choice back into a map of `platform:direction` to output id; unknown keys
+ * and values that are not strings are dropped.
+ *
+ * @param {unknown} stored value read from storage
+ * @returns {Record<string, string>} output id per platform and direction
+ */
+export function restoreSelected(stored) {
+  const selected = {};
+  if (!stored || typeof stored !== 'object') {
+    return selected;
+  }
+  for (const key of SELECTION_KEYS) {
+    if (typeof stored[key] === 'string') {
+      selected[key] = stored[key];
+    }
+  }
+  return selected;
+}
+
+export const SHARE_PREFIX = '#share=';
+
+// Token kinds: "z" = deflate-compressed JSON (short links), "j" = plain JSON (browser without
+// CompressionStream). Both are UTF-8 and base64url.
+const SHARE_FORMAT = 'deflate-raw';
+
+function toBase64Url(bytes) {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
+  }
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/u, '');
+}
+
+function fromBase64Url(text) {
+  const binary = atob(text.replaceAll('-', '+').replaceAll('_', '/'));
+  return Uint8Array.from(binary, (character) => character.codePointAt(0));
+}
+
+async function pipeBytes(bytes, stream) {
+  const piped = new Blob([bytes]).stream().pipeThrough(stream);
+  return new Uint8Array(await new Response(piped).arrayBuffer());
+}
+
+/**
+ * Packs what the page shows into a short URL-safe token.
+ *
+ * @param {{ platform: string, direction: string, input: string, settings: object, tab: string|null }} view shown view
+ * @returns {Promise<string>} token
+ */
+export async function encodeShare(view) {
+  const bytes = new TextEncoder().encode(JSON.stringify(view));
+  if (typeof CompressionStream === 'function') {
+    return `z${toBase64Url(await pipeBytes(bytes, new CompressionStream(SHARE_FORMAT)))}`;
+  }
+  return `j${toBase64Url(bytes)}`;
+}
+
+/**
+ * Reads a token from encodeShare back; every field is checked like stored settings are.
+ *
+ * @param {string} token token from the link
+ * @returns {Promise<{ platform: 'mce'|'mcn', direction: 'toCode'|'toSql', input: string, settings: object, tab: string|null }|null>} view, or null when the token is broken
+ */
+export async function decodeShare(token) {
+  let view;
+  try {
+    const text = String(token);
+    let bytes = fromBase64Url(text.slice(1));
+    if (text.startsWith('z')) {
+      bytes = await pipeBytes(bytes, new DecompressionStream(SHARE_FORMAT));
+    } else if (!text.startsWith('j')) {
+      return null;
+    }
+    view = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  } catch {
+    return null;
+  }
+  if (!view || typeof view !== 'object' || typeof view.input !== 'string') {
+    return null;
+  }
+  return {
+    platform: view.platform === 'mcn' ? 'mcn' : 'mce',
+    direction: view.direction === 'toSql' ? 'toSql' : 'toCode',
+    input: view.input,
+    settings: restoreSettings(view.settings),
+    tab: typeof view.tab === 'string' ? view.tab : null,
+  };
 }
 
 /**
@@ -487,6 +579,10 @@ function writeStorage(key, value) {
   }
 }
 
+async function asTextBlob(textPromise) {
+  return new Blob([await textPromise], { type: 'text/plain' });
+}
+
 function emptyResult() {
   return { outputs: [], messages: [], clauseMap: [], roundTrip: null };
 }
@@ -530,7 +626,7 @@ function disabledTab(event) {
   return event.target.closest?.('[role="tab"][aria-disabled="true"]') ?? null;
 }
 
-function init(root) {
+async function init(root) {
   const $ = (selector) => root.querySelector(selector);
   const elements = {
     platform: $('#sqlc-platform'),
@@ -548,8 +644,8 @@ function init(root) {
     backdrop: $('#sqlc-backdrop'),
     swap: $('#sqlc-swap'),
     tabs: $('#sqlc-tabs'),
-    copy: $('#sqlc-copy'),
-    copyStatus: $('#sqlc-copy-status'),
+    share: $('#sqlc-share'),
+    shareStatus: $('#sqlc-share-status'),
     output: $('#sqlc-output'),
     map: $('#sqlc-map'),
     mapList: $('#sqlc-map-list'),
@@ -558,14 +654,20 @@ function init(root) {
     counts: $('#sqlc-counts'),
   };
 
+  const hasShare = location.hash.startsWith(SHARE_PREFIX);
+  const shared = hasShare ? await decodeShare(location.hash.slice(SHARE_PREFIX.length)) : null;
+
   const state = {
-    platform: readStorage('platform') === 'mcn' ? 'mcn' : 'mce',
+    platform: shared?.platform ?? (readStorage('platform') === 'mcn' ? 'mcn' : 'mce'),
     direction: 'toCode',
-    selected: {},
+    selected: restoreSelected(readStorage('selected')),
     result: emptyResult(),
     messagesVisible: true,
     activeClause: null,
-    settings: restoreSettings(readStorage('settings')),
+    settings: shared?.settings ?? restoreSettings(readStorage('settings')),
+    // A shared view is only shown: nothing is saved until the visitor does something with it,
+    // so opening a link never overwrites their own saved work.
+    shared: shared !== null,
   };
 
   const selectionKey = () => `${state.platform}:${state.direction}`;
@@ -573,9 +675,26 @@ function init(root) {
     pickOutput(state.result.outputs, state.selected[selectionKey()] ?? null);
 
   function save() {
+    if (state.shared) {
+      return;
+    }
     writeStorage(state.platform, { direction: state.direction, input: elements.input.value });
     writeStorage('platform', state.platform);
     writeStorage('settings', state.settings);
+    writeStorage('selected', state.selected);
+  }
+
+  function clearHash() {
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
+  }
+
+  // The visitor works with the shared view: from now on it is their own and gets saved.
+  function leaveShare() {
+    if (!state.shared) {
+      return;
+    }
+    state.shared = false;
+    clearHash();
   }
 
   function loadPlatformInput() {
@@ -664,7 +783,6 @@ function init(root) {
 
   function renderOutput() {
     const shown = currentOutput();
-    elements.copy.disabled = shown === null;
     elements.swap.disabled = shown === null;
     elements.swap.title = shown
       ? 'Swap direction and use the output as input'
@@ -806,6 +924,7 @@ function init(root) {
   }
 
   function scheduleConvert() {
+    leaveShare();
     // Hide messages while typing so half-typed SQL does not flash red; they return after 1 s idle.
     state.messagesVisible = false;
     renderMessages();
@@ -859,27 +978,41 @@ function init(root) {
     elements.backdrop.scrollLeft = elements.input.scrollLeft;
   }
 
-  // ── Copy ──
-  async function copyOutput() {
-    const shown = currentOutput();
-    if (!shown) {
-      return;
-    }
+  // ── Share link ──
+  let shareStatusTimer;
+  function showShareStatus(text) {
+    clearTimeout(shareStatusTimer);
+    elements.shareStatus.textContent = text;
+    shareStatusTimer = setTimeout(() => {
+      elements.shareStatus.textContent = '';
+    }, 4000);
+  }
+
+  async function buildShareLink() {
+    const token = await encodeShare({
+      platform: state.platform,
+      direction: state.direction,
+      input: elements.input.value,
+      settings: state.settings,
+      tab: currentOutput()?.id ?? null,
+    });
+    return `${location.origin}${location.pathname}${SHARE_PREFIX}${token}`;
+  }
+
+  async function copyShareLink() {
+    const linkPromise = buildShareLink();
     try {
-      await navigator.clipboard.writeText(shown.code);
-      elements.copyStatus.textContent = 'Copied';
+      // Hand the clipboard a pending item right away: Safari refuses a write that starts after an await.
+      await (typeof ClipboardItem === 'function'
+        ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': asTextBlob(linkPromise) })])
+        : navigator.clipboard.writeText(await linkPromise));
+      showShareStatus('Link copied');
     } catch {
-      const range = document.createRange();
-      range.selectNodeContents(elements.output);
-      const selection = getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      elements.output.focus();
-      elements.copyStatus.textContent = 'Selected: press Ctrl+C to copy';
+      const link = await linkPromise;
+      // No clipboard access: show the link to copy by hand. Not via the address bar, where
+      // analytics history tracking could record the visitor's SQL.
+      prompt('Copy this link:', link);
     }
-    setTimeout(() => {
-      elements.copyStatus.textContent = '';
-    }, 2500);
   }
 
   // ── Events ──
@@ -891,7 +1024,15 @@ function init(root) {
     if (!button || button.dataset.platform === state.platform) {
       return;
     }
-    save();
+    // Leaving a shared view for the other platform drops it instead of saving it over own work.
+    if (state.shared) {
+      leaveShare();
+      state.settings = restoreSettings(readStorage('settings'));
+      state.selected = restoreSelected(readStorage('selected'));
+      showSettingValues();
+    } else {
+      save();
+    }
     state.platform = button.dataset.platform;
     state.activeClause = null;
     loadPlatformInput();
@@ -905,6 +1046,7 @@ function init(root) {
     if (!example) {
       return;
     }
+    leaveShare();
     state.direction = 'toCode';
     elements.input.value = example.sql;
     if (state.platform === 'mcn') {
@@ -921,6 +1063,7 @@ function init(root) {
     if (!shown) {
       return;
     }
+    leaveShare();
     state.direction = state.direction === 'toCode' ? 'toSql' : 'toCode';
     state.activeClause = null;
     elements.input.value = shown.code;
@@ -937,9 +1080,11 @@ function init(root) {
       showTip(tab);
       return;
     }
+    leaveShare();
     state.selected[selectionKey()] = tab.dataset.output;
     // Messages, counts, round trip and clause map all belong to the shown output.
     renderAll();
+    save();
     elements.tabs.querySelector(`[data-output="${CSS.escape(tab.dataset.output)}"]`)?.focus();
   });
 
@@ -964,7 +1109,7 @@ function init(root) {
     }
   });
 
-  elements.copy.addEventListener('click', copyOutput);
+  elements.share.addEventListener('click', copyShareLink);
 
   elements.mapToggle.addEventListener('click', () => {
     const isOn = elements.mapToggle.getAttribute('aria-pressed') !== 'true';
@@ -1033,8 +1178,14 @@ function init(root) {
     deKey: elements.deKey,
     columns: elements.columns,
   };
+  // The radios follow the state in renderSettingsFields.
+  function showSettingValues() {
+    for (const [name, field] of Object.entries(settingFields)) {
+      field.value = state.settings[name];
+    }
+  }
+  showSettingValues();
   for (const [name, field] of Object.entries(settingFields)) {
-    field.value = state.settings[name];
     field.addEventListener('input', () => {
       state.settings[name] = field.value;
       scheduleConvert();
@@ -1046,7 +1197,19 @@ function init(root) {
   });
 
   // ── Start ──
-  loadPlatformInput();
+  if (shared) {
+    state.direction = shared.direction;
+    elements.input.value = shared.input;
+    if (shared.tab) {
+      state.selected[selectionKey()] = shared.tab;
+    }
+  } else {
+    loadPlatformInput();
+    if (hasShare) {
+      clearHash();
+      showShareStatus('This link could not be read; showing your last work instead');
+    }
+  }
   renderChrome();
   root.classList.add('is-ready');
   convertNow();
@@ -1055,6 +1218,6 @@ function init(root) {
 if (typeof document !== 'undefined') {
   const root = document.querySelector('#sqlc-app');
   if (root) {
-    init(root);
+    await init(root);
   }
 }

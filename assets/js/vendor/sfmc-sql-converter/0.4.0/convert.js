@@ -43,7 +43,7 @@ import { parseSql } from './sql-parser.js';
  * @property {'CRM'|'MO'|'DG'} [dataSource] Next data source: Sales Cloud object (default),
  * marketing object or DMO of the email's bound data graph
  * @property {{fields: {name: string}[]}} [schema] data extension fields
- * @property {{rowsAsObjects?: boolean, paging?: boolean}} [output] WSProxy output options
+ * @property {{rowsAsObjects?: boolean}} [output] WSProxy output options
  */
 
 /**

@@ -140,7 +140,7 @@ test('debounce runs once after the last call and can be cancelled', async (t) =>
 });
 
 const VENDOR_URL = pathToFileURL(
-  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.3.0', 'index.js'),
+  path.join(__dirname, '..', 'assets', 'js', 'vendor', 'sfmc-sql-converter', '0.4.0', 'index.js'),
 ).href;
 
 test('the UI imports the converter core only from a versioned vendor folder', () => {
@@ -379,8 +379,90 @@ test('restoreSettings keeps stored settings and falls back on bad values', async
       columns: 'Id, Email',
       dataSource: 'MO',
     }),
-    { deName: 'Orders', deKey: 'orders_key', columns: 'Id, Email', dataSource: 'MO' },
+    {
+      deName: 'Orders',
+      deKey: 'orders_key',
+      columns: 'Id, Email',
+      dataSource: 'MO',
+    },
   );
   assert.deepEqual(restoreSettings({ deName: 42, dataSource: 'DMO', extra: 'x' }), defaults);
   assert.equal(restoreSettings({ dataSource: 'DG' }).dataSource, 'DG');
+});
+
+test('restoreSelected keeps a string id per platform and direction only', async () => {
+  const { restoreSelected } = await load();
+  assert.deepEqual(restoreSelected(null), {});
+  assert.deepEqual(restoreSelected('broken'), {});
+  assert.deepEqual(
+    restoreSelected({
+      'mcn:toCode': 'handlebars-queryfirst',
+      'mce:toSql': 'sql',
+      'mce:toCode': 42,
+      'xyz:toCode': 'ssjs-wsproxy',
+    }),
+    { 'mcn:toCode': 'handlebars-queryfirst', 'mce:toSql': 'sql' },
+  );
+});
+
+test('encodeShare and decodeShare round-trip the shown view in a URL-safe token', async () => {
+  const { encodeShare, decodeShare } = await load();
+  const view = {
+    platform: 'mcn',
+    direction: 'toCode',
+    input: "SELECT TOP 5 FirstName\nFROM [Contact]\nWHERE Title LIKE '%Größe ✓%'",
+    settings: { deName: '', deKey: '', columns: '', dataSource: 'DG' },
+    tab: 'handlebars-queryfirst',
+  };
+  const token = await encodeShare(view);
+  assert.match(token, /^z[\w-]+$/u);
+  assert.deepEqual(await decodeShare(token), view);
+});
+
+test('encodeShare compresses, so long SQL gives a shorter link than plain base64', async () => {
+  const { encodeShare } = await load();
+  const input = Array.from({ length: 20 }, (_, index) => `  AND Field${index} = 'value'`).join(
+    '\n',
+  );
+  const view = { platform: 'mce', direction: 'toCode', input, settings: {}, tab: null };
+  const plain = Buffer.from(JSON.stringify(view)).toString('base64url');
+  const token = await encodeShare(view);
+  assert.ok(token.length < plain.length / 2);
+});
+
+const plainToken = (value) => `j${Buffer.from(JSON.stringify(value)).toString('base64url')}`;
+
+test('decodeShare reads plain tokens and rejects broken ones, falling back per field', async () => {
+  const { decodeShare } = await load();
+  assert.deepEqual(
+    await decodeShare(
+      plainToken({ platform: 'evil', direction: 'x', input: 'SELECT 1', settings: 5, tab: 7 }),
+    ),
+    {
+      platform: 'mce',
+      direction: 'toCode',
+      input: 'SELECT 1',
+      settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
+      tab: null,
+    },
+  );
+  assert.equal(await decodeShare(plainToken({ platform: 'mce' })), null);
+  assert.equal(await decodeShare('z!!!'), null);
+  assert.equal(await decodeShare('zAAAA'), null);
+  assert.equal(await decodeShare('qabc'), null);
+  assert.equal(await decodeShare(''), null);
+});
+
+test('the converter page has the share button, a wrapping input and no second copy button', () => {
+  const page = require('node:fs').readFileSync(
+    path.join(__dirname, '..', 'tools', 'sql-converter', 'index.md'),
+    'utf8',
+  );
+  assert.match(
+    page,
+    /id="sqlc-share"[^>]*title="[^"]*co-worker[^"]*bookmark[^"]*"[^>]*>[\s\S]*?Share<\/button>/u,
+  );
+  assert.doesNotMatch(page, /sqlc-paging/u);
+  assert.match(page, /id="sqlc-input"[^>]*wrap="soft"/u);
+  assert.doesNotMatch(page, /id="sqlc-copy"/u);
 });

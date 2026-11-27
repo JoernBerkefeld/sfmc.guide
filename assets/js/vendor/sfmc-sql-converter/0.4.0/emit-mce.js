@@ -21,7 +21,6 @@ import {
 } from './clauses.js';
 import {
     EMPTY_STRING_AS_SPACE,
-    FIRST_BATCH_ONLY,
     LIKE_CHECKED_IN_SCRIPT,
     LOOKUP_FIRST_ROW_ONLY,
     ORDER_BY_DROPPED,
@@ -43,9 +42,8 @@ import { formatName } from './print-sql.js';
  * @property {string[]} [columns] column names that `SELECT *` stands for
  * @property {{fields: {name: string}[]}} [schema] data extension fields (used for `*` when
  * `columns` is not given)
- * @property {{rowsAsObjects?: boolean, paging?: boolean}} [output] WSProxy output options:
- * `rowsAsObjects` (default true) adds a helper that turns each result into a plain object;
- * `paging` (default false) adds a loop that reads every batch
+ * @property {{rowsAsObjects?: boolean}} [output] WSProxy output options:
+ * `rowsAsObjects` (default true) adds a helper that turns each result into a plain object
  * @property {string} [sourceText] the SQL text the AST came from (locates TOP for messages)
  */
 
@@ -190,6 +188,30 @@ export const ORDER_ROWS_HELPER = [
     '}',
     '',
 ].join('\n');
+
+/**
+ * SSJS helper that turns a WSProxy result item into a plain object of its properties.
+ */
+export const TO_OBJECT_HELPER =
+    'function toObject(item) {\n    var obj = {};\n    var props = item.Properties;\n    for (var p = 0; p < props.length; p++) {\n        obj[props[p].Name] = props[p].Value;\n    }\n    return obj;\n}\n';
+
+// No "SQL:" in this comment: the reverse parser reads every comment that has it as the header.
+const HELPERS_COMMENT =
+    '\n// Helper functions (declarations are hoisted, so the code above can call them)\n';
+
+/**
+ * Writes the helper functions after the code that runs, behind a separating comment. SSJS
+ * hoists function declarations within one script block, and each output is one block.
+ *
+ * @param {CodeWriter} out writer
+ * @param {(string|false)[]} helpers helper sources in order; false entries are skipped
+ */
+function writeHelpers(out, helpers) {
+    const used = helpers.filter(Boolean);
+    if (used.length) {
+        out.write(HELPERS_COMMENT).write(used.join(''));
+    }
+}
 
 /**
  * Writes `rows = orderRows(rows, [["Col", "DIR"], …], top);` with each sort pair marked as its
@@ -750,7 +772,6 @@ export function emitSsjsWsproxy(ast, options = {}) {
     }
     const { checks } = plan;
     const rowsAsObjects = options.output?.rowsAsObjects ?? true;
-    const isPaging = options.output?.paging ?? false;
     // sort columns missing from the SELECT are read too, or every row would sort as empty
     const missing = missingCheckColumns(context.columns, [...checks, ...(ast.orderBy ?? [])]);
     const out = new CodeWriter();
@@ -765,17 +786,6 @@ export function emitSsjsWsproxy(ast, options = {}) {
     }
     writeFromComment(out, context.deName, context.deKey);
     writeNotInMarker(out, ast);
-    if (checks.length) {
-        out.write(SQL_LIKE_HELPER);
-    }
-    if (requiresOrderRows(ast)) {
-        out.write(ORDER_ROWS_HELPER);
-    }
-    if (rowsAsObjects || checks.length) {
-        out.write(
-            'function toObject(item) {\n    var obj = {};\n    var props = item.Properties;\n    for (var p = 0; p < props.length; p++) {\n        obj[props[p].Name] = props[p].Value;\n    }\n    return obj;\n}\n',
-        );
-    }
     out.write('var api = new Script.Util.WSProxy();\nvar objectType = ');
     out.mark('from', jsString(`DataExtensionObject[${context.deKey}]`)).write(';\nvar cols = [');
     for (const [index, column] of context.columns.entries()) {
@@ -790,11 +800,9 @@ export function emitSsjsWsproxy(ast, options = {}) {
         writeFilter(out, ast.where, context.idOf, '', new Set(checks));
         out.write(';\n');
     }
-    // without WHERE the non-paging call passes a null filter, like the continuation (proven live)
-    let call = 'api.retrieve(objectType, cols, filter)';
-    if (!ast.where) {
-        call = isPaging ? 'api.retrieve(objectType, cols)' : 'api.retrieve(objectType, cols, null)';
-    }
+    const call = ast.where
+        ? 'api.retrieve(objectType, cols, filter)'
+        : 'api.retrieve(objectType, cols)';
     const item = rowsAsObjects ? 'toObject(result.Results[i])' : 'result.Results[i]';
     const writeBody = (indent) => {
         if (checks.length) {
@@ -810,45 +818,25 @@ export function emitSsjsWsproxy(ast, options = {}) {
             out.write(`${indent}rows.push(${item});\n`);
         }
     };
-    if (isPaging) {
-        // the next batch is read with props.ContinueRequest = RequestID (proven live)
-        const nextCall = `api.retrieve(objectType, cols, ${ast.where ? 'filter' : 'null'}, null, props)`;
-        out.write(
-            `var rows = [];\nvar retrieveError = "";\nvar props = {};\nvar result = ${call};\n`,
-        );
-        out.write(
-            'while (result) {\n    if (result.Status !== "OK" && result.Status !== "MoreDataAvailable") {\n        rows = [];\n        retrieveError = String(result.Status);\n        break;\n    }\n    for (var i = 0; i < result.Results.length; i++) {\n',
-        );
-        writeBody(INDENT.repeat(2));
-        out.write(
-            `    }\n    if (result.HasMoreRows) {\n        props.ContinueRequest = result.RequestID;\n        result = ${nextCall};\n    } else {\n        result = null;\n    }\n}\n`,
-        );
-    } else {
-        out.write(
-            `var rows = [];\nvar retrieveError = "";\nvar hasMoreRows = false;\nvar result = ${call};\n`,
-        );
-        out.write(
-            'if (result.Status === "OK" || result.Status === "MoreDataAvailable") {\n    for (var i = 0; i < result.Results.length; i++) {\n',
-        );
-        writeBody(INDENT.repeat(2));
-        out.write(
-            '    }\n} else {\n    retrieveError = String(result.Status);\n}\nif (result.HasMoreRows) {\n    // only the first batch was read: turn on paging in the settings to read every row\n    hasMoreRows = true;\n}\n',
-        );
-    }
+    // the next batch is read with props.ContinueRequest = RequestID; the first call without WHERE
+    // passes no filter at all (both proven live, the latter 2026-11-27)
+    const nextCall = `api.retrieve(objectType, cols, ${ast.where ? 'filter' : 'null'}, null, props)`;
+    out.write(`var rows = [];\nvar retrieveError = "";\nvar props = {};\nvar result = ${call};\n`);
+    out.write(
+        'while (result) {\n    if (result.Status !== "OK" && result.Status !== "MoreDataAvailable") {\n        rows = [];\n        retrieveError = String(result.Status);\n        break;\n    }\n    for (var i = 0; i < result.Results.length; i++) {\n',
+    );
+    writeBody(INDENT.repeat(2));
+    out.write(
+        `    }\n    if (result.HasMoreRows) {\n        props.ContinueRequest = result.RequestID;\n        result = ${nextCall};\n    } else {\n        result = null;\n    }\n}\n`,
+    );
     writeOrderRowsCall(out, ast, context.idOf);
+    writeHelpers(out, [
+        checks.length > 0 && SQL_LIKE_HELPER,
+        requiresOrderRows(ast) && ORDER_ROWS_HELPER,
+        (rowsAsObjects || checks.length > 0) && TO_OBJECT_HELPER,
+    ]);
     out.write(SSJS_END);
-    const messages = [...plan.messages];
-    if (!isPaging) {
-        messages.push(
-            createMessage(
-                'info',
-                FIRST_BATCH_ONLY,
-                `Without paging only the first batch of up to 2,500 rows is read; turn on paging for more.${requiresOrderRows(ast) ? ' Sorting and TOP apply to that batch only.' : ''}`,
-                ast.from.loc,
-            ),
-        );
-    }
-    return finish(out, withMessages({ messages: [], dropped: [] }, messages));
+    return finish(out, withMessages({ messages: [], dropped: [] }, plan.messages));
 }
 
 /**
@@ -875,12 +863,6 @@ export function emitSsjsRowsRetrieve(ast, options = {}) {
     }
     writeFromComment(out, context.deName, context.deKey);
     writeNotInMarker(out, ast);
-    if (checks.length) {
-        out.write(SQL_LIKE_HELPER);
-    }
-    if (requiresOrderRows(ast)) {
-        out.write(ORDER_ROWS_HELPER);
-    }
     out.write('var de = DataExtension.Init(').mark('from', jsString(context.deKey)).write(');\n');
     if (ast.where) {
         out.write('var filter = ');
@@ -901,6 +883,10 @@ export function emitSsjsRowsRetrieve(ast, options = {}) {
         );
     }
     writeOrderRowsCall(out, ast, context.idOf);
+    writeHelpers(out, [
+        checks.length > 0 && SQL_LIKE_HELPER,
+        requiresOrderRows(ast) && ORDER_ROWS_HELPER,
+    ]);
     out.write(SSJS_END);
     return finish(out, withMessages({ messages: [], dropped: [] }, plan.messages));
 }
@@ -1060,16 +1046,15 @@ export function emitSsjsLookupRows(ast, options = {}) {
     if (Array.isArray(ast.columns)) {
         writeSelectComment(out, context.columns);
     }
-    if (requiresOrderRows(ast)) {
-        out.write(ORDER_ROWS_HELPER);
-    }
     out.write('var rows = Platform.Function.LookupRows(')
         .mark('from', jsString(context.deName))
         .write(', ');
     writeSsjsLookupArrays(out, check.pairs, context.idOf);
     out.write(');\n');
     writeOrderRowsCall(out, ast, context.idOf);
-    out.write('var rowCount = rows ? rows.length : 0;\n').write(SSJS_END);
+    out.write('var rowCount = rows ? rows.length : 0;\n');
+    writeHelpers(out, [requiresOrderRows(ast) && ORDER_ROWS_HELPER]);
+    out.write(SSJS_END);
     return finish(
         out,
         withMessages(
@@ -1198,7 +1183,7 @@ function lookupLimitMessages(ast, clauses, label) {
         createMessage(
             'warning',
             TOP_ABOVE_LOOKUP_LIMIT,
-            `${label} returns at most 2,000 rows, so TOP ${ast.top} can't be reached. Use the SSJS WSProxy output with paging to read more rows.`,
+            `${label} returns at most 2,000 rows, so TOP ${ast.top} can't be reached. Use the SSJS WSProxy output, which reads every batch.`,
             topClause?.loc ?? ast.loc,
         ),
     ];

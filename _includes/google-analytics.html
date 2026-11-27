@@ -18,7 +18,10 @@
   });
 
   gtag('js', new Date());
-  gtag('config', '{{ site.google_analytics }}');
+  // Without the #fragment: a converter share link (#share=…) carries the visitor's SQL.
+  gtag('config', '{{ site.google_analytics }}', {
+    page_location: location.href.split('#')[0]
+  });
 </script>
 
 <!-- CookieConsent v3 (Orest Bida) — GDPR opt-in banner, self-hosted (no third-party requests) -->

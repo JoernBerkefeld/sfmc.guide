@@ -305,6 +305,7 @@ html.sqlc-page {
 
 .sqlc-hint { font-size: 0.72rem; color: var(--sqlc-text-3); }
 
+
 // ── Body ──────────────────────────────────────────────────────────────────────
 .sqlc-body {
   display: grid;
@@ -383,8 +384,11 @@ html.sqlc-page {
   align-items: stretch;
 }
 
+// minmax(0, 1fr): without an explicit column, a long code line widened the pane past its edge
+// and cut off the tabs.
 .sqlc-pane {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   min-width: 0;
   border: 1px solid var(--sqlc-border);
@@ -413,8 +417,9 @@ html.sqlc-page {
   font: 0.8rem/1.6 $font-mono;
   letter-spacing: normal;
   tab-size: 4;
-  white-space: pre;
-  overflow-wrap: normal;
+  // Word wrap like VS Code: long lines break instead of scrolling sideways.
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   color: var(--sqlc-text);
   background: var(--sqlc-bg-base);
   border: 0;
@@ -424,7 +429,14 @@ html.sqlc-page {
 .sqlc-editor {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: max(7rem, calc((100vh - 22rem) / 2));
+}
+
+// Both reserve the scrollbar's room, so the textarea and its backdrop wrap at the same width.
+.sqlc .sqlc-backdrop,
+.sqlc .sqlc-input {
+  scrollbar-gutter: stable;
 }
 
 .sqlc .sqlc-backdrop {
@@ -477,6 +489,14 @@ html.sqlc-page {
 
   &:focus-visible { outline-offset: -2px; }
 
+  // Keeps the first line clear of the copy button in the top right corner.
+  &::before {
+    content: '';
+    float: right;
+    width: 5.5rem;
+    height: 1.6em;
+  }
+
   .tok-k { color: var(--sqlc-kw); }
   .tok-s { color: var(--sqlc-str); }
   .tok-n { color: var(--sqlc-num); }
@@ -520,10 +540,22 @@ html.sqlc-page {
 // Output tabs, grouped by language
 .sqlc-tabs {
   display: flex;
+  flex: 1 1 100%;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem $space-3;
   min-width: 0;
+}
+
+// The site-wide copy button of code blocks: always visible here (no hover on phones), and
+// gone while the output only shows a placeholder.
+.sqlc .code-block-wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+
+  .copy-button { opacity: 1; }
+  &:has(.sqlc-placeholder) .copy-button { display: none; }
 }
 
 .sqlc-tab-group {
