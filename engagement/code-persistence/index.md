@@ -86,6 +86,8 @@ In emails, content blocks and templates, a `<script>` without `runat="server"` i
 
 In the code snippet editor, the `<script>` was still visible after the save while the stored item no longer had it. You only see that it is gone when you open the item again. Use this check if a tracking snippet or widget "stopped working" after an edit.
 
+Emails are saved automatically while you edit unless **Email Autosave** is turned off under Setup → Content Builder Settings (it is on by default). A client-side `<script>` you type into an email is therefore removed before you click Save. Content blocks, templates and code snippets are saved only when you click Save.
+
 The filter does not depend on the content type you send. Code resources created by API with the content type the CloudPages editor uses (`application/javascript` and so on) lose the tag just the same, and an update (`PATCH`) is filtered like a create.
 
 ### Landing pages keep everything
