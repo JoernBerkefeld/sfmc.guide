@@ -414,9 +414,12 @@ test('encodeShare and decodeShare round-trip the shown view in a URL-safe token'
     settings: { deName: '', deKey: '', columns: '', dataSource: 'DG' },
     tab: 'handlebars-queryfirst',
   };
-  const token = await encodeShare(view);
+  const token = await encodeShare({ ...view, s: '1b4e28ba-2fa1-11d2-883f-0016d3cca427' });
   assert.match(token, /^z[\w-]+$/u);
-  assert.deepEqual(await decodeShare(token), view);
+  assert.deepEqual(await decodeShare(token), {
+    ...view,
+    source: '1b4e28ba-2fa1-11d2-883f-0016d3cca427',
+  });
 });
 
 test('encodeShare compresses, so long SQL gives a shorter link than plain base64', async () => {
@@ -436,7 +439,14 @@ test('decodeShare reads plain tokens and rejects broken ones, falling back per f
   const { decodeShare } = await load();
   assert.deepEqual(
     await decodeShare(
-      plainToken({ platform: 'evil', direction: 'x', input: 'SELECT 1', settings: 5, tab: 7 }),
+      plainToken({
+        platform: 'evil',
+        direction: 'x',
+        input: 'SELECT 1',
+        settings: 5,
+        tab: 7,
+        s: '../x',
+      }),
     ),
     {
       platform: 'mce',
@@ -444,6 +454,7 @@ test('decodeShare reads plain tokens and rejects broken ones, falling back per f
       input: 'SELECT 1',
       settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
       tab: null,
+      source: null,
     },
   );
   assert.equal(await decodeShare(plainToken({ platform: 'mce' })), null);
@@ -465,4 +476,137 @@ test('the converter page has the share button, a wrapping input and no second co
   assert.doesNotMatch(page, /sqlc-paging/u);
   assert.match(page, /id="sqlc-input"[^>]*wrap="soft"/u);
   assert.doesNotMatch(page, /id="sqlc-copy"/u);
+});
+
+test('the converter page has a read-only bar with a Take over button', () => {
+  const page = require('node:fs').readFileSync(
+    path.join(__dirname, '..', 'tools', 'sql-converter', 'index.md'),
+    'utf8',
+  );
+  assert.match(
+    page,
+    /id="sqlc-lock"[^>]*hidden[\s\S]*?id="sqlc-take-over"[^>]*>Take over<\/button>/u,
+  );
+});
+
+test('parseHash tells share links, session ids and anything else apart', async () => {
+  const { parseHash } = await load();
+  assert.deepEqual(parseHash('#share=zABC'), { kind: 'share', token: 'zABC' });
+  assert.deepEqual(parseHash('#s=1b4e28ba-2fa1-11d2'), {
+    kind: 'session',
+    id: '1b4e28ba-2fa1-11d2',
+  });
+  assert.deepEqual(parseHash('#s=../../x'), { kind: 'none' });
+  assert.deepEqual(parseHash('#s=short'), { kind: 'none' });
+  assert.deepEqual(parseHash(''), { kind: 'none' });
+  assert.deepEqual(parseHash('#top'), { kind: 'none' });
+});
+
+test('newSessionId gives distinct ids that parseHash accepts', async () => {
+  const { newSessionId, parseHash } = await load();
+  const first = newSessionId();
+  assert.notEqual(first, newSessionId());
+  assert.equal(parseHash(`#s=${first}`).id, first);
+});
+
+test('restoreSession keeps valid fields and falls back for broken ones', async () => {
+  const { restoreSession } = await load();
+  assert.equal(restoreSession(null), null);
+  assert.equal(restoreSession('x'), null);
+  assert.deepEqual(
+    restoreSession({
+      platform: 'mcn',
+      inputs: {
+        mcn: { direction: 'toSql', input: '{{x}}' },
+        mce: { input: 5 },
+        xyz: { input: 'a' },
+      },
+      settings: { dataSource: 'MO' },
+      selected: { 'mcn:toSql': 'sql', bad: 'x' },
+      updatedAt: 12,
+    }),
+    {
+      platform: 'mcn',
+      inputs: { mcn: { direction: 'toSql', input: '{{x}}' } },
+      settings: { deName: '', deKey: '', columns: '', dataSource: 'MO' },
+      selected: { 'mcn:toSql': 'sql' },
+      updatedAt: 12,
+    },
+  );
+  assert.deepEqual(restoreSession({}), {
+    platform: 'mce',
+    inputs: {},
+    settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
+    selected: {},
+    updatedAt: 0,
+  });
+});
+
+test('a shared view becomes a session that shows the same view, whatever the output tab', async () => {
+  const { sessionFromView, sessionView, isSameView } = await load();
+  const view = {
+    platform: 'mcn',
+    direction: 'toCode',
+    input: 'SELECT Email FROM [Lead]',
+    settings: { deName: '', deKey: '', columns: '', dataSource: 'CRM' },
+    tab: 'handlebars-queryfirst',
+    source: null,
+  };
+  const session = sessionFromView(view);
+  assert.deepEqual(session.selected, { 'mcn:toCode': 'handlebars-queryfirst' });
+  assert.ok(isSameView(sessionView(session), view));
+  assert.ok(isSameView(sessionView(session), { ...view, tab: 'other' }));
+  assert.ok(!isSameView(sessionView(session), { ...view, input: 'SELECT Phone FROM [Lead]' }));
+  assert.ok(!isSameView(sessionView(session), { ...view, platform: 'mce' }));
+  assert.ok(!isSameView(sessionView(session), { ...view, settings: { dataSource: 'MO' } }));
+  assert.deepEqual(sessionView({ ...session, platform: 'mce' }).input, '');
+});
+
+test('isLockedByOther: only a fresh lease of another tab counts', async () => {
+  const { isLockedByOther, LOCK_STALE_MS } = await load();
+  const now = 1_000_000;
+  assert.ok(isLockedByOther({ tabId: 'other', ts: now - 1000 }, 'me', now));
+  assert.ok(!isLockedByOther({ tabId: 'me', ts: now }, 'me', now));
+  assert.ok(!isLockedByOther({ tabId: 'other', ts: now - LOCK_STALE_MS - 1 }, 'me', now));
+  assert.ok(!isLockedByOther(null, 'me', now));
+  assert.ok(!isLockedByOther({ tabId: 5, ts: now }, 'me', now));
+  assert.ok(!isLockedByOther({ tabId: 'other' }, 'me', now));
+});
+
+test('sessionsToPrune drops the oldest beyond the limit but never an open one', async () => {
+  const { sessionsToPrune } = await load();
+  const sessions = [
+    { id: 'a', updatedAt: 1 },
+    { id: 'b', updatedAt: 5 },
+    { id: 'c', updatedAt: 3 },
+    { id: 'd', updatedAt: 4 },
+  ];
+  assert.deepEqual(sessionsToPrune(sessions, 2, new Set()), ['c', 'a']);
+  assert.deepEqual(sessionsToPrune(sessions, 2, new Set(['a'])), ['c']);
+  assert.deepEqual(sessionsToPrune(sessions, 10, new Set()), []);
+});
+
+test('legacySession carries over the saved state of earlier versions', async () => {
+  const { legacySession } = await load();
+  const old = {
+    platform: 'mcn',
+    mce: { direction: 'toCode', input: 'SELECT 1' },
+    mcn: { direction: 'toSql', input: '{{x}}' },
+    settings: { deKey: 'K' },
+    selected: { 'mce:toCode': 'ssjs-wsproxy' },
+  };
+  assert.deepEqual(
+    legacySession((key) => old[key] ?? null),
+    {
+      platform: 'mcn',
+      inputs: { mce: old.mce, mcn: old.mcn },
+      settings: { deName: '', deKey: 'K', columns: '', dataSource: 'CRM' },
+      selected: { 'mce:toCode': 'ssjs-wsproxy' },
+      updatedAt: 0,
+    },
+  );
+  assert.equal(
+    legacySession(() => null),
+    null,
+  );
 });

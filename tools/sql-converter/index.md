@@ -53,6 +53,10 @@ platforms:
   </fieldset>
 </div>
 <div class="sqlc-body">
+  <div class="sqlc-lock" id="sqlc-lock" role="status" hidden>
+    <span>This session is open in another tab, so it is read-only here and shows the changes made there.</span>
+    <button class="sqlc-btn" type="button" id="sqlc-take-over" title="Edit this session in this tab; the other tab becomes read-only and can take it back.">Take over</button>
+  </div>
   <ul class="sqlc-msgs" id="sqlc-messages" aria-live="polite" aria-label="Messages" hidden></ul>
   <div class="sqlc-grid">
     <section class="sqlc-pane" aria-labelledby="sqlc-input-title">

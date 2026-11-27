@@ -313,6 +313,26 @@ html.sqlc-page {
   padding-top: $space-4;
 }
 
+// Read-only bar: this session is edited in another tab
+.sqlc-lock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--sqlc-info) 40%, transparent);
+  border-radius: $radius-sm + 0.125rem;
+  background: color-mix(in srgb, var(--sqlc-info) 8%, transparent);
+  color: var(--sqlc-text);
+  font-size: $text-sm;
+  line-height: 1.5;
+
+  &[hidden] { display: none; }
+}
+
+.sqlc.is-readonly .sqlc-input { cursor: default; }
+
 // Messages
 .sqlc-msgs {
   display: grid;

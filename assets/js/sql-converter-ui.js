@@ -204,9 +204,10 @@ export async function encodeShare(view) {
 
 /**
  * Reads a token from encodeShare back; every field is checked like stored settings are.
+ * `source` is the session the link was copied from (`s` in the token; older links have none).
  *
  * @param {string} token token from the link
- * @returns {Promise<{ platform: 'mce'|'mcn', direction: 'toCode'|'toSql', input: string, settings: object, tab: string|null }|null>} view, or null when the token is broken
+ * @returns {Promise<{ platform: 'mce'|'mcn', direction: 'toCode'|'toSql', input: string, settings: object, tab: string|null, source: string|null }|null>} view, or null when the token is broken
  */
 export async function decodeShare(token) {
   let view;
@@ -231,6 +232,191 @@ export async function decodeShare(token) {
     input: view.input,
     settings: restoreSettings(view.settings),
     tab: typeof view.tab === 'string' ? view.tab : null,
+    source: typeof view.s === 'string' && SESSION_ID.test(view.s) ? view.s : null,
+  };
+}
+
+// ── Sessions ──
+// Each tab works on one session, named in the URL (#s=<id>). One tab edits a session at a time:
+// it holds a lease (lock) it renews every few seconds; other tabs on the same session are
+// read-only, follow its changes and can take the session over.
+
+export const SESSION_PREFIX = '#s=';
+export const MAX_SESSIONS = 20;
+export const LOCK_HEARTBEAT_MS = 4000;
+export const LOCK_STALE_MS = 10_000;
+const SESSION_ID = /^[\w-]{8,64}$/u;
+const PLATFORMS = ['mce', 'mcn'];
+
+/**
+ * What the URL fragment asks for.
+ *
+ * @param {string} hash location.hash
+ * @returns {{ kind: 'share', token: string } | { kind: 'session', id: string } | { kind: 'none' }} request
+ */
+export function parseHash(hash) {
+  const text = String(hash ?? '');
+  if (text.startsWith(SHARE_PREFIX)) {
+    return { kind: 'share', token: text.slice(SHARE_PREFIX.length) };
+  }
+  const id = text.startsWith(SESSION_PREFIX) ? text.slice(SESSION_PREFIX.length) : '';
+  return SESSION_ID.test(id) ? { kind: 'session', id } : { kind: 'none' };
+}
+
+/**
+ * A new random id for a session or a tab.
+ *
+ * @returns {string} id
+ */
+export function newSessionId() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function restoreInput(stored) {
+  if (!stored || typeof stored !== 'object' || typeof stored.input !== 'string') {
+    return null;
+  }
+  return { direction: stored.direction === 'toSql' ? 'toSql' : 'toCode', input: stored.input };
+}
+
+/**
+ * Turns a stored session back into a full one; broken fields fall back like settings do.
+ *
+ * @param {unknown} stored value read from storage
+ * @returns {{ platform: 'mce'|'mcn', inputs: Record<string, {direction: string, input: string}>, settings: object, selected: Record<string, string>, updatedAt: number }|null} session, or null
+ */
+export function restoreSession(stored) {
+  if (!stored || typeof stored !== 'object') {
+    return null;
+  }
+  const inputs = {};
+  for (const platform of PLATFORMS) {
+    const entry = restoreInput(stored.inputs?.[platform]);
+    if (entry) {
+      inputs[platform] = entry;
+    }
+  }
+  return {
+    platform: stored.platform === 'mcn' ? 'mcn' : 'mce',
+    inputs,
+    settings: restoreSettings(stored.settings),
+    selected: restoreSelected(stored.selected),
+    updatedAt: Number.isFinite(stored.updatedAt) ? stored.updatedAt : 0,
+  };
+}
+
+/**
+ * What a session shows, in the shape of a shared view (without the output tab).
+ *
+ * @param {ReturnType<typeof restoreSession>} session session
+ * @returns {{ platform: string, direction: string, input: string, settings: object }} view
+ */
+export function sessionView(session) {
+  const entry = session.inputs[session.platform];
+  return {
+    platform: session.platform,
+    direction: entry?.direction ?? 'toCode',
+    input: entry?.input ?? '',
+    settings: session.settings,
+  };
+}
+
+/**
+ * Whether two views show the same thing. The chosen output tab does not count, so switching a
+ * tab after sharing still lets the own link reopen its session.
+ *
+ * @param {object} first view
+ * @param {object} second view
+ * @returns {boolean} true when equal
+ */
+export function isSameView(first, second) {
+  return (
+    first.platform === second.platform &&
+    first.direction === second.direction &&
+    first.input === second.input &&
+    JSON.stringify(restoreSettings(first.settings)) === JSON.stringify(restoreSettings(second.settings))
+  );
+}
+
+/**
+ * Turns a shared view into the content of a new session.
+ *
+ * @param {Awaited<ReturnType<typeof decodeShare>>} view decoded view
+ * @returns {ReturnType<typeof restoreSession>} session content
+ */
+export function sessionFromView(view) {
+  return {
+    platform: view.platform,
+    inputs: { [view.platform]: { direction: view.direction, input: view.input } },
+    settings: restoreSettings(view.settings),
+    selected: view.tab ? { [`${view.platform}:${view.direction}`]: view.tab } : {},
+    updatedAt: 0,
+  };
+}
+
+/**
+ * Whether another tab holds a live lease on a session.
+ *
+ * @param {unknown} lock stored lease `{ tabId, ts }`
+ * @param {string} tabId this tab's id
+ * @param {number} now current time in ms
+ * @returns {boolean} true when another tab edits the session
+ */
+export function isLockedByOther(lock, tabId, now) {
+  return (
+    Boolean(lock) &&
+    typeof lock.tabId === 'string' &&
+    lock.tabId !== tabId &&
+    Number.isFinite(lock.ts) &&
+    now - lock.ts <= LOCK_STALE_MS
+  );
+}
+
+/**
+ * The sessions to delete so that only the `keep` most recently updated ones stay; protected ones
+ * (open in a tab) are never deleted.
+ *
+ * @param {Array<{ id: string, updatedAt: number }>} sessions stored sessions
+ * @param {number} keep how many to keep
+ * @param {Set<string>} protectedIds ids never to delete
+ * @returns {string[]} ids to delete
+ */
+export function sessionsToPrune(sessions, keep, protectedIds) {
+  return sessions
+    .toSorted((first, second) => second.updatedAt - first.updatedAt)
+    .slice(keep)
+    .map((entry) => entry.id)
+    .filter((id) => !protectedIds.has(id));
+}
+
+export const LEGACY_KEYS = ['platform', 'mce', 'mcn', 'settings', 'selected'];
+
+/**
+ * Builds a session from the single saved state of earlier page versions.
+ *
+ * @param {(key: string) => unknown} read reads one old storage key
+ * @returns {ReturnType<typeof restoreSession>} session, or null when nothing was saved
+ */
+export function legacySession(read) {
+  const inputs = {};
+  for (const platform of PLATFORMS) {
+    const entry = restoreInput(read(platform));
+    if (entry) {
+      inputs[platform] = entry;
+    }
+  }
+  if (Object.keys(inputs).length === 0) {
+    return null;
+  }
+  return {
+    platform: read('platform') === 'mcn' ? 'mcn' : 'mce',
+    inputs,
+    settings: restoreSettings(read('settings')),
+    selected: restoreSelected(read('selected')),
+    updatedAt: 0,
   };
 }
 
@@ -579,6 +765,28 @@ function writeStorage(key, value) {
   }
 }
 
+function removeStorage(key) {
+  try {
+    localStorage.removeItem(STORAGE_PREFIX + key);
+  } catch {
+    // Storage blocked: nothing to remove.
+  }
+}
+
+const SESSION_KEY = 'session::';
+const LOCK_KEY = 'lock::';
+
+function storedSessionIds() {
+  try {
+    return Object.keys(localStorage)
+      .filter((key) => key.startsWith(STORAGE_PREFIX + SESSION_KEY))
+      .map((key) => key.slice((STORAGE_PREFIX + SESSION_KEY).length));
+  } catch {
+    return [];
+  }
+}
+
+
 async function asTextBlob(textPromise) {
   return new Blob([await textPromise], { type: 'text/plain' });
 }
@@ -652,54 +860,201 @@ async function init(root) {
     mapToggle: $('#sqlc-map-toggle'),
     roundTrip: $('#sqlc-roundtrip'),
     counts: $('#sqlc-counts'),
+    lock: $('#sqlc-lock'),
+    takeOver: $('#sqlc-take-over'),
   };
 
-  const hasShare = location.hash.startsWith(SHARE_PREFIX);
-  const shared = hasShare ? await decodeShare(location.hash.slice(SHARE_PREFIX.length)) : null;
-
   const state = {
-    platform: shared?.platform ?? (readStorage('platform') === 'mcn' ? 'mcn' : 'mce'),
+    platform: 'mce',
     direction: 'toCode',
-    selected: restoreSelected(readStorage('selected')),
+    inputs: {},
+    selected: {},
     result: emptyResult(),
     messagesVisible: true,
     activeClause: null,
-    settings: shared?.settings ?? restoreSettings(readStorage('settings')),
-    // A shared view is only shown: nothing is saved until the visitor does something with it,
-    // so opening a link never overwrites their own saved work.
-    shared: shared !== null,
+    settings: restoreSettings(null),
   };
+
+  // This tab's session and its lease. The tab id lives in memory only, so a duplicated tab
+  // gets its own.
+  const TAB_ID = newSessionId();
+  const session = { id: '', readOnly: false, heartbeat: 0 };
+  const sessionKey = (id = session.id) => SESSION_KEY + id;
+  const lockKey = (id = session.id) => LOCK_KEY + id;
 
   const selectionKey = () => `${state.platform}:${state.direction}`;
   const currentOutput = () =>
     pickOutput(state.result.outputs, state.selected[selectionKey()] ?? null);
 
+  const isOwner = () =>
+    !session.readOnly && !isLockedByOther(readStorage(lockKey()), TAB_ID, Date.now());
+
   function save() {
-    if (state.shared) {
+    // Only the tab holding the lease writes; a read-only tab never does.
+    if (!session.id || !isOwner()) {
       return;
     }
-    writeStorage(state.platform, { direction: state.direction, input: elements.input.value });
-    writeStorage('platform', state.platform);
-    writeStorage('settings', state.settings);
-    writeStorage('selected', state.selected);
+    state.inputs[state.platform] = { direction: state.direction, input: elements.input.value };
+    writeStorage(sessionKey(), {
+      platform: state.platform,
+      inputs: state.inputs,
+      settings: state.settings,
+      selected: state.selected,
+      updatedAt: Date.now(),
+    });
+    writeStorage('last', session.id);
   }
 
-  function clearHash() {
-    history.replaceState(null, '', `${location.pathname}${location.search}`);
+  function writeSession(id, content) {
+    writeStorage(sessionKey(id), { ...content, updatedAt: Date.now() });
   }
 
-  // The visitor works with the shared view: from now on it is their own and gets saved.
-  function leaveShare() {
-    if (!state.shared) {
+  // Stores new session content under a new id and drops the oldest sessions beyond the limit.
+  function createSession(content) {
+    const id = newSessionId();
+    writeSession(id, content);
+    const now = Date.now();
+    const open = new Set([id]);
+    const stored = storedSessionIds().map((storedId) => {
+      if (isLockedByOther(readStorage(lockKey(storedId)), TAB_ID, now)) {
+        open.add(storedId);
+      }
+      return { id: storedId, updatedAt: restoreSession(readStorage(sessionKey(storedId)))?.updatedAt ?? 0 };
+    });
+    for (const oldId of sessionsToPrune(stored, MAX_SESSIONS, open)) {
+      removeStorage(sessionKey(oldId));
+      removeStorage(lockKey(oldId));
+    }
+    return id;
+  }
+
+  function applySession(content) {
+    state.platform = content.platform;
+    state.inputs = content.inputs;
+    state.settings = content.settings;
+    state.selected = content.selected;
+    state.activeClause = null;
+    loadPlatformInput();
+    showSettingValues();
+  }
+
+  function openSession(id, content) {
+    session.id = id;
+    applySession(content);
+    history.replaceState(null, '', `${location.pathname}${location.search}${SESSION_PREFIX}${id}`);
+    claimOrWatch();
+  }
+
+  // Shows what the editing tab saved last (read-only tabs, take over, back/forward cache).
+  function reloadFromStorage() {
+    const stored = restoreSession(readStorage(sessionKey()));
+    if (!stored) {
       return;
     }
-    state.shared = false;
-    clearHash();
+    if (session.readOnly) {
+      // A viewer's own output-tab choice survives the editing tab's updates.
+      stored.selected = { ...stored.selected, ...state.selected };
+    }
+    applySession(stored);
+    renderChrome();
+    convertNow();
+  }
+
+  // ── Lease: one editing tab per session ──
+  function writeLock() {
+    writeStorage(lockKey(), { tabId: TAB_ID, ts: Date.now() });
+  }
+
+  function stopHeartbeat() {
+    clearInterval(session.heartbeat);
+    session.heartbeat = 0;
+  }
+
+  function setReadOnly(isReadOnly) {
+    session.readOnly = isReadOnly;
+    root.classList.toggle('is-readonly', isReadOnly);
+    elements.lock.hidden = !isReadOnly;
+    elements.input.readOnly = isReadOnly;
+    elements.example.disabled = isReadOnly;
+    for (const control of [
+      ...elements.platform.querySelectorAll('button'),
+      ...elements.settings.querySelectorAll('input'),
+    ]) {
+      control.disabled = isReadOnly;
+    }
+    renderOutput();
+  }
+
+  function claim() {
+    stopHeartbeat();
+    writeLock();
+    setReadOnly(false);
+    session.heartbeat = setInterval(heartbeat, LOCK_HEARTBEAT_MS);
+  }
+
+  function claimOrWatch() {
+    if (isLockedByOther(readStorage(lockKey()), TAB_ID, Date.now())) {
+      stopHeartbeat();
+      setReadOnly(true);
+    } else {
+      claim();
+    }
+  }
+
+  // Another tab took the session over: stop writing, drop pending saves, follow that tab.
+  function loseLock() {
+    stopHeartbeat();
+    convertSoon.cancel();
+    messagesSoon.cancel();
+    setReadOnly(true);
+    reloadFromStorage();
+  }
+
+  function heartbeat() {
+    if (isLockedByOther(readStorage(lockKey()), TAB_ID, Date.now())) {
+      loseLock();
+    } else {
+      writeLock();
+    }
+  }
+
+  function takeOver() {
+    reloadFromStorage();
+    claim();
+    elements.input.focus();
+  }
+
+  function releaseLock() {
+    stopHeartbeat();
+    if (session.readOnly) {
+      return;
+    }
+    // Keep what was typed in the last fraction of a second before the debounced save.
+    convertSoon.cancel();
+    save();
+    if (readStorage(lockKey())?.tabId === TAB_ID) {
+      removeStorage(lockKey());
+    }
+  }
+
+  function onStorage(event) {
+    if (!session.id || !event.key) {
+      return;
+    }
+    if (event.key === STORAGE_PREFIX + lockKey()) {
+      // Decide on what storage holds now, not on the event's value: when two tabs claim at
+      // once, the lease that was written last wins and exactly one tab keeps editing.
+      if (!session.readOnly && isLockedByOther(readStorage(lockKey()), TAB_ID, Date.now())) {
+        loseLock();
+      }
+    } else if (event.key === STORAGE_PREFIX + sessionKey() && session.readOnly && event.newValue) {
+      reloadFromStorage();
+    }
   }
 
   function loadPlatformInput() {
-    const stored = readStorage(state.platform);
-    if (stored && typeof stored.input === 'string') {
+    const stored = state.inputs[state.platform];
+    if (stored) {
       state.direction = stored.direction === 'toSql' ? 'toSql' : 'toCode';
       elements.input.value = stored.input;
     } else {
@@ -783,7 +1138,7 @@ async function init(root) {
 
   function renderOutput() {
     const shown = currentOutput();
-    elements.swap.disabled = shown === null;
+    elements.swap.disabled = shown === null || session.readOnly;
     elements.swap.title = shown
       ? 'Swap direction and use the output as input'
       : 'Nothing to swap: there is no output yet';
@@ -924,7 +1279,6 @@ async function init(root) {
   }
 
   function scheduleConvert() {
-    leaveShare();
     // Hide messages while typing so half-typed SQL does not flash red; they return after 1 s idle.
     state.messagesVisible = false;
     renderMessages();
@@ -995,6 +1349,7 @@ async function init(root) {
       input: elements.input.value,
       settings: state.settings,
       tab: currentOutput()?.id ?? null,
+      s: session.id,
     });
     return `${location.origin}${location.pathname}${SHARE_PREFIX}${token}`;
   }
@@ -1024,15 +1379,7 @@ async function init(root) {
     if (!button || button.dataset.platform === state.platform) {
       return;
     }
-    // Leaving a shared view for the other platform drops it instead of saving it over own work.
-    if (state.shared) {
-      leaveShare();
-      state.settings = restoreSettings(readStorage('settings'));
-      state.selected = restoreSelected(readStorage('selected'));
-      showSettingValues();
-    } else {
-      save();
-    }
+    save();
     state.platform = button.dataset.platform;
     state.activeClause = null;
     loadPlatformInput();
@@ -1046,7 +1393,6 @@ async function init(root) {
     if (!example) {
       return;
     }
-    leaveShare();
     state.direction = 'toCode';
     elements.input.value = example.sql;
     if (state.platform === 'mcn') {
@@ -1063,7 +1409,6 @@ async function init(root) {
     if (!shown) {
       return;
     }
-    leaveShare();
     state.direction = state.direction === 'toCode' ? 'toSql' : 'toCode';
     state.activeClause = null;
     elements.input.value = shown.code;
@@ -1080,7 +1425,6 @@ async function init(root) {
       showTip(tab);
       return;
     }
-    leaveShare();
     state.selected[selectionKey()] = tab.dataset.output;
     // Messages, counts, round trip and clause map all belong to the shown output.
     renderAll();
@@ -1196,19 +1540,67 @@ async function init(root) {
     scheduleConvert();
   });
 
-  // ── Start ──
-  if (shared) {
-    state.direction = shared.direction;
-    elements.input.value = shared.input;
-    if (shared.tab) {
-      state.selected[selectionKey()] = shared.tab;
+  elements.takeOver.addEventListener('click', takeOver);
+  addEventListener('storage', onStorage);
+  addEventListener('pagehide', releaseLock);
+  addEventListener('pageshow', (event) => {
+    // Back/forward cache: the lease was released on pagehide, so check it again.
+    if (!(event.persisted && session.id)) {
+    	return;
     }
-  } else {
-    loadPlatformInput();
-    if (hasShare) {
-      clearHash();
-      showShareStatus('This link could not be read; showing your last work instead');
+
+    claimOrWatch();
+    reloadFromStorage();
+  });
+  // A link pasted into this tab changes only the fragment: start over with it.
+  // (history.replaceState, used for the session id, fires no hashchange.)
+  addEventListener('hashchange', () => location.reload());
+
+  // ── Start: the session from the link, else the last one, else a new one ──
+  const request = parseHash(location.hash);
+  const storedSession = (id) => restoreSession(readStorage(sessionKey(id)));
+  let note = '';
+  if (request.kind === 'share') {
+    const shared = await decodeShare(request.token);
+    const own = shared?.source ? storedSession(shared.source) : null;
+    if (own && isSameView(sessionView(own), shared)) {
+      // The visitor's own link, unchanged since: back to that session.
+      if (shared.tab) {
+        own.selected[`${shared.platform}:${shared.direction}`] = shared.tab;
+      }
+      openSession(shared.source, own);
+    } else if (shared) {
+      const content = sessionFromView(shared);
+      openSession(createSession(content), content);
+    } else {
+      note = 'This link could not be read; showing your last work instead';
     }
+  } else if (request.kind === 'session') {
+    const stored = storedSession(request.id);
+    if (stored) {
+      openSession(request.id, stored);
+    } else {
+      note = 'That session is not saved in this browser, so a new one was started';
+      const content = restoreSession({});
+      openSession(createSession(content), content);
+    }
+  }
+  if (!session.id) {
+    const lastId = readStorage('last');
+    const last = typeof lastId === 'string' ? storedSession(lastId) : null;
+    if (last) {
+      openSession(lastId, last);
+    } else {
+      // First visit since sessions exist: carry over the single saved state of earlier versions.
+      const content = legacySession(readStorage) ?? restoreSession({});
+      openSession(createSession(content), content);
+      for (const key of LEGACY_KEYS) {
+        removeStorage(key);
+      }
+    }
+  }
+  if (note) {
+    showShareStatus(note);
   }
   renderChrome();
   root.classList.add('is-ready');
